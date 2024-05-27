@@ -1,0 +1,162 @@
+from CCE.src import thermo, components
+from piston_engine.src.misc import post_processing
+import matplotlib.pyplot as plt
+import pickle
+import numpy as np
+
+# load the surrogate model
+filename = '../piston_engine/surrogate_data/piston_surrogate_h2_16th.pkl'
+with open(filename, "rb") as f:
+    meta_model_unnoisy = pickle.load(f)
+
+
+error = False
+
+# input to surrogate
+pin = 7e5
+Tin = 600
+cr = 5
+p_ratio = 1.3
+v_mean = 10
+
+# fuel type
+fuel_type = 'H2'
+far_s, LHV = thermo.fuel_props(fuel_type)
+
+core_flow = 5
+
+
+def find_match(x, meta_model):
+    # change fuel air ratio and bore to match power and turbine inlet temperature
+
+    bore = x[0]  # bore is varied to
+    far34 = x[1]  # far is varied to match target output temperature
+
+
+    # get the output of the surrogate
+    piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, far34, p_ratio, v_mean]))
+    air_flow = meta_model[2].predict_values(piston_input)[0][0]
+    induced_power = meta_model[5].predict_values(piston_input)[0][0]*1e3
+    p_tdc = meta_model[7].predict_values(piston_input)[0][0]*1e5
+    T34 = meta_model[0].predict_values(piston_input)[0][0]
+
+    # pressurise circumventing flow
+    m_circumvent = core_flow - air_flow
+    if m_circumvent < 0:
+        return np.array([0, 0, 0, 0])
+    pressure_circ, T_circumv, P_circumv = \
+        components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99)
+
+    # mix circumventing flow
+    equ34 = far34 / far_s
+    m34 = air_flow * (1 + far34)  # outflow of piston engine (air + fuel)
+    #m35 = m34 + m_circumvent  # flow after mixing
+    T35, equ35 = components.mix(m34, T34, equ34, m_circumvent, T_circumv, equ2=0, fuel_type=fuel_type)
+    #far35 = equ35 * far_s
+
+    # power needed to pressurise the fuel
+    fuel_flow = air_flow * far34  # far_given is the same as far in the engine (at least it is supposed to be)
+    P_fuel_pump = components.fuel_pump(p_tdc, fuel_type, fuel_flow)
+
+    # things needed for aux and friction losses
+    bsr = 1.0
+    stroke = bore / bsr
+    lv_max = bore * 0.1
+    cylinders = 12
+    rpm = v_mean / (2 * stroke) * 60
+    rps = rpm / 60
+    Vd_tot = stroke * bore ** 2 / 4 * np.pi * cylinders
+    cycle = '4T'
+    if cycle == '4T':
+        n_r = 2
+    else:
+        n_r = 1
+
+    # auxiliary losses and friction losses. these do not depend on the trapped fuel air ratio
+    fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(bore, rpm, stroke, v_mean, pin, cr, cylinders,
+                                                                   lv_max)
+    friction_loss = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+    aux_loss = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
+
+    shaft_power = induced_power - aux_loss - friction_loss - P_circumv - P_fuel_pump
+
+    residual = np.array([shaft_power, T35, air_flow, T34])
+    #print(residual, bore, far34)
+
+    return residual
+
+
+
+
+far = 0.025
+power2 = []
+TET2 = []
+airflow2 = []
+T342 = []
+
+bores2 = np.linspace(0.05, 0.20, 5000)
+for bore in bores2:
+    x = np.array([bore, far])
+    output = find_match(x, meta_model_unnoisy)
+    power2.append(output[0])
+    TET2.append(output[1])
+    airflow2.append(output[2])
+    T342.append((output[3]))
+
+
+bore2 = 0.1
+fars2 = np.linspace(0.015, 0.029, 5000)
+
+power3 = []
+TET3 = []
+airflow3 = []
+T343 = []
+i = 0
+for far in fars2:
+    print(i)
+    x = np.array([bore2, far])
+    output = find_match(x, meta_model_unnoisy)
+    power3.append(output[0])
+    TET3.append(output[1])
+    airflow3.append(output[2])
+    T343.append((output[3]))
+    i += 1
+
+
+
+
+
+
+# Creating figure
+fig4 = plt.figure(figsize=(14, 9))
+ax4 = plt.plot(bores2, airflow2)
+
+
+fig5 = plt.figure(figsize=(14, 9))
+ax5 = plt.plot(bores2, TET2)
+
+
+fig6 = plt.figure(figsize=(14, 9))
+ax6 = plt.plot(bores2, power2)
+
+
+fig7 = plt.figure(figsize=(14, 9))
+ax7 = plt.plot(bores2, T342)
+
+
+# Creating figure
+fig8 = plt.figure(figsize=(14, 9))
+ax8 = plt.plot(fars2, airflow3, label='less_trained')
+plt.legend()
+
+fig9 = plt.figure(figsize=(14, 9))
+ax9 = plt.plot(fars2, TET3, label='less_trained')
+plt.legend()
+
+fig10 = plt.figure(figsize=(14, 9))
+ax10 = plt.plot(fars2, power3, label='less_trained')
+plt.legend()
+
+# show plot
+plt.show()
+
