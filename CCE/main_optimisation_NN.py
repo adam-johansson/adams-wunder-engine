@@ -18,8 +18,8 @@ path_pist = input_dir_pist + "." + input_file_pist
 d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
-#flags = ['single', 'print_output']  # normal case
-flags = ['single']
+flags = ['single', 'print_output']  # normal case
+#flags = ['single']
 #flags = ['sweep']
 #flags = ['optim']
 

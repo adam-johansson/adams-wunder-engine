@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 def load_nn():
 
     # import data just to now the scale
-    X = pd.read_csv('../piston_engine/surrogate_data/backup/h2_validated_woschni_18/x_cleaned.csv', index_col=0)
-    y = pd.read_csv('../piston_engine/surrogate_data/backup/h2_validated_woschni_18/y_cleaned.csv', index_col=0)
+    X = pd.read_csv('../piston_engine/sampled_data/h2/x_cleaned.csv', index_col=0)
+    y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
 
     # convert to numpy arrays
     X = pd.DataFrame.to_numpy(X)
