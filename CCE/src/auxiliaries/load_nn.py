@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 def load_nn():
 
-    # import data just to now the scale
+    # import data just to know the scale
     X = pd.read_csv('../piston_engine/sampled_data/h2/x_cleaned.csv', index_col=0)
     y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
 
@@ -20,42 +20,16 @@ def load_nn():
     X = pd.DataFrame.to_numpy(X)
     y = pd.DataFrame.to_numpy(y)
 
-    # need one scaler for each output
-    y0 = y[:, 0]
-    y2 = y[:, 2]
-    y3 = y[:, 3]
-    y4 = y[:, 4]
-    y5 = y[:, 5]
-    y6 = y[:, 6]
-    y7 = y[:, 7]
-
     # convert to PyTorch tensors
     X = torch.tensor(X, dtype=torch.float32)
-    y0 = torch.tensor(y0, dtype=torch.float32).reshape(-1, 1)
-    y2 = torch.tensor(y2, dtype=torch.float32).reshape(-1, 1)
-    y3 = torch.tensor(y3, dtype=torch.float32).reshape(-1, 1)
-    y4 = torch.tensor(y4, dtype=torch.float32).reshape(-1, 1)
-    y5 = torch.tensor(y5, dtype=torch.float32).reshape(-1, 1)
-    y6 = torch.tensor(y6, dtype=torch.float32).reshape(-1, 1)
-    y7 = torch.tensor(y7, dtype=torch.float32).reshape(-1, 1)
+    y = torch.tensor(y, dtype=torch.float32)
 
     # Normalize the data just to get the scaler
     X_scaler = StandardScaler()
     X_scaled = X_scaler.fit_transform(X)
-    y0_scaler = StandardScaler()
-    y0_scaled = y0_scaler.fit_transform(y0)
-    y2_scaler = StandardScaler()
-    y2_scaled = y2_scaler.fit_transform(y2)
-    y3_scaler = StandardScaler()
-    y3_scaled = y3_scaler.fit_transform(y3)
-    y4_scaler = StandardScaler()
-    y4_scaled = y4_scaler.fit_transform(y4)
-    y5_scaler = StandardScaler()
-    y5_scaled = y5_scaler.fit_transform(y5)
-    y6_scaler = StandardScaler()
-    y6_scaled = y6_scaler.fit_transform(y6)
-    y7_scaler = StandardScaler()
-    y7_scaled = y7_scaler.fit_transform(y7)
+    y_scaler = StandardScaler()
+    y_scaled = y_scaler.fit_transform(y)
+
 
 
     class NET(nn.Module):
@@ -92,28 +66,9 @@ def load_nn():
             return x
 
     # Create new model and load states
-    model0 = NET(7, 32, 32, 1)
-    model0.load_state_dict(torch.load("../meta_model/model_Tout.pth"))
+    model = NET(7, 64, 64, 8)
+    model.load_state_dict(torch.load("../neural_network/model_multi.pth"))
 
-    model2 = NET(7, 32, 32, 1)
-    model2.load_state_dict(torch.load("../meta_model/model_airflow.pth"))
+    bundle = [model, X_scaler, y_scaler]
 
-    model3 = NET(7, 32, 32, 1)
-    model3.load_state_dict(torch.load("../meta_model/model_pmax.pth"))
-
-    model4 = NET(7, 32, 32, 1)
-    model4.load_state_dict(torch.load("../meta_model/model_Tmax.pth"))
-
-    model5 = NET(7, 32, 32, 1)
-    model5.load_state_dict(torch.load("../meta_model/model_power.pth"))
-
-    model6 = NET(7, 32, 32, 1)
-    model6.load_state_dict(torch.load("../meta_model/model_heat.pth"))
-
-    model7 = NET(7, 32, 32, 1)
-    model7.load_state_dict(torch.load("../meta_model/model_ptdc.pth"))
-
-    model = [model0, model2, model3, model4, model5, model6, model7, X_scaler, y0_scaler, y2_scaler, y3_scaler,
-             y4_scaler, y5_scaler, y6_scaler, y7_scaler]
-
-    return model
+    return bundle

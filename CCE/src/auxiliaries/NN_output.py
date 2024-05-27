@@ -5,24 +5,11 @@ from torch import float32
 def nn_output(piston_input, meta_model):
 
     # unpack meta_model
-    model0 = meta_model[0]
-    model2 = meta_model[1]
-    model3 = meta_model[2]
-    model4 = meta_model[3]
-    model5 = meta_model[4]
-    model6 = meta_model[5]
-    model7 = meta_model[6]
+    model = meta_model[0]
 
-    x_scaler = meta_model[7]
+    x_scaler = meta_model[1]
 
-    y0_scaler = meta_model[8]
-    y2_scaler = meta_model[9]
-    y3_scaler = meta_model[10]
-    y4_scaler = meta_model[11]
-    y5_scaler = meta_model[12]
-    y6_scaler = meta_model[13]
-    y7_scaler = meta_model[14]
-
+    y_scaler = meta_model[2]
 
     # scale input
     piston_input = x_scaler.transform(piston_input)
@@ -31,22 +18,19 @@ def nn_output(piston_input, meta_model):
     piston_input = tensor(piston_input, dtype=float32)
 
     # get output
-    y0 = model0(piston_input)
-    y2 = model2(piston_input)
-    y3 = model3(piston_input)
-    y4 = model4(piston_input)
-    y5 = model5(piston_input)
-    y6 = model6(piston_input)
-    y7 = model7(piston_input)
+    y = model(piston_input)
+
+    # get back to actual numbers
+    y_real = y_scaler.inverse_transform(y.detach().numpy())
+
+    Tout = y_real[0,0]
+    air_flow = y_real[0,2]
+    p_max = y_real[0,3]
+    T_max = y_real[0,4]
+    indicated_power = y_real[0,5]
+    heat_loss = y_real[0,6]
+    p_tdc = y_real[0,7]
 
 
-    # rescale output
-    Tout = y0_scaler.inverse_transform(y0.detach().numpy())[0][0]
-    air_flow = y2_scaler.inverse_transform(y2.detach().numpy())[0][0]
-    p_max = y3_scaler.inverse_transform(y3.detach().numpy())[0][0]
-    T_max = y4_scaler.inverse_transform(y4.detach().numpy())[0][0]
-    indicated_power = y5_scaler.inverse_transform(y5.detach().numpy())[0][0]
-    heat_loss = y6_scaler.inverse_transform(y6.detach().numpy())[0][0]
-    p_tdc = y7_scaler.inverse_transform(y7.detach().numpy())[0][0]
 
     return Tout, air_flow, p_max, T_max, indicated_power, heat_loss, p_tdc
