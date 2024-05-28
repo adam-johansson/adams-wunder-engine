@@ -24,10 +24,10 @@ for far in far_s:
     outputs[i, :] = output
     i += 1
 
-plt.plot(far_s, outputs[:, 6])
+plt.plot(far_s, outputs[:, 1])
 plt.show()
 
 # air flow is beheaving weirldy (output[1])
 # power a bit weird but not so much [4]
-# p_tdc reall weird [6]
+# p_tdc real weird [6]
 

@@ -32,22 +32,22 @@ def load_nn():
 
 
 
-    class NET(nn.Module):
+    class NET3(nn.Module):
         '''Regression Model
         '''
 
-        def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int, output_dim: int) -> None:
+        def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int, hidden_dim3: int, output_dim: int) -> None:
             '''The network has 4 layers
                  - input layer
                  - hidden layer
                  - hidden layer
                  - output layer
             '''
-            super(NET, self).__init__()
+            super(NET3, self).__init__()
             self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
             self.hidden_layer_1 = nn.Linear(hidden_dim1, hidden_dim2)
-            self.hidden_layer_2 = nn.Linear(hidden_dim2, hidden_dim2)
-            self.hidden_to_output = nn.Linear(hidden_dim2, output_dim)
+            self.hidden_layer_2 = nn.Linear(hidden_dim2, hidden_dim3)
+            self.hidden_to_output = nn.Linear(hidden_dim3, output_dim)
             self.ReLu = nn.ReLU()  # activation function
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -58,15 +58,61 @@ def load_nn():
             x = self.hidden_layer_2(x)
             x = self.ReLu(x)
             x = self.hidden_to_output(x)
+            return x
 
-            # x = F.relu(self.input_to_hidden(x))
-            # x = F.relu(self.hidden_layer_1(x))
-            # x = F.relu(self.hidden_layer_2(x))
-            # x = self.hidden_to_output(x)
+    class NET2(nn.Module):
+        '''Regression Model
+        '''
+
+        def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int,
+                     output_dim: int) -> None:
+            '''The network has 4 layers
+                 - input layer
+                 - hidden layer
+                 - hidden layer
+                 - output layer
+            '''
+            super(NET2, self).__init__()
+            self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
+            self.hidden_layer_1 = nn.Linear(hidden_dim1, hidden_dim2)
+            self.hidden_to_output = nn.Linear(hidden_dim2, output_dim)
+            self.ReLu = nn.ReLU()  # activation function
+
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            x = self.input_to_hidden(x)
+            x = self.ReLu(x)
+            x = self.hidden_layer_1(x)
+            x = self.ReLu(x)
+            x = self.hidden_to_output(x)
+            return x
+
+    class NET1(nn.Module):
+        '''Regression Model
+        '''
+
+        def __init__(self, input_dim: int, hidden_dim1: int,
+                     output_dim: int) -> None:
+            '''The network has 4 layers
+                 - input layer
+                 - hidden layer
+                 - hidden layer
+                 - output layer
+            '''
+            super(NET1, self).__init__()
+            self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
+            self.hidden_to_output = nn.Linear(hidden_dim1, output_dim)
+            self.ReLu = nn.ReLU()  # activation function
+
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            x = self.input_to_hidden(x)
+            x = self.ReLu(x)
+            x = self.hidden_to_output(x)
             return x
 
     # Create new model and load states
-    model = NET(7, 64, 64, 8)
+    #model = NET3(7, 64, 32, 16, 8)
+    #model = NET2(7, 64, 32, 8)
+    model = NET1(7, 64, 8)
     model.load_state_dict(torch.load("../neural_network/model_multi.pth"))
 
     bundle = [model, X_scaler, y_scaler]
