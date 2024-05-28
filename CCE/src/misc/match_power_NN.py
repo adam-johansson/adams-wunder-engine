@@ -4,7 +4,7 @@ from CCE.src import components
 from CCE.src import thermo
 from timeit import default_timer as timer
 from piston_engine.engine import run_piston_engine
-from CCE.src.auxiliaries import nn_output
+from CCE.src.surrogate import nn_output
 
 import numpy as np
 

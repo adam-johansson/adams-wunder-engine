@@ -74,10 +74,10 @@ wm = 0.6
 
 
 # this is for single wiebe function
-m_wiebe = 1.75
+m_wiebe = 1.75  # from validation italian
 
-phi_sc = (361/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #345
-phi_cd = (35/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
+phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
+phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation italian
 
 T_fuel = 450
 p_fuel = 300e5

@@ -1,4 +1,3 @@
-from CCE.src import cce_propulsion_system
 from CCE.src import auxiliaries
 
 import numpy as np

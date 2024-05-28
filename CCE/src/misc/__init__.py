@@ -8,6 +8,6 @@ from .calc_efficiencies import calc_efficiencies
 from .fpr_opt import fpr_opt
 from .match_tet_power import match_tet_power
 from .match_tet_power_v2 import match_tet_power_v2
-from.match_power import match_power
+from .match_power import match_power
 from .match_power_v2 import match_power_v2
 from .match_power_NN import match_power_nn

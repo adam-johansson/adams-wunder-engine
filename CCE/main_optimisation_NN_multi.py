@@ -1,7 +1,7 @@
 from CCE.src import cce_propulsion_system
 from CCE.src import auxiliaries
 import importlib
-import pickle
+from CCE.src import surrogate
 
 from timeit import default_timer as timer
 
@@ -44,15 +44,15 @@ data_piston = [p_in_dummy, T_in_dummy, pi_pe_dummy, d_p.cycle, d_p.thermo, d_p.c
 
 
 # load the Neural Network model
-meta_model = auxiliaries.load_nn()
+meta_model = surrogate.load_nn()
 
 if 'single' in flags:
     start = timer()
-    sfc, v_ratio, thrust, m0, error, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
-        = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+    #sfc, v_ratio, thrust, m0, error, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
+    #    = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
 
-    #sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
-    #   = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
+    sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
+       = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
 
     end = timer()
     print(sfc*1e6)

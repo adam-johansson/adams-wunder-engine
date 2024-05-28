@@ -24,8 +24,8 @@ d = importlib.import_module(path)
 # sweep, plot_details
 
 #flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # validation case
-flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
-#flags = ['single', 'save', 'output_all', 'load']  # normal case no plots
+#flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
+flags = ['single', 'output_all']  # normal case no plots
 #flags = ['sweep']  # parametric study
 #flags = ['optimise']  # optimisation
 #flags = ['load']
@@ -41,7 +41,8 @@ if 'single' in flags:
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
         heat_loss, p_tdc = run_piston_engine(data, flags)
     end = timer()
-    print(far / 0.02918)
+    print(far / 0.02923)
+    print(p_tdc*1e-5)
     #0.01124952812
     #print(f'Induced power: {induced_power * 1e-3} [kW]')
     #print(f'PE losses: {friction_loss * 1e-6} [MW]')
