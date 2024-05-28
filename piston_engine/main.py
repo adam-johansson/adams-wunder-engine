@@ -12,8 +12,8 @@ from CCE.src.thermo.fuel_func import fuel_props
 # input_file = "4T_HP"
 #input_file = "4stroke"
 #input_file = "4stroke_kaiser"
-#input_file = "4stroke_hydrogen"
-input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
+input_file = "4stroke_hydrogen"
+#input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
 #input_file = "nasa_validation_singlewiebe"
 input_dir = "input"
 path = input_dir + "." + input_file
@@ -24,8 +24,8 @@ d = importlib.import_module(path)
 # sweep, plot_details
 
 #flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # validation case
-#flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
-flags = ['single', 'save', 'output_all', 'load']  # normal case no plots
+flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
+#flags = ['single', 'save', 'output_all', 'load']  # normal case no plots
 #flags = ['sweep']  # parametric study
 #flags = ['optimise']  # optimisation
 #flags = ['load']

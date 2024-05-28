@@ -10,10 +10,10 @@ def N2(T):
 
     if T > 6000:
         T = 6000
-        print(f'Temperature over 6000 K was found')
+        #print(f'Temperature over 6000 K was found')
     if T < 200:
         T = 200
-        print(f'Temperature under 200 K was found')
+        #print(f'Temperature under 200 K was found')
 
     M = 28.0134e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
@@ -56,10 +56,10 @@ def O2(T):
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
     if T > 6000:
         T = 6000
-        print(f'Temperature over 6000 K was found')
+        #print(f'Temperature over 6000 K was found')
     if T < 200:
         T = 200
-        print(f'Temperature under 200 K was found')
+        #print(f'Temperature under 200 K was found')
     M = 31.9988e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
 
@@ -100,10 +100,10 @@ def Ar(T):
     Rspec = R / M  # J kg^-1 K^-1
     if T > 6000:
         T = 6000
-        print(f'Temperature over 6000 K was found')
+        #print(f'Temperature over 6000 K was found')
     if T < 200:
         T = 200
-        print(f'Temperature under 200 K was found')
+        #print(f'Temperature under 200 K was found')
     if T < 1000.0007:  # between 200K and 1000K
         a1 = 0.0
         a2 = 0.0
@@ -143,10 +143,10 @@ def CO2(T):
     Rspec = R / M  # J kg^-1 K^-1
     if T > 6000:
         T = 6000
-        print(f'Temperature over 6000 K was found')
+        #print(f'Temperature over 6000 K was found')
     if T < 200:
         T = 200
-        print(f'Temperature under 200 K was found')
+        #print(f'Temperature under 200 K was found')
     if T < 1000.0007:  # between 200K and 1000K
         a1 = 4.943650540e+04
         a2 = -6.264116010e+02
@@ -189,10 +189,10 @@ def H2O(T):
     Rspec = R / M  # J kg^-1 K^-1
     if T > 6000:
         T = 6000
-        print(f'Temperature over 6000 K was found')
+        #print(f'Temperature over 6000 K was found')
     if T < 200:
         T = 200
-        print(f'Temperature under 200 K was found')
+        #print(f'Temperature under 200 K was found')
     if T < 1000.0007:  # between 200K and 1000K
         a1 = -3.947960830e+04
         a2 = 5.755731020e+02
@@ -280,10 +280,10 @@ def H2(T):
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
     if T > 6000:
         T = 6000
-        print(f'Temperature over 6000 K was found')
+        #print(f'Temperature over 6000 K was found')
     if T < 200:
         T = 200
-        print(f'Temperature under 200 K was found')
+        #print(f'Temperature under 200 K was found')
     M = 2.0158800e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
 

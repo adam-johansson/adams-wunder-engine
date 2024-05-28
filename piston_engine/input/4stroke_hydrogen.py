@@ -63,7 +63,7 @@ cd = 0.8
 
 eta_c = 1.0
 
-throttle = 0.02923 / 3.0
+throttle = 0.02923 / 1.0
 
 
 wiebe_type = "Single"

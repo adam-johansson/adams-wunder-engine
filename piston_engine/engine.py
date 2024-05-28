@@ -536,8 +536,7 @@ def run_piston_engine(indata, flags):
         if i + 1 == it:
             print(f'Simulation never converged. p_in, T_in, cr, throttle, rpm: {p_in * 1e-5, T_in, cr, throttle, rpm, d}')
             # Return zeros so that the data can be cleaned from simulations that never converged
-            # Vågar inte testa just nu
-            #return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 
     # for j in range(it):
