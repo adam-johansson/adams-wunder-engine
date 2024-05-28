@@ -7,6 +7,8 @@ from engine import run_piston_engine  # import the piston engine function
 
 from scipy.stats import qmc
 
+import pandas as pd
+
 
 # Setting up the piston engine
 
@@ -47,12 +49,14 @@ v_mean_lim = [5, 20]
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 1  # points per variable
+npoints = 1000  # points per variable
 ndoe = ndim * npoints
 
-
 # create sampling on unit hypercube
-sampler = qmc.LatinHypercube(d=ndim, seed=42, optimization="random-cd")
+# optimization greatly improves discrepancy
+# strength=2 requires p**2 sample points with p being a prime number
+# however strength 1 + optimization seems to give best results
+sampler = qmc.LatinHypercube(d=ndim, seed=42, optimization="random-cd", strength=1)
 sample = sampler.random(n=ndoe)
 
 
@@ -72,16 +76,6 @@ start_simulating = timer()
 i = 0
 for p, T, cr, bore, throttle, p_ratio, v_mean, fuel_t in sample_scaled:
     i += 1
-    if not (i % (ndoe // 10)):
-        mellantid = timer()
-        elapsed_time = mellantid - start_simulating
-        avg_iteration_time = elapsed_time / i
-        total_time = avg_iteration_time * ndoe
-        print(f'Simulation {i} out of {ndoe}.'
-              f'Elapsed time: {elapsed_time} [s]'
-              f'Avg iteration time: {avg_iteration_time} [s]'
-              f'Estimated total sampling time: {total_time} [s]'
-              f'Progress in percent: {elapsed_time / total_time * 100}')
 
     lv_max = 0.1 * bore
     data = [p, T, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
@@ -97,9 +91,31 @@ for p, T, cr, bore, throttle, p_ratio, v_mean, fuel_t in sample_scaled:
     # eta_th is redundant I suppose
     y[i - 1, :] = T_out, eta_th, air_flow, p_max, T_max, induced_power * 1e-3, heat_loss * 1e-3, p_tdc * 1e-5
 
+    if not (i % (ndoe // 1000)):
+        mellantid = timer()
+        elapsed_time = mellantid - start_simulating
+        avg_iteration_time = elapsed_time / i
+        total_time = avg_iteration_time * ndoe
+        print(f'Simulation {i} out of {ndoe}.'
+              f'Elapsed time: {elapsed_time} [s]'
+              f'Avg iteration time: {avg_iteration_time} [s]'
+              f'Estimated total sampling time: {total_time} [s]'
+              f'Progress in percent: {elapsed_time / total_time * 100}')
 
-# Saving the arrays in surrogate_data folder
-np.savetxt("sampled_data/x.csv", sample_scaled, delimiter=",", header='')
-np.savetxt("sampled_data/y.csv", y, delimiter=",")
+
+# Saving the arrays in sampled_data folder
+# Labels
+headers_input = np.array(['p_in', 'T_in', 'cr', 'bore', 'far', 'PI', 'v_mean', 'T_fuel'])
+headers_output = np.array(['T_out', 'eff', 'air_flow', 'p_max', 'T_max', 'power', 'heat_loss', 'p_tdc'])
+
+# Adding the labels to the data
+x_data = pd.DataFrame(sample_scaled, columns=headers_input)
+y_data = pd.DataFrame(y, columns=headers_output)
+
+# Writing data to file
+x_data.to_csv('sampled_data/x.csv')
+y_data.to_csv('sampled_data/y.csv')
 end_sampling = timer()
 print(f'Total time for sampling data: {end_sampling - start_sampling} [s]')
+
+
