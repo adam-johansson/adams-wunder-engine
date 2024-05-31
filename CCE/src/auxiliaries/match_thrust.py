@@ -36,7 +36,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             return sfc
         #cost = np.abs(thrust / m0 - Fs_goal)
         cost = thrust / m0 - Fs_goal
-        print(cost, fpr)
+        #print(cost, fpr)
         return cost
 
     try:
@@ -49,7 +49,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             #print(f'Fsolve worked. {sol}, {opt_fpr[0]}')
 
         elif ier != 1:
-            print(ier, mesg)
+            #print(ier, mesg)
             cost = 5e-6 + np.abs(infodict['fvec']) * 1e-5
             return cost, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 
@@ -59,7 +59,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
 
     except ValueError as e:
         error = True
-        print(e)
+        #print(e)
         return 999, 0, 0, 1, error, 0, 0, 0, 0, 0, 0, 0
 
     #opt_fpr = minimize(find_fpr, x0, bounds=limits, method='Nelder-Mead', options={'disp': True, 'fatol': 1e-0})

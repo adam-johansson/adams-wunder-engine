@@ -19,9 +19,9 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ['single', 'print_output']  # normal case
-flags = ['single']
+#flags = ['single']
 #flags = ['sweep']
-#flags = ['optim']
+flags = ['optim']
 
 p_in_dummy = 1
 T_in_dummy = 1

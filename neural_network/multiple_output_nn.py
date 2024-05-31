@@ -10,9 +10,9 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-# import data  IN FUTURE JUST IMPORT ONE CSV FILE
-X = pd.read_csv('../piston_engine/sampled_data/h2/x_cleaned.csv', index_col=0)
-y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
+# import data
+X = pd.read_csv('../piston_engine/sampled_data/h2/x.csv', index_col=0)
+y = pd.read_csv('../piston_engine/sampled_data/h2/y.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -32,6 +32,7 @@ y_scaled = y_scaler.fit_transform(y)
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y_scaled, test_size=0.33, random_state=42)
+
 
 
 class Data(Dataset):
@@ -57,172 +58,78 @@ class Data(Dataset):
 # Generate the training dataset
 traindata = Data(X_train, y_train)
 
-batch_size = 32
-epochs = 1000
+# Generate the test dataset
+testdata = Data(X_test, y_test)
+
+
+batch_size = 64
+epochs = 10000
+
+# number of neurons of hidden layers
+hidden_dim = 256
+
+# number of hidden layers
+layers = 8
+
+lr = 1e-4
+weight_decay = 1e-2
 
 # Load the training data into data loader with the
-# respective batch_size and num_workers
+# respective batch_size
 trainloader = DataLoader(traindata, batch_size=batch_size,
                          shuffle=True)
 
-# NOTES:
-# 2 hidden layers with 32 neurons each seems good fit: 10 batch size. LR 1e-4
-# 1000 Epochs: L1 Loss on test: 0.03749, training 0.033
-# 2000 Epochs: L1 Loss on test: 0.03192, training 0.0272
-# 3000 Epochs: L1 Loss on test: 0.03257, training 0.0266 #OVERTRAINED
-
-# 2 hidden layers with 32 neurons each seems good fit: 32 batch size. LR 1e-4
-# 1000 Epochs: L1 Loss on test: 0.04197, training 0.0369
-# 2000 Epochs: L1 Loss on test: 0.03972, training 0.0344
-# 3000 Epochs: L1 Loss on test: 0.03779, training 0.03269
-# 4000 Epochs: L1 Loss on test: 0.03407, training 0.02927
-
-# 2 hidden layers with 32 neurons each seems good fit: 32 batch size. LR 1e-3
-# 4000 Epochs: L1 Loss on test: 0.02351, training 0.02101
-# 6000 Epochs: L1 Loss on test: 0.02481, training 0.02109  # TRAINING LOSS DOESNT DECREASE AFTER 4000 Epochs
-
-# BEST SO FAR but problem with air flow and p_tdc
-# 2 hidden layers with 64, 64 neurons: 32 batch size. LR 1e-3
-# 1000 Epochs: L1 Loss on test: 0.02251, training 0.0161  #MEANS SLIGHTLY OVERFITTED
-# 800 Epochs: L1 Loss on test: 0.02263, training 0.01702  #MEANS SLIGHTLY OVERFITTED
-# 600 Epochs: L1 Loss on test: 0.02308, training 0.01792  #MEANS SLIGHTLY OVERFITTED
-# 2000 Epochs: L1 Loss on test: 0.01859, training 0.0131  #MEANS SLIGHTLY OVERFITTED
-
-# THIS IS THE NEW SETUP OF THE MODEL
-# dimensions: 64, 32, 16. batch size 32. lr 1e-3
-# 1000 epochs: L1 loss on test: 0.029 , training loss: 0.025
-#
-
-# dimensions: 64, 32. batch size 32. lr 1e-3
-# 1000 epochs: L1 loss on test: 0.028 , training loss: 0.0234
-# 2000 epochs: L1 loss test: 0.028, training loss: 0.0234
+# Validate model on validation data
+testloader = DataLoader(testdata, batch_size=batch_size,
+                        shuffle=True)
 
 
-# dimensions: 32, 32. batch size 32. lr 1e-3
-# 1000 epochs: L1 loss on test: 0.033 , training loss: 0.0297
-
-# dimensions: 32. batch size 32. lr 1e-3
-# 1000 epochs: L1 loss on test: 0.05845 , training loss: 0.055, R2 score test: 99.07
-
-# switching to MSE loss
-
-# dimensions: 32. batch size 32. lr 1e-3, MSE loss
-# 1000 epochs: L1 loss on test: 0.05908, R2 score test: 99.29
-
-
-# dimensions: 64. batch size 32. lr 1e-3, MSE loss
-# 1000 epochs: L1 loss on test: 0.0389, R2 score test: 99.70
-
-# dimensions: 128. batch size 32. lr 1e-3, MSE loss
-# 1000 epochs: L1 loss on test: 0.0389, R2 score test: 99.70
-
-class NET3(nn.Module):
+class NET(nn.Module):
     '''Regression Model
     '''
 
-    def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int, hidden_dim3: int, output_dim: int) -> None:
-        '''The network has 4 layers
-             - input layer
-             - hidden layer
-             - hidden layer
-             - output layer
-        '''
+    def __init__(self, n_layers: int, input_dim: int, hidden_dim: int, output_dim: int) -> None:
 
-        super(NET3, self).__init__()
-        self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
-        self.hidden_layer_1 = nn.Linear(hidden_dim1, hidden_dim2)
-        self.hidden_layer_2 = nn.Linear(hidden_dim2, hidden_dim3)
-        self.hidden_to_output = nn.Linear(hidden_dim3, output_dim)
+        super(NET, self).__init__()
+        self.input_to_hidden = nn.Linear(input_dim, hidden_dim)
+        self.hidden = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
+        self.hidden_to_output = nn.Linear(hidden_dim, output_dim)
         self.ReLu = nn.ReLU()  # activation function
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_to_hidden(x)
         x = self.ReLu(x)
-        x = self.hidden_layer_1(x)
-        x = self.ReLu(x)
-        x = self.hidden_layer_2(x)
-        x = self.ReLu(x)
-        x = self.hidden_to_output(x)
-
-        return x
-
-class NET2(nn.Module):
-    '''Regression Model
-    '''
-
-    def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int, output_dim: int) -> None:
-        '''The network has 4 layers
-             - input layer
-             - hidden layer
-             - hidden layer
-             - output layer
-        '''
-
-        super(NET2, self).__init__()
-        self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
-        self.hidden_layer_1 = nn.Linear(hidden_dim1, hidden_dim2)
-        self.hidden_to_output = nn.Linear(hidden_dim2, output_dim)
-        self.ReLu = nn.ReLU()  # activation function
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-
-        x = self.input_to_hidden(x)
-        x = self.ReLu(x)
-        x = self.hidden_layer_1(x)
-        x = self.ReLu(x)
-        x = self.hidden_to_output(x)
-
-        return x
-
-class NET1(nn.Module):
-    '''Regression Model
-    '''
-
-    def __init__(self, input_dim: int, hidden_dim1: int, output_dim: int) -> None:
-        '''The network has 4 layers
-             - input layer
-             - hidden layer
-             - hidden layer
-             - output layer
-        '''
-
-        super(NET1, self).__init__()
-        self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
-        self.hidden_to_output = nn.Linear(hidden_dim1, output_dim)
-        self.ReLu = nn.ReLU()  # activation function
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-
-        x = self.input_to_hidden(x)
-        x = self.ReLu(x)
+        for layer in self.hidden:
+            x = layer(x)
+            x = self.ReLu(x)
         x = self.hidden_to_output(x)
 
         return x
 
 
-# number of features (len of X cols)
+# number of inputs
 input_dim = X_train.shape[1]
-# number of neurons of hidden layers
-hidden_dim1 = 64
-hidden_dim2 = 32
-hidden_dim3 = 16
+
 # output dimension
-output_dim = 8
+output_dim = y_train.shape[1]
+
 # initiate the regression model
-#model = NET3(input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim)
-#model = NET2(input_dim, hidden_dim1, hidden_dim2, output_dim)
-model = NET1(input_dim, hidden_dim1, output_dim)
+model = NET(layers, input_dim, hidden_dim, output_dim)
+
+
 print(model)
 
 # criterion to computes the loss between input and target
 #criterion = nn.L1Loss()
 criterion = nn.MSELoss()
+
 # optimizer that will be used to update weights and biases
-# lr 1e-3 was too large. 1e-4 seems to work well
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+#optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
 # saving losses for each epoch to visualize
 training_loss = []
+test_loss = []
 
 
 # start training
@@ -249,23 +156,24 @@ for epoch in range(epochs):
         optimizer.step()
         running_loss += loss.item()
 
+    # test loss (only once per epoch)
+    outputs_test = model(testdata.X)
+    running_loss_test = criterion(outputs_test, testdata.y)
+
     # display statistics
-    if not ((epoch + 1) % (epochs // 100)):
+    if not ((epoch + 1) % (epochs // 1000)):
         print(f'Epochs:{epoch + 1:5d} | ' \
               f'Batches per epoch: {i + 1:3d} | ' \
-              f'Loss: {running_loss / (i + 1):.10f}')
+              f'Training loss: {running_loss / (i + 1):.10f} | ' \
+              f'Test loss: {running_loss_test}')
 
     training_loss.append(running_loss / (i + 1))
+    test_loss.append(running_loss_test.detach().numpy())
 
 # save the trained model
 PATH = './model_multi.pth'
 torch.save(model.state_dict(), PATH)
 
-
-# Validate model on validation data
-testdata = Data(X_test, y_test)
-testloader = DataLoader(testdata, batch_size=batch_size,
-                        shuffle=True)
 
 # Validate trained model using the test dataset
 with torch.no_grad():
@@ -289,12 +197,14 @@ with torch.no_grad():
     print(f'L1 Loss on test dataset, real numbers: {loss / (i + 1):.5f}')
 
 
+epochss = np.arange(100, epochs)
 fig, ax1 = plt.subplots()
-ax1.plot(training_loss)
+ax1.plot(epochss, training_loss[100:], label='Training loss')
+ax1.plot(epochss, test_loss[100:], label='Test loss')
 ax1.set_xlabel(r'Epoch')
 ax1.set_ylabel(r'Training loss')
-ax1.set_ylim(0, 0.01)
+#ax1.set_ylim(0, 0.01)
+#ax1.set_xlim(100, epochs)
+plt.legend()
 plt.show()
 
-
-predictions = model(torch.tensor(X_test, dtype=torch.float32))

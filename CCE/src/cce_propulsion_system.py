@@ -113,7 +113,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         induced_power, friction_loss, aux_loss, heat_loss, P_fuel_pump, bore_match, error, P_circumv \
         = misc.match_power_nn(data_piston, meta_model, power_req_single, core_flow=m31/nr_engines, surrogate_status=surrogate)
 
-    # if engine was not able to match power requirements, return error
+    # if engine was not able to match power requirements or negative air flow, return error
     if error:
         return 999, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
 

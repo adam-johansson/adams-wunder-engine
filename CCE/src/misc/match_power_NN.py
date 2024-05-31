@@ -21,6 +21,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     cr = data[7]
     p_ratio = data[2]
     v_mean = data[10]
+    T_fuel = data[25]
 
     #print(pin, Tin)
     # fuel type
@@ -41,7 +42,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             # get the output of the surrogate
             # TODO: CHANGE THIS TO FIT NN
 
-            piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, far34, p_ratio, v_mean]))
+            piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, far34, p_ratio, v_mean, T_fuel]))
             T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
 
             induced_power = induced_power*1e3
@@ -57,8 +58,16 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         m_circumvent = core_flow - air_flow
         if m_circumvent < 0:
             return 1e6
-        pressure_circ, T_circumv, P_circumv = \
-            components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99)
+
+        # dont need compress negative pressure ratio
+        if p_ratio < 1:
+            p_ratio_circ = 1
+            pressure_circ, T_circumv, P_circumv = \
+                components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio_circ * 0.99 * 0.99)
+        else:
+            pressure_circ, T_circumv, P_circumv = \
+                components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99)
+
 
         # mix circumventing flow
         #equ34 = far34 / far_s
@@ -100,6 +109,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
 
         #print(f'match_power_nn residual: {residual}, piston_input: {piston_input}')
+        #print(f'match_power_nn residual: {residual}, far: {x[0]}')
 
         return residual
 
@@ -132,7 +142,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     if surrogate_status:
         # get the output of the surrogate
         # TODO: CHANGE THIS TO FIT NN
-        piston_input_final = np.atleast_2d(np.array([pin, Tin, cr, bore, far34_final, p_ratio_final, v_mean]))
+        piston_input_final = np.atleast_2d(np.array([pin, Tin, cr, bore, far34_final, p_ratio_final, v_mean, T_fuel]))
 
         T34_final, air_flow_final, p_max_final, T_max_final, induced_power_final, heat_loss_final, p_tdc_final\
             = nn_output(piston_input_final, meta_model)
@@ -150,10 +160,22 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
     # power needed to compress circumventing air
     m_circumvent_final = core_flow - air_flow_final
-    #if m_circumvent_final < 0:
-    #    print(f'Flow through piston engine is smaller than core flow with {m_circumvent_final} [kg/s].')
-    p_circ_final, T_circ_final, P_circumv_final = \
-        components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_final * 0.99 * 0.99)
+    if m_circumvent_final < 0:
+        error = True
+        #print(f'Flow through piston engine is smaller than core flow with {m_circumvent_final} [kg/s].')
+        return 0, 0, 0, 0, 0, 0, 0, 0, 0, \
+            0, 0, 0, 0, 0, \
+            0, 0, 0, 0, 0, error, 0
+
+
+    # negative pressure ratio dont need to compress
+    if p_ratio_final < 1:
+        p_ratio_circ_final = 1
+        p_circ_final, T_circ_final, P_circumv_final = \
+            components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_circ_final * 0.99 * 0.99)
+    else:
+        p_circ_final, T_circ_final, P_circumv_final = \
+            components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_final * 0.99 * 0.99)
 
     # mix circumventing flow
     equ34 = far34_final / far_s

@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 def load_nn():
 
     # import data just to know the scale
-    X = pd.read_csv('../piston_engine/sampled_data/h2/x_cleaned.csv', index_col=0)
-    y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
+    X = pd.read_csv('../piston_engine/sampled_data/h2/x.csv', index_col=0)
+    y = pd.read_csv('../piston_engine/sampled_data/h2/y.csv', index_col=0)
 
     # convert to numpy arrays
     X = pd.DataFrame.to_numpy(X)
@@ -30,89 +30,31 @@ def load_nn():
     y_scaler = StandardScaler()
     y_scaled = y_scaler.fit_transform(y)
 
-
-
-    class NET3(nn.Module):
+    class NET(nn.Module):
         '''Regression Model
         '''
 
-        def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int, hidden_dim3: int, output_dim: int) -> None:
-            '''The network has 4 layers
-                 - input layer
-                 - hidden layer
-                 - hidden layer
-                 - output layer
-            '''
-            super(NET3, self).__init__()
-            self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
-            self.hidden_layer_1 = nn.Linear(hidden_dim1, hidden_dim2)
-            self.hidden_layer_2 = nn.Linear(hidden_dim2, hidden_dim3)
-            self.hidden_to_output = nn.Linear(hidden_dim3, output_dim)
+        def __init__(self, n_layers: int, input_dim: int, hidden_dim: int, output_dim: int) -> None:
+            super(NET, self).__init__()
+            self.input_to_hidden = nn.Linear(input_dim, hidden_dim)
+            self.hidden = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
+            self.hidden_to_output = nn.Linear(hidden_dim, output_dim)
             self.ReLu = nn.ReLU()  # activation function
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             x = self.input_to_hidden(x)
             x = self.ReLu(x)
-            x = self.hidden_layer_1(x)
-            x = self.ReLu(x)
-            x = self.hidden_layer_2(x)
-            x = self.ReLu(x)
+            for layer in self.hidden:
+                x = layer(x)
+                x = self.ReLu(x)
             x = self.hidden_to_output(x)
+
             return x
 
-    class NET2(nn.Module):
-        '''Regression Model
-        '''
-
-        def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int,
-                     output_dim: int) -> None:
-            '''The network has 4 layers
-                 - input layer
-                 - hidden layer
-                 - hidden layer
-                 - output layer
-            '''
-            super(NET2, self).__init__()
-            self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
-            self.hidden_layer_1 = nn.Linear(hidden_dim1, hidden_dim2)
-            self.hidden_to_output = nn.Linear(hidden_dim2, output_dim)
-            self.ReLu = nn.ReLU()  # activation function
-
-        def forward(self, x: torch.Tensor) -> torch.Tensor:
-            x = self.input_to_hidden(x)
-            x = self.ReLu(x)
-            x = self.hidden_layer_1(x)
-            x = self.ReLu(x)
-            x = self.hidden_to_output(x)
-            return x
-
-    class NET1(nn.Module):
-        '''Regression Model
-        '''
-
-        def __init__(self, input_dim: int, hidden_dim1: int,
-                     output_dim: int) -> None:
-            '''The network has 4 layers
-                 - input layer
-                 - hidden layer
-                 - hidden layer
-                 - output layer
-            '''
-            super(NET1, self).__init__()
-            self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
-            self.hidden_to_output = nn.Linear(hidden_dim1, output_dim)
-            self.ReLu = nn.ReLU()  # activation function
-
-        def forward(self, x: torch.Tensor) -> torch.Tensor:
-            x = self.input_to_hidden(x)
-            x = self.ReLu(x)
-            x = self.hidden_to_output(x)
-            return x
 
     # Create new model and load states
-    #model = NET3(7, 64, 32, 16, 8)
-    #model = NET2(7, 64, 32, 8)
-    model = NET1(7, 64, 8)
+
+    model = NET(8, 8, 256, 8)
     model.load_state_dict(torch.load("../neural_network/model_multi.pth"))
 
     bundle = [model, X_scaler, y_scaler]
