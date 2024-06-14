@@ -357,7 +357,7 @@ def plot_validation(phi, P, T, m, equ):
     ax1.tick_params(labelsize=fs)
     plt.legend(loc='best', frameon=True, fontsize=fs)
     ax1.grid()
-    plt.savefig('simulation_data/figures/m_validation.png', dpi=res, bbox_inches='tight')
+    plt.savefig('simulation_data/figures/m_validation.pdf', dpi=res, bbox_inches='tight')
 
     fig, ax2 = plt.subplots(figsize=figsize)
     ax2.plot(phi_order * 180 / np.pi, equ_order, label='Piston model', color="k", lw=4)
@@ -370,7 +370,7 @@ def plot_validation(phi, P, T, m, equ):
     ax2.tick_params(labelsize=fs)
     plt.legend(loc='best', frameon=True, fontsize=fs)
     ax2.grid()
-    plt.savefig('simulation_data/figures/equ_validation.png', dpi=res, bbox_inches='tight')
+    plt.savefig('simulation_data/figures/equ_validation.pdf', dpi=res, bbox_inches='tight')
 
     fig, ax3 = plt.subplots(figsize=figsize)
     ax3.plot(phi_order * 180 / np.pi, T_order, label='Piston model', color="k", lw=4)
@@ -383,7 +383,7 @@ def plot_validation(phi, P, T, m, equ):
     ax3.tick_params(labelsize=fs)
     plt.legend(loc='best', frameon=True, fontsize=fs)
     ax3.grid()
-    plt.savefig('simulation_data/figures/T_validation.png', dpi=res, bbox_inches='tight')
+    plt.savefig('simulation_data/figures/T_validation.pdf', dpi=res, bbox_inches='tight')
 
     fig, ax4 = plt.subplots(figsize=figsize)
     ax4.plot(phi_order * 180 / np.pi, p_order * 1e-5, label='Piston model', color="k", lw=4)
@@ -396,8 +396,57 @@ def plot_validation(phi, P, T, m, equ):
     ax4.tick_params(labelsize=fs)
     plt.legend(loc='best', frameon=True, fontsize=fs)
     ax4.grid()
-    plt.savefig('simulation_data/figures/p_validation.png', dpi=res, bbox_inches='tight')
+    plt.savefig('simulation_data/figures/p_validation.pdf', dpi=res, bbox_inches='tight')
     plt.show()
+
+    # create output data for tikz
+    phi_transpose = np.atleast_2d(phi_order * 180 / np.pi).T
+    phi_transpose = phi_transpose[::100]
+
+    m_transpose = np.atleast_2d(m_order*1000).T
+    m_transpose = m_transpose[::100]
+
+    equ_transpose = np.atleast_2d(equ_order).T
+    equ_transpose = equ_transpose[::100]
+
+    T_transpose = np.atleast_2d(T_order).T
+    T_transpose = T_transpose[::100]
+
+    p_transpose = np.atleast_2d(p_order * 1e-5).T
+    p_transpose = p_transpose[::100]
+
+
+
+    ca_NASA_transpose = np.atleast_2d(ca_NASA_order).T
+    m_NASA_transpose = np.atleast_2d(m_NASA_order*1000).T
+    equ_NASA_transpose = np.atleast_2d(equ_NASA_order).T
+    T_NASA_transpose = np.atleast_2d(T_NASA_order).T
+    p_NASA_transpose = np.atleast_2d(p_NASA_order).T
+
+    m_sim = np.concatenate((phi_transpose, m_transpose), axis=1)
+    m_true = np.concatenate((ca_NASA_transpose, m_NASA_transpose), axis=1)
+
+    equ_sim = np.concatenate((phi_transpose, equ_transpose), axis=1)
+    equ_true = np.concatenate((ca_NASA_transpose, equ_NASA_transpose), axis=1)
+
+    T_sim = np.concatenate((phi_transpose, T_transpose), axis=1)
+    T_true = np.concatenate((ca_NASA_transpose, T_NASA_transpose), axis=1)
+
+    p_sim = np.concatenate((phi_transpose, p_transpose), axis=1)
+    p_true = np.concatenate((ca_NASA_transpose, p_NASA_transpose), axis=1)
+
+
+    np.savetxt("validation_output_data/m_validation.dat", m_true, fmt='%.5f')
+    np.savetxt("validation_output_data/m_simulation.dat", m_sim, fmt='%.5f')
+
+    np.savetxt("validation_output_data/equ_validation.dat", equ_true, fmt='%.5f')
+    np.savetxt("validation_output_data/equ_simulation.dat", equ_sim, fmt='%.5f')
+
+    np.savetxt("validation_output_data/T_validation.dat", T_true, fmt='%.5f')
+    np.savetxt("validation_output_data/T_simulation.dat", T_sim, fmt='%.5f')
+
+    np.savetxt("validation_output_data/p_validation.dat", p_true, fmt='%.5f')
+    np.savetxt("validation_output_data/p_simulation.dat", p_sim, fmt='%.5f')
 
     return
 

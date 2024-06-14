@@ -63,17 +63,17 @@ traindata = Data(X_train, y_train)
 testdata = Data(X_test, y_test)
 
 
-batch_size = 64
-epochs = 600
+batch_size = 25
+epochs = 400
 
 # number of neurons of hidden layers
-hidden_dim = 128
+hidden_dim1 = 75
+hidden_dim2 = 50
+hidden_dim3 = 25
 
-# number of hidden layers
-layers = 3
 
 lr = 1e-2
-weight_decay = 1e-2
+weight_decay = 0.0
 
 # Load the training data into data loader with the
 # respective batch_size
@@ -89,20 +89,22 @@ class NET(nn.Module):
     '''Regression Model
     '''
 
-    def __init__(self, n_layers: int, input_dim: int, hidden_dim: int, output_dim: int) -> None:
+    def __init__(self, input_dim: int, hidden_dim1: int, hidden_dim2: int, hidden_dim3: int, output_dim: int) -> None:
 
         super(NET, self).__init__()
-        self.input_to_hidden = nn.Linear(input_dim, hidden_dim)
-        self.hidden = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
-        self.hidden_to_output = nn.Linear(hidden_dim, output_dim)
+        self.input_to_hidden = nn.Linear(input_dim, hidden_dim1)
+        self.hidden1 = nn.Linear(hidden_dim1, hidden_dim2)
+        self.hidden2 = nn.Linear(hidden_dim2, hidden_dim3)
+        self.hidden_to_output = nn.Linear(hidden_dim3, output_dim)
         self.ReLu = nn.ReLU()  # activation function
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_to_hidden(x)
+        #x = self.ReLu(x)
+        x = self.hidden1(x)
         x = self.ReLu(x)
-        for layer in self.hidden:
-            x = layer(x)
-            x = self.ReLu(x)
+        x = self.hidden2(x)
+        x = self.ReLu(x)
         x = self.hidden_to_output(x)
 
         return x
@@ -115,7 +117,7 @@ input_dim = X_train.shape[1]
 output_dim = y_train.shape[1]
 
 # initiate the regression model
-model = NET(layers, input_dim, hidden_dim, output_dim)
+model = NET(input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim)
 
 
 print(model)
@@ -128,7 +130,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
 # learning rate scheduler
-scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, factor=0.5)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10, factor=0.5)
 
 # saving losses for each epoch to visualize
 training_loss = []
@@ -165,7 +167,7 @@ for epoch in range(epochs):
 
     # update learning rate
     # normally use val loss but for overfitting use training loss
-    scheduler.step(running_loss_test)
+    scheduler.step(running_loss / (i + 1))
     lr = optimizer.param_groups[0]["lr"]
 
     # display statistics
@@ -180,7 +182,7 @@ for epoch in range(epochs):
     test_loss.append(running_loss_test.detach().numpy())
 
 # save the trained model
-PATH = 'model_multi.pth'
+PATH = 'model_multi_variable.pth'
 torch.save(model.state_dict(), PATH)
 
 

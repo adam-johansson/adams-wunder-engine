@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import pandas as pd
 from torcheval.metrics import R2Score
+import numpy as np
+import math
 
 import matplotlib.pyplot as plt
 
@@ -12,8 +14,8 @@ import matplotlib.pyplot as plt
 
 
 # import data  IN FUTURE JUST IMPORT ONE CSV FILE
-X = pd.read_csv('../piston_engine/sampled_data/h2/x.csv', index_col=0)
-y = pd.read_csv('../piston_engine/sampled_data/h2/y.csv', index_col=0)
+X = pd.read_csv('../piston_engine/sampled_data/h2/X_cleaned.csv', index_col=0)
+y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -35,11 +37,11 @@ y_scaled = y_scaler.fit_transform(y)
 X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y_scaled, test_size=0.33, random_state=42)
 
-# NOTES:
-# 2 hidden layers with 32 neurons each seems good fit: R2 99.71 on test data
+
 #
 #
 #
+
 class NET(nn.Module):
     '''Regression Model
     '''
@@ -64,8 +66,8 @@ class NET(nn.Module):
 
 
 # Create new model and load states
-newmodel = NET(8, 8, 256, 8)
-newmodel.load_state_dict(torch.load("./model_multi.pth"))
+newmodel = NET(3, 8, 128, 8)
+newmodel.load_state_dict(torch.load("model_multi_4_128_relu.pth"))
 
 
 # convert to PyTorch tensors
@@ -255,8 +257,8 @@ plt.legend()
 
 fig = plt.figure()
 
-# heat_loss
-output = 6
+# p_tdc
+output = 7
 
 plt.subplot(1, 2, 1)
 plt.plot(y_test[:, output], y_test[:, output], 'b', lw=2, label='Actual')
@@ -274,4 +276,124 @@ plt.ylabel(r'Prediction')
 plt.title(f'Training data p_tdc')
 plt.legend()
 
-plt.show()
+#plt.show()
+
+for i in range(8):
+
+    # root square error
+    RSE = np.sqrt(np.square(np.subtract(y_test[:, i], y_pred_test[:, i]) ) )
+
+    # relative error
+    rel_error = np.divide(RSE, y_test[:, i])
+
+    # mean relative error
+    MRE_ptdc = rel_error.mean()
+
+
+    print(f'MRE: {MRE_ptdc} for output {i}')
+
+
+# go from 12 cylinders to 1
+power_pred_trimmed = y_pred_test[:, 5] / 12
+power_val_trimmed = y_test[:,5] / 12
+power_pred_trimmed = np.atleast_2d(power_pred_trimmed).T
+power_val_trimmed = np.atleast_2d(power_val_trimmed).T
+
+power_trimmed = np.concatenate((power_val_trimmed, power_pred_trimmed), axis=1)
+
+power_trimmed = power_trimmed[power_trimmed[:, 0].argsort()]
+
+#mask = power_trimmed[:, 0] < 1500
+
+#power_trimmed = power_trimmed[mask]
+
+mask = power_trimmed[:, 0] > 1
+
+power_trimmed = power_trimmed[mask]
+
+# root square error
+RSE = np.sqrt(np.square(np.subtract(power_trimmed[:, 0], power_trimmed[:, 1])))
+
+# relative error
+rel_error = np.divide(RSE, power_trimmed[:, 0])
+
+# mean relative error
+MRE_ptdc = rel_error.mean()
+
+print(f'MRE: {MRE_ptdc} for power over 5 kW')
+
+
+
+
+
+
+
+fs = 52
+figsize = (24, 16)
+res = 50
+
+
+
+
+fig, ax1 = plt.subplots(figsize=figsize)
+ax1.plot(y_test[:, 0], y_test[:, 0], 'b', lw=2, label='Actual')
+ax1.scatter(y_test[:, 0], y_pred_test[:, 0], label='Prediction', color="r", s=32)
+
+ax1.set_xlabel(r'Actual $T_2$ [K]', fontsize=fs)
+ax1.set_ylabel(r'Predicted $T_2$ [K]', fontsize=fs)
+ax1.set_title(r'$T_2$ prediction on validation data set', fontsize=fs)
+#ax1.set_xlim(710, 770)
+#ax1.set_xticks([720, 730, 740, 750, 760, 770])
+#ax1.set_ylim(0, 14)
+#ax1.set_yticks([0, 2, 4, 6, 8, 10, 12, 14])
+ax1.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+#ax1.grid()
+#plt.savefig('T_out_validation.pdf', dpi=res, bbox_inches='tight')
+
+
+
+fig, ax2 = plt.subplots(figsize=figsize)
+ax2.plot(y_test[:, 5] / 12, y_test[:, 5] / 12, 'b', lw=2, label='Actual')
+ax2.scatter(y_test[:, 5] / 12, y_pred_test[:, 5] / 12, label='Prediction', color="r", s=32)
+ax2.set_xlabel(r'Actual $P_i$ [kW]', fontsize=fs)
+ax2.set_ylabel(r'Predicted $P_i$ [kW]', fontsize=fs)
+ax2.set_title(r'$P_i$ prediction on validation data set', fontsize=fs)
+#ax2.set_xlim(660, 810)
+#ax2.set_xticks([690, 720, 750, 780, 810])
+#ax2.set_ylim(0, 55)
+#ax2.set_yticks([0, 10, 20, 30, 40, 50])
+ax2.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+#ax2.grid()
+#plt.savefig('power_validation.pdf', dpi=res, bbox_inches='tight')
+
+#plt.show()
+
+
+
+power_transpose = np.atleast_2d(y_test[:, 5] / 12).T
+power_pred_transpose = np.atleast_2d(y_pred_test[:, 5] / 12).T
+
+power_true = np.concatenate((power_transpose, power_transpose), axis=1)
+power_pred = np.concatenate((power_transpose, power_pred_transpose), axis=1)
+power_true = power_true[power_true[:, 0].argsort()]
+power_pred = power_pred[power_pred[:, 0].argsort()]
+
+T2_transpose = np.atleast_2d(y_test[:, 0]).T
+T2_pred_transpose = np.atleast_2d(y_pred_test[:, 0]).T
+
+
+T2_true = np.concatenate((T2_transpose, T2_transpose), axis=1)
+T2_pred = np.concatenate((T2_transpose, T2_pred_transpose), axis=1)
+T2_true = T2_true[T2_true[:, 0].argsort()]
+T2_pred = T2_pred[T2_pred[:, 0].argsort()]
+
+#np.savetxt("nn_output_data/power_true.dat", power_true, fmt="%s")
+#np.savetxt("nn_output_data/power_pred.dat", power_pred, fmt="%s")
+#np.savetxt("nn_output_data/t2_true.dat", T2_true, fmt="%s")
+#np.savetxt("nn_output_data/t2_pred.dat", T2_pred, fmt="%s")
+
+
+
+

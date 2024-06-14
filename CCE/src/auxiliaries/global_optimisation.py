@@ -53,7 +53,11 @@ def global_optimisation(data, data_piston, flags, meta_model):
 
         # COST SHOULD BE SFC. BUT ALSO PENALISE SOME OTHER STUFF MAYBE
 
-        cost = sfc * 1e6
+        # Dont allow temperatures over 1350 out of piston engine pga valves
+        if T_out_piston > 1350:
+            cost = sfc * 1e6 + (T_out_piston - 1350) * 1e2
+        else:
+            cost = sfc * 1e6
         if cost < 5.0:
             print(f'bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, pi_pe: {x[3]}, cr: {x[4]}, fpr: {fpr}, bore: {x[5]}')
             print(sfc, F)

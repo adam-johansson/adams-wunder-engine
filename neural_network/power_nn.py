@@ -18,10 +18,11 @@ y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
+y = y[:, 5]
 
 # convert to PyTorch tensors
 X = torch.tensor(X, dtype=torch.float32)
-y = torch.tensor(y, dtype=torch.float32)
+y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
 
 # Normalize the data
 # Which scaler to use???
@@ -67,12 +68,12 @@ batch_size = 64
 epochs = 600
 
 # number of neurons of hidden layers
-hidden_dim = 128
+hidden_dim = 256
 
 # number of hidden layers
 layers = 3
 
-lr = 1e-2
+lr = 1e-3
 weight_decay = 1e-2
 
 # Load the training data into data loader with the
@@ -93,13 +94,13 @@ class NET(nn.Module):
 
         super(NET, self).__init__()
         self.input_to_hidden = nn.Linear(input_dim, hidden_dim)
-        self.hidden = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
-        self.hidden_to_output = nn.Linear(hidden_dim, output_dim)
+        self.hidden = nn.ModuleList([nn.Linear(hidden_dim // (2**i), hidden_dim // (2**(i+1))) for i in range(n_layers)])
+        self.hidden_to_output = nn.Linear(hidden_dim // (2**(n_layers)), output_dim)
         self.ReLu = nn.ReLU()  # activation function
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_to_hidden(x)
-        x = self.ReLu(x)
+        #x = self.ReLu(x)
         for layer in self.hidden:
             x = layer(x)
             x = self.ReLu(x)
@@ -121,7 +122,8 @@ model = NET(layers, input_dim, hidden_dim, output_dim)
 print(model)
 
 # criterion to computes the loss between input and target
-criterion = nn.MSELoss()
+#criterion = nn.MSELoss()
+criterion = nn.L1Loss()
 
 # optimizer that will be used to update weights and biases
 
@@ -180,7 +182,7 @@ for epoch in range(epochs):
     test_loss.append(running_loss_test.detach().numpy())
 
 # save the trained model
-PATH = 'model_multi.pth'
+PATH = 'model_power.pth'
 torch.save(model.state_dict(), PATH)
 
 

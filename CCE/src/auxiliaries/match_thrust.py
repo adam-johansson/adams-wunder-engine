@@ -74,7 +74,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
     if np.abs(thrust_final / m0 - Fs_goal) > 0.1:
         # if thrust didnt match raise error
         error = True
-        print('andra error funkar')
+        #print('andra error funkar')
         cost = sfc_final + np.abs(thrust_final / m0 - Fs_goal)
         return cost, 0, thrust_final, m0, error, opt_fpr[0], p_max, T_max, T_in_piston, T_out_piston,\
         TET, far_piston

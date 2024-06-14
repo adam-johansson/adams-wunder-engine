@@ -12,8 +12,8 @@ from CCE.src.thermo.fuel_func import fuel_props
 # input_file = "4T_HP"
 #input_file = "4stroke"
 #input_file = "4stroke_kaiser"
-input_file = "4stroke_hydrogen"
-#input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
+#input_file = "4stroke_hydrogen"
+input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
 #input_file = "nasa_validation_singlewiebe"
 input_dir = "input"
 path = input_dir + "." + input_file
@@ -23,9 +23,11 @@ d = importlib.import_module(path)
 # flags: plot_all, plot_essentials, plot_convergence, validation, output_all, output_power
 # sweep, plot_details
 
+# to plot validation: first run validation case then run load
+
 #flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # validation case
 #flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
-flags = ['single', 'output_all']  # normal case no plots
+flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['sweep']  # parametric study
 #flags = ['optimise']  # optimisation
 #flags = ['load']
@@ -41,8 +43,10 @@ if 'single' in flags:
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
         heat_loss, p_tdc = run_piston_engine(data, flags)
     end = timer()
-    print(far / 0.02923)
-    print(p_tdc*1e-5)
+    #print(far / 0.02923)
+    print(far)
+    print(d.throttle - far)
+    #print(p_tdc*1e-5)
     #0.01124952812
     #print(f'Induced power: {induced_power * 1e-3} [kW]')
     #print(f'PE losses: {friction_loss * 1e-6} [MW]')

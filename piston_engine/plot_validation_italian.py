@@ -139,7 +139,7 @@ ax1.set_yticks([0, 2, 4, 6, 8, 10, 12, 14])
 ax1.tick_params(labelsize=fs)
 plt.legend(loc='best', frameon=True, fontsize=fs)
 ax1.grid()
-#plt.savefig('simulation_data/figures/Q_validation_h2.png', dpi=res, bbox_inches='tight')
+plt.savefig('simulation_data/figures/Q_validation_h2.pdf', dpi=res, bbox_inches='tight')
 
 
 
@@ -160,9 +160,75 @@ ax2.set_yticks([0, 10, 20, 30, 40, 50])
 ax2.tick_params(labelsize=fs)
 plt.legend(loc='best', frameon=True, fontsize=fs)
 ax2.grid()
-#plt.savefig('simulation_data/figures/p_validation_h2.png', dpi=res, bbox_inches='tight')
+plt.savefig('simulation_data/figures/p_validation_h2.pdf', dpi=res, bbox_inches='tight')
 
 plt.show()
+
+# create output data for tikz
+
+
+# simulation data
+Qd04_transpose = np.atleast_2d(Qd_04).T
+Qd04_transpose = Qd04_transpose[::10]
+Qd06_transpose = np.atleast_2d(Qd_06).T
+Qd06_transpose = Qd06_transpose[::10]
+Qd08_transpose = np.atleast_2d(Qd_08).T
+Qd08_transpose = Qd08_transpose[::10]
+phi2_transpose = np.atleast_2d(phi2).T
+phi2_transpose = phi2_transpose[::10]
+
+p04_transpose = np.atleast_2d(p_04*1e-5).T
+p04_transpose = p04_transpose[::10]
+p06_transpose = np.atleast_2d(p_06*1e-5).T
+p06_transpose = p06_transpose[::10]
+p08_transpose = np.atleast_2d(p_08*1e-5).T
+p08_transpose = p08_transpose[::10]
+phi_transpose = np.atleast_2d(phi_deg).T
+phi_transpose = phi_transpose[::10]
+
+Qd04_transpose_val = np.atleast_2d(Q_val_04['Q']).T
+Qd04_transpose_val_phi = np.atleast_2d(Q_val_04['ca']).T
+
+Qd06_transpose_val = np.atleast_2d(Q_val_06['Q']).T
+Qd06_transpose_val_phi = np.atleast_2d(Q_val_06['ca']).T
+
+Qd08_transpose_val = np.atleast_2d(Q_val_08['Q']).T
+Qd08_transpose_val_phi = np.atleast_2d(Q_val_08['ca']).T
+
+p04_transpose_val = np.atleast_2d(p_val_04['p']).T
+p04_transpose_val_phi = np.atleast_2d(p_val_04['ca']).T
+
+p06_transpose_val = np.atleast_2d(p_val_06['p']).T
+p06_transpose_val_phi = np.atleast_2d(p_val_06['ca']).T
+
+p08_transpose_val = np.atleast_2d(p_val_08['p']).T
+p08_transpose_val_phi = np.atleast_2d(p_val_08['ca']).T
+
+
+
+
+Q_sim = np.concatenate((phi2_transpose, Qd04_transpose, Qd06_transpose, Qd08_transpose), axis=1)
+p_sim = np.concatenate((phi_transpose, p04_transpose, p06_transpose, p08_transpose), axis=1)
+
+Q04_val = np.concatenate((Qd04_transpose_val_phi, Qd04_transpose_val), axis=1)
+Q06_val = np.concatenate((Qd06_transpose_val_phi, Qd06_transpose_val), axis=1)
+Q08_val = np.concatenate((Qd08_transpose_val_phi, Qd08_transpose_val), axis=1)
+
+p04_val = np.concatenate((p04_transpose_val_phi, p04_transpose_val), axis=1)
+p06_val = np.concatenate((p06_transpose_val_phi, p06_transpose_val), axis=1)
+p08_val = np.concatenate((p08_transpose_val_phi, p08_transpose_val), axis=1)
+
+
+np.savetxt("validation_output_data/H2/Q_sim.dat", Q_sim, fmt='%.5f')
+np.savetxt("validation_output_data/H2/p_sim.dat", p_sim, fmt='%.5f')
+
+np.savetxt("validation_output_data/H2/Q04_val.dat", Q04_val, fmt='%.5f')
+np.savetxt("validation_output_data/H2/Q06_val.dat", Q06_val, fmt='%.5f')
+np.savetxt("validation_output_data/H2/Q08_val.dat", Q08_val, fmt='%.5f')
+
+np.savetxt("validation_output_data/H2/p04_val.dat", p04_val, fmt='%.5f')
+np.savetxt("validation_output_data/H2/p06_val.dat", p06_val, fmt='%.5f')
+np.savetxt("validation_output_data/H2/p08_val.dat", p08_val, fmt='%.5f')
 
 
 p_04 = np.array(p_04)
@@ -181,7 +247,7 @@ phi_val_06_interp = np.linspace(phi_val_06[0], phi_val_06[-1], 1000)
 phi_val_08_interp = np.linspace(phi_val_08[0], phi_val_08[-1], 1000)
 
 
-# linear interplation
+# linear interplation to better integrate the validation data
 #p_val_08_interp = np.interp(phi_val_08_interp, phi_val_08, p_val_08)
 
 # cubic spline interpolation
@@ -212,25 +278,27 @@ phi_deg_08 = phi_deg.reset_index(drop=True)
 
 plt.scatter(phi_deg_04[mask], p_04_filtered * 1e-5)
 plt.scatter(phi_val_04_interp, p_val_04_interp)
-plt.show()
+#plt.show()
 
 plt.scatter(phi_deg_06[mask], p_06_filtered * 1e-5)
 plt.scatter(phi_val_06_interp, p_val_06_interp)
-plt.show()
+#plt.show()
 
 plt.scatter(phi_deg_08[mask], p_08_filtered * 1e-5)
 plt.scatter(phi_val_08_interp, p_val_08_interp)
-plt.show()
+#plt.show()
 
-
+# mean square error for pressure validation
 MSE_p_04 = np.square(np.subtract(p_04_filtered * 1e-5, p_val_04_interp)).mean()
 MSE_p_06 = np.square(np.subtract(p_06_filtered * 1e-5, p_val_06_interp)).mean()
 MSE_p_08 = np.square(np.subtract(p_08_filtered * 1e-5, p_val_08_interp)).mean()
 
+# root mean square error
 RMSE_p_04 = math.sqrt(MSE_p_04)
 RMSE_p_06 = math.sqrt(MSE_p_06)
 RMSE_p_08 = math.sqrt(MSE_p_08)
 
+# norm
 RMSE_p_norm_04 = RMSE_p_04 / (p_04_filtered.max() - p_04_filtered.min()) * 1e5
 RMSE_p_norm_06 = RMSE_p_06 / (p_06_filtered.max() - p_06_filtered.min()) * 1e5
 RMSE_p_norm_08 = RMSE_p_08 / (p_08_filtered.max() - p_08_filtered.min()) * 1e5
@@ -240,9 +308,9 @@ print(f'06 MSE: {MSE_p_06}')
 print(f'08 MSE: {MSE_p_08}')
 
 
-print(f'04 MSE: {RMSE_p_04}')
-print(f'06 MSE: {RMSE_p_06}')
-print(f'08 MSE: {RMSE_p_08}')
+print(f'04 RMSE: {RMSE_p_04}')
+print(f'06 RMSE: {RMSE_p_06}')
+print(f'08 RMSE: {RMSE_p_08}')
 
 
 print(f'04 RMSE norm: {RMSE_p_norm_04}')
@@ -251,16 +319,23 @@ print(f'08 RMSE norm: {RMSE_p_norm_08}')
 
 
 # this if for peak pressure validation
-"""
 print(p_08.max() * 1e-5)
-print(p_val_08['p'].max())
-print(p_08.max() * 1e-5 / p_val_08['p'].max() - 1)
+print(p_val_08.max())
+print(p_08.max() * 1e-5 / p_val_08.max() - 1)
 
 print(p_06.max() * 1e-5)
-print(p_val_06['p'].max())
-print(1 - p_06.max() * 1e-5 / p_val_06['p'].max())
+print(p_val_06.max())
+print(1 - p_06.max() * 1e-5 / p_val_06.max())
 
 print(p_04.max() * 1e-5)
-print(p_val_04['p'].max())
-print((p_04.max() * 1e-5 / p_val_04['p'].max() - 1)*100)
-"""
+print(p_val_04.max())
+print((p_04.max() * 1e-5 / p_val_04.max() - 1)*100)
+
+
+
+
+
+
+
+
+

@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MCR_H2"
+input_file = "MCR_H2_opt"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -19,9 +19,9 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ['single', 'print_output']  # normal case
-#flags = ['single']
+flags = ['single']
 #flags = ['sweep']
-flags = ['optim']
+#flags = ['optim']
 
 p_in_dummy = 1
 T_in_dummy = 1
@@ -48,14 +48,15 @@ meta_model = surrogate.load_nn()
 
 if 'single' in flags:
     start = timer()
-    #sfc, v_ratio, thrust, m0, error, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
-    #    = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+    sfc, v_ratio, thrust, m0, error, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
+        = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
 
-    sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
-       = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
+    #sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
+    #   = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
 
     end = timer()
     print(sfc*1e6)
+    print(far_piston)
     print(thrust / m0)
     print(m0)
     print(v_ratio)

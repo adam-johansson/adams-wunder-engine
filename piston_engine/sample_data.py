@@ -49,7 +49,7 @@ v_mean_lim = [5, 20]
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 1000  # points per variable
+npoints = 2000  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube

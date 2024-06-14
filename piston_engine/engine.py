@@ -102,7 +102,7 @@ def run_piston_engine(indata, flags):
 
     if 'validation' in flags:
         Qf = LHV * mf_tot
-        m_air_theo = V1[np.argwhere(phi >= phi_close_in)[0][0]] * rho_in
+        m_air_theo = V1[np.argwhere(phi >= phi_close_out)[0][0]] * rho_in
         far_tot = mf_tot / m_air_theo
     else:
         # Calculating fuel mass based on desired fuel air ratio
@@ -466,6 +466,7 @@ def run_piston_engine(indata, flags):
             Tdiff.append(np.abs(sol.y[0][-1] - T[-1][-1]))
             equdiff.append(np.abs(sol.y[9][-1] - equ[-1][-1]))
 
+
         T.append(sol.y[0])
         V.append(sol.y[1])
         Q.append(sol.y[2])
@@ -495,11 +496,20 @@ def run_piston_engine(indata, flags):
             print(f"iter {i + 1} of {it}")
 
         # These values can be motivated at a later stage
-        p_lim = 1e-1
-        m_lim = 1e-7
-        T_lim = 1e-3
-        T_out_lim = 1e-3
-        equ_lim = 1e-5
+        if 'validation' in flags:
+            p_lim = 1e0
+            m_lim = 1e-1
+            T_lim = 1e-1
+            T_out_lim = 1e-1
+            equ_lim = 1e-1
+
+        else:
+
+            p_lim = 1e-1
+            m_lim = 1e-7
+            T_lim = 1e-3
+            T_out_lim = 1e-3
+            equ_lim = 1e-5
 
         equ_avg = (mf[-1][-1] / m_in_IP[-1][-1]) / far_s
 
@@ -524,6 +534,7 @@ def run_piston_engine(indata, flags):
 
         if i > 0:
             T_out_diff.append(np.abs(T_out[-1] - T_out[-2]))
+            #print(mdiff[-1], pdiff[-1], Tdiff[-1], equdiff[-1], T_out_diff[-1])
 
         # Checking if simulation has converged (minimum 3 simulations)
         if i > 1 and pdiff[-1] < p_lim and mdiff[-1] < m_lim and Tdiff[-1] < T_lim and pdiff[-2] < p_lim \

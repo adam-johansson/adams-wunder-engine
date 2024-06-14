@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 def load_nn():
 
     # import data just to know the scale
-    X = pd.read_csv('../piston_engine/sampled_data/h2/x.csv', index_col=0)
-    y = pd.read_csv('../piston_engine/sampled_data/h2/y.csv', index_col=0)
+    X = pd.read_csv('../piston_engine/sampled_data/h2/X_cleaned.csv', index_col=0)
+    y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
 
     # convert to numpy arrays
     X = pd.DataFrame.to_numpy(X)
@@ -43,7 +43,7 @@ def load_nn():
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             x = self.input_to_hidden(x)
-            x = self.ReLu(x)
+            #x = self.ReLu(x)
             for layer in self.hidden:
                 x = layer(x)
                 x = self.ReLu(x)
@@ -54,7 +54,7 @@ def load_nn():
 
     # Create new model and load states
 
-    model = NET(8, 8, 256, 8)
+    model = NET(3, 8, 128, 8)
     model.load_state_dict(torch.load("../neural_network/model_multi.pth"))
 
     bundle = [model, X_scaler, y_scaler]
