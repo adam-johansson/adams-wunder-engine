@@ -22,7 +22,7 @@ cylinders = 1
 d = 0.087  # diameter / bore (specified)
 # s = 0.074676  # stroke
 # rpm = v_mean / (2 * s) * 60
-v_mean = 2501 * 2 * 0.085 / 60 # mean velocity 1000 rpm (specified in tysk2)  4.533 = 1000
+v_mean = 2501 * 2 * 0.085 / 60 # mean velocity 2500 rpm
 # l_con = 0.182067  # rod length
 bsr = 0.087 / 0.085  # bore stroke ratio ( specified)
 

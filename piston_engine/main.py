@@ -13,7 +13,7 @@ from CCE.src.thermo.fuel_func import fuel_props
 #input_file = "4stroke"
 #input_file = "4stroke_kaiser"
 #input_file = "4stroke_hydrogen"
-input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
+input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_04_v2"
 #input_file = "nasa_validation_singlewiebe"
 input_dir = "input"
 path = input_dir + "." + input_file
@@ -25,9 +25,9 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-#flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # validation case
-#flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
-flags = ['single', 'output_all', 'save']  # normal case no plots
+#flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
+#flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['sweep']  # parametric study
 #flags = ['optimise']  # optimisation
 #flags = ['load']
@@ -44,8 +44,8 @@ if 'single' in flags:
         heat_loss, p_tdc = run_piston_engine(data, flags)
     end = timer()
     #print(far / 0.02923)
-    print(far)
-    print(d.throttle - far)
+    #print(far)
+    #print(d.throttle - far)
     #print(p_tdc*1e-5)
     #0.01124952812
     #print(f'Induced power: {induced_power * 1e-3} [kW]')

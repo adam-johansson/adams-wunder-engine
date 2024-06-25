@@ -60,13 +60,25 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max):
     s = s_meter * 1000
 
     # OBS!!! LÄS PÅ OM HUR MAN GÖR FÖR MÅNGA CYLINDRAR
+    if n_cyl == 1:
+        # this is for validation case of hydrogen. this is not a vee engine
+        v_engine = False
+    else:
+        # more than one cylinder (typical application case), we assume vee-configuration
+        v_engine = True
 
     # Crankshaft losses
     # NOTES: model sensitive to main bearing diameter predictions
+    if v_engine:
+        n_b = 1 + 0.5 * n_cyl  # number of bearings: (1 + n_cyl for inline and 1 + 0.5*n_cyl for V)
+        d_b = 0.62 * d  # main bearing diameter [mm]. ( this is for 2 connecting rods per crank pin (typical v8))
+        l_b = 0.4 * d_b  # main bearing length [mm] ( this is for 2 connecting rods per crank pin (typical v8))
+    else:
+        # two main bearings for single cylinder engine
+        n_b = 2
+        d_b = 0.6 * d  # for line engine
+        l_b = 0.37 * d_b  # line engine
 
-    n_b = 1 + 0.5 * n_cyl  # number of bearings: (1 + n_cyl for inline and 1 + 0.5*n_cyl for V)
-    d_b = 0.62 * d  # main bearing diameter [mm]. ( this is for 2 connecting rods per crank pin (typical v8))
-    l_b = 0.4 * d_b  # main bearing length [mm] ( this is for 2 connecting rods per crank pin (typical v8))
     n_c = n_cyl  # number of cylinders per crankshaft
 
     c_s = 1.22e5  # correlation constant kPa mm^2
@@ -86,8 +98,14 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max):
     c_g = 6.89
     K = 2.38e-2  # s/m
     c_bc = 3.03e-4
-    d_b_cr = 0.57 * d  # also for 2 rods/pin V engines
-    l_b_cr = 0.39 * d_b_cr  # also for 2 rods/pin V engines
+
+    if v_engine:
+        d_b_cr = 0.57 * d  # also for 2 rods/pin V engines
+        l_b_cr = 0.39 * d_b_cr  # also for 2 rods/pin V engines
+    else:
+        d_b_cr = 0.57 * d  # line engine
+        l_b_cr = 0.41 * d_b_cr  # line engine
+
     n_b_cr = n_cyl  # number of connecting rod bearings (same as number of cylinders?)
 
     fmep_skirt = c_ps * v_mean / d  # skirt losses
@@ -100,7 +118,6 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max):
 
     # Valvetrain losses  OBS: CHOSE ONE VALVE TRAIN AND MOTIVATE (DOHC direct acting)
 
-    v_engine = True
     if v_engine:
         camshafts = 2
     else:
@@ -128,8 +145,8 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max):
     # Auxiliary component losses (oil pump, water pump, non-charging alternator friction)
     fmep_aux = 6.23 + 5.22e-3 * rpm - 1.79e-7 * rpm**2
 
-    fmep = (fmep_crankshaft + fmep_piston + fmep_valvetrain) * 0.8 + fmep_aux
-    fmep_pe_loss = (fmep_crankshaft + fmep_piston + fmep_valvetrain) * 0.8  # 0.8 Kaiser's factor
+    fmep = (fmep_crankshaft + fmep_piston + fmep_valvetrain) + fmep_aux
+    fmep_pe_loss = (fmep_crankshaft + fmep_piston + fmep_valvetrain)  # 0.8 Kaiser's factor
     #fmep = (fmep_crankshaft + fmep_piston) * 1e3  # for two-stroke
 
     # multiply by 1000 so that the unit is Pa for output

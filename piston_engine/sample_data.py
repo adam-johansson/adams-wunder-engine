@@ -29,14 +29,14 @@ n_out = 8  # Number of outputs from the piston model
 start_sampling = timer()
 
 # limits for the sampling
-p_lim = [1e5, 10e5]  # limits for input pressure (3e5, 10e5)
+p_lim = [2e5, 70e5]  # limits for input pressure (3e5, 10e5)
 T_lim = [300, 1200]  # limits for input temperature (400, 1000)
 cr_lim = [4, 18]  # limits for geometric compression ratio (6, 12)
 d_lim = [0.05, 0.30]  # limits for bore (piston diameter) (0.08, 0.17)
 
 # THIS THROTTLE LIM IS FOR HYDROGEN
 throttle_lim = [0.02923 / 6, 0.02923 / 1.0]  # (0.02923 / 5, 0.02923 / 1.5)
-fuel_t_lim = [300, 500]
+fuel_t_lim = [100, 500]
 
 # THIS IS FOR JETA
 #throttle_lim = [0.06821 / 6, 0.06821 / 1.0]
@@ -49,7 +49,7 @@ v_mean_lim = [5, 20]
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 2000  # points per variable
+npoints = 3000  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
