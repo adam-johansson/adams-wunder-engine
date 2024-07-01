@@ -12,8 +12,8 @@ import torch.optim.lr_scheduler as lr_scheduler
 import matplotlib.pyplot as plt
 
 # import data
-X = pd.read_csv('../piston_engine/sampled_data/h2/X_cleaned.csv', index_col=0)
-y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
+X = pd.read_csv('./input_data/H2/x.csv', index_col=0)
+y = pd.read_csv('./input_data/H2/y.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -63,16 +63,16 @@ traindata = Data(X_train, y_train)
 testdata = Data(X_test, y_test)
 
 
-batch_size = 25
+batch_size = 128
 epochs = 400
 
 # number of neurons of hidden layers
-hidden_dim1 = 75
-hidden_dim2 = 50
-hidden_dim3 = 25
+hidden_dim = 512
 
+# number of hidden layers
+layers = 1
 
-lr = 1e-2
+lr = 1e-3
 weight_decay = 0.0
 
 # Load the training data into data loader with the
@@ -115,7 +115,7 @@ input_dim = X_train.shape[1]
 output_dim = y_train.shape[1]
 
 # initiate the regression model
-model = NET(input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim)
+model = NET(layers, input_dim, hidden_dim, output_dim)
 
 
 print(model)
@@ -169,7 +169,7 @@ for epoch in range(epochs):
     lr = optimizer.param_groups[0]["lr"]
 
     # display statistics
-    if not ((epoch + 1) % (epochs // 100)):
+    if not ((epoch + 1) % (epochs // 50)):
         print(f'Epochs:{epoch + 1:5d} | ' \
               f'Batches per epoch: {i + 1:3d} | ' \
               f'Training loss: {running_loss / (i + 1):.10f} | ' \
@@ -180,7 +180,7 @@ for epoch in range(epochs):
     test_loss.append(running_loss_test.detach().numpy())
 
 # save the trained model
-PATH = 'model_multi_halve.pth'
+PATH = './models/narrowing_256_3.pth'
 torch.save(model.state_dict(), PATH)
 
 
@@ -211,7 +211,8 @@ fig, ax1 = plt.subplots()
 ax1.plot(epochss, training_loss[20:], label='Training loss')
 ax1.plot(epochss, test_loss[20:], label='Test loss')
 ax1.set_xlabel(r'Epoch')
-ax1.set_ylabel(r'Training loss')
+ax1.set_ylabel(r'MSE loss')
+ax1.set_title(fr'Narrowing. Layers: {layers}, Neurons 1st hidden layer: {hidden_dim}')
 #ax1.set_ylim(0, 0.01)
 #ax1.set_xlim(100, epochs)
 plt.legend()

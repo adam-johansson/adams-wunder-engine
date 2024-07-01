@@ -12,12 +12,12 @@ p_validation_file_04 = 'validation/H2/p_2500_04_validation.csv'
 p_simulation_file_04 = 'validation/H2/p_2500_04_simulation_v2.csv'
 p_simulation_file_06 = 'validation/H2/p_2500_06_simulation_v2.csv'
 p_simulation_file_08 = 'validation/H2/p_2500_08_simulation_v2.csv'
-#p_simulation_file_08 = 'simulation_data/P.csv'
+p_simulation_file_08 = 'simulation_data/P.csv'
 
 Q_simulation_04_file = 'validation/H2/Q_2500_04_simulation_v2.csv'
 Q_simulation_06_file = 'validation/H2/Q_2500_06_simulation_v2.csv'
 Q_simulation_08_file = 'validation/H2/Q_2500_08_simulation_v2.csv'
-#Q_simulation_08_file = 'simulation_data/Qapparent.csv'
+Q_simulation_08_file = 'simulation_data/Qapparent.csv'
 
 Q_validation_file_08 = 'validation/H2/Q_2500_08_validation.csv'
 Q_validation_file_06 = 'validation/H2/Q_2500_06_validation.csv'
@@ -116,8 +116,8 @@ Q_08 = Q_08[mask]
 phi_deg = phi_deg[mask]
 phi_deg = phi_deg + 360
 
-fs = 52
-figsize = (24, 16)
+fs = 24
+figsize = (16, 8)
 res = 50
 
 
@@ -137,19 +137,19 @@ ax1.set_xticks([720, 730, 740, 750, 760, 770])
 ax1.set_ylim(0, 14)
 ax1.set_yticks([0, 2, 4, 6, 8, 10, 12, 14])
 ax1.tick_params(labelsize=fs)
-plt.legend(loc='best', frameon=True, fontsize=fs)
+#plt.legend(loc='best', frameon=True, fontsize=fs)
 ax1.grid()
-plt.savefig('simulation_data/figures/Q_validation_h2.pdf', dpi=res, bbox_inches='tight')
+#plt.savefig('simulation_data/figures/Q_validation_h2.pdf', dpi=res, bbox_inches='tight')
 
 
 
 fig, ax2 = plt.subplots(figsize=figsize)
 ax2.plot(p_val_08['ca'], p_val_08['p'], label='Exp 08', color="r", lw=4, linestyle='dashed')
 ax2.plot(phi_deg, p_08*1e-5, label='Sim 08', color="r", lw=4)
-ax2.plot(p_val_06['ca'], p_val_06['p'], label='Exp 06', color="b", lw=4, linestyle='dashed')
-ax2.plot(phi_deg, p_06*1e-5, label='Sim 06', color="b", lw=4)
-ax2.plot(p_val_04['ca'], p_val_04['p'], label='Exp 04', color="k", lw=4, linestyle='dashed')
-ax2.plot(phi_deg, p_04*1e-5, label='Sim 04', color="k", lw=4)
+#ax2.plot(p_val_06['ca'], p_val_06['p'], label='Exp 06', color="b", lw=4, linestyle='dashed')
+#ax2.plot(phi_deg, p_06*1e-5, label='Sim 06', color="b", lw=4)
+#ax2.plot(p_val_04['ca'], p_val_04['p'], label='Exp 04', color="k", lw=4, linestyle='dashed')
+#ax2.plot(phi_deg, p_04*1e-5, label='Sim 04', color="k", lw=4)
 ax2.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
 ax2.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
 ax2.set_title(r'$p - \theta$ diagram', fontsize=fs)
@@ -158,9 +158,9 @@ ax2.set_xticks([690, 720, 750, 780, 810])
 ax2.set_ylim(0, 55)
 ax2.set_yticks([0, 10, 20, 30, 40, 50])
 ax2.tick_params(labelsize=fs)
-plt.legend(loc='best', frameon=True, fontsize=fs)
+#plt.legend(loc='best', frameon=True, fontsize=fs)
 ax2.grid()
-plt.savefig('simulation_data/figures/p_validation_h2.pdf', dpi=res, bbox_inches='tight')
+#plt.savefig('simulation_data/figures/p_validation_h2.pdf', dpi=res, bbox_inches='tight')
 
 plt.show()
 
