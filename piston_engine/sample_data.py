@@ -36,7 +36,7 @@ d_lim = [0.05, 0.30]  # limits for bore (piston diameter) (0.08, 0.17)
 
 # THIS THROTTLE LIM IS FOR HYDROGEN
 throttle_lim = [0.02923 / 6, 0.02923 / 1.0]  # (0.02923 / 5, 0.02923 / 1.5)
-fuel_t_lim = [100, 500]
+fuel_t_lim = [100, 600]
 
 # THIS IS FOR JETA
 #throttle_lim = [0.06821 / 6, 0.06821 / 1.0]
