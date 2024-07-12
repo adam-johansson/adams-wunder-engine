@@ -13,7 +13,7 @@ cooling = "Woschni"
 opposed = False
 cr = 10.5
 
-cylinders = 12  # V12
+cylinders = 1  # for sampling data
 
 # piston
 d = 0.14  # diameter / bore
@@ -63,7 +63,7 @@ cd = 0.8
 
 eta_c = 1.0
 
-throttle = 0.02923 / 1.0
+throttle = 0.02923 / 1.5
 
 
 wiebe_type = "Single"

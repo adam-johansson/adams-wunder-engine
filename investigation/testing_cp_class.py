@@ -1,4 +1,4 @@
-from piston_engine.src.piston.polynomials import O2, N2, CO2, Ar, H2O
+from thermo import PureSubstance
 
 from CoolProp.CoolProp import PropsSI
 
@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-t = 1000
-p = 10e5
+t = 500
+p = 1e5
 
 N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
 x_O2_air = 1 / N_air  # molar fraction of O2
@@ -20,17 +20,23 @@ cpAr_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'Argon')
 cpH2O_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'H2O')
 cpCO2_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'CO2')
 
-cpN2, hn2, sN2, M_N2 = N2(t, p)
-cpO2, ho2, sO2, M_O2 = O2(t, p)
-cpCO2, hco2, sCO2, M_CO2 = CO2(t, p)
-cpH2O, hh2o, sH2O, M_H2O = H2O(t, p)
-cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
+N2 = PureSubstance("N2", temperature=t)
+O2 = PureSubstance("O2", temperature=t)
+Ar = PureSubstance("Ar", temperature=t)
+CO2 = PureSubstance("CO2", temperature=t)
+H2O = PureSubstance("H2O", temperature=t)
 
-print(f'N2. NASA:{cpN2}, CoolProp: {cpN2_cp}')
-print(f'O2. NASA:{cpO2}, CoolProp: {cpO2_cp}')
-print(f'Ar. NASA:{cp_Ar}, CoolProp: {cpAr_cp}')
-print(f'CO2. NASA:{cpCO2}, CoolProp: {cpCO2_cp}')
-print(f'H2O. NASA:{cpH2O}, CoolProp: {cpH2O_cp}')
+M_N2 = N2.molar_mass
+M_O2 = O2.molar_mass
+M_CO2 = CO2.molar_mass
+M_H2O = H2O.molar_mass
+M_Ar = Ar.molar_mass
+
+print(f'N2. NASA:{N2.heat_capacity()}, CoolProp: {cpN2_cp}')
+print(f'O2. NASA:{O2.heat_capacity()}, CoolProp: {cpO2_cp}')
+print(f'Ar. NASA:{Ar.heat_capacity()}, CoolProp: {cpAr_cp}')
+print(f'CO2. NASA:{CO2.heat_capacity()}, CoolProp: {cpCO2_cp}')
+print(f'H2O. NASA:{H2O.heat_capacity()}, CoolProp: {cpH2O_cp}')
 
 
 cp_Air_list = []
@@ -88,8 +94,9 @@ for equ in equ_list:
         mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
         mu_CO2 = 0.0  # no CO2 for H2
 
-    cp_Air    = cpN2 * mu_N2    + cpO2 * mu_O2    + cp_Ar * mu_Ar   + cpH2O * mu_H2O
-    cp_Air_cp = cpN2_cp * mu_N2 + cpO2_cp * mu_O2 + cpAr_cp * mu_Ar + cpH2O_cp * mu_H2O
+    cp_Air = N2.heat_capacity() * mu_N2 + O2.heat_capacity() * mu_O2 + Ar.heat_capacity() * mu_Ar + H2O.heat_capacity() * mu_H2O + CO2.heat_capacity() * mu_CO2
+
+    cp_Air_cp = cpN2_cp * mu_N2 + cpO2_cp * mu_O2 + cpAr_cp * mu_Ar + cpH2O_cp * mu_H2O + cpCO2_cp * mu_CO2
 
     cp_Air_list.append(cp_Air)
     cp_Air_cp_list.append(cp_Air_cp)

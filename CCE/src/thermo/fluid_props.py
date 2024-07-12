@@ -1,7 +1,7 @@
 from piston_engine.src.piston.polynomials import N2, O2, CO2, H2O, Ar
 
 
-def properties(t, equ, fuel_type = False):
+def properties(t, p, equ, fuel_type = False):
 
     """
     Function that return thermodynamic properties of a mixture based on the
@@ -56,11 +56,11 @@ def properties(t, equ, fuel_type = False):
     #x_Ar_air = 0.009365  # molar fraction of Ar
     #x_CO2_air = 0.000319  # molar fraction of CO2
 
-    cp_N2, h_N2, s_N2, M_N2 = N2(t)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t)
-    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t)
-    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t)
+    cp_N2, h_N2, s_N2, M_N2 = N2(t, p)
+    cp_O2, h_O2, s_O2, M_O2 = O2(t, p)
+    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
+    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p)
+    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p)
 
     M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_CO2_air * M_CO2
     # air consisting of N2, O2, Ar and CO2

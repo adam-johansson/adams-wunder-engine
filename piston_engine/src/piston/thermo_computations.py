@@ -2,7 +2,7 @@ from .polynomials import N2, O2, CO2, H2O, Ar
 from scipy.optimize import fsolve
 
 
-def mixture(equ, t, fuel_type):
+def mixture(equ, t, p, fuel_type):
     """
     Function that return thermodynamic properties of a mixture based on the 
     properties of the individual species. This is for a combustion gas of
@@ -15,6 +15,8 @@ def mixture(equ, t, fuel_type):
         stochiometric fuel air ratio.
     t : float
         Temperature of the gas.
+    p : float
+        Pressure of the gas mixture.
     fuel_type : string
         Type of fuel. H2 or jetA
 
@@ -34,7 +36,7 @@ def mixture(equ, t, fuel_type):
     gamma : float
         Isentropic exponent of the mixture.
     s : float
-        Specific entropy of the mixture. UNSURE ABOOUT THIS ONE
+        Specific entropy of the mixture. UNSURE ABOUT THIS ONE
 
     """
 
@@ -46,11 +48,12 @@ def mixture(equ, t, fuel_type):
     x_Ar_air = 0.0444 / N_air  # molar fraction of Ar
     x_CO2_air = 0  # no co2 in air for now
 
-    cp_N2, h_N2, s_N2, M_N2 = N2(t)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t)
-    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t)
-    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t)
+    # retrieve the molar masses
+    cp_N2, h_N2, s_N2, M_N2 = N2(t, p)
+    cp_O2, h_O2, s_O2, M_O2 = O2(t, p)
+    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
+    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p)
+    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p)
 
     M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_CO2_air * M_CO2
     # air consisting of N2, O2, Ar and CO2
@@ -113,6 +116,22 @@ def mixture(equ, t, fuel_type):
         else:
             raise Exception('Fuel type must be specified.')
 
+    # partial pressures
+    p_N2 = mu_N2 * p
+    p_O2 = mu_O2 * p
+    p_Ar = mu_Ar * p
+    p_H2O = mu_H2O * p
+    p_CO2 = mu_CO2 * p
+
+    # now use the partial pressures to get the correct entropy values
+    cp_N2, h_N2, s_N2, M_N2 = N2(t, p_N2)
+    cp_O2, h_O2, s_O2, M_O2 = O2(t, p_O2)
+    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p_Ar)
+    if mu_H2O > 0:
+        cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p_H2O)
+    if mu_CO2 > 0:
+        cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p_CO2)
+
     cp = mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar  # heat capacity at constant
     # pressure
     h = mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar  # specific enthalpy
@@ -126,7 +145,7 @@ def mixture(equ, t, fuel_type):
     return h, u, cp, cv, R, gamma, s
 
 
-def equivalence_derivative(equ, t, fuel_type):
+def equivalence_derivative(equ, t, p, fuel_type):
     """
     Function that returns the partial derivative of specific gas constant R 
     and specific internal energy u with respect to the equivalence ration.
@@ -157,11 +176,11 @@ def equivalence_derivative(equ, t, fuel_type):
 
     Runiv = 8.3144626  # J mol^-1 K^-1
 
-    cp_N2, h_N2, s_N2, M_N2 = N2(t)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t)
-    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t)
-    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t)
+    cp_N2, h_N2, s_N2, M_N2 = N2(t, p)
+    cp_O2, h_O2, s_O2, M_O2 = O2(t, p)
+    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
+    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p)
+    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p)
 
     N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
     x_O2_air = 1 / N_air  # molar fraction of O2

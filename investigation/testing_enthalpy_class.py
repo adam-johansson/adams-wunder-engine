@@ -1,4 +1,4 @@
-from piston_engine.src.piston.polynomials import O2, N2, CO2, Ar, H2O
+from thermo import PureSubstance
 
 from CoolProp.CoolProp import PropsSI
 
@@ -6,31 +6,37 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-t = 1000
-p = 10e5
+t = 298.15
+p = 1e5
 
 N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
 x_O2_air = 1 / N_air  # molar fraction of O2
 x_N2_air = 3.7274 / N_air  # molar fraction of N2
 x_Ar_air = 0.0444 / N_air  # molar fraction of Ar
 
-cpN2_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'Nitrogen')
-cpO2_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'Oxygen')
-cpAr_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'Argon')
-cpH2O_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'H2O')
-cpCO2_cp = PropsSI('CPMASS', 'T', t, 'P', p, 'CO2')
+hN2_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Nitrogen')
+hO2_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Oxygen')
+hAr_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Argon')
+hH2O_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Water')
+hCO2_cp = PropsSI('HMASS', 'T', t, 'P', p, 'CarbonDioxide')
 
-cpN2, hn2, sN2, M_N2 = N2(t, p)
-cpO2, ho2, sO2, M_O2 = O2(t, p)
-cpCO2, hco2, sCO2, M_CO2 = CO2(t, p)
-cpH2O, hh2o, sH2O, M_H2O = H2O(t, p)
-cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
+N2 = PureSubstance("N2", temperature=t)
+O2 = PureSubstance("O2", temperature=t)
+Ar = PureSubstance("Ar", temperature=t)
+CO2 = PureSubstance("CO2", temperature=t)
+H2O = PureSubstance("H2O", temperature=t)
 
-print(f'N2. NASA:{cpN2}, CoolProp: {cpN2_cp}')
-print(f'O2. NASA:{cpO2}, CoolProp: {cpO2_cp}')
-print(f'Ar. NASA:{cp_Ar}, CoolProp: {cpAr_cp}')
-print(f'CO2. NASA:{cpCO2}, CoolProp: {cpCO2_cp}')
-print(f'H2O. NASA:{cpH2O}, CoolProp: {cpH2O_cp}')
+M_N2 = N2.molar_mass
+M_O2 = O2.molar_mass
+M_CO2 = CO2.molar_mass
+M_H2O = H2O.molar_mass
+M_Ar = Ar.molar_mass
+
+print(f'N2. NASA:{N2.enthalpy()}, CoolProp: {hN2_cp}')
+print(f'O2. NASA:{O2.enthalpy()}, CoolProp: {hO2_cp}')
+print(f'Ar. NASA:{Ar.enthalpy()}, CoolProp: {hAr_cp}')
+print(f'CO2. NASA:{CO2.enthalpy() * CO2.molar_mass}, CoolProp: {hCO2_cp * CO2.molar_mass}')
+print(f'H2O. NASA:{H2O.enthalpy() * H2O.molar_mass}, CoolProp: {hH2O_cp * H2O.molar_mass}')
 
 
 cp_Air_list = []
@@ -39,7 +45,7 @@ cp_Air_cp_list = []
 equ_list = np.linspace(0.0, 1.0)
 t_list = np.linspace(298.15, 1000)
 
-fuel_type = 'jetA'
+fuel_type = 'H2'
 equ = 0
 
 for equ in equ_list:
@@ -88,18 +94,18 @@ for equ in equ_list:
         mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
         mu_CO2 = 0.0  # no CO2 for H2
 
-    cp_Air    = cpN2 * mu_N2    + cpO2 * mu_O2    + cp_Ar * mu_Ar   + cpH2O * mu_H2O
-    cp_Air_cp = cpN2_cp * mu_N2 + cpO2_cp * mu_O2 + cpAr_cp * mu_Ar + cpH2O_cp * mu_H2O
+    h_Air = N2.enthalpy() * mu_N2 + O2.enthalpy() * mu_O2 + Ar.enthalpy() * mu_Ar + H2O.enthalpy() * mu_H2O + CO2.enthalpy() * mu_CO2
+    h_Air_cp = hN2_cp * mu_N2 + hO2_cp * mu_O2 + hAr_cp * mu_Ar + hH2O_cp * mu_H2O + hCO2_cp * mu_CO2
 
-    cp_Air_list.append(cp_Air)
-    cp_Air_cp_list.append(cp_Air_cp)
+    cp_Air_list.append(h_Air)
+    cp_Air_cp_list.append(h_Air_cp)
 
 
 cp_Air_list = np.array(cp_Air_list)
 cp_Air_cp_list = np.array(cp_Air_cp_list)
 
-#s_Air_list = s_Air_list - s_Air_list[0]
-#s_Air_cp_list = s_Air_cp_list - s_Air_cp_list[0]
+#cp_Air_list = cp_Air_list - cp_Air_list[0]
+#cp_Air_cp_list = cp_Air_cp_list - cp_Air_cp_list[0]
 
 plt.plot(equ_list, cp_Air_list, label='NASA')
 plt.plot(equ_list, cp_Air_cp_list, label='CoolProp')

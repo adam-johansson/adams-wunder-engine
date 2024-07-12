@@ -39,23 +39,6 @@ def plot_progress(phi, cycle_phi, P, T, V, V1, m, Q_in):
     return
 
 
-def plot_diagrams(V, P, S, T):
-    fig, ax1 = plt.subplots()
-    ax1.plot(V[-1] * 1000, P[-1] * 1e-5, label='last cycle')
-    ax1.set_xlabel('V [L]')
-    ax1.set_ylabel(r'P [bar]')
-    plt.legend(loc='best', fontsize='small', frameon=False)
-    ax1.grid()
-
-    fig, ax2 = plt.subplots()
-    ax2.plot(S[-1], T[-1], label='last cycle')
-    ax2.set_xlabel('S [J/kg]')
-    ax2.set_ylabel(r'T [K]')
-    plt.legend(loc='best', fontsize='small', frameon=False)
-    ax2.grid()
-    return
-
-
 def plot_essentials(phi, T, P, m, equ, validation=False):
     if validation:
         # loading validation data
@@ -535,7 +518,10 @@ def plot_rohr(phi, Q, Q_in, v, apiston, dtdphi, bore, p, t):
     return
 
 
-def plot_pv(p, v):
+def plot_pvts(p, v, t, s, s2):
+    # s is calculated from NASA9 polynomials of entropy
+    # s2 is calculated with Gibbs equation
+
     fs = 24
     fig, ax12 = plt.subplots()
     ax12.plot(v*1e3, p*1e-5)
@@ -543,6 +529,24 @@ def plot_pv(p, v):
     ax12.set_ylabel(r'Cylinder pressure [bar]')
     ax12.set_title(r'pV-diagram', fontsize=fs)
     ax12.grid()
+
+    fig, ax13 = plt.subplots()
+    ax13.plot(s, t, label="NASA")
+    ax13.set_xlabel('Specific entropy [J/K]')
+    ax13.set_ylabel(r'Cylinder temperature [K]')
+    ax13.set_title(r'Ts-diagram', fontsize=fs)
+    ax13.grid()
+    ax13.legend()
+
+    fig, ax14 = plt.subplots()
+    ax14.plot(s2, t, label="Gibbs")
+    ax14.set_xlabel('Specific entropy [J/K]')
+    ax14.set_ylabel(r'Cylinder temperature [K]')
+    ax14.set_title(r'Ts-diagram', fontsize=fs)
+    ax14.grid()
+    ax14.legend()
+
     plt.show()
 
     return
+

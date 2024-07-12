@@ -44,7 +44,7 @@ def run_piston_engine(indata, flags):
 
     rpm = v_mean / (2 * s) * 60
 
-    cp_in, h_in, s_in, M_in = properties(T_in, equ=0)  # assuming pure air in intake
+    cp_in, h_in, s_in, M_in = properties(T_in, p_in, equ=0)  # assuming pure air in intake
 
     R_in = Runiv / M_in
     rho_in = p_in / (R_in * T_in)
@@ -143,15 +143,15 @@ def run_piston_engine(indata, flags):
 
         # Gas properties inside the cylinder
         h, u, cp, cv, R, gamma, entropy = \
-            thermo_computations.mixture(equ, T, fuel_type)
+            thermo_computations.mixture(equ, T, P, fuel_type)
 
         # Intake port values
         h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP = \
-            thermo_computations.mixture(equ_IP, T_IP, fuel_type)
+            thermo_computations.mixture(equ_IP, T_IP, p_in, fuel_type)
 
         # Exhaust port values
         h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP = \
-            thermo_computations.mixture(equ_EP, T_EP, fuel_type)
+            thermo_computations.mixture(equ_EP, T_EP, p_out, fuel_type)
 
         # Phi derivative of the volume (without Taylor expansion)
         # Opposed piston
@@ -273,7 +273,7 @@ def run_piston_engine(indata, flags):
         h_in_IP = h_in
 
         dellRdellequ_IP, delludellequ_IP = \
-            thermo_computations.equivalence_derivative(equ_IP, T_IP, fuel_type)
+            thermo_computations.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type)
 
         term1 = T_IP + h_out_IP / cv_IP + \
             (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (cv_IP * (1 + equ_out_IP * far_s)) * delludellequ_IP - \
@@ -311,7 +311,7 @@ def run_piston_engine(indata, flags):
         h_out_EP = h_EP
 
         dellRdellequ_EP, delludellequ_EP = \
-            thermo_computations.equivalence_derivative(equ_EP, T_EP, fuel_type)
+            thermo_computations.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type)
 
         # Change of equivalence ratio in the exhaust port
         dequdphi_EP = dmoutdphi * (1 + equ_EP * far_s) * (equ_in_EP - equ_EP) / (1 + equ_in_EP * far_s)
@@ -338,8 +338,7 @@ def run_piston_engine(indata, flags):
                                               - ((equ_in_EP - equ) / (1 + equ_in_EP * far_s)) * dmoutdphi
                                               + dmfdphi / far_s)
 
-
-        dellRdellequ, delludellequ = thermo_computations.equivalence_derivative(equ, T, fuel_type)
+        dellRdellequ, delludellequ = thermo_computations.equivalence_derivative(equ, T, P, fuel_type)
 
         dRdphi = dellRdellequ * dequdphi
 
@@ -365,7 +364,8 @@ def run_piston_engine(indata, flags):
         # if P > 150e5:
         #    dPdphi = dPdphi * 1.05
 
-        dsdphi = cv * dTdphi / T + R * dVdphi / V
+        # Entropy (Gibbs equation)
+        dsdphi = dudphi / T + dVdphi * ( P / T)
 
         dQ_appdphi = (1 / (1.4 - 1)) * V * dPdphi + (1 / (1.4 - 1)) * P * dVdphi
 
@@ -527,7 +527,7 @@ def run_piston_engine(indata, flags):
             Qf = LHV * mf_tot  # hmmm eta_c or not
 
         def find_tout(t):
-            h, u, cp, cv, R, gamma, entropy = thermo_computations.mixture(equ_avg, t[0], fuel_type)
+            h, u, cp, cv, R, gamma, entropy = thermo_computations.mixture(equ_avg, t[0], p_out, fuel_type)
             return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
         T_out.append(fsolve(find_tout, T[-1][-1])[0])
@@ -632,6 +632,11 @@ def run_piston_engine(indata, flags):
     # Fuel air ratio based on the total fuel and air flows
     far_avg = fuel_flow_engine / air_flow_engine
 
+    # Calculate entropy for the last cycle
+    from src.misc.entropy import entropy_calc
+
+    s_specific = entropy_calc(T[-1], equ[-1], fuel_type, P[-1])
+
     if "validation" in flags:
         validation = True
     else:
@@ -646,7 +651,6 @@ def run_piston_engine(indata, flags):
         np.savetxt("simulation_data/Qapparent.csv", Q_apparent[-1], delimiter=",")
         np.savetxt("simulation_data/phi.csv", phi, delimiter=",")
 
-
     if "plot_validation" in flags:
         from src.misc.plot_output import plot_validation
         plot_validation(phi, P, T, m, equ)
@@ -657,8 +661,10 @@ def run_piston_engine(indata, flags):
         plot_rohr(phi, Q[-1], Q_in[-1], V[-1], Apiston, dtdphi, d, P[-1], T[-1])
 
     if "plot_pv" in flags:
-        from src.misc.plot_output import plot_pv
-        plot_pv(P[-1], V[-1])
+        from src.misc.plot_output import plot_pvts
+        #plot_pv(P[-1], V[-1])
+        #plot_ts(T[-1], S[-1])
+        plot_pvts(P[-1], V[-1], T[-1], s_specific, S[-1])
 
     if "plot_convergence" in flags:
         from src.misc.plot_output import plot_convergence
