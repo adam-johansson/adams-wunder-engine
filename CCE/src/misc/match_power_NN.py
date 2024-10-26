@@ -11,6 +11,9 @@ import numpy as np
 
 def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
+
+
+
     error = False
 
 
@@ -28,6 +31,12 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     fuel_type = data[32]
     far_s, LHV = thermo.fuel_props(fuel_type)
 
+    piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, 0.02, p_ratio, v_mean, T_fuel]))
+    # T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
+    # prediction on test data
+    POWER = meta_model.inference(piston_input)
+
+    k = 6
     def find_match(x):
         # change fuel air ratio and bore to match power and turbine inlet temperature
 
@@ -43,7 +52,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             # TODO: CHANGE THIS TO FIT NN
 
             piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, far34, p_ratio, v_mean, T_fuel]))
-            T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
+            #T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
+            # prediction on test data
+            T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = meta_model.inference(piston_input)
 
             induced_power = induced_power*1e3
             p_tdc = p_tdc*1e5

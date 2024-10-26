@@ -1,115 +1,47 @@
 import numpy as np
-from sklearn import datasets
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import pandas as pd
 import torch.optim.lr_scheduler as lr_scheduler
 
 import matplotlib.pyplot as plt
 
-
-def clean_folder(folder):
-    # function that cleans all files in a folder
-    import os
-    import shutil
-
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
-    return
-
-
-def checkpoint(model, filename):
-    # function that saves both the weights of the ANN and the momentum of the optimizer
-    torch.save({
-        'optimizer': optimizer.state_dict(),
-        'model': model.state_dict(),
-    }, filename)
-
-
-
-def resume(model, filename):
-    # loads both network weights and optimizer momentum
-    checkpoint = torch.load(filename)
-    model.load_state_dict(checkpoint['model'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-
+from src import clean_folder, checkpoint, resume
+from src import Data, NET_straight
 
 # import data
-X = pd.read_csv('./input_data/H2/x.csv', index_col=0)
-y = pd.read_csv('./input_data/H2/y.csv', index_col=0)
+X = pd.read_csv('./input_data/H2/x_cleaned.csv', index_col=0)
+y = pd.read_csv('./input_data/H2/y_cleaned.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
 
 # convert to PyTorch tensors
-X = torch.tensor(X, dtype=torch.float32)
-y = torch.tensor(y, dtype=torch.float32)
+#X = torch.tensor(X, dtype=torch.float32)
+#y = torch.tensor(y, dtype=torch.float32)
+
+# Split the data into training and testing
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, train_size=0.8, test_size=0.2, random_state=42)
+
 
 # Normalize the data
 # Which scaler to use???
 X_scaler = StandardScaler()
-X_scaled = X_scaler.fit_transform(X)
+#X_scaler = QuantileTransformer(output_distribution='normal')
+# fit transformer on training data
+X_train = X_scaler.fit_transform(X_train)
+# just scale test data without fitting
+X_test = X_scaler.transform(X_test)
 y_scaler = StandardScaler()
-y_scaled = y_scaler.fit_transform(y)
-
-# Split the data into training and testing
-X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled, y_scaled, train_size=0.8, test_size=0.2, random_state=42)
-
-
-
-class Data(Dataset):
-    '''Dataset Class to store the samples and their corresponding labels,
-    and DataLoader wraps an iterable around the Dataset to enable easy access to the samples.
-    '''
-
-    def __init__(self, X: np.ndarray, y: np.ndarray) -> None:
-        # need to convert float64 to float32 else
-        # will get the following error
-        # RuntimeError: expected scalar type Double but found Float
-        self.X = torch.from_numpy(X.astype(np.float32))
-        self.y = torch.from_numpy(y.astype(np.float32))
-        self.len = self.X.shape[0]
-
-    def __getitem__(self, index: int) -> tuple:
-        return self.X[index], self.y[index]
-
-    def __len__(self) -> int:
-        return self.len
-
-class NET(nn.Module):
-    '''Regression Model
-    '''
-
-    def __init__(self, n_layers: int, input_dim: int, hidden_dim: int, output_dim: int) -> None:
-
-        super(NET, self).__init__()
-        self.input_to_hidden = nn.Linear(input_dim, hidden_dim)
-        self.hidden = nn.ModuleList([nn.Linear(hidden_dim // (2**i), hidden_dim // (2**(i+1))) for i in range(n_layers)])
-        self.hidden_to_output = nn.Linear(hidden_dim // (2**(n_layers)), output_dim)
-        self.ReLu = nn.ReLU()  # activation function
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.input_to_hidden(x)
-        #x = self.ReLu(x)
-        for layer in self.hidden:
-            x = layer(x)
-            x = self.ReLu(x)
-        x = self.hidden_to_output(x)
-
-        return x
+#y_scaler = QuantileTransformer(output_distribution='normal')
+y_train = y_scaler.fit_transform(y_train)
+y_test = y_scaler.transform(y_test)
 
 
 # Generate the training dataset
@@ -119,14 +51,14 @@ traindata = Data(X_train, y_train)
 testdata = Data(X_test, y_test)
 
 
-batch_size = 256
+batch_size = 128
 epochs = 500
 
 # number of neurons of hidden layers
-hidden_dim = 8192
+hidden_dim = 512
 
 # number of hidden layers
-layers = 1
+layers = 2
 
 lr = 1e-3
 weight_decay = 0
@@ -152,7 +84,7 @@ input_dim = X_train.shape[1]
 output_dim = y_train.shape[1]
 
 # initiate the regression model
-model = NET(layers, input_dim, hidden_dim, output_dim)
+model = NET_straight(layers, input_dim, hidden_dim, output_dim)
 
 
 print(model)
@@ -178,7 +110,7 @@ if start_epoch == 0:
 # use checkpoint number from the file + 1
 if start_epoch > 0:
     resume_epoch = start_epoch - 1
-    resume(model, f"./checkpoints/epoch-{resume_epoch}.pth")
+    resume(model, optimizer, f"./checkpoints/epoch-{resume_epoch}.pth")
 
 
 # initialize best validation loss
@@ -231,7 +163,7 @@ for epoch in range(start_epoch, epochs):
     if running_loss_test < best_loss:
         best_loss = running_loss_test
         best_epoch = epoch
-        checkpoint(model, f'./models/narrowing_{hidden_dim}_{layers}.pth')
+        checkpoint(model, optimizer, X_scaler, y_scaler, f'./models/straight_{hidden_dim}_{layers}.pth')
 
     elif epoch - best_epoch > epoch_threshold:
         print("Early stopped training at epoch %d" % epoch)
@@ -240,7 +172,7 @@ for epoch in range(start_epoch, epochs):
         break  # terminate the training loop
 
     # display statistics
-    if not ((epoch + 1) % (epochs // 50)):
+    if not ((epoch + 1) % (epochs // 10)):
         print(f'Epochs:{epoch + 1:5d} | ' \
               f'Batches per epoch: {i + 1:3d} | ' \
               f'Training loss: {running_loss / (i + 1):.10f} | ' \
@@ -250,7 +182,7 @@ for epoch in range(start_epoch, epochs):
     # save 10 checkpoints
     if not ((epoch + 1) % (epochs // 10)):
         # checkpoint the model parameters
-        checkpoint(model, f"./checkpoints/epoch-{epoch}.pth")
+        checkpoint(model, optimizer, X_scaler, y_scaler, f"./checkpoints/epoch-{epoch}.pth")
         # saving best model found so far based on validation loss
 
 
@@ -264,7 +196,7 @@ for epoch in range(start_epoch, epochs):
 #torch.save(model.state_dict(), PATH)
 
 # load the best model for validation
-resume(model, f'./models/narrowing_{hidden_dim}_{layers}.pth')
+resume(model, optimizer, f'./models/straight_{hidden_dim}_{layers}.pth')
 
 # Validate trained model using the test dataset
 with torch.no_grad():
@@ -297,7 +229,7 @@ ax1.plot(epochss[skip:], training_loss[skip:], label='Training loss')
 ax1.plot(epochss[skip:], test_loss[skip:], label='Test loss')
 ax1.set_xlabel(r'Epoch')
 ax1.set_ylabel(r'MSE loss')
-ax1.set_title(fr'Narrowing. Layers: {layers}, Neurons 1st hidden layer: {hidden_dim}')
+ax1.set_title(fr'Straight. Layers: {layers}, Neurons 1st hidden layer: {hidden_dim}')
 #ax1.set_ylim(0, 0.01)
 #ax1.set_xlim(100, epochs)
 plt.legend()

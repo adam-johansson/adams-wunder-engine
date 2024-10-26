@@ -10,11 +10,9 @@ from scipy.stats import qmc
 import pandas as pd
 
 
-
 # Setting up the piston engine
 
 input_file = "4stroke_hydrogen"
-#input_file = "4stroke"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -31,27 +29,28 @@ n_out = 8  # Number of outputs from the piston model
 start_sampling = timer()
 
 # limits for the sampling
-p_lim = [3e5, 40e5]  # limits for input pressure (3e5, 10e5)
-T_lim = [300, 1000]  # limits for input temperature (400, 1000)
-cr_lim = [6, 12]  # limits for geometric compression ratio (6, 12)
-d_lim = [0.05, 0.30]  # limits for bore (piston diameter) (0.08, 0.17)
-p_ratio_lim = [0.7, 2.0]   # (1.0, 1.5)
-v_mean_lim = [5, 20]
+p_lim = [10e5, 12e5]  # limits for input pressure (3e5, 10e5)
+T_lim = [500, 700]  # limits for input temperature (400, 1000)
+cr_lim = [6, 10]  # limits for geometric compression ratio (6, 12)
+d_lim = [0.10, 0.20]  # limits for bore (piston diameter) (0.08, 0.17)
+p_ratio_lim = [0.9, 1.1]   # (1.0, 1.5)
+v_mean_lim = [8, 12]
 
-# THESE LIMITS ARE FOR HYDROGEN
-throttle_lim = [0.02923 / 3, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
-fuel_t_lim = [200, 600]
+# THIS THROTTLE LIM IS FOR HYDROGEN
+throttle_lim = [0.02923 / 1.5, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
+fuel_t_lim = [400, 500]
 
 # THIS IS FOR JETA
-#throttle_lim = [0.06821 / 6, 0.06821 / 1.0]
-#fuel_t_lim = [250, 550]
+#throttle_lim = [0.06821 / 3.0, 0.06821 / 1.1]
+#fuel_t_lim = [220, 550]
+
 
 # could add wall temperatures
 
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 100  # points per variable
+npoints = 350  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -119,5 +118,4 @@ x_data.to_csv('sampled_data/x.csv')
 y_data.to_csv('sampled_data/y.csv')
 end_sampling = timer()
 print(f'Total time for sampling data: {end_sampling - start_sampling} [s]')
-
 

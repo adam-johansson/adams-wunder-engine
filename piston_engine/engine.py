@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 from piston_engine.src.piston import valve_isentrop, walls, wiebe, polynomials, port_isentrop
 from piston_engine.src.piston import thermo_computations
 from piston_engine.src.misc import post_processing
+from piston_engine.src.misc.entropy import entropy_calc
 
 from CCE.src.thermo import fuel_props, properties
 
@@ -633,7 +634,6 @@ def run_piston_engine(indata, flags):
     far_avg = fuel_flow_engine / air_flow_engine
 
     # Calculate entropy for the last cycle
-    from src.misc.entropy import entropy_calc
 
     s_specific = entropy_calc(T[-1], equ[-1], fuel_type, P[-1])
 

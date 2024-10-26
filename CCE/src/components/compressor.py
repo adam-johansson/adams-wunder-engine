@@ -22,8 +22,8 @@ def compressor(t1, p1, m, eta, pr):
     #end = timer()
     #print(f'time compressor: {end - start}')
 
-    cp, h1, s, M = thermo.properties(t1, equ=0)  # enthalpy before compression
-    cp, h2, s, M = thermo.properties(t2, equ=0)  # enthalpy after compression
+    cp, h1, s, M = thermo.properties(t1, p1, equ=0)  # enthalpy before compression
+    cp, h2, s, M = thermo.properties(t2, p2, equ=0)  # enthalpy after compression
     P = m*(h2 - h1)  # power needed for the compression
 
     return p2, t2, P

@@ -9,12 +9,14 @@ from scipy.stats import qmc
 
 import pandas as pd
 
+from src.misc.seiliger import seiliger
+
+
 
 
 # Setting up the piston engine
 
 input_file = "4stroke_hydrogen"
-#input_file = "4stroke"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -31,27 +33,28 @@ n_out = 8  # Number of outputs from the piston model
 start_sampling = timer()
 
 # limits for the sampling
-p_lim = [3e5, 40e5]  # limits for input pressure (3e5, 10e5)
-T_lim = [300, 1000]  # limits for input temperature (400, 1000)
+p_lim = [2e5, 30e5]  # limits for input pressure (3e5, 10e5)
+T_lim = [250, 900]  # limits for input temperature (400, 1000)
 cr_lim = [6, 12]  # limits for geometric compression ratio (6, 12)
-d_lim = [0.05, 0.30]  # limits for bore (piston diameter) (0.08, 0.17)
-p_ratio_lim = [0.7, 2.0]   # (1.0, 1.5)
-v_mean_lim = [5, 20]
+d_lim = [0.10, 0.20]  # limits for bore (piston diameter) (0.08, 0.17)
+p_ratio_lim = [0.9, 1.5]   # (1.0, 1.5)
+v_mean_lim = [8, 15]
 
-# THESE LIMITS ARE FOR HYDROGEN
-throttle_lim = [0.02923 / 3, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
-fuel_t_lim = [200, 600]
+# THIS THROTTLE LIM IS FOR HYDROGEN
+throttle_lim = [0.02923 / 3.0, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
+fuel_t_lim = [300, 500]
 
 # THIS IS FOR JETA
-#throttle_lim = [0.06821 / 6, 0.06821 / 1.0]
-#fuel_t_lim = [250, 550]
+#throttle_lim = [0.06821 / 3.0, 0.06821 / 1.1]
+#fuel_t_lim = [220, 550]
+
 
 # could add wall temperatures
 
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 100  # points per variable
+npoints = 350  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -76,22 +79,35 @@ y = np.zeros([ndoe, n_out])
 print(f'Total number of sampling points: {ndoe}')
 start_simulating = timer()
 i = 0
+remove = 0
+
 for p, T, cr, bore, throttle, p_ratio, v_mean, fuel_t in sample_scaled:
     i += 1
 
-    lv_max = 0.1 * bore
-    data = [p, T, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-            v_mean, d.lms, d.Twalls, d.ch,
-            d.valve_timings, d.n_valve, lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
-            d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, fuel_t, d.p_fuel, d.it, d.wiebe_type, d.valve_type, throttle,
-            d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+    pmax_seiliger = seiliger(p, T, cr, throttle, bore)
 
-    # run the simulation
-    T_out, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss, \
-        heat_loss, p_tdc = run_piston_engine(data, flags)
-    # save the output that is relevant
-    # eta_th is redundant I suppose
-    y[i - 1, :] = T_out, eta_th, air_flow, p_max, T_max, induced_power * 1e-3, heat_loss * 1e-3, p_tdc * 1e-5
+    # if predicted pressure under 600 bar
+    if pmax_seiliger < 600*1e5:
+
+        lv_max = 0.1 * bore
+        data = [p, T, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
+                v_mean, d.lms, d.Twalls, d.ch,
+                d.valve_timings, d.n_valve, lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
+                d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, fuel_t, d.p_fuel, d.it, d.wiebe_type, d.valve_type, throttle,
+                d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+
+        # run the simulation
+        T_out, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss, \
+            heat_loss, p_tdc = run_piston_engine(data, flags)
+        # save the output that is relevant
+        # eta_th is redundant I suppose
+        y[i - 1, :] = T_out, eta_th, air_flow, p_max, T_max, induced_power * 1e-3, heat_loss * 1e-3, p_tdc * 1e-5
+
+    else:
+        # if predicted peak pressure is over 600 bar
+        y[i - 1, :] = 0, 0, 0, 0, 0, 0, 0, 0
+        remove = remove + 1
+        print(f"Number of data points removed: {remove} out of {i} in total")
 
     if not (i % (ndoe // 100)):
         mellantid = timer()
@@ -119,5 +135,4 @@ x_data.to_csv('sampled_data/x.csv')
 y_data.to_csv('sampled_data/y.csv')
 end_sampling = timer()
 print(f'Total time for sampling data: {end_sampling - start_sampling} [s]')
-
 

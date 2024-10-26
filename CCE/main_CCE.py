@@ -12,7 +12,7 @@ path = input_dir + "." + input_file
 d = importlib.import_module(path)
 
 # Use surrogate or real model
-surrogate_status = True
+surrogate_status = False
 
 data = [d.Fn, d.dTisa, d.bpr, d.TET, d.fpr_inner, d.fpr_outer, d.dp_intake, d.dp_bypass,
         d.M, d.eta_inner_fan, d.eta_outer_fan,
@@ -22,3 +22,4 @@ data = [d.Fn, d.dTisa, d.bpr, d.TET, d.fpr_inner, d.fpr_outer, d.dp_intake, d.dp
 
 
 cce_propulsion_system.run_cce(data)
+

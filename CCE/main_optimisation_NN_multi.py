@@ -1,7 +1,7 @@
 from CCE.src import cce_propulsion_system
 from CCE.src import auxiliaries
 import importlib
-from CCE.src import surrogate
+from neural_network.src import load_ANN
 
 from timeit import default_timer as timer
 
@@ -43,8 +43,10 @@ data_piston = [p_in_dummy, T_in_dummy, pi_pe_dummy, d_p.cycle, d_p.thermo, d_p.c
                d_p.throttle, d_p.cylinders, d_p.fuel, d_p.c1, d_p.c4, d_p.c5]
 
 
-# load the Neural Network model
-meta_model = surrogate.load_nn()
+
+# Load the trained model
+meta_model = load_ANN("./meta_models/piston_NN.pth")
+print(meta_model)
 
 if 'single' in flags:
     start = timer()

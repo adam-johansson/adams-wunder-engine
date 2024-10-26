@@ -12,7 +12,7 @@ opposed = False
 #cr = 9.6  # geometric compression ratio (Kaiser used 9.6 ToC and 6.4 TO and 18 in Cruise)
 cr = 7.3
 
-cylinders = 12  # V12
+cylinders = 1  # V12
 
 # piston
 d = 0.16915  # diameter
@@ -88,7 +88,7 @@ phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SING
 T_fuel = 300
 p_fuel = 2500e5
 
-it = 20
+it = 40
 
 mf_tot = 1.5e-4
 
