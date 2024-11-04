@@ -11,23 +11,23 @@ cooling = "Woschni"
 #cooling = "H2"
 
 opposed = False
-cr = 6
+cr = 7.89
 
-cylinders = 12  # for sampling data use 1
+cylinders = 1  # for sampling data use 1
 
 # piston
-d = 0.10  # diameter / bore
+d = 0.1045  # diameter / bore
 # s = 0.074676  # stroke
-v_mean = 15.0  # mean velocity
+v_mean = 8.4  # mean velocity
 # l_con = 0.182067  # rod length
 bsr = 1.0  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 2e5  # inlet pressure
+p_in = 233461  # inlet pressure
 #T_in = 700  # inlet temperature
-T_in = 1000
-p_ratio = 1.5  # pressure ratio after and before engine
+T_in = 895
+p_ratio = 1.04  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500          # Wall temperature
@@ -64,7 +64,7 @@ cd = 0.8
 
 eta_c = 1.0
 
-throttle = 0.02923 / 3.0
+throttle = 0.0241
 
 
 wiebe_type = "Single"
@@ -80,7 +80,7 @@ m_wiebe = 1.75  # from validation italian
 phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
 phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation italian
 
-T_fuel = 450
+T_fuel = 499.6
 p_fuel = 300e5
 
 it = 40

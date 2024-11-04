@@ -17,22 +17,18 @@ from src import load_ANN
 
 ## NN-PP: Neural Network Post Processing
 
-
 # Load the trained model
 hidden_dim = 128
 layers = 1
 model = load_ANN(f'./models/straight_{hidden_dim}_{layers}.pth')
 print(model)
 
-X = pd.read_csv('./input_data/H2_mediumnarrow/x.csv', index_col=0)
-y = pd.read_csv('./input_data/H2_mediumnarrow/y.csv', index_col=0)
+X = pd.read_csv('./input_data/H2_adaptive/x_cleaned.csv', index_col=0)
+y = pd.read_csv('./input_data/H2_adaptive/y_cleaned.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
-
-# only look at power
-y = y[:, [5]]
 
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(
@@ -43,6 +39,7 @@ train_data = np.concatenate((X_train, y_train), axis=1)
 test_data = np.concatenate((X_test, y_test), axis=1)
 
 # normalise the data, fit the normalisation on training data
+# we dont have to scale since it is done in the inference model
 scaler = "3"
 
 if scaler == "1":
@@ -113,33 +110,72 @@ elif scaler == "2":
     y_train_hat = y_train_hat * (y_max - y_min) + y_min
 
 
-y_both = np.hstack((y_test, y_test_hat))
-y_both_train = np.hstack((y_train, y_train_hat))
 
-rel_error = (y_both[:, 1] - y_both[:, 0]) / y_both[:, 0]
-rel_error_train = (y_both_train[:, 1] - y_both_train[:, 0]) / y_both_train[:, 0]
 
-problems_idx = np.abs(rel_error) > 0.1
-problems_idx_train = np.abs(rel_error_train) > 0.1
+
+
+
+
+# root square error
+RSE_test = np.sqrt(np.square(np.subtract(y_test, y_test_hat) ) )
+RSE_train = np.sqrt(np.square(np.subtract(y_train, y_train_hat) ) )
+
+# relative error
+rel_test = np.divide(RSE_test, y_test)
+rel_train = np.divide(RSE_train, y_train)
+
+# mean absolute relative error
+MRE_test = np.mean(np.abs(rel_test), axis=0)
+MRE_train = np.mean(np.abs(rel_train), axis=0)
+
+print(f'Test data % \n' 
+      f'MRE T_2: {MRE_test[0] * 100:.2f} % \n'  
+      f'MRE eff: {MRE_test[1] * 100:.2f} % \n' 
+      f'MRE airflow: {MRE_test[2]*100:.2f} % \n' 
+      f'MRE pmax: {MRE_test[3]*100:.2f} % \n'
+      f'MRE T_max: {MRE_test[4]*100:.2f} % \n'
+      f'MRE P: {MRE_test[5]*100:.2f} % \n'
+      f'MRE Q : {MRE_test[6]*10:.2f} % \n'
+      f'MRE p_tdc: {MRE_test[7]*100:.2f} %'
+      )
+
+print(f'Training data % \n' 
+      f'MRE T_2: {MRE_train[0] * 100:.2f} % \n'  
+      f'MRE eff: {MRE_train[1] * 100:.2f} % \n' 
+      f'MRE airflow: {MRE_train[2]*100:.2f} % \n' 
+      f'MRE pmax: {MRE_train[3]*100:.2f} % \n'
+      f'MRE T_max: {MRE_train[4]*100:.2f} % \n'
+      f'MRE P: {MRE_train[5]*100:.2f} % \n'
+      f'MRE Q : {MRE_train[6]*10:.2f} % \n'
+      f'MRE p_tdc: {MRE_train[7]*100:.2f} %'
+          )
+
+
+t2 = np.vstack((y_test[:,0], y_test_hat[:,0])).T
+eff = np.vstack((y_test[:,1], y_test_hat[:,1])).T
+airflow = np.vstack((y_test[:,2], y_test_hat[:,2])).T
+pmax = np.vstack((y_test[:,3], y_test_hat[:,3])).T
+tmax = np.vstack((y_test[:,4], y_test_hat[:,4])).T
+P = np.vstack((y_test[:,5], y_test_hat[:,5])).T
+Q = np.vstack((y_test[:,6], y_test_hat[:,6])).T
+ptdc = np.vstack((y_test[:,7], y_test_hat[:,7])).T
+
+t2 = t2[t2[:,0].argsort()]
+eff = eff[eff[:,0].argsort()]
+airflow = airflow[airflow[:,0].argsort()]
+pmax = pmax[pmax[:,0].argsort()]
+tmax = tmax[tmax[:,0].argsort()]
+P = P[P[:, 0].argsort()]
+Q = Q[Q[:, 0].argsort()]
+ptdc = ptdc[ptdc[:, 0].argsort()]
+
+
+# look at data points that perform poorly
+test_data = np.concatenate((X_test, y_test), axis=1)
+problems_idx = np.abs(rel_test) > 0.5
+problems_idx = np.any(problems_idx, axis=1)
 
 problems = test_data[problems_idx]
-problems_train = train_data[problems_idx_train]
-
-
-# sort from smallest to biggest power, for plotting
-y_both = y_both[y_both[:,0].argsort()]
-
-y_both_train = y_both_train[y_both_train[:,0].argsort()]
-
-# relative error, sorted
-rel_error = (y_both[:, 1] - y_both[:, 0]) / y_both[:, 0]
-rel_error_train = (y_both_train[:, 1] - y_both_train[:, 0]) / y_both_train[:, 0]
-
-print(f"Average rel error: {np.mean(np.abs(rel_error))} \n")
-print(f"Average rel error training: {np.mean(np.abs(rel_error_train))}")
-
-points = np.arange(1,y_test.shape[0] + 1, 1)
-points_train = np.arange(1,y_train.shape[0] + 1, 1)
 
 
 
@@ -158,61 +194,100 @@ tins = np.linspace(550,600, 1000)
 powers1 = []
 for T_in1 in tins:
     temp = model.inference(np.array([p_in, T_in1, cr, bore, far, PI, v_mean, T_fuel]))
-    powers1.append(temp[0][0])
+    powers1.append(temp[0][5])
 
 fars = np.linspace(0.02923 / 1.5, 0.02923 / 1.1, 1000)
 
 powers2 = []
 for far in fars:
     temp = model.inference(np.array([p_in, T_in, cr, bore, far, PI, v_mean, T_fuel]))
-    powers2.append(temp[0][0])
+    powers2.append(temp[0][5])
 
 
 
 
-s = 1
 
-# plot the real values for power and the predicted one
-fig, ax1 = plt.subplots()
-ax1.scatter(points, y_both[:, 0], label='Validation', s=s)
-ax1.scatter(points, y_both[:, 1], label='Predicted', s=s)
-ax1.set_xlabel(r'Data point')
-ax1.set_ylabel(r'Power [kW]')
-ax1.set_title(fr'Straight. Layers: {layers + 1}, neurons: {hidden_dim}, Test set')
-ax1.set_ylim(0, 1000)
-#ax1.set_xlim(100, epochs)
-plt.legend()
+fs = 24
+figsize = (12, 8)
+res = 50
+dotsize = 2
 
 
-# plot the real values for power and the predicted one
-fig, ax2 = plt.subplots()
-ax2.scatter(points, rel_error, s=s)
-ax2.set_xlabel(r'Data point')
-ax2.set_ylabel(r'Relative error')
-ax2.set_title(fr'Straight. Layers: {layers + 1}, neurons: {hidden_dim}, Test set')
-#ax2.set_ylim(-10, 10)
-#ax1.set_xlim(100, epochs)
+fig, ax1 = plt.subplots(figsize=figsize)
+ax1.scatter(t2[:,0], (t2[:,1] - t2[:,0]) / t2[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax1.set_xlabel(r'Actual $T2$ [K]', fontsize=fs)
+ax1.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax1.set_title(r'T2 relative error', fontsize=fs)
+#ax2.set_xlim(660, 810)
+#ax2.set_xticks([690, 720, 750, 780, 810])
+#ax2.set_ylim(0, 55)
+#ax2.set_yticks([0, 10, 20, 30, 40, 50])
+ax1.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+#ax2.grid()
+#plt.savefig('power_validation.pdf', dpi=res, bbox_inches='tight')
+
+fig, ax2 = plt.subplots(figsize=figsize)
+ax2.scatter(eff[:,0], (eff[:,1] - eff[:,0]) / eff[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax2.set_xlabel(r'Actual $\eta$ [-]', fontsize=fs)
+ax2.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax2.set_title(r'$\eta$ relative error', fontsize=fs)
+ax2.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+ax2.grid()
 
 
-fig, ax3 = plt.subplots()
-ax3.scatter(points_train, y_both_train[:, 0], label='Validation', s=s)
-ax3.scatter(points_train, y_both_train[:, 1], label='Predicted', s=s)
-ax3.set_xlabel(r'Data point')
-ax3.set_ylabel(r'Power [kW]')
-ax3.set_title(fr'Straight. Layers: {layers + 1}, neurons: {hidden_dim}, Training set')
-#ax3.set_ylim(0, 1000)
-#ax1.set_xlim(100, epochs)
-plt.legend()
+fig, ax3 = plt.subplots(figsize=figsize)
+ax3.scatter(airflow[:,0], (airflow[:,1] - airflow[:,0]) / airflow[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax3.set_xlabel(r'Actual airflow [kg/s]', fontsize=fs)
+ax3.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax3.set_title(r'Airflow relative error', fontsize=fs)
+ax3.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
 
-# plot the real values for power and the predicted one
-fig, ax4 = plt.subplots()
-ax4.scatter(points_train, rel_error_train, s=s)
-ax4.set_xlabel(r'Data point')
-ax4.set_ylabel(r'Relative error')
-ax4.set_title(fr'Straight. Layers: {layers + 1}, neurons: {hidden_dim}, Training set')
-#ax2.set_ylim(-10, 10)
-#ax1.set_xlim(100, epochs)
+fig, ax4 = plt.subplots(figsize=figsize)
+ax4.scatter(pmax[:,0], (pmax[:,1] - pmax[:,0]) / pmax[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax4.set_xlabel(r'Actual $p_{max}$ [bar]', fontsize=fs)
+ax4.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax4.set_title(r'$p_{max}$ relative error', fontsize=fs)
+ax4.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
 
+
+fig, ax5 = plt.subplots(figsize=figsize)
+ax5.scatter(tmax[:,0], (tmax[:,1] - tmax[:,0]) / tmax[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax5.set_xlabel(r'Actual $T_{max}$ [K]', fontsize=fs)
+ax5.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax5.set_title(r'$T_{max}$ relative error', fontsize=fs)
+ax5.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+
+fig, ax6 = plt.subplots(figsize=figsize)
+ax6.scatter(P[:,0], (P[:,1] - P[:,0]) / P[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax6.set_xlabel(r'Actual $P_i$ [kW]', fontsize=fs)
+ax6.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax6.set_title(r'$P_i$ relative error', fontsize=fs)
+ax6.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+
+fig, ax7 = plt.subplots(figsize=figsize)
+ax7.scatter(Q[:,0], (Q[:,1] - Q[:,0]) / Q[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax7.set_xlabel(r'Actual $Q$ [kW]', fontsize=fs)
+ax7.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax7.set_title(r'$Q$ relative error', fontsize=fs)
+ax7.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+
+fig, ax8 = plt.subplots(figsize=figsize)
+ax8.scatter(ptdc[:,0], (ptdc[:,1] - ptdc[:,0]) / ptdc[:,0] * 100, label='Prediction', color="r", s=dotsize)
+ax8.set_xlabel(r'Actual $p_{tdc}$ [bar]', fontsize=fs)
+ax8.set_ylabel(r'Relative error [%]', fontsize=fs)
+ax8.set_title(r'$p_{tdc}$ relative error', fontsize=fs)
+ax8.tick_params(labelsize=fs)
+plt.legend(loc='best', frameon=True, fontsize=fs)
+
+
+plt.show()
 
 # plot the real values for power and the predicted one
 fig, ax5 = plt.subplots()

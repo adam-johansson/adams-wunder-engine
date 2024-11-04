@@ -14,15 +14,20 @@ from src import clean_folder, checkpoint, resume, save, load, save_inference, lo
 from src import Data, NET_straight
 
 # import data
-X = pd.read_csv('./input_data/H2_mediumnarrow/x.csv', index_col=0)
-y = pd.read_csv('./input_data/H2_mediumnarrow/y.csv', index_col=0)
+X = pd.read_csv('./input_data/H2_adaptive/x_cleaned.csv', index_col=0)
+y = pd.read_csv('./input_data/H2_adaptive/y_cleaned.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
 
-# only look at power
-y = y[:, [5]]
+
+# if we only look at power or not
+simple = False
+
+if simple:
+    # only look at power
+    y = y[:, [5]]
 
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(

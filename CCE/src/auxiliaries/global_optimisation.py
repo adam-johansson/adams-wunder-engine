@@ -68,11 +68,11 @@ def global_optimisation(data, data_piston, flags, meta_model):
 
     bpr_lim = [10, 45]
     #tet_lim = [1000, 1400]
-    opr_lim = [5, 50]
+    opr_lim = [10, 30]
     split_lim = [0.1, 0.9]
-    pi_pe_lim = [0.9, 1.7]
-    cr_lim = [4, 16]
-    bore_lim = [0.05, 0.2]
+    pi_pe_lim = [0.9, 1.5]
+    cr_lim = [6, 12]
+    bore_lim = [0.1, 0.2]
     bounds = (bpr_lim, opr_lim, split_lim, pi_pe_lim, cr_lim, bore_lim)
 
     x0 = np.array([16.55, 19.985, 0.55, 1.21, 4.87, 0.098])

@@ -13,7 +13,7 @@ cooling = "Woschni"
 opposed = False
 cr = 6
 
-cylinders = 12  # for sampling data use 1
+cylinders = 1  # for sampling data use 1
 
 # piston
 d = 0.10  # diameter / bore

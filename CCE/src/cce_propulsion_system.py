@@ -133,11 +133,11 @@ def run_cce(indata, data_piston, flags, meta_model):
         return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
 
     # checking max pressure
-    if p_max > 150:
+    if p_max > 250:
         error = True
         minor_error_pressure = True
         #print(f'Maximum pressure reached: {p_max}')
-        cost = 999 + (p_max - 150)*100
+        cost = 999 + (p_max - 250)*100
         return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
 
     bpr_piston = m_circumv / m3  # fraction of air led around engine (based on m3)

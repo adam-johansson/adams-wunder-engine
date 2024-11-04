@@ -18,8 +18,8 @@ path_pist = input_dir_pist + "." + input_file_pist
 d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
-#flags = ['single', 'print_output']  # normal case
-flags = ['single']
+flags = ['single', 'print_output']  # normal case
+#flags = ['single']
 #flags = ['sweep']
 #flags = ['optim']
 
@@ -55,6 +55,10 @@ if 'single' in flags:
 
     #sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston\
     #   = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
+
+    if error:
+        print("error in cce_propulsion_system")
+        exit()
 
     end = timer()
     print(sfc*1e6)

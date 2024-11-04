@@ -5,6 +5,7 @@ from CCE.src import thermo
 from timeit import default_timer as timer
 from piston_engine.engine import run_piston_engine
 from CCE.src.surrogate import nn_output
+from piston_engine.src.misc.seiliger import seiliger
 
 import numpy as np
 
@@ -26,35 +27,61 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     v_mean = data[10]
     T_fuel = data[25]
 
+    # needed to convert surrogate data (single cylinder)
+    cylinders = data[31]
+
     #print(pin, Tin)
     # fuel type
     fuel_type = data[32]
     far_s, LHV = thermo.fuel_props(fuel_type)
 
-    piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, 0.02, p_ratio, v_mean, T_fuel]))
-    # T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
-    # prediction on test data
-    POWER = meta_model.inference(piston_input)
+    if surrogate_status:
+        if pin < 2e5 or pin > 30e5 or Tin < 250 or Tin > 900:
+            print('input to surrogate outside limits')
+            error = True
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0, 0, 0, 0, 0
 
-    k = 6
+
     def find_match(x):
         # change fuel air ratio and bore to match power and turbine inlet temperature
 
-        far34 = x[0]  # far is varied to match target power
 
+        far34 = x[0]  # far is varied to match target power
+        #print(far34)
         # THESE LIMITS ARE FOR H2
-        if far34 < 0.002923 or far34 > 0.02923:
-            residual = 1e6
+        if far34 < 0.02923 / 3.0:
+            residual = 1e8 + np.abs(far34 - 0.02923 / 3.0) * 1e8
             return residual
+
+        elif far34 > 0.02923 / 1.1:
+           residual = 1e8 + np.abs(far34 - 0.02923 / 1.1) * 1e8
+           return residual
 
         if surrogate_status:
             # get the output of the surrogate
-            # TODO: CHANGE THIS TO FIT NN
 
             piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, far34, p_ratio, v_mean, T_fuel]))
             #T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
-            # prediction on test data
-            T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = meta_model.inference(piston_input)
+
+            # check if input is within the limits of the surrogate model
+            pmax_seiliger = seiliger(pin, Tin, cr, far34, bore)
+
+            # if predicted pressure under 600 bar
+            if pmax_seiliger > 600 * 1e5:
+                return 1e6
+
+
+            # use meta model to get outputs from the piston egnine
+            output = meta_model.inference(piston_input)[0]
+
+            T34 = output[0]
+            eta_th = output[1]
+            air_flow = output[2] * cylinders
+            p_max = output[3]
+            T_max = output[4]
+            induced_power = output[5] * cylinders
+            heat_loss = output[6] * cylinders
+            p_tdc = output[7]
 
             induced_power = induced_power*1e3
             p_tdc = p_tdc*1e5
@@ -95,7 +122,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         bsr = data[9]
         stroke = bore / bsr
         lv_max = bore * 0.1
-        cylinders = data[31]
+        #cylinders = data[31]
         #v_mean = data[10]
         rpm = v_mean / (2 * stroke) * 60
         rps = rpm / 60
@@ -126,15 +153,17 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
     try:
         start = timer()
-        x0 = np.array([0.027])  # p_ratio, far
+        x0 = np.array([0.029 / 1.3])  # p_ratio, far
         x_match, infodict, ier, mesg = fsolve(find_match, x0, full_output=True)
         #print(infodict)
+        #print(ier)
+        #print(mesg)
         if ier == 1:
             sol = infodict['fvec']
             #print(f'Fsolve worked. {sol}, {x_match[0]}')
-        elif ier == 1:
+        elif ier == 0:
             cost = 5e-6 + np.abs(infodict['fvec']) * 1e-5
-            print('fsolve failed in match_power_NN')
+            #print('fsolve failed in match_power_NN')
             error = True
             return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0, 0, 0, 0, 0
         end = timer()
@@ -143,7 +172,8 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         print('problem with matching power')
         print(e)
         error = True
-        return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0
+        return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0
+
 
     # This last simulation run could probably be done without, just taking the values from find_match
     # input to surrogate
@@ -152,11 +182,22 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
     if surrogate_status:
         # get the output of the surrogate
-        # TODO: CHANGE THIS TO FIT NN
         piston_input_final = np.atleast_2d(np.array([pin, Tin, cr, bore, far34_final, p_ratio_final, v_mean, T_fuel]))
 
-        T34_final, air_flow_final, p_max_final, T_max_final, induced_power_final, heat_loss_final, p_tdc_final\
-            = nn_output(piston_input_final, meta_model)
+        #T34_final, air_flow_final, p_max_final, T_max_final, induced_power_final, heat_loss_final, p_tdc_final\
+        #    = nn_output(piston_input_final, meta_model)
+
+        # use meta model to get outputs from the piston egnine
+        output_final = meta_model.inference(piston_input_final)[0]
+
+        T34_final = output_final[0]
+        eta_th_final = output_final[1]
+        air_flow_final = output_final[2] * cylinders
+        p_max_final = output_final[3]
+        T_max_final = output_final[4]
+        induced_power_final = output_final[5] * cylinders
+        heat_loss_final = output_final[6] * cylinders
+        p_tdc_final = output_final[7]
 
         induced_power_final = induced_power_final*1e3
         heat_loss_final = heat_loss_final*1e3
@@ -206,7 +247,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     bsr = data[9]
     stroke = bore / bsr
     lv_max = bore * 0.1
-    cylinders = data[31]
+    #cylinders = data[31]
     #v_mean = data[10]
     rpm = v_mean / (2 * stroke) * 60
     rps = rpm / 60

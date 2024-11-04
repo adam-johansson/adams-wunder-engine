@@ -16,7 +16,7 @@ from src.misc.seiliger import seiliger
 
 # Setting up the piston engine
 
-input_file = "4stroke_hydrogen"
+input_file = "4stroke_hydrogen_sampling"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -32,8 +32,8 @@ n_out = 8  # Number of outputs from the piston model
 
 start_sampling = timer()
 
-# limits for the sampling
-p_lim = [2e5, 30e5]  # limits for input pressure (3e5, 10e5)
+# limits for the sampling # ÄNDRA till 35e5
+p_lim = [2e5, 35e5]  # limits for input pressure (3e5, 10e5)
 T_lim = [250, 900]  # limits for input temperature (400, 1000)
 cr_lim = [6, 12]  # limits for geometric compression ratio (6, 12)
 d_lim = [0.10, 0.20]  # limits for bore (piston diameter) (0.08, 0.17)
@@ -54,7 +54,7 @@ fuel_t_lim = [300, 500]
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 350  # points per variable
+npoints = 4000  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -86,8 +86,8 @@ for p, T, cr, bore, throttle, p_ratio, v_mean, fuel_t in sample_scaled:
 
     pmax_seiliger = seiliger(p, T, cr, throttle, bore)
 
-    # if predicted pressure under 600 bar
-    if pmax_seiliger < 600*1e5:
+    # if predicted pressure under 500 bar
+    if pmax_seiliger < 500*1e5:
 
         lv_max = 0.1 * bore
         data = [p, T, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,

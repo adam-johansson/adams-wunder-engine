@@ -12,18 +12,17 @@ Fn = 4384 * 4.44822  # [N] #Net thrust requirement (lb_f * conversion to Newton)
 m0 = 200.0  # intake mass flow [kg/s]  RIGHT NOW ITERATIVELY SOLVED FOR BASED ON Fn
 Fs_req = 80  # specific thrust [m/s]
 
+bpr = 33.66  # bypass ratio
 
-bpr = 26.54  # bypass ratio
-
-fpr_outer = 1.306  # Outer fan pressure ratio 1.3087
+fpr_outer = 1.308  # Outer fan pressure ratio 1.3087
 
 # piston stuff
-cr = 7.54  # piston engine geometric compression ratio
-pi_pe = 1.30  # Piston engine pressure ratio
-bore = 0.124  # piston bore
+cr = 9.205  # piston engine geometric compression ratio
+pi_pe = 1.48  # Piston engine pressure ratio
+bore = 0.11  # piston bore
 
-OPR = 18.49  # overall pressure ratio (excluding pressure losses for now)
-PR = 0.113  # pressure split, with regard to the LPC
+OPR = 25.6  # overall pressure ratio (excluding pressure losses for now)
+PR = 0.106  # pressure split, with regard to the LPC
 
 T35 = 800  # [K] Turbine entry temperature
 
@@ -53,7 +52,7 @@ cd_nozzle = 99.5/100  # nozzle discharge coefficient
 q_ngv = 0.87  # fraction of cooling from cooling first stator
 bpr_c = 0.00  # cooling from fraction of core flow
 
-surrogate = True
+surrogate = False
 second_burner = False
 
 
