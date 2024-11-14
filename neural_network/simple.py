@@ -13,9 +13,14 @@ import matplotlib.pyplot as plt
 from src import clean_folder, checkpoint, resume, save, load, save_inference, load_ANN
 from src import Data, NET_straight
 
+
+
 # import data
-X = pd.read_csv('./input_data/H2_adaptive/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./input_data/H2_adaptive/y_cleaned.csv', index_col=0)
+
+folder = "H2"
+
+X = pd.read_csv('./input_data/' + folder + '/x_cleaned.csv', index_col=0)
+y = pd.read_csv('./input_data/' + folder + '/y_cleaned.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -34,8 +39,8 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, train_size=0.8, test_size=0.2, random_state=42)
 
 
-scaler = "1"
-if scaler == "1":
+scaler = "minmax"
+if scaler == "standard":
     # normalise the data, fit the normalisation on training data (mean 0 std 1)
     X_mean = np.mean(X_train,0)
     X_std = np.std(X_train,0)
@@ -51,7 +56,12 @@ if scaler == "1":
     X_test = (X_test - X_mean) / X_std
     y_test = (y_test - y_mean) / y_std
 
-elif scaler == "2":
+    x1 = X_mean
+    x2 = X_std
+    y1 = y_mean
+    y2 = y_std
+
+elif scaler == "minmax":
     # scale between 0 and 1
     x_min = X_train.min(axis=0)
     x_max = X_train.max(axis=0)
@@ -65,6 +75,11 @@ elif scaler == "2":
     X_test = (X_test - x_min) / (x_max - x_min)
     y_test = (y_test - y_min) / (y_max - y_min)
 
+    x1 = x_min
+    x2 = x_max
+    y1 = y_min
+    y2 = y_max
+
 
 
 
@@ -75,11 +90,11 @@ traindata = Data(X_train, y_train)
 testdata = Data(X_test, y_test)
 
 
-batch_size = 64
-epochs = 5000
+batch_size = 32
+epochs = 3000
 
 # number of neurons of hidden layers
-hidden_dim = 128
+hidden_dim = 256
 
 # number of hidden layers - 1
 layers = 1
@@ -91,7 +106,7 @@ weight_decay = 0.1
 start_epoch = 0
 
 # early stopping threshold
-epoch_threshold = 200
+epoch_threshold = 100
 
 # Load the training data into data loader with the
 # respective batch_size
@@ -124,8 +139,8 @@ criterion = nn.MSELoss()
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
-# learning rate scheduler
-scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=100, factor=0.5)
+# learning rate scheduler (100 patience normal)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=50, factor=0.5, min_lr=1e-6)
 
 # saving losses for each epoch to visualize
 training_loss = []
@@ -190,7 +205,7 @@ for epoch in range(start_epoch, epochs):
     if running_loss_test < best_loss:
         best_loss = running_loss_test
         best_epoch = epoch
-        save_inference(model,f'./models/straight_{hidden_dim}_{layers}.pth', X_std, X_mean, y_std, y_mean)
+        save_inference(model, f'models/{folder}_{hidden_dim}_{layers}.pth', scaler, x1, x2, y1, y2)
 
     elif epoch - best_epoch > epoch_threshold:
         print("Early stopped training at epoch %d" % epoch)
@@ -199,7 +214,7 @@ for epoch in range(start_epoch, epochs):
         break  # terminate the training loop
 
     # display statistics
-    if not ((epoch + 1) % (epochs // 100)):
+    if not ((epoch + 1) % (epochs // 10)):
         print(f'Epochs:{epoch + 1:5d} | ' \
               f'Batches per epoch: {i + 1:3d} | ' \
               f'Training loss: {running_loss / (i + 1):.10f} | ' \
@@ -218,9 +233,9 @@ for epoch in range(start_epoch, epochs):
 
 
 # load the best model for validation
-#resume(model, optimizer, f'./models/straight_{hidden_dim}_{layers}.pth')
+#resume(model, optimizer, f'./models_old/straight_{hidden_dim}_{layers}.pth')
 
-model = load_ANN(f'./models/straight_{hidden_dim}_{layers}.pth')
+model = load_ANN(f'models/{folder}_{hidden_dim}_{layers}.pth')
 
 # Validate trained model using the test dataset
 with torch.no_grad():
@@ -244,7 +259,7 @@ ax1.plot(epochss[skip:], training_loss[skip:], label='Training loss')
 ax1.plot(epochss[skip:], test_loss[skip:], label='Test loss')
 ax1.set_xlabel(r'Epoch')
 ax1.set_ylabel(r'L1 loss')
-ax1.set_title(fr'Straight. Layers: {layers}, Neurons 1st hidden layer: {hidden_dim}')
+ax1.set_title(fr'Straight. Layers: {layers + 1}, Neurons 1st hidden layer: {hidden_dim}')
 #ax1.set_ylim(0, 0.01)
 #ax1.set_xlim(100, epochs)
 plt.legend()

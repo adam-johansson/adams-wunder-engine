@@ -77,6 +77,7 @@ def plot_stations(p_array, t_array):
     ax2.set_ylabel('Temperature [K]', color=color)  # we already handled the x-label with ax1
     ax2.plot(stations, t_array, color=color, marker='o')
     ax2.tick_params(axis='y', labelcolor=color)
+    ax1.grid(True)
 
     plt.xticks(stations, labels)
 
@@ -116,32 +117,6 @@ def optimisation_csv(sfc, opr, split, pi_pe, cr, bore, fpr, bpr, p_max, T_max, T
 
     return
 
-
-def energy_output(induced_power_tot, friction_loss_tot, aux_loss_tot, fuel_pump, pe_cirumv, turbine_cooling,
-                  hpc_gear, hpc, power_lpt, lp_spool, ipc, fan_gear, fan, pe_heat, h2_heat, bypass_heat):
-
-    """
-    csv of energy
-    """
-    headers = ('component', 'P [kW]')
-    components = ('PE', 'PE friction', 'aux', 'fuel_pump', 'PE circumv compressor', 'CA compressor', 'gearbox', 'HPC',
-                  'sum HP', 'LPT', 'LP spool', 'IPC', 'fan gear', 'fan', 'sum LP', 'heat_PE',
-                  'friction_heat', 'cooling_H2', 'cooling_bypass', 'sum_heat')
-    components = np.atleast_2d(components).T
-
-    sum_HP = induced_power_tot - friction_loss_tot - aux_loss_tot - fuel_pump - pe_cirumv - turbine_cooling - hpc_gear - hpc
-    sum_LP = power_lpt - lp_spool - ipc - fan_gear - fan
-    sum_heat = pe_heat + friction_loss_tot - h2_heat - bypass_heat
-
-    powers = np.array([induced_power_tot, -friction_loss_tot, -aux_loss_tot, -fuel_pump, -pe_cirumv, -turbine_cooling,
-                       -hpc_gear, -hpc, sum_HP, power_lpt, -lp_spool, -ipc, -fan_gear, -fan, sum_LP,
-                       pe_heat, friction_loss_tot, h2_heat, bypass_heat, sum_heat]) * 1e-3
-
-    data = np.concatenate((components, np.atleast_2d(powers).T), axis=1)
-    data = np.vstack([headers, data])
-    np.savetxt("simulation_data/energy.csv", data, delimiter=",", fmt="%s")
-
-    return
 
 
 def print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, fs):

@@ -45,19 +45,36 @@ def save(model, filename):
     return
 
 
-def save_inference(model, filename, x_std, x_mean, y_std, y_mean):
+def save_inference(model, filename, scaler, x_1, x_2, y_1, y_2):
     # function that saves the weights of the ANN and the scaling params
-    torch.save({
-        'model': model.state_dict(),
-        'in_features': model.input_to_hidden.in_features,
-        'out_features': model.hidden_to_output.out_features,
-        'hidden_features': model.input_to_hidden.out_features,
-        'layers': len(model.hidden),
-        'x_std': x_std,
-        'x_mean': x_mean,
-        'y_std': y_std,
-        'y_mean': y_mean,
-    }, filename)
+    if scaler == "standard":
+        torch.save({
+            'model': model.state_dict(),
+            'in_features': model.input_to_hidden.in_features,
+            'out_features': model.hidden_to_output.out_features,
+            'hidden_features': model.input_to_hidden.out_features,
+            'layers': len(model.hidden),
+            'x_std': x_1,
+            'x_mean': x_2,
+            'y_std': y_1,
+            'y_mean': y_2,
+            'scaler': scaler,
+        }, filename)
+    elif scaler == "minmax":
+        torch.save({
+            'model': model.state_dict(),
+            'in_features': model.input_to_hidden.in_features,
+            'out_features': model.hidden_to_output.out_features,
+            'hidden_features': model.input_to_hidden.out_features,
+            'layers': len(model.hidden),
+            'x_min': x_1,
+            'x_max': x_2,
+            'y_min': y_1,
+            'y_max': y_2,
+            'scaler': scaler,
+        }, filename)
+    else:
+        print("Unknown scaler")
     return
 
 
@@ -121,12 +138,23 @@ def load_ANN(filename):
     hidden_dim = model['hidden_features']
     layers = model['layers']
     weights = model['model']
-    x_std = model['x_std']
-    x_mean = model['x_mean']
-    y_std = model['y_std']
-    y_mean = model['y_mean']
+    try:
+        scaler = model['scaler']
+    except:
+        scaler = "standard"
+    if scaler == "standard":
+        x_1 = model['x_std']
+        x_2 = model['x_mean']
+        y_1 = model['y_std']
+        y_2 = model['y_mean']
+    elif scaler == "minmax":
+        x_1 = model['x_min']
+        x_2 = model['x_max']
+        y_1 = model['y_min']
+        y_2 = model['y_max']
+
     # creates a model with the corresponding dimension
-    model_inference = InferenceModelStraight(layers, input_dim, hidden_dim, output_dim, weights, x_std, x_mean, y_std, y_mean)
+    model_inference = InferenceModelStraight(layers, input_dim, hidden_dim, output_dim, weights, scaler, x_1, x_2, y_1, y_2)
 
     return model_inference
 

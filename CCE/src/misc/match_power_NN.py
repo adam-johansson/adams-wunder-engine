@@ -64,9 +64,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             #T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
 
             # check if input is within the limits of the surrogate model
-            pmax_seiliger = seiliger(pin, Tin, cr, far34, bore)
+            pmax_seiliger = seiliger(pin, Tin, cr, far34, bore, fuel_type)
 
-            # if predicted pressure under 600 bar
+            # if predicted pressure over 600 bar
             if pmax_seiliger > 600 * 1e5:
                 return 1e6
 
@@ -74,13 +74,13 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             # use meta model to get outputs from the piston egnine
             output = meta_model.inference(piston_input)[0]
 
-            T34 = output[0]
-            eta_th = output[1]
+            #T34 = output[0]
+            #eta_th = output[1]
             air_flow = output[2] * cylinders
-            p_max = output[3]
-            T_max = output[4]
+            #p_max = output[3]
+            #T_max = output[4]
             induced_power = output[5] * cylinders
-            heat_loss = output[6] * cylinders
+            #heat_loss = output[6] * cylinders
             p_tdc = output[7]
 
             induced_power = induced_power*1e3
@@ -100,8 +100,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         # dont need compress negative pressure ratio
         if p_ratio < 1:
             p_ratio_circ = 1
-            pressure_circ, T_circumv, P_circumv = \
-                components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio_circ * 0.99 * 0.99)
+            #pressure_circ, T_circumv, P_circumv = \
+            #    components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio_circ * 0.99 * 0.99)
+            pressure_circ, T_circumv, P_circumv = 0.0, Tin, 0.0
         else:
             pressure_circ, T_circumv, P_circumv = \
                 components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99)
@@ -143,7 +144,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
         residual = np.array([shaft_power - power_req])
         if not surrogate_status:
-            print(f"{residual[0]:.16f}, {far34:.16f}")
+            print(f"(Not Neural Network) Residual between power: {residual[0]:.16f}, fuel air ratio: {far34:.16f}")
 
 
         #print(f'match_power_nn residual: {residual}, piston_input: {piston_input}')
@@ -223,8 +224,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     # negative pressure ratio dont need to compress
     if p_ratio_final < 1:
         p_ratio_circ_final = 1
-        p_circ_final, T_circ_final, P_circumv_final = \
-            components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_circ_final * 0.99 * 0.99)
+        #p_circ_final, T_circ_final, P_circumv_final = \
+        #    components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_circ_final * 0.99 * 0.99)
+        p_circ_final, T_circ_final, P_circumv_final = 0, Tin, 0
     else:
         p_circ_final, T_circ_final, P_circumv_final = \
             components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_final * 0.99 * 0.99)
@@ -259,14 +261,14 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         n_r = 1
 
     # auxiliary losses and friction losses. these do not depend on the trapped fuel air ratio
-    fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(bore, rpm, stroke, v_mean, pin, cr, cylinders,
+    fmep_final, fmep_aux_final, fmep_pe_loss_final = post_processing.friction_patton(bore, rpm, stroke, v_mean, pin, cr, cylinders,
                                                                    lv_max)
-    friction_loss = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
-    aux_loss = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
+    friction_loss_final = fmep_pe_loss_final * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+    aux_loss_final = fmep_aux_final * Vd_tot * rps / n_r  # auxiliary losses
 
 
     # power out from engine after fuel pump and aux losses and friction and pressurising circumventing flow
-    shaft_power_final = induced_power_final - aux_loss - friction_loss - P_circumv_final - P_fuel_pump_final
+    shaft_power_final = induced_power_final - aux_loss_final - friction_loss_final - P_circumv_final - P_fuel_pump_final
 
     #print(T35_final)
     #print(p_ratio_final)
@@ -274,7 +276,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
     return T34_final, T35_final, p34, p35, m34, m35, far34_final, far35, shaft_power_final,\
         air_flow_final, p_max_final, T_max_final, far34_final, induced_power_final, \
-        friction_loss, aux_loss, heat_loss_final, P_fuel_pump_final, bore, error, P_circumv_final
+        friction_loss_final, aux_loss_final, heat_loss_final, P_fuel_pump_final, bore, error, P_circumv_final
 
 
 

@@ -1,4 +1,4 @@
-from piston_engine.src.piston.polynomials import O2, N2, CO2, Ar, H2O
+from piston_engine.src.piston.polynomials import O2, N2, CO2, Ar, H2O, H2
 
 from CoolProp.CoolProp import PropsSI
 
@@ -6,8 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-t = 700
 p = 1e5
+
+t = 298.15
+p = 1e5
+tref = 298.15
 
 N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
 x_O2_air = 1 / N_air  # molar fraction of O2
@@ -19,18 +22,56 @@ hO2_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Oxygen')
 hAr_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Argon')
 hH2O_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Water')
 hCO2_cp = PropsSI('HMASS', 'T', t, 'P', p, 'CarbonDioxide')
+hH2_cp = PropsSI('HMASS', 'T', t, 'P', p, 'Hydrogen')
+
+hN2_cpref = PropsSI('HMASS', 'T', tref, 'P', p, 'Nitrogen')
+hO2_cpref = PropsSI('HMASS', 'T', tref, 'P', p, 'Oxygen')
+hAr_cpref = PropsSI('HMASS', 'T', tref, 'P', p, 'Argon')
+hH2O_cpref = PropsSI('HMASS', 'T', tref, 'P', p, 'Water')
+hCO2_cpref = PropsSI('HMASS', 'T', tref, 'P', p, 'CarbonDioxide')
+hH2_cpref = PropsSI('HMASS', 'T', tref, 'P', p, 'Hydrogen')
+
+sN2_cp = PropsSI('SMASS', 'T', t, 'P', p, 'Nitrogen')
+sO2_cp = PropsSI('SMASS', 'T', t, 'P', p, 'Oxygen')
+sAr_cp = PropsSI('SMASS', 'T', t, 'P', p, 'Argon')
+sH2O_cp = PropsSI('SMASS', 'T', t, 'P', p, 'Water')
+sCO2_cp = PropsSI('SMASS', 'T', t, 'P', p, 'CarbonDioxide')
+sH2_cp = PropsSI('SMASS', 'T', t, 'P', p, 'Hydrogen')
+
 
 cpN2, hN2, sN2, M_N2 = N2(t, p)
 cpO2, hO2, sO2, M_O2 = O2(t, p)
 cpCO2, hCO2, sCO2, M_CO2 = CO2(t, p)
 cpH2O, hH2O, sH2O, M_H2O = H2O(t, p)
-cp_Ar, hAr, s_Ar, M_Ar = Ar(t, p)
+cp_Ar, hAr, sAr, M_Ar = Ar(t, p)
+cp_H2, hH2, sH2, M_H2 = H2(t, p)
 
-print(f'N2. NASA:{hN2}, CoolProp: {hN2_cp}')
-print(f'O2. NASA:{hO2}, CoolProp: {hO2_cp}')
-print(f'Ar. NASA:{hAr}, CoolProp: {hAr_cp}')
-print(f'CO2. NASA:{hCO2 * M_CO2}, CoolProp: {hCO2_cp * M_CO2}')
-print(f'H2O. NASA:{hH2O * M_H2O}, CoolProp: {hH2O_cp * M_H2O}')
+_, hN2ref, _, M_N2 = N2(tref, p)
+_, hO2ref, _, M_O2 = O2(tref, p)
+_, hCO2ref, _, M_CO2 = CO2(tref, p)
+_, hH2Oref, _, M_H2O = H2O(tref, p)
+_, hArref, _, M_Ar = Ar(tref, p)
+_, h2rref, _, M_H2 = H2(tref, p)
+
+print(f'N2. NASA:{hN2 - hN2ref}, CoolProp: {hN2_cp - hN2_cpref}')
+print(f'O2. NASA:{hO2 - hO2ref}, CoolProp: {hO2_cp - hO2_cpref}')
+print(f'Ar. NASA:{hAr - hArref}, CoolProp: {hAr_cp - hAr_cpref}')
+print(f'CO2. NASA:{hCO2 - hCO2ref}, CoolProp: {hCO2_cp - hCO2_cpref}')
+print(f'H2O. NASA:{hH2O - hH2Oref}, CoolProp: {hH2O_cp - hH2O_cpref}')
+
+print(f'N2. NASA:{hN2}, CoolProp: {hN2_cp - hN2_cpref}')
+print(f'O2. NASA:{hO2}, CoolProp: {hO2_cp - hO2_cpref}')
+print(f'Ar. NASA:{hAr}, CoolProp: {hAr_cp - hAr_cpref}')
+print(f'CO2. NASA:{hCO2}, CoolProp: {hCO2_cp - hCO2_cpref}')
+print(f'H2O. NASA:{hH2O}, CoolProp: {hH2O_cp - hH2O_cpref}')
+print(f'H2. NASA:{hH2}, CoolProp: {hH2_cp - hH2_cpref}')
+
+print(f'Entropy: N2. NASA:{sN2}, CoolProp: {sN2_cp}')
+print(f'Entropy: O2. NASA:{sO2}, CoolProp: {sO2_cp}')
+print(f'Entropy: Ar. NASA:{sAr}, CoolProp: {sAr_cp}')
+print(f'Entropy: CO2. NASA:{sCO2 * M_CO2}, CoolProp: {sCO2_cp}')
+print(f'Entropy: H2O. NASA:{sH2O * M_H2O}, CoolProp: {sH2O_cp}')
+print(f'Entropy: H2. NASA:{sH2 * M_H2}, CoolProp: {sH2_cp}')
 
 
 cp_Air_list = []

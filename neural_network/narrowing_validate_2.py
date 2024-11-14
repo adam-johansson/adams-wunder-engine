@@ -19,7 +19,7 @@ from src import load_inference
 
 
 # Load the trained model
-model = load_inference("./models/narrowing_512_2.pth")
+model = load_inference("models_old/narrowing_512_2.pth")
 print(model)
 
 # putting the model in output mode (this is done in the class already)

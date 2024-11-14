@@ -5,12 +5,13 @@ from CCE.src.gas_props.air_properties import isa
 # Take-off alt = 0 Mach = 0 disa = + 30
 # Cruise alt = 10000 Mach = 0.7 disa = ?
 
-alt = 11800
-disa = 0
-Mach = 0.7
+#alt = 11800
+alt = 0
+disa = 30
+Mach = 0.0
 
 # compressor pressure ratio
-pr = 10
+pr = 30
 
 # compression ratio engine
 cr = 10.5

@@ -1,7 +1,9 @@
 from .polynomials import N2, O2, CO2, H2O, Ar
 from scipy.optimize import fsolve
+from numba import jit
 
 
+@jit()
 def mixture(equ, t, p, fuel_type):
     """
     Function that return thermodynamic properties of a mixture based on the 
@@ -144,7 +146,7 @@ def mixture(equ, t, p, fuel_type):
 
     return h, u, cp, cv, R, gamma, s
 
-
+@jit()
 def equivalence_derivative(equ, t, p, fuel_type):
     """
     Function that returns the partial derivative of specific gas constant R 
@@ -296,35 +298,4 @@ def equivalence_derivative(equ, t, p, fuel_type):
         raise Exception('Fuel type must be specified.')
 
     return dellRdellequ, delludellequ
-
-def isen(T0, p0, p_final, gamma):
-    
-    """
-    def find_isen(T,p0,equ0,p_final,x_N2in, x_O2in):
-        cp_N2, h_N2, sn2 = polynomials.N2(T)
-        cp_O2, h_O2, so2 = polynomials.O2(T)
-        cp_CO2, h_CO2, sCO2 = polynomials.CO2(T)
-        cp_H2O, h_H2O, sH2O = polynomials.H2O(T)
-    
-        h_array = [h_N2, h_O2, h_CO2, h_H2O]
-        cp_array = [cp_N2, cp_O2, cp_CO2, cp_H2O]
-    
-        h, u, cp, cv, R, gamma = mixture(equ0, T0, x_N2in, x_O2in, h_array, cp_array)
-        
-        
-        #basically
-        
-        # s(T_final,p_final) - s(T0,p0) = 0
-        # return s(T,p_final) - s(T0,p0)
-    """
-    T_final = T0*(p_final/p0)**((gamma-1)/gamma)
-
-
-    #T_final = fsolve(find_isen,T0)
-    
-    
-    
-    return T_final
-
-
 

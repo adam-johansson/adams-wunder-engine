@@ -29,12 +29,12 @@ pi_pe_dummy = 1
 cr_dummy = 1
 bore_dummy = 1
 
-data = [d.Fn, d.dTisa, d.bpr, d.T35, d.fpr_outer, d.Fs_req, d.dp_intake, d.dp_bypass,
+data = [d.Fn, d.dTisa, d.bpr, d.T4, d.fpr_outer, d.Fs_req, d.dp_intake, d.dp_bypass,
         d.M, d.eta_inner_fan, d.eta_outer_fan,
         d.pi_hpc, d.eta_p_hpc, d.pi_ipc, d.eta_p_ipc,
         d.eta_b, d.dPcomb, d.eta_s, d.eta_g, d.q_ngv,
         d.bpr_c, d.eta_s_lpt, d.cfg_core, d.cfg_bypass, d.cd_nozzle, d.alt, d.fuel, d.pi_pe, d.surrogate, d.m0,
-        d.cr, d.OPR, d.PR, d.bore, d.second_burner]
+        d.cr, d.OPR, d.PR, d.bore, d.second_burner, d.t_fuel, d.t_tank]
 
 data_piston = [p_in_dummy, T_in_dummy, pi_pe_dummy, d_p.cycle, d_p.thermo, d_p.cooling, d_p.opposed,
                cr_dummy, bore_dummy, d_p.bsr, d_p.v_mean, d_p.lms, d_p.Twalls, d_p.ch, d_p.valve_timings,
@@ -43,9 +43,8 @@ data_piston = [p_in_dummy, T_in_dummy, pi_pe_dummy, d_p.cycle, d_p.thermo, d_p.c
                d_p.throttle, d_p.cylinders, d_p.fuel, d_p.c1, d_p.c4, d_p.c5]
 
 
-
 # Load the trained model
-meta_model = load_ANN("./meta_models/piston_NN.pth")
+meta_model = load_ANN("./meta_models/straight_2048_0.pth")
 print(meta_model)
 
 if 'single' in flags:

@@ -1,7 +1,10 @@
+#from statsmodels.sandbox.regression.ols_anova_original import xx_b1
 from torch.utils.data import Dataset
 import numpy as np
 import torch
 import torch.nn as nn
+
+#from neural_network.simple import scaler
 
 
 class Data(Dataset):
@@ -98,20 +101,30 @@ class InferenceModel(NET_narrowing):
 
 
 class InferenceModelStraight(NET_straight):
-    def __init__(self, layers, input_dim, hidden_dim, output_dim, weights, x_std, x_mean, y_std, y_mean):
+    def __init__(self, layers, input_dim, hidden_dim, output_dim, weights, scaler, x_1, x_2, y_1, y_2):
         super().__init__(layers, input_dim, hidden_dim, output_dim)
         # load weights from saved file
         self.load_state_dict(weights)
-        self.x_std = x_std
-        self.x_mean = x_mean
-        self.y_std = y_std
-        self.y_mean = y_mean
+        self.scaler = scaler
+        if self.scaler == "standard":
+            self.x_std = x_1
+            self.x_mean = x_2
+            self.y_std = y_1
+            self.y_mean = y_2
+        elif self.scaler == "minmax":
+            self.x_min = x_1
+            self.x_max = x_2
+            self.y_min = y_1
+            self.y_max = y_2
 
     def inference(self, x: np.array) -> np.array:
         #print(np.shape(np.atleast_2d(x))[0])
         if np.shape(np.atleast_2d(x))[0] == 1:
             x = x.reshape(1, -1)
-        x = (x - self.x_mean) / self.x_std
+        if self.scaler == "standard":
+            x = (x - self.x_mean) / self.x_std
+        elif self.scaler == "minmax":
+            x = (x - self.x_min) / (self.x_max - self.x_min)
         if np.shape(np.atleast_2d(x))[0] == 1:
             x = torch.tensor(x, dtype=torch.float32).reshape(1, -1)
         else:
@@ -119,7 +132,10 @@ class InferenceModelStraight(NET_straight):
         self.eval()
         with torch.no_grad():
             y = self.forward(x)
-        y = self.y_mean + self.y_std * y.detach().numpy()
+        if self.scaler == "standard":
+            y = self.y_mean + self.y_std * y.detach().numpy()
+        elif self.scaler == "minmax":
+            y = self.y_min + (self.y_max - self.y_min) * y.detach().numpy()
 
         return y
 

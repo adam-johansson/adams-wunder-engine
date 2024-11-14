@@ -163,7 +163,7 @@ for epoch in range(start_epoch, epochs):
     if running_loss_test < best_loss:
         best_loss = running_loss_test
         best_epoch = epoch
-        checkpoint(model, optimizer, X_scaler, y_scaler, f'./models/straight_{hidden_dim}_{layers}.pth')
+        checkpoint(model, optimizer, X_scaler, y_scaler, f'models_old/straight_{hidden_dim}_{layers}.pth')
 
     elif epoch - best_epoch > epoch_threshold:
         print("Early stopped training at epoch %d" % epoch)
@@ -192,11 +192,11 @@ for epoch in range(start_epoch, epochs):
 
 
 # save the trained model
-#PATH = './models/narrowing_256_3.pth'
+#PATH = './models_old/narrowing_256_3.pth'
 #torch.save(model.state_dict(), PATH)
 
 # load the best model for validation
-resume(model, optimizer, f'./models/straight_{hidden_dim}_{layers}.pth')
+resume(model, optimizer, f'models_old/straight_{hidden_dim}_{layers}.pth')
 
 # Validate trained model using the test dataset
 with torch.no_grad():

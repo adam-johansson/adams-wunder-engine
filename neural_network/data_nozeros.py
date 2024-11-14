@@ -3,9 +3,13 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+from piston_engine.src.misc import seiliger, temp_lim
 
-X = pd.read_csv('./input_data/H2_adaptive_large/x.csv', index_col=0)
-y = pd.read_csv('./input_data/H2_adaptive_large/y.csv', index_col=0)
+folder = "H2"
+
+
+X = pd.read_csv('./input_data/' + folder + '/x.csv', index_col=0)
+y = pd.read_csv('./input_data/' + folder + '/y.csv', index_col=0)
 
 
 print(np.shape(X))
@@ -13,8 +17,20 @@ print(np.shape(X))
 # remove all the data points with zeros
 mask = y.p_max > 0
 print(f"Number of data points that was removed during sampling {np.count_nonzero(mask == 0)}")
+print(f"Number of data points left: {np.shape(X)[0] - np.count_nonzero(mask == 0)}")
 y_cleaned = y[mask]
 X_cleaned = X[mask]
+
+
+mask = temp_lim.t_in_lim(X_cleaned.p_in) > X_cleaned.T_in
+
+print(f"Number of data points with too high temperature {np.count_nonzero(mask == 0)}")
+
+y_cleaned = y_cleaned[mask]
+X_cleaned = X_cleaned[mask]
+
+y_cleaned.reset_index(drop=True, inplace=True)
+X_cleaned.reset_index(drop=True, inplace=True)
 
 # insight into the data
 max_pressure = np.max(y_cleaned.p_max)
@@ -66,7 +82,7 @@ print(f"Maximum pressure at top dead centre is {max_ptdc} bar")
 print(f"Minimum pressure at top dead centre is {min_ptdc} bar")
 
 # count how many data points have peak pressure below 300 bar
-print(f"Number of data points with peak pressure over 300 bar {np.count_nonzero(y.p_max > 300)}")
+print(f"Number of data points with peak pressure under 300 bar {np.count_nonzero(y_cleaned.p_max < 300)}")
 
 
 plt.plot(y_cleaned.p_max, 'o', markersize=1)
@@ -74,9 +90,14 @@ plt.ylabel("peak pressure [bar]")
 plt.xlabel("data point")
 plt.show()
 
+plt.plot(X_cleaned.p_in*1e-5, X_cleaned.T_in, 'o', markersize=1)
+plt.xlabel("Intake pressure [bar]")
+plt.ylabel("Intake temperature [K]")
+plt.show()
 
-pd.DataFrame.to_csv(X_cleaned, './input_data/H2_adaptive_large/x_cleaned.csv')
-pd.DataFrame.to_csv(y_cleaned, './input_data/H2_adaptive_large/y_cleaned.csv')
+
+pd.DataFrame.to_csv(X_cleaned, './input_data/' + folder + '/x_cleaned.csv')
+pd.DataFrame.to_csv(y_cleaned, './input_data/' + folder + '/y_cleaned.csv')
 
 
 

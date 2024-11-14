@@ -1,7 +1,7 @@
 import math
 
 
-def seiliger(p1, t1, cr, far, bore):
+def seiliger(p1, t1, cr, far, bore, fuel):
 
     # top dead center pressure estimate
     p_tdc = p1 * (cr) ** 1.4 * 0.9
@@ -12,7 +12,10 @@ def seiliger(p1, t1, cr, far, bore):
     cv = cp / 1.4
 
     # lower heating value h2
-    lhv = 119.96e6
+    if fuel == "h2":
+        lhv = 119.96e6
+    else:
+        lhv = 42.8e6
 
     # cylinder volume
     V = bore * (bore / 2) ** 2 * math.pi
@@ -24,7 +27,7 @@ def seiliger(p1, t1, cr, far, bore):
     # air in cylinder
     m_air = rho_air * V
 
-    # mass of h2 injected
+    # mass of fuel injected
     m_h2 = m_air * far
 
     # amount of heat added (factor 0.6 from Kaiser paper)

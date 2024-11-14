@@ -1,5 +1,5 @@
 import numpy as np
-
+from numba import jit
 
 def dqfdt_kaiser(Qf, t, t_soc, t_eoc, wa, wm):
     # Wiebe function from Kaiser's thesis
@@ -10,6 +10,7 @@ def dqfdt_kaiser(Qf, t, t_soc, t_eoc, wa, wm):
     return 0.0
 
 
+@jit()
 def dqfdt_single(phi, m, phi_sc, phi_cd, Qf):
     # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
     if phi > phi_sc:

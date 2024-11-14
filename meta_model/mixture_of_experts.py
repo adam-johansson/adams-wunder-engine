@@ -13,11 +13,11 @@ xval = np.genfromtxt('../piston_engine/surrogate_data/xval.csv', delimiter=',')
 yt = np.genfromtxt('../piston_engine/surrogate_data/yt.csv', delimiter=',')
 yval = np.genfromtxt('../piston_engine/surrogate_data/yval.csv', delimiter=',')
 
-# Only 1 cluster is considered and the surrogate models are compared on a test set from the training database
+# Only 1 cluster is considered and the surrogate models_old are compared on a test set from the training database
 moe = MOE(n_clusters=1)
 moe = MOE(n_clusters=1, xtest=xval, ytest=yval[:, 0])
 
-# to choose some restrictions of the available models use allow option
+# to choose some restrictions of the available models_old use allow option
 moe = MOE(n_clusters=1, allow=['KRG', 'LS', 'QP', 'KPLSK', 'RBF', 'IDW', 'GEKPLS'])
 #allow=["KRG", "LS", "QP"]
 
@@ -50,4 +50,4 @@ if plot_status:
 if plot_status:
     plt.show()
 
-# to add a validation set (xtest,ytest) in order to compare different surrogate models
+# to add a validation set (xtest,ytest) in order to compare different surrogate models_old

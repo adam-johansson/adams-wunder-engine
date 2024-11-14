@@ -1,4 +1,3 @@
-#import cantera as ct
 import numpy as np
 from timeit import default_timer as timer
 
@@ -7,16 +6,35 @@ from piston_engine.src.piston import thermo_computations
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
 
-from CCE.src.thermo import fuel_props, properties
+from piston_engine.src.piston.fuel_func import fuel_props
+from piston_engine.src.piston.fluid_props import properties
 
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
+
+
+from piston_engine.src.misc.output import output_thermo, output_power, output_efficiencies
+
+from piston_engine.src.misc.plot_output import plot_validation
+
+
+from piston_engine.src.misc.plot_output import plot_rohr, plot_pvts
+
+from piston_engine.src.misc.plot_output import plot_energy, plot_convergence, plot_progress
+from piston_engine.src.misc.plot_output import plot_essentials, plot_manifolds, plot_details, plot_massflows
+
+
+from piston_engine.src.misc.output import output_thermo_validation, output_power_validation, \
+    output_scavenging_validation, output_efficiencies_validation
+
+from numba import jit
 
 Runiv = 8.3144626  # J mol^-1 K^-1
 
 dPdphi_temp = 0
 
 
+#@jit(nopython=True)
 def run_piston_engine(indata, flags):
     [p_in, T_in, p_ratio, cycle, thermo, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
      valve_timings, n_valve, lv_max, cd, eta_c, mf_tot, wa, wm, m_wiebe,
@@ -24,6 +42,8 @@ def run_piston_engine(indata, flags):
      c1, c4, c5] = indata
 
     p_out = p_ratio * p_in
+
+    Twalls = np.array(Twalls)
 
     phi_open_in = valve_timings[0]
     phi_close_in = valve_timings[1]
@@ -55,9 +75,9 @@ def run_piston_engine(indata, flags):
     phi_ec = (phi_sc + phi_cd)  # angle at combustion end
 
     if fuel_type == 'jetA':
-        cp_fuel, h_fuel = polynomials.JETA(T_fuel)
+        cp_fuel, h_fuel, _, _ = polynomials.JETA(T_fuel)
     elif fuel_type == 'H2':
-        cp_fuel, h_fuel, s_fuel, M_fuel = polynomials.H2(T_fuel)
+        cp_fuel, h_fuel, s_fuel, M_fuel = polynomials.H2(T_fuel, p_fuel)
     else:
         raise Exception('Unknown fuel.')
 
@@ -114,6 +134,7 @@ def run_piston_engine(indata, flags):
         mf_tot = far_tot * m_air_theo
         Qf = LHV * mf_tot  #hmmm eta_c or not
 
+    @jit(nopython=True)
     def dxdphi(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
         # solve a system of ODEs for pressure, temperature, volume
         # assign ode to vector element
@@ -143,16 +164,13 @@ def run_piston_engine(indata, flags):
         Q_app = x[23]  # apparent heat release
 
         # Gas properties inside the cylinder
-        h, u, cp, cv, R, gamma, entropy = \
-            thermo_computations.mixture(equ, T, P, fuel_type)
+        h, u, cp, cv, R, gamma, entropy = thermo_computations.mixture(equ, T, P, fuel_type)
 
         # Intake port values
-        h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP = \
-            thermo_computations.mixture(equ_IP, T_IP, p_in, fuel_type)
+        h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP = thermo_computations.mixture(equ_IP, T_IP, p_in, fuel_type)
 
         # Exhaust port values
-        h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP = \
-            thermo_computations.mixture(equ_EP, T_EP, p_out, fuel_type)
+        h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP = thermo_computations.mixture(equ_EP, T_EP, p_out, fuel_type)
 
         # Phi derivative of the volume (without Taylor expansion)
         # Opposed piston
@@ -189,10 +207,13 @@ def run_piston_engine(indata, flags):
         # Heat loss
         ref = (Pref, Tref, Vref, Pmotor, Vmotor)
         Awall = (V / Apiston) * (d * np.pi)  # Wall area in contact with the fluid
-        if opposed:
-            Awalls = [Awall, Apiston, Apiston]
-        else:
-            Awalls = [Awall, Apiston, Ahead]
+
+        # removed opposed piston functionality for now
+        #if opposed:
+        #    Awalls = [Awall, Apiston, Apiston]
+        #else:
+        #    Awalls = [Awall, Apiston, Ahead]
+        Awalls = np.array([Awall, Apiston, Ahead])
 
         if cooling == "Woschni":
             if np.mod(phi, cycle_phi) > phi_sc and np.mod(phi, cycle_phi) < phi_open_out:
@@ -551,36 +572,6 @@ def run_piston_engine(indata, flags):
             return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 
-    # for j in range(it):
-    #    for i in range(len(T[-1])):
-    #        air.TP = T[j][i],P[j][i]
-    #        Cv[j][i] = air.cv
-    #        Cp[j][i] = air.cp
-    #        S[j][i] = air.s
-
-    # Cv = np.zeros((it,len(T[-1])))
-    # Cp = np.zeros((it,len(T[-1])))
-    # S = np.zeros((it,len(T[-1])))
-
-    # for j in range(it):
-    #    for i in range(len(T[-1])):
-    #        cp_N2, h_N2, s_N2 = polynomials.N2(T[j][i])
-    #        cp_O2, h_O2, s_O2 = polynomials.O2(T[j][i])
-    #        cp_CO2, h_CO2, s_CO2 = polynomials.CO2(T[j][i])
-    #        cp_H2O, h_H2O, s_H2O = polynomials.H2O(T[j][i])
-    #        
-    #        h_array = [h_N2, h_O2, h_CO2, h_H2O]
-    #        cp_array = [cp_N2, cp_O2, cp_CO2, cp_H2O]
-    #        s_array = [s_N2, s_O2, s_CO2, s_H2O]
-    #        
-    #        h, u, cp, cv, R, gamma, entropy = \
-    #            thermo_computations.mixture(equ[j][i], T[j][i], x_N2in, x_O2in, h_array, cp_array,s_array)
-    #            
-    #        Cv[j][i] = cv
-    #        Cp[j][i] = cp
-    #        S[j][i] = entropy*m[j][i]
-
-    # %%
     ## Post processing
     # Calculate power and induced mean effective pressure
     n_r = cycle_phi/(2*np.pi)  # crank revolutions per power stroke ( 1 for two-stroke and 2 for four-stroke)
@@ -592,17 +583,18 @@ def run_piston_engine(indata, flags):
     power_engine = W[-1][-1] * cylinders / t_cycle  # Total indicated power for the entire engine
     Vd_tot = V_d * cylinders
 
-    fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders, lv_max)
-    bmep = imep - fmep
+    if 'sweep' not in flags:
+        fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders, lv_max)
+        bmep = imep - fmep
 
-    friction_power = fmep * V_d * rps / n_r  # power lost from piston to crankshaft
-    break_power = bmep * V_d * rps / n_r  # total power at the crankshaft
+        friction_power = fmep * V_d * rps / n_r  # power lost from piston to crankshaft
+        break_power = bmep * V_d * rps / n_r  # total power at the crankshaft
+
+        # Calculate some scavenging things
+        purity, residual_fraction, eta_trapping, eta_charging, delivery_ratio, eta_sc = \
+            post_processing.scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_d, m)
 
     heat_loss_single = Q[-1][-1] / t_cycle
-
-    # Calculate some scavenging things
-    purity, residual_fraction, eta_trapping, eta_charging, delivery_ratio, eta_sc = \
-        post_processing.scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_d, m)
 
     # Calculate mass flow
     air_flow = m_in_IP[-1][-1] / t_cycle
@@ -620,87 +612,98 @@ def run_piston_engine(indata, flags):
     p_tdc = P[-1][np.argwhere(phi >= 2*np.pi)[0][0]]
 
     # For multiple cylinders. Values for the entire engine (for example for one V10 engine)
-    friction_power_engine = fmep * Vd_tot * rps / n_r  # power lost from piston to crankshaft
-    break_power_engine = break_power * cylinders  # total power at the crankshaft
+    if "sweep" not in flags:
+        friction_power_engine = fmep * Vd_tot * rps / n_r  # power lost from piston to crankshaft
+        break_power_engine = break_power * cylinders  # total power at the crankshaft
+        friction_losses = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+        aux_losses = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
+
+        # Calculate entropy for the last cycle
+        s_specific = entropy_calc(T[-1], equ[-1], fuel_type, P[-1])
+
     air_flow_engine = air_flow * cylinders
     fuel_flow_engine = fuel_flow * cylinders
-
-    friction_losses = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
-    aux_losses = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
 
     heat_losses = heat_loss_single * cylinders
 
     # Fuel air ratio based on the total fuel and air flows
     far_avg = fuel_flow_engine / air_flow_engine
 
-    # Calculate entropy for the last cycle
+    if "sweep" in flags:
+        #removed friction for now when sampling/sweeping
+        break_power_engine = 0.0
+        friction_losses = 0.0
+        aux_losses = 0.0
 
-    s_specific = entropy_calc(T[-1], equ[-1], fuel_type, P[-1])
 
-    if "validation" in flags:
-        validation = True
-    else:
-        validation = False
+    # post processing
+    if "sweep" not in flags:
+        if "validation" in flags:
+            validation = True
+        else:
+            validation = False
 
-    if 'save' in flags:
-        np.savetxt("simulation_data/P.csv", P[-1], delimiter=",")
-        np.savetxt("simulation_data/T.csv", T[-1], delimiter=",")
-        np.savetxt("simulation_data/m.csv", m[-1], delimiter=",")
-        np.savetxt("simulation_data/equ.csv", equ[-1], delimiter=",")
-        np.savetxt("simulation_data/rohr.csv", Q_in[-1], delimiter=",")
-        np.savetxt("simulation_data/Qapparent.csv", Q_apparent[-1], delimiter=",")
-        np.savetxt("simulation_data/phi.csv", phi, delimiter=",")
+        if 'save' in flags:
+            np.savetxt("simulation_data/P.csv", P[-1], delimiter=",")
+            np.savetxt("simulation_data/T.csv", T[-1], delimiter=",")
+            np.savetxt("simulation_data/m.csv", m[-1], delimiter=",")
+            np.savetxt("simulation_data/equ.csv", equ[-1], delimiter=",")
+            np.savetxt("simulation_data/rohr.csv", Q_in[-1], delimiter=",")
+            np.savetxt("simulation_data/Qapparent.csv", Q_apparent[-1], delimiter=",")
+            np.savetxt("simulation_data/phi.csv", phi, delimiter=",")
 
-    if "plot_validation" in flags:
-        from src.misc.plot_output import plot_validation
-        plot_validation(phi, P, T, m, equ)
+        if "plot_validation" in flags:
+            from src.misc.plot_output import plot_validation
+            plot_validation(phi, P, T, m, equ)
 
-    if "plot_essentials" in flags:
-        from src.misc.plot_output import plot_essentials, plot_rohr
-        plot_essentials(phi, T, P, m, equ, validation)
-        plot_rohr(phi, Q[-1], Q_in[-1], V[-1], Apiston, dtdphi, d, P[-1], T[-1])
+        if "plot_essentials" in flags:
+            from src.misc.plot_output import plot_essentials, plot_rohr
+            plot_essentials(phi, T, P, m, equ, validation)
+            plot_rohr(phi, Q[-1], Q_in[-1], V[-1], Apiston, dtdphi, d, P[-1], T[-1])
 
-    if "plot_pv" in flags:
-        from src.misc.plot_output import plot_pvts
-        #plot_pv(P[-1], V[-1])
-        #plot_ts(T[-1], S[-1])
-        plot_pvts(P[-1], V[-1], T[-1], s_specific, S[-1])
+        if "plot_pv" in flags:
+            from src.misc.plot_output import plot_pvts
+            # plot_pv(P[-1], V[-1])
+            # plot_ts(T[-1], S[-1])
+            plot_pvts(P[-1], V[-1], T[-1], s_specific, S[-1])
 
-    if "plot_convergence" in flags:
-        from src.misc.plot_output import plot_convergence
-        plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff)
+        if "plot_convergence" in flags:
+            from src.misc.plot_output import plot_convergence
+            plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff)
 
-    if "plot_all" in flags:
-        from src.misc.plot_output import plot_energy, plot_convergence, plot_diagrams, plot_progress
-        from src.misc.plot_output import plot_essentials, plot_manifolds, plot_details, plot_massflows
-        plot_essentials(phi, T, P, m, equ, validation)
-        plot_massflows(phi, m_in, mf, mdotin, mdotout, V, validation)
-        plot_energy(phi, W, Q, m_in, Q_in, mf)
-        plot_convergence(pdiff, Tdiff, mdiff, equdiff)
-        plot_manifolds(phi, equ_IP, m_IP, T_IP, equ_EP, m_EP, T_EP)
+        if "plot_all" in flags:
+            from src.misc.plot_output import plot_energy, plot_convergence, plot_diagrams, plot_progress
+            from src.misc.plot_output import plot_essentials, plot_manifolds, plot_details, plot_massflows
+            plot_essentials(phi, T, P, m, equ, validation)
+            plot_massflows(phi, m_in, mf, mdotin, mdotout, V, validation)
+            plot_energy(phi, W, Q, m_in, Q_in, mf)
+            plot_convergence(pdiff, Tdiff, mdiff, equdiff)
+            plot_manifolds(phi, equ_IP, m_IP, T_IP, equ_EP, m_EP, T_EP)
 
-    if 'output_all' and 'validation' in flags:
-        from src.misc.output import output_thermo_validation, output_power_validation,\
-            output_scavenging_validation, output_efficiencies_validation
-        output_thermo_validation(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
-        output_power_validation(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single)
-        output_efficiencies_validation(eta_th, hl)
-        output_scavenging_validation(purity, residual_fraction, eta_trapping,
-                                     eta_charging, delivery_ratio, eta_sc, equ_avg)
+        if 'output_all' and 'validation' in flags:
+            from src.misc.output import output_thermo_validation, output_power_validation, \
+                output_scavenging_validation, output_efficiencies_validation
+            output_thermo_validation(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
+            output_power_validation(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single)
+            output_efficiencies_validation(eta_th, hl)
+            output_scavenging_validation(purity, residual_fraction, eta_trapping,
+                                         eta_charging, delivery_ratio, eta_sc, equ_avg)
 
-    if 'output_power' and 'validation' in flags:
-        from src.misc.output import output_power_validation
-        output_power_validation(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single)
+        if 'output_power' and 'validation' in flags:
+            from src.misc.output import output_power_validation
+            output_power_validation(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep,
+                                    heat_loss_single)
 
-    if 'output_all' in flags and not validation:
-        from src.misc.output import output_thermo, output_power, output_efficiencies
-        output_thermo(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
-        output_power(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single, equ_avg)
-        output_efficiencies(eta_th, hl)
+        if 'output_all' in flags and not validation:
+            from src.misc.output import output_thermo, output_power, output_efficiencies
+            output_thermo(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
+            output_power(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single, equ_avg)
+            output_efficiencies(eta_th, hl)
 
-    if 'output_power' in flags and not validation:
-        from src.misc.output import output_power
-        output_power(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single, equ_avg)
+        if 'output_power' in flags and not validation:
+            from src.misc.output import output_power
+            output_power(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single,
+                         equ_avg)
 
     return T_out[-1], break_power_engine*1e-3, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
         power_engine, friction_losses, aux_losses, heat_losses, p_tdc

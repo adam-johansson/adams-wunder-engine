@@ -45,7 +45,7 @@ y_test = y_scaler.fit_transform(y_test)
 
 
 # Create new model and load states
-model = load("./models/straight_512_2.pth")
+model = load("models_old/straight_512_2.pth")
 print(model)
 
 

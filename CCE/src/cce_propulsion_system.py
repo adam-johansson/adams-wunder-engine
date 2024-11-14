@@ -7,9 +7,10 @@ from CCE.src.gas_props.air_properties import isa
 
 
 def run_cce(indata, data_piston, flags, meta_model):
-    [Fn, disa, bpr, T35_req, fpr_outer, Fs_req, dp_in, dp_bypass, Mach, eta_inner_fan,
+    [Fn, disa, bpr, T4_req, fpr_outer, Fs_req, dp_in, dp_bypass, Mach, eta_inner_fan,
      eta_outer_fan, pi_hpc, eta_p_hpc, pi_ipc, eta_p_ipc, eta_b, dPcomb, eta_s, eta_g, q_ngv, bpr_c,
-     eta_s_lpt, cfg_core, cfg_bypass, cd_nozzle, alt, fuel_type, pi_pe, surrogate, m0, cr, OPR, PR, bore, second_burner] = indata
+     eta_s_lpt, cfg_core, cfg_bypass, cd_nozzle, alt, fuel_type, pi_pe, surrogate, m0, cr, OPR, PR, bore,
+     second_burner, t_fuel, t_tank] = indata
 
     error = False
     minor_error_mass = False
@@ -89,9 +90,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     data_piston[2] = pi_pe
     data_piston[7] = cr
     data_piston[8] = bore
-
-    # flags: plot, output, validation, sweep
-    flags_piston = ["sweep"]
+    data_piston[25] = t_fuel
 
     # Number of V12 engines
     nr_engines = 2
@@ -102,16 +101,9 @@ def run_cce(indata, data_piston, flags, meta_model):
     power_req_single = power_req / nr_engines
     # flow_req_single = m32 / nr_engines  # flow in each piston engine
 
-    # matching throttle and diameter
-    # T34, power_piston, eta_th, air_flow, p_max, T_max, far_piston, bore_match, equ_trapped, throttle_match, \
-    #    induced_power, friction_loss, aux_loss, heat_loss \
-    #    = misc.match_piston_engine(data_piston, flags, match_status, power_req_single, flow_req_single)
-
-
-    # ADD SOME CHECKS HERE TO SEE IF INPUT IS WITHIN VALID RANGE OF SURROGATE
     T34, T35, p34, p35, m34_single, m35_single, far34, far35, power_piston, air_flow, p_max, T_max, far_piston, \
         induced_power, friction_loss, aux_loss, heat_loss, P_fuel_pump, bore_match, error, P_circumv \
-        = misc.match_power_nn(data_piston, meta_model, power_req_single, core_flow=m31/nr_engines, surrogate_status=surrogate)
+        = misc.match_power_nn(data_piston, meta_model, power_req_single, core_flow = m31/nr_engines, surrogate_status = surrogate)
 
     # if engine was not able to match power requirements or negative air flow, return error
     if error:
@@ -121,6 +113,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     air_flow_tot = nr_engines * air_flow
     m34 = m34_single * nr_engines
     m35 = m35_single * nr_engines
+    P_circumv_tot = P_circumv * nr_engines
 
     m_circumv = m31 - air_flow_tot
 
@@ -140,7 +133,8 @@ def run_cce(indata, data_piston, flags, meta_model):
         cost = 999 + (p_max - 250)*100
         return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
 
-    bpr_piston = m_circumv / m3  # fraction of air led around engine (based on m3)
+    bpr_piston = m_circumv / m31  # fraction of air led around engine (based on m31, after cooling flow is removed)
+    # mass flow going into the piston engines
     m32 = m31 - m_circumv
 
     nr_of_cylinders_per_engine = data_piston[31]
@@ -155,16 +149,18 @@ def run_cce(indata, data_piston, flags, meta_model):
     heat_loss_tot = heat_loss * nr_engines
     P_fuel_pump_tot = P_fuel_pump * nr_engines
 
+    equ35 = far35 / far_s
     if second_burner:
         # Second burner
-        p4, T4, far_burner = components.burner(p35, T35, far35 / far_s, T35_req, dPcomb, eta_b, fuel_type)
-        m4 = m35 * (1 + far_burner)  # flow after burner
+        p4, T4, far_burner = components.burner(p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel)
+        # m31 is pure air. After cooling flow removed but before piston.
+        m4 = m31 + fuel_flow_piston + far_burner * m31   # flow after burner. air + fuel piston + fuel burner
 
         # burner fuel flow
-        fuel_flow_burner = far_burner * m35
+        fuel_flow_burner = far_burner * m31
 
         # fuel air ratio after burner and piston engine
-        far_tot = far_burner + far_piston  # is this correct?
+        far_tot = far_burner + far35
         equ4 = far_tot / far_s
 
     else:
@@ -179,10 +175,12 @@ def run_cce(indata, data_piston, flags, meta_model):
         equ4 = far4 / far_s
 
     # Low pressure turbine, powering fan and IPC
+    # IPC + inner and outer fan (with gearbox efficiency) + everything shaft efficiency
+    power_lpt = (P25 + (P21 + P13) / eta_g) / eta_s
     p43, T41, T43, T5, m41, m5, equ5, error = components.turbine(T4, p4, m4, equ4,
-                                                          (P25 + (P21 + P13) / eta_g) / eta_s,
-                                                          eta_s_lpt, fuel_type, cooling=True, t_cool=T_cool,
-                                                          m1_cool=m_cool, q_ngv=q_ngv)
+                                                                 power_lpt,
+                                                                 eta_s_lpt, fuel_type, cooling=True, t_cool=T_cool,
+                                                                 m1_cool=m_cool, q_ngv=q_ngv)
 
     if error:
         #print('Prob too high power demand on LPT')
@@ -207,7 +205,7 @@ def run_cce(indata, data_piston, flags, meta_model):
 
     # Heating the fuel
     # TODO: Make this work for jetA as well
-    heating_h2, oil_temp_1 = components.fuel_oil_hx(300e5, 20, 0.08, 450, fuel_flow_piston + fuel_flow_burner)
+    heating_h2, oil_temp_1 = components.fuel_oil_hx(300e5, t_tank, 0.08, t_fuel, fuel_flow_piston + fuel_flow_burner)
 
     # Bypass stream
     # Split stream into cooling air and not cooling air
@@ -250,10 +248,6 @@ def run_cce(indata, data_piston, flags, meta_model):
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v18_id / v8_id
 
-    # Power
-    power_lpt = (P25 / eta_s) + (P21 + P13) / (eta_s * eta_g)
-
-    # power required by the fan divided by mechanical efficiency and gearbox + ipc only shaft efficiency
     power_hpc = P3 / eta_s  # power required by the hpc divided by mechanical efficiency (from piston engine/HPT)
 
     # Calculating the work potential left after powering ipc and inner fan
@@ -284,11 +278,16 @@ def run_cce(indata, data_piston, flags, meta_model):
         misc.plot_stations(p_array, T_array)
 
         misc.csv_output(p_array, T_array, m_array)
-        piston_gearbox = (induced_power_tot - friction_loss_tot - aux_loss_tot) * (1 - eta_g)
-        misc.energy_output(induced_power_tot, friction_loss_tot, aux_loss_tot, P_fuel_pump_tot, P_circumv, P_cooling,
+        piston_gearbox = (induced_power_tot - P_fuel_pump_tot - P_circumv_tot - friction_loss_tot - aux_loss_tot - P_cooling) * (1 - eta_g)
+        misc.power_balance(induced_power_tot, friction_loss_tot, aux_loss_tot, P_fuel_pump_tot, P_circumv_tot, P_cooling,
                            piston_gearbox, P3, power_lpt, power_lpt * (1 - eta_s), P25,
                            (P21 + P13) * (1 - eta_g) / eta_g, P21 + P13, heat_loss_tot,
                            heating_h2, heating_bypass)
+
+        misc.energy_flow_fuel(LHV, fuel_flow_piston, fuel_flow_burner, t_tank, fuel_type, t_fuel,
+                              induced_power_tot, heat_loss_tot, T32, T34, m32, m34, far34 / far_s, T35, equ35, m35,
+                              T4, equ4, m4)
+
 
         #print(f'ideal jet velocity ratio: {vel_ratio}')
 

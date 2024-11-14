@@ -1,9 +1,10 @@
 import numpy as np
+from numba import jit
 
 # Universal gas constant (from Wikipedia) or maybe the database?
 R = 8.3144626  # J mol^-1 K^-1
 
-
+@jit()
 def N2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -48,7 +49,7 @@ def N2(T, p):
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
-    # reference 0K
+    # if we want to use reference 0K
     #h = h + 8.670104*1e3 / M
 
     # standards state pressure is 1 bar
@@ -59,7 +60,7 @@ def N2(T, p):
 
     return cp, h, s, M
 
-
+@jit()
 def O2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -101,7 +102,7 @@ def O2(T, p):
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
     # reference 0K
-    h = h + 8.680104e3 / M
+    #h = h + 8.680104e3 / M
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -111,7 +112,7 @@ def O2(T, p):
 
     return cp, h, s, M
 
-
+@jit()
 def Ar(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -152,7 +153,7 @@ def Ar(T, p):
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
     # reference 0K
-    h = h + 6.197*1e3 / M
+    #h = h + 6.197*1e3 / M
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -163,6 +164,7 @@ def Ar(T, p):
     return cp, h, s, M
 
 
+@jit()
 def CO2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -207,13 +209,13 @@ def CO2(T, p):
 
     # WORKING IS TO USE THESE FOR CO2 and H2O and none for N2, Ar and O2
     # enthalpy of formation 298.15 K
-    #h = h + 393510.000 / M
+    h = h + 393510.000 / M
 
     # enthalpy of formation 0k
     #h = h + 393142.000 / M
 
     # standard enthalpy 0K
-    h = h + 402875.0 / M
+    #h = h + 402875.0 / M
 
     #h = h + 9365.469 / M
 
@@ -225,7 +227,7 @@ def CO2(T, p):
 
     return cp, h, s, M
 
-
+@jit()
 def H2O(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -267,19 +269,16 @@ def H2O(T, p):
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
-    #298.15 k
-    #h = h + 241826.000 / M    #J kg^-1
+    # Enthalpy at 298.15K
+    h = h + 241826.000 / M    # J kg^-1
 
     # enthalpy of formation
     #h = h + 238922.0 / M
 
     # enthalpy at 0K
-    h = h + 251730.0 / M
+    #h = h + 251730.0 / M
 
     #h = h + 9.904 / M
-
-    #h = h +
-
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -293,28 +292,10 @@ def H2O(T, p):
     return cp, h, s, M
 
 
-def OCTAN(T):
-    M = 114.2285200e-3
-    Rspec = R / M
-
-    a1 = -6.986647150e+05
-    a2 = 1.338501096e+04
-    a3 = -8.415165920e+01
-    a4 = 3.271936660e-01
-    a5 = -3.777209590e-04
-    a6 = 2.339836988e-07
-    a7 = -6.010892650e-11
-    b1 = -9.026223250e+04
-
-    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
-                  a6 * T ** 3 + a7 * T ** 4)  # J kg^-1 K^-1
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
-                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    h = h + 208750.000 / M  # J kg^-1
-    return cp, h
-
-
+@jit()
 def JETA(T):
+    # LIQUID JET A
+
     if T < 220 or T > 550:
         print(f"Temperature {T} outside valid range for Jet-A.")
         return
@@ -335,11 +316,16 @@ def JETA(T):
                   a6 * T ** 3 + a7 * T ** 4)  # J kg^-1 K^-1
     h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    h = h + 303.403e3 / M  # - 10.340270190732554 #J kg^-1
-    return cp, h
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # reference 298.15K
+    h = h + 303.403e3 / M   # J kg^-1
+    return cp, h, s, M
 
 
-def H2(T):
+@jit()
+def H2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
     if T > 6000:
@@ -378,6 +364,17 @@ def H2(T):
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # if we want reference 0K
+    #h = h + 8.468*1e3 / M
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+
     return cp, h, s, M
 
 

@@ -6,11 +6,13 @@ import matplotlib.pyplot as plt
 
 from neural_network.src import load_ANN
 
-from piston_engine.engine import run_piston_engine  # import the piston engine function
+from piston_engine.engine import run_piston_engine_numba  # import the piston engine function
+from piston_engine.src.misc import seiliger, temp_lim
 import importlib
 
 # import all the input files for real piston simulation
-input_file_pist = "4stroke_hydrogen_bad_point"
+#input_file_pist = "4stroke_hydrogen"
+input_file_pist = "4stroke_hydrogen_CCE"
 input_dir_pist = "piston_engine.input"
 path_pist = input_dir_pist + "." + input_file_pist
 
@@ -21,9 +23,10 @@ flags = ['sweep']  # normal case no plots
 
 # Load the trained model
 simple = False
-hidden_dim = 128
-layers = 1
-model = load_ANN(f'./../models/straight_{hidden_dim}_{layers}.pth')
+hidden_dim = 2048
+layers = 0
+fuel = "H2"
+model = load_ANN(f'./../models/{fuel}_{hidden_dim}_{layers}.pth')
 print(model)
 
 
@@ -53,7 +56,7 @@ points_nn = 1000
 #fars_nn = np.linspace(0.02923 / 3.0, 0.02923 / 1.1, 1000)
 Tfuels_nn = np.linspace(300, 500, points_nn)
 
-points = 20
+points = 5
 
 #fars = np.linspace(0.02923 / 3.0, 0.02923 / 1.1, 10)
 Tfuels = np.linspace(300, 500, points)
@@ -69,6 +72,18 @@ else:
 
 i = 0
 for T_fuel in variable_nn:
+
+    fuel = "H2"
+    peak_pressure = seiliger.seiliger(p_in, T_in, cr, far, bore, fuel)
+    t_in_limit = temp_lim.t_in_lim(p_in)
+
+    if T_in > t_in_limit:
+        print("too high temperature")
+
+    if peak_pressure > 400*1e5:
+        print("too high peak pressure")
+
+
     temp = model.inference(np.array([p_in, T_in, cr, bore, far, PI, v_mean, T_fuel]))
     if simple:
         outputs_nn.append(temp[0][0])
@@ -94,7 +109,7 @@ for T_fuel in variable:
             d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, indicated_power, friction_loss, aux_loss, \
-        heat_loss, p_tdc = run_piston_engine(data, flags)
+        heat_loss, p_tdc = run_piston_engine_numba(data, flags)
 
     if simple:
         outputs.append(indicated_power*1e-3)

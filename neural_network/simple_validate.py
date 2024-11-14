@@ -17,14 +17,17 @@ from src import load_ANN
 
 ## NN-PP: Neural Network Post Processing
 
+folder = "H2"
 # Load the trained model
-hidden_dim = 128
+hidden_dim = 256
 layers = 1
-model = load_ANN(f'./models/straight_{hidden_dim}_{layers}.pth')
+model = load_ANN(f'./models/{folder}_{hidden_dim}_{layers}.pth')
 print(model)
 
-X = pd.read_csv('./input_data/H2_adaptive/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./input_data/H2_adaptive/y_cleaned.csv', index_col=0)
+# import data
+
+X = pd.read_csv('./input_data/' + folder + '/x_cleaned.csv', index_col=0)
+y = pd.read_csv('./input_data/' + folder + '/y_cleaned.csv', index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -38,44 +41,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 train_data = np.concatenate((X_train, y_train), axis=1)
 test_data = np.concatenate((X_test, y_test), axis=1)
 
-# normalise the data, fit the normalisation on training data
-# we dont have to scale since it is done in the inference model
-scaler = "3"
-
-if scaler == "1":
-
-    X_mean = np.mean(X_train,0)
-    X_std = np.std(X_train,0)
-
-    y_mean = np.mean(y_train,0)
-    y_std = np.std(y_train,0)
-
-    # normalise the training data
-    X_train = (X_train - X_mean) / X_std
-    y_train = (y_train - y_mean) / y_std
-
-    # normalise the test data
-    X_test = (X_test - X_mean) / X_std
-    y_test = (y_test - y_mean) / y_std
-
-elif scaler == "2":
-    # scale between 0 and 1
-    x_min = X_train.min(axis=0)
-    x_max = X_train.max(axis=0)
-
-    y_min = y_train.min(axis=0)
-    y_max = y_train.max(axis=0)
-
-    X_train = (X_train - x_min) / (x_max - x_min)
-    y_train = (y_train - y_min) / (y_max - y_min)
-
-    X_test = (X_test - x_min) / (x_max - x_min)
-    y_test = (y_test - y_min) / (y_max - y_min)
-
-
-
-
-
 # convert to tensor
 #X_test = torch.tensor(X_test, dtype=torch.float32)
 #X_train = torch.tensor(X_train, dtype=torch.float32)
@@ -85,33 +50,17 @@ y_train_hat = np.zeros((X_train.shape[0], y_train.shape[1]))
 
 for i in range(X_test.shape[0]):
     #y_test_hat.append(model(X_test[i, :]).detach().numpy()) #for tensor
-    y_test_hat[i,:] = model.inference(X_test[i, :])
+    y_test_hat[i, :] = model.inference(X_test[i, :])
 
 
 for i in range(X_train.shape[0]):
     #y_train_hat.append(model(X_train[i, :]).detach().numpy())
-    y_train_hat[i,:] = model.inference(X_train[i, :])
+    y_train_hat[i, :] = model.inference(X_train[i, :])
 
 
-
-if scaler == "1":
-    # rescale from std 1 mean 0
-    y_test = y_test * y_std + y_mean
-    y_test_hat = y_test_hat * y_std + y_mean
-    y_train = y_train * y_std + y_mean
-    y_train_hat = y_train_hat * y_std + y_mean
-
-elif scaler == "2":
-    # rescale from 0 to 1
-    #X_scaled = X_std * (X_train.max(axis=0) - X_train.min(axis=0)) + X_train.min(axis=0)
-    y_test = y_test * (y_max - y_min) + y_min
-    y_test_hat = y_test_hat * (y_max - y_min) + y_min
-    y_train = y_train * (y_max - y_min) + y_min
-    y_train_hat = y_train_hat * (y_max - y_min) + y_min
-
-
-
-
+plt.plot(y_test[:,5],y_test[:,5])
+plt.scatter(y_test_hat[:,5], y_test[:,5],s=4)
+plt.show()
 
 
 
