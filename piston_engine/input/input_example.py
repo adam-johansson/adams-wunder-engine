@@ -5,9 +5,9 @@ cycle = "2T"
 
 
 # Choose between "Cantera" or "NASA"
-#thermo = "CANTERA"
+#thermo_outdated = "CANTERA"
 thermo = "NASA"
-#thermo = "Coolprop"
+#thermo_outdated = "Coolprop"
 
 #cooling = "Woschni"
 cooling = "Hohenberg"

@@ -2,7 +2,7 @@
 import numpy as np
 
 from CoolProp.CoolProp import PropsSI
-from piston_engine.src.piston import polynomials
+from piston_engine.src.piston import polynomials_outdated
 
 
 #print(coefficients)
@@ -12,7 +12,7 @@ from piston_engine.src.piston import polynomials
 
 t = 500
 
-from thermo import PureSubstance
+from thermo_outdated import PureSubstance
 
 N2 = PureSubstance("N2",temperature=t)
 O2 = PureSubstance("O2",temperature=t)

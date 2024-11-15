@@ -1,7 +1,7 @@
 from piston_engine.src.misc import post_processing
 from scipy.optimize import fsolve, brentq
 from CCE.src import components
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 from timeit import default_timer as timer
 from piston_engine.engine import run_piston_engine
 from CCE.src.surrogate import nn_output
@@ -33,7 +33,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     #print(pin, Tin)
     # fuel type
     fuel_type = data[32]
-    far_s, LHV = thermo.fuel_props(fuel_type)
+    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
     if surrogate_status:
         if pin < 2e5 or pin > 30e5 or Tin < 250 or Tin > 900:

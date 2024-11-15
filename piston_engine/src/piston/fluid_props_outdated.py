@@ -1,6 +1,8 @@
-from piston_engine.src.piston.polynomials import N2, O2, CO2, H2O, Ar
+from piston_engine.src.piston.polynomials_outdated import N2, O2, CO2, H2O, Ar
+#from numba import jit
 
 
+#@jit(nopython=True)
 def properties(t, p, equ, fuel_type = False):
 
     """

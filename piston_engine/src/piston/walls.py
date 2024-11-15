@@ -67,7 +67,7 @@ def dqdphi_NASA(T,Twalls,Awalls,type2,dtdphi,D, mu, rho,V):
     return dqdphi * dtdphi
 
 
-@jit()
+@jit(nopython=True)
 def dqdphi_hohenberg(T,P,V,Twalls,Awalls,v_mean,dtdphi):
     # Hohenberg heat loss model
     Pbar = P*1e-5
@@ -124,7 +124,7 @@ def dqdphi_h2_shudo(t, p, V, twalls, awalls, bore, v_mean, ref, dpdphi, dVdphi, 
     return dqdphi
 
 
-@jit()
+@jit(nopython=True)
 def dqdphi_woschni_h2(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2):
     # Woschni heat transfer model for H2 (the normal one. just dont forget 1.4 ch factor)
     Pref = ref[0]

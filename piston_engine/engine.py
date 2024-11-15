@@ -1,13 +1,15 @@
 import numpy as np
 from timeit import default_timer as timer
 
-from piston_engine.src.piston import valve_isentrop, walls, wiebe, polynomials, port_isentrop
-from piston_engine.src.piston import thermo_computations
+from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop
+#from piston_engine.src.piston import thermo_computations, polynomials
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
 
-from piston_engine.src.piston.fuel_func import fuel_props
-from piston_engine.src.piston.fluid_props import properties
+#from piston_engine.src.piston.fuel_func import fuel_props
+#from piston_engine.src.piston.fluid_props import properties
+
+import thermo
 
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
@@ -29,14 +31,14 @@ from piston_engine.src.misc.output import output_thermo_validation, output_power
 
 from numba import jit
 
-Runiv = 8.3144626  # J mol^-1 K^-1
+#Runiv = 8.3144626  # J mol^-1 K^-1
 
 dPdphi_temp = 0
 
 
 #@jit(nopython=True)
 def run_piston_engine(indata, flags):
-    [p_in, T_in, p_ratio, cycle, thermo, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
+    [p_in, T_in, p_ratio, cycle, thermo_unused, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
      valve_timings, n_valve, lv_max, cd, eta_c, mf_tot, wa, wm, m_wiebe,
      phi_sc, phi_cd, T_fuel, p_fuel, it, wiebe_type, valve_type, throttle, cylinders, fuel_type,
      c1, c4, c5] = indata
@@ -65,19 +67,19 @@ def run_piston_engine(indata, flags):
 
     rpm = v_mean / (2 * s) * 60
 
-    cp_in, h_in, s_in, M_in = properties(T_in, p_in, equ=0)  # assuming pure air in intake
+    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equ=0, fuel_type=fuel_type)  # assuming pure air in intake
 
-    R_in = Runiv / M_in
+    #R_in = Runiv / M_in
     rho_in = p_in / (R_in * T_in)
 
-    far_s, LHV = fuel_props(fuel_type)
+    far_s, LHV = thermo.fuel_props(fuel_type)
 
     phi_ec = (phi_sc + phi_cd)  # angle at combustion end
 
     if fuel_type == 'jetA':
-        cp_fuel, h_fuel, _, _ = polynomials.JETA(T_fuel)
+        cp_fuel, h_fuel, _, _ = thermo.polynomials.JETA(T_fuel)
     elif fuel_type == 'H2':
-        cp_fuel, h_fuel, s_fuel, M_fuel = polynomials.H2(T_fuel, p_fuel)
+        cp_fuel, h_fuel, s_fuel, M_fuel = thermo.polynomials.H2(T_fuel, p_fuel)
     else:
         raise Exception('Unknown fuel.')
 
@@ -164,13 +166,13 @@ def run_piston_engine(indata, flags):
         Q_app = x[23]  # apparent heat release
 
         # Gas properties inside the cylinder
-        h, u, cp, cv, R, gamma, entropy = thermo_computations.mixture(equ, T, P, fuel_type)
+        h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type)
 
         # Intake port values
-        h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP = thermo_computations.mixture(equ_IP, T_IP, p_in, fuel_type)
+        h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type)
 
         # Exhaust port values
-        h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP = thermo_computations.mixture(equ_EP, T_EP, p_out, fuel_type)
+        h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP, _ = thermo.mixture(T_EP, p_out, equ_IP, fuel_type)
 
         # Phi derivative of the volume (without Taylor expansion)
         # Opposed piston
@@ -295,7 +297,7 @@ def run_piston_engine(indata, flags):
         h_in_IP = h_in
 
         dellRdellequ_IP, delludellequ_IP = \
-            thermo_computations.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type)
+            thermo.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type)
 
         term1 = T_IP + h_out_IP / cv_IP + \
             (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (cv_IP * (1 + equ_out_IP * far_s)) * delludellequ_IP - \
@@ -333,7 +335,7 @@ def run_piston_engine(indata, flags):
         h_out_EP = h_EP
 
         dellRdellequ_EP, delludellequ_EP = \
-            thermo_computations.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type)
+            thermo.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type)
 
         # Change of equivalence ratio in the exhaust port
         dequdphi_EP = dmoutdphi * (1 + equ_EP * far_s) * (equ_in_EP - equ_EP) / (1 + equ_in_EP * far_s)
@@ -360,7 +362,7 @@ def run_piston_engine(indata, flags):
                                               - ((equ_in_EP - equ) / (1 + equ_in_EP * far_s)) * dmoutdphi
                                               + dmfdphi / far_s)
 
-        dellRdellequ, delludellequ = thermo_computations.equivalence_derivative(equ, T, P, fuel_type)
+        dellRdellequ, delludellequ = thermo.equivalence_derivative(equ, T, P, fuel_type)
 
         dRdphi = dellRdellequ * dequdphi
 
@@ -549,7 +551,7 @@ def run_piston_engine(indata, flags):
             Qf = LHV * mf_tot  # hmmm eta_c or not
 
         def find_tout(t):
-            h, u, cp, cv, R, gamma, entropy = thermo_computations.mixture(equ_avg, t[0], p_out, fuel_type)
+            h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(t[0], p_out, equ_avg, fuel_type)
             return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
         T_out.append(fsolve(find_tout, T[-1][-1])[0])
@@ -690,18 +692,18 @@ def run_piston_engine(indata, flags):
                                          eta_charging, delivery_ratio, eta_sc, equ_avg)
 
         if 'output_power' and 'validation' in flags:
-            from src.misc.output import output_power_validation
+            from piston_engine.src.misc.output import output_power_validation
             output_power_validation(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep,
                                     heat_loss_single)
 
         if 'output_all' in flags and not validation:
-            from src.misc.output import output_thermo, output_power, output_efficiencies
+            from piston_engine.src.misc.output import output_thermo, output_power, output_efficiencies
             output_thermo(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
             output_power(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single, equ_avg)
             output_efficiencies(eta_th, hl)
 
         if 'output_power' in flags and not validation:
-            from src.misc.output import output_power
+            from piston_engine.src.misc.output import output_power
             output_power(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single,
                          equ_avg)
 

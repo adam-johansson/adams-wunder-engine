@@ -1,9 +1,9 @@
-from .polynomials import N2, O2, CO2, H2O, Ar
+from .polynomials_outdated import N2, O2, CO2, H2O, Ar
 from scipy.optimize import fsolve
 from numba import jit
 
 
-@jit()
+@jit(nopython=True)
 def mixture(equ, t, p, fuel_type):
     """
     Function that return thermodynamic properties of a mixture based on the 
@@ -146,7 +146,8 @@ def mixture(equ, t, p, fuel_type):
 
     return h, u, cp, cv, R, gamma, s
 
-@jit()
+
+@jit(nopython=True)
 def equivalence_derivative(equ, t, p, fuel_type):
     """
     Function that returns the partial derivative of specific gas constant R 

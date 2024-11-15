@@ -1,11 +1,11 @@
-from piston_engine.src.piston.polynomials import O2, N2, CO2, Ar, H2O
+from piston_engine.src.piston.polynomials_outdated import O2, N2, CO2, Ar, H2O
 
 from CoolProp.CoolProp import PropsSI
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from thermo import PureSubstance
+from thermo_outdated import PureSubstance
 
 
 t = 600

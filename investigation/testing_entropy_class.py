@@ -3,7 +3,7 @@ from CoolProp.CoolProp import PropsSI
 import numpy as np
 import matplotlib.pyplot as plt
 
-from thermo import PureSubstance
+from thermo_outdated import PureSubstance
 
 
 t = 600

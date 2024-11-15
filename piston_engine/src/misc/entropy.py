@@ -1,6 +1,6 @@
 import numpy as np
 
-from piston_engine.src.piston.thermo_computations import mixture
+from piston_engine.src.piston.thermo_computations_outdated import mixture
 
 
 def entropy_calc(t_list, phi_list, fuel_type, p_list):

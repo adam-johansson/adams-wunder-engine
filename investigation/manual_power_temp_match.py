@@ -1,5 +1,5 @@
 import numpy as np
-from CCE.src import thermo, components
+from CCE.src import thermo_outdated, components
 from piston_engine.src.misc import post_processing
 
 import pickle
@@ -40,7 +40,7 @@ p_ratio = data[2]
 
 # fuel type
 fuel_type = data[32]
-far_s, LHV = thermo.fuel_props(fuel_type)
+far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
 def find_match(x):
     # change fuel air ratio and bore to match power and turbine inlet temperature

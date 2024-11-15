@@ -1,4 +1,4 @@
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 import numpy as np
 
 
@@ -6,7 +6,7 @@ def fpr_opt(Mach, bpr, Fs_req, Ta, eta_lpt, eta_fan, cfg_bypass, cd_nozzle, dp_b
 
     R_uni = 8.3144626  # J mol^-1 K^-1
 
-    cp, h, s, M = thermo.properties(Ta, equ=0)
+    cp, h, s, M = thermo_outdated.properties(Ta, equ=0)
     R = R_uni / M
     cv = cp - R
     gamma = cp / cv

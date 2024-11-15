@@ -1,4 +1,4 @@
-from piston_engine.src.piston import polynomials
+from piston_engine.src.piston import polynomials_outdated
 from CoolProp.CoolProp import PropsSI
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,9 +33,9 @@ plt.legend()
 #plt.show()
 
 
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 
 
-wp = thermo.work_potential(1119, 777517, 0.7483, 23855, "H2")
+wp = thermo_outdated.work_potential(1119, 777517, 0.7483, 23855, "H2")
 
 print(wp)

@@ -2,8 +2,10 @@ import numpy as np
 import importlib
 from timeit import default_timer as timer
 
-from CCE.src import components, thermo, compressible, misc
+from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
+
+import thermo_outdated
 
 
 def run_cce(indata, data_piston, flags, meta_model):
@@ -26,7 +28,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     pi_hpc = OPR_c / pi_ipc
 
     # fuel props
-    far_s, LHV = thermo.fuel_props(fuel_type)
+    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
     # ISA table
     pa, Ta, a = isa(alt, disa, False)  # static pressure, static temperature and speed of sound

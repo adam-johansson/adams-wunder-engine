@@ -1,4 +1,4 @@
-from piston_engine.src.piston.polynomials import O2, N2, CO2, Ar, H2O
+from piston_engine.src.piston.polynomials_outdated import O2, N2, CO2, Ar, H2O
 
 from CoolProp.CoolProp import PropsSI
 

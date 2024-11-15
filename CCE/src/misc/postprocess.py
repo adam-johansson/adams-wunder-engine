@@ -2,9 +2,9 @@ import numpy as np
 
 import pandas as pd
 
-from piston_engine.src.piston.polynomials import H2, JETA
+from piston_engine.src.piston.polynomials_outdated import H2, JETA
 
-from CCE.src.thermo import properties
+from CCE.src.thermo_outdated import properties
 
 
 def power_balance(induced_power_tot, friction_loss_tot, aux_loss_tot, fuel_pump, pe_cirumv, turbine_cooling,
@@ -41,7 +41,7 @@ def energy_flow_fuel(lhv, m_f_p, m_f_b, t_tank, fuel_type, t_fuel, P_indicated, 
     keeping track of the fuel energy
     """
 
-    # pressure needed as input to thermo
+    # pressure needed as input to thermo_outdated
     p_dummy = 1e5
     # total fuel flow (piston + burner)
     m_f = m_f_p + m_f_b

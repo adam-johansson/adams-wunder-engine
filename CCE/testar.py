@@ -1,4 +1,4 @@
-from CCE.src import thermo, components
+from CCE.src import thermo_outdated, components
 from piston_engine.src.misc import post_processing
 import matplotlib.pyplot as plt
 import pickle
@@ -25,7 +25,7 @@ p_ratio = 1.3
 
 # fuel type
 fuel_type = 'H2'
-far_s, LHV = thermo.fuel_props(fuel_type)
+far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
 core_flow = 5
 

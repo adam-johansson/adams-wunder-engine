@@ -1,7 +1,7 @@
 from piston_engine.src.misc import post_processing
 from scipy.optimize import fsolve, brentq
 from CCE.src import components
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 from timeit import default_timer as timer
 
 import numpy as np
@@ -19,7 +19,7 @@ def match_tet_power(data, meta_model, power_req, core_flow, T35_req):
 
     # fuel type
     fuel_type = data[32]
-    far_s, LHV = thermo.fuel_props(fuel_type)
+    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
     def find_match(x):
         # change fuel air ratio and bore to match power and turbine inlet temperature

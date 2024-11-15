@@ -1,7 +1,8 @@
 import numpy as np
 from numba import jit
 
-@jit()
+
+@jit(nopython=True)
 def dmvdphi(phi, phi_open, phi_close, n_valve, lv_max, cd, d, p, T, gamma, R, p3, T3, gamma3, R3, type, phi_cycle):
     if phi_open < phi < phi_close:
         backflow = False

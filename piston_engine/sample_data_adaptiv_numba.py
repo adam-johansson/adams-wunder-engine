@@ -14,6 +14,7 @@ from src.misc.temp_lim import t_in_lim
 
 from numba import jit
 
+from src.piston.fuel_func_outdated import fuel_props
 
 # Setting up the piston engine
 input_file = "4stroke_hydrogen_sampling"
@@ -48,18 +49,19 @@ v_mean_lim = [8, 15]
 
 if fuel == "H2":
     # THIS THROTTLE LIM IS FOR HYDROGEN
-    throttle_lim = [0.02923 / 3.0, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
+    far
+    far_lim = [0.02923 / 3.0, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
     fuel_t_lim = [300, 500]
 
 elif fuel == "jetA":
     # THIS IS FOR JETA
-    throttle_lim = [0.06821 / 3.0, 0.06821 / 1.1]
+    far_lim = [0.06821 / 3.0, 0.06821 / 1.1]
     fuel_t_lim = [220, 550]
 
 
 # could add wall temperatures
 
-xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, throttle_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
+xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
 npoints = 200  # points per variable
@@ -89,27 +91,28 @@ start_simulating = timer()
 i = 0
 remove = 0
 
-for p, T, cr, bore, throttle, p_ratio, v_mean, fuel_t in sample_scaled:
+for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
     i += 1
 
     # rough estimiation of the peak pressure
-    pmax_seiliger = seiliger(p, T, cr, throttle, bore, fuel)
+    pmax_seiliger = seiliger(p, T, cr, far_goal, bore, fuel)
 
     # estimation of the highest possible temperature for given pressure
     t_limit = t_in_lim(p)
 
+    t_limit = 1000000
     # if predicted pressure under 400 bar
-    if pmax_seiliger < 400*1e5 and T < t_limit:
+    if pmax_seiliger < 40000*1e5 and T < t_limit:
 
         lv_max = 0.1 * bore
         data = [p, T, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
                 v_mean, d.lms, d.Twalls, d.ch,
                 d.valve_timings, d.n_valve, lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
-                d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, fuel_t, d.p_fuel, d.it, d.wiebe_type, d.valve_type, throttle,
+                d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, fuel_t, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
                 d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
         # run the simulation
-        T_out, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss, \
+        T_out, work_piston, eta_th, air_flow, p_max, T_max, far_output, equ_trapped, induced_power, friction_loss, aux_loss, \
             heat_loss, p_tdc = run_piston_engine(data, flags)
         # save the output that is relevant
         # eta_th is redundant I suppose

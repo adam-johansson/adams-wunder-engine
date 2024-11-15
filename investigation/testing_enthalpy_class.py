@@ -1,4 +1,4 @@
-from thermo import PureSubstance
+from thermo_outdated import PureSubstance
 
 from CoolProp.CoolProp import PropsSI
 

@@ -1,5 +1,5 @@
-from CCE.src import thermo
-from piston_engine.src.piston.polynomials import H2, JETA
+from CCE.src import thermo_outdated
+from piston_engine.src.piston.polynomials_outdated import H2, JETA
 
 
 def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
@@ -7,7 +7,7 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     p2 = p1 * (1 - dp)
 
     # stochiometric fuel air ratio
-    far_s, LHV = thermo.fuel_props(fuel_type)
+    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
     if fuel_type == "H2":
         cp_f, hf, s_f, M_f = H2(t_fuel, p1)
@@ -20,8 +20,8 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     while not convergence:
         # actual fuel air ratio
         f = f0 / eta
-        cp1, h1, s1, M1 = thermo.properties(t1, p=p1, equ=equ1, fuel_type=fuel_type)
-        cp2, h2, s2, M2 = thermo.properties(t2, p=p2, equ=f/far_s + equ1, fuel_type=fuel_type)
+        cp1, h1, s1, M1 = thermo_outdated.properties(t1, p=p1, equ=equ1, fuel_type=fuel_type)
+        cp2, h2, s2, M2 = thermo_outdated.properties(t2, p=p2, equ=f / far_s + equ1, fuel_type=fuel_type)
 
         # theoretical fuel air ratio
         f_theo = ((h2 - h1) / (LHV + hf - h2)) * (1 + equ1 * far_s)

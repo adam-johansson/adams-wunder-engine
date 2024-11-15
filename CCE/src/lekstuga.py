@@ -1,9 +1,9 @@
 import numpy as np
 from CCE.src import components
 import matplotlib.pyplot as plt
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 from CoolProp.CoolProp import PropsSI
-from piston_engine.src.piston import polynomials
+from piston_engine.src.piston import polynomials_outdated
 
 """"
 p1 = 0.53e5
@@ -115,7 +115,7 @@ ss_cp = []
 
 for t in T:
     R = 8.3144626  # J mol^-1 K^-1
-    cp, h, s, M = thermo.properties(t, 0)
+    cp, h, s, M = thermo_outdated.properties(t, 0)
     ss.append(s)
     cv = cp - R/M
     gamma = cp/cv
@@ -143,8 +143,8 @@ print(p2, f)
 
 t = 700
 
-from piston_engine.src.piston.thermo_computations import mixture
-from CCE.src import thermo
+from piston_engine.src.piston.thermo_computations_outdated import mixture
+from CCE.src import thermo_outdated
 
 equ = np.linspace(0, 1)
 
@@ -158,11 +158,11 @@ plt.plot(equ,y)
 plt.show()
 
 #Runiv = 8.3144626  # J mol^-1 K^-1
-#cp, h, s, M = thermo.properties(t, equ, fuel_type='jetA')
+#cp, h, s, M = thermo_outdated.properties(t, equ, fuel_type='jetA')
 #print(h)
 
 
-from CCE.src.thermo.fuel_func import fuel_props
+from CCE.src.thermo_outdated.fuel_func import fuel_props
 
 x, y = fuel_props('H2')
 

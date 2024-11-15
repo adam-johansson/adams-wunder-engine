@@ -1,4 +1,4 @@
-from CCE.src import components, thermo, compressible, misc
+from CCE.src import components, thermo_outdated, compressible, misc
 from CCE.src.gas_props.air_properties import isa
 import numpy as np
 import matplotlib.pyplot as plt

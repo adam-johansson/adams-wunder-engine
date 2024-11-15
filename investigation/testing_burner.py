@@ -1,7 +1,7 @@
 from CCE.src import components
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 
-from piston_engine.src.piston.polynomials import H2, JETA
+from piston_engine.src.piston.polynomials_outdated import H2, JETA
 
 
 p35 = 10e5
@@ -17,7 +17,7 @@ equ35 = 0.0
 m31 = 1
 
 # fuel props
-far_s, LHV = thermo.fuel_props(fuel_type)
+far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
 # far into burner
 far_before_burner = equ35 * far_s
@@ -50,10 +50,10 @@ _, hf, _, _ = H2(t_fuel, p4)
 fuel_power = fuel_flow_burner * (LHV + hf)
 
 # enthalpy in burner
-_, h_b_in, _, _ = thermo.properties(T35, p35, equ35, fuel_type)
+_, h_b_in, _, _ = thermo_outdated.properties(T35, p35, equ35, fuel_type)
 
 # enthalpy out burner
-_, h_b_out, _, _ = thermo.properties(T4, p4, equ4, fuel_type)
+_, h_b_out, _, _ = thermo_outdated.properties(T4, p4, equ4, fuel_type)
 
 # energy increase in burner per second
 P_burner = m4 * h_b_out - m35 * h_b_in

@@ -1,7 +1,7 @@
 from piston_engine.src.misc import post_processing
 from scipy.optimize import fsolve, brentq
 from CCE.src import components
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 from timeit import default_timer as timer
 
 import numpy as np
@@ -20,7 +20,7 @@ def match_power_v2(data, meta_model, power_req, core_flow):
 
     # fuel type
     fuel_type = data[32]
-    far_s, LHV = thermo.fuel_props(fuel_type)
+    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
     far34 = 0.025
 
     def find_match(x):

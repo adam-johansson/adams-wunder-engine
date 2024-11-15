@@ -1,7 +1,7 @@
 from piston_engine.src.misc import post_processing
 from scipy.optimize import fsolve, brentq
 from CCE.src import components
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 from timeit import default_timer as timer
 
 import numpy as np
@@ -136,7 +136,7 @@ def match_piston_surrogate(data, meta_model, power_req, core_flow):
                         P_fuel_pump_final
 
     # fuel properties to get equivalence ratio
-    far_s, LHV = thermo.fuel_props(fuel_type)
+    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
     equ_trapped = far_final / far_s
 
     return T_out_final, shaft_power_final, eta_th_final, air_flow_final, p_max_final, T_max_final, far_final,\

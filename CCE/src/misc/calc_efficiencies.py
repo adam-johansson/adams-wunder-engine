@@ -1,4 +1,4 @@
-from CCE.src import thermo
+import thermo
 
 
 def calc_efficiencies(F, mdot_fuel, m_cold, v_cold_id, m_cold_hx, v_cold_hx_id, m_hot, v_hot_id, m_intake, v_0, p_wp,

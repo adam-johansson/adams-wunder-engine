@@ -39,13 +39,6 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.8  # multiplier to decrease/increase heat transfer
 
 # Inlet valve
-#phi_open_in = (725/180)*np.pi  # from Argonne paper
-#phi_close_in = (935/180)*np.pi  # from Argonne paper
-
-# outlet valve
-#phi_open_out = (495/180)*np.pi  # from Argonne paper
-#phi_close_out = (750/180)*np.pi  # from Argonne paper
-
 phi_open_in = (715/180)*np.pi  # pressure rise
 phi_close_in = (918/180)*np.pi  # pressure rise
 
@@ -64,7 +57,7 @@ cd = 0.8
 
 eta_c = 1.0
 
-throttle = 0.02923 / 3.0
+far_goal = 0.02923 / 3.0
 
 
 wiebe_type = "Single"

@@ -1,4 +1,4 @@
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 
 
 def fuel_props(fuel_type):
@@ -8,7 +8,7 @@ def fuel_props(fuel_type):
     x_N2_air = 3.7274 / N_air  # molar fraction of N2
     x_Ar_air = 0.0444 / N_air  # molar fraction of Ar
 
-    cp, h, s, M_air = thermo.properties(t=999, p=1e5, equ=0)  # mole mass is constant with temperature
+    cp, h, s, M_air = thermo_outdated.properties(t=999, p=1e5, equ=0)  # mole mass is constant with temperature
 
     if fuel_type == 'jetA':
         LHV = 42.8e6  # 43.0 jet A and 42.6 diesel (engineering toolbox), but 42.8 jet A from Kaiser

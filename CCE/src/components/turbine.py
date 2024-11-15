@@ -3,7 +3,7 @@ from scipy.optimize import brentq
 
 #from timeit import default_timer as timer
 
-from CCE.src import thermo
+from CCE.src import thermo_outdated
 
 
 # add fuel type in the input later
@@ -12,7 +12,7 @@ def turbine(t1_main, p1_main, m1_main, equ1_main, power_req, eta, fuel_type, coo
 
     p_dummy = 1e5
     error = False
-    cp1_main, h1_main, s1_main, M1_main = thermo.properties(t1_main, p1_main, equ1_main, fuel_type=fuel_type)
+    cp1_main, h1_main, s1_main, M1_main = thermo_outdated.properties(t1_main, p1_main, equ1_main, fuel_type=fuel_type)
     if not cooling:
         h1 = h1_main
         m1 = m1_main
@@ -24,13 +24,13 @@ def turbine(t1_main, p1_main, m1_main, equ1_main, power_req, eta, fuel_type, coo
 
         # assumes pure air for cooling
         # TODO: NOTE THAT PRESSURE IS ONLY USED HERE TO GET ENTROPY. COULD add p cool
-        cp1_cool, h1_cool, s1_cool, M1_cool = thermo.properties(t_cool, p1_main, equ=0)  # cooling air props
+        cp1_cool, h1_cool, s1_cool, M1_cool = thermo_outdated.properties(t_cool, p1_main, equ=0)  # cooling air props
         m1 = m1_main + q_ngv * m1_cool  # mass flow after mixing of stator cooling
         h1 = (m1_main * h1_main + q_ngv * m1_cool * h1_cool) / m1  # enthalpy after mixing before rotor
         equ1 = equ1_main * m1_main / m1  # mass average (think this is correct)
 
         def find_t1(t):
-            cp1, h1_guess, s1, M1 = thermo.properties(t, p_dummy, equ1, fuel_type=fuel_type)
+            cp1, h1_guess, s1, M1 = thermo_outdated.properties(t, p_dummy, equ1, fuel_type=fuel_type)
             return h1 - h1_guess
 
         #start = timer()
@@ -49,11 +49,11 @@ def turbine(t1_main, p1_main, m1_main, equ1_main, power_req, eta, fuel_type, coo
     equ2 = equ1  # no cooling air is inserted at the rotor. only before or after
 
     def find_t2(t):
-        cp2, h2_guess, s2, M2 = thermo.properties(t, p_dummy, equ1, fuel_type=fuel_type)
+        cp2, h2_guess, s2, M2 = thermo_outdated.properties(t, p_dummy, equ1, fuel_type=fuel_type)
         return h2 - h2_guess
 
     def find_t2_real(t):
-        cp2, h2_guess, s2, M2 = thermo.properties(t, p_dummy, equ1, fuel_type=fuel_type)
+        cp2, h2_guess, s2, M2 = thermo_outdated.properties(t, p_dummy, equ1, fuel_type=fuel_type)
         return h2_real - h2_guess
 
     #t2 = fsolve(find_t2, x0=t1_main)[0]  # temperature after rotor (for calculating pressure drop)
@@ -74,8 +74,8 @@ def turbine(t1_main, p1_main, m1_main, equ1_main, power_req, eta, fuel_type, coo
         return float('nan'), float('nan'), float('nan'), float('nan'), float('nan'), \
             float('nan'), float('nan'), error
 
-    psi1 = thermo.entropy_func(t1, p1_main, equ1, fuel_type)  # before work extraction from rotor
-    psi2 = thermo.entropy_func(t2, p1_main, equ2, fuel_type)  # after rotor
+    psi1 = thermo_outdated.entropy_func(t1, p1_main, equ1, fuel_type)  # before work extraction from rotor
+    psi2 = thermo_outdated.entropy_func(t2, p1_main, equ2, fuel_type)  # after rotor
     pr = np.exp(psi2 - psi1)  # pressure ratio over rotor
     p2 = p1_main * pr  # pressure after rotor
 
@@ -92,7 +92,7 @@ def turbine(t1_main, p1_main, m1_main, equ1_main, power_req, eta, fuel_type, coo
         equ3 = equ1 * m1 / m3  # mass average (think this is correct)
 
         def find_t3(t):
-            cp3, h3_guess, s3, M3 = thermo.properties(t, p_dummy, equ3, fuel_type=fuel_type)
+            cp3, h3_guess, s3, M3 = thermo_outdated.properties(t, p_dummy, equ3, fuel_type=fuel_type)
             return h3 - h3_guess
 
         #t3 = fsolve(find_t3, x0=t1_main)[0]
