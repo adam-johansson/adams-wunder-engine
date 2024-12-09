@@ -24,10 +24,10 @@ bsr = 1.0  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 20e5  # inlet pressure
-T_in = 700  # inlet temperature
+p_in = 10e5  # inlet pressure
+T_in = 750  # inlet temperature
 #T_in = 1000
-p_ratio = 1.5  # pressure ratio after and before engine
+p_ratio = 0.9  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500          # Wall temperature
@@ -55,9 +55,9 @@ valve_type = "valve"
 lv_max = 0.1 * d
 cd = 0.8
 
-eta_c = 1.0
+eta_c = 0.999
 
-far_goal = 0.02923 / 3.0
+far_goal = 0.0291755 / 3.0
 
 
 wiebe_type = "Single"
@@ -76,7 +76,7 @@ phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation 
 T_fuel = 450
 p_fuel = 300e5
 
-it = 40
+it = 100
 
 mf_tot = 1.5e-4
 

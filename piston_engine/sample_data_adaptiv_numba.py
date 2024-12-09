@@ -3,7 +3,7 @@ import importlib
 
 from timeit import default_timer as timer
 
-from engine import run_piston_engine  # import the piston engine function
+from piston_engine.engine import run_piston_engine  # import the piston engine function
 
 from scipy.stats import qmc
 
@@ -14,7 +14,7 @@ from src.misc.temp_lim import t_in_lim
 
 from numba import jit
 
-from src.piston.fuel_func_outdated import fuel_props
+from thermo import fuel_props
 
 # Setting up the piston engine
 input_file = "4stroke_hydrogen_sampling"
@@ -47,15 +47,16 @@ d_lim = [0.10, 0.20]  # limits for bore (piston diameter)
 p_ratio_lim = [0.9, 1.5]
 v_mean_lim = [8, 15]
 
+
+far_s, _ = fuel_props(fuel)
 if fuel == "H2":
     # THIS THROTTLE LIM IS FOR HYDROGEN
-    far
-    far_lim = [0.02923 / 3.0, 0.02923 / 1.1]  # (0.02923 / 5, 0.02923 / 1.5)
+    far_lim = [far_s / 3.0, far_s / 1.2]  # (0.02923 / 5, 0.02923 / 1.5)
     fuel_t_lim = [300, 500]
 
 elif fuel == "jetA":
     # THIS IS FOR JETA
-    far_lim = [0.06821 / 3.0, 0.06821 / 1.1]
+    far_lim = [far_s / 3.0, far_s / 1.1]
     fuel_t_lim = [220, 550]
 
 
@@ -64,7 +65,7 @@ elif fuel == "jetA":
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 200  # points per variable
+npoints = 16000  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -100,9 +101,9 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
     # estimation of the highest possible temperature for given pressure
     t_limit = t_in_lim(p)
 
-    t_limit = 1000000
+    #t_limit = 1000000
     # if predicted pressure under 400 bar
-    if pmax_seiliger < 40000*1e5 and T < t_limit:
+    if pmax_seiliger < 400*1e5 and T < t_limit:
 
         lv_max = 0.1 * bore
         data = [p, T, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
@@ -112,19 +113,25 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
                 d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
         # run the simulation
-        T_out, work_piston, eta_th, air_flow, p_max, T_max, far_output, equ_trapped, induced_power, friction_loss, aux_loss, \
-            heat_loss, p_tdc = run_piston_engine(data, flags)
+        print(p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
+        T_out, work_piston, eta_th, air_flow, p_max, T_max, _, equ_trapped, induced_power, _, _, \
+            heat_loss, p_tdc, _ = run_piston_engine(data, flags)
         # save the output that is relevant
-        # eta_th is redundant I suppose
-        y[i - 1, :] = T_out, eta_th, air_flow, p_max, T_max, induced_power * 1e-3, heat_loss * 1e-3, p_tdc * 1e-5
+        if equ_trapped > 1.0:
+            y[i - 1, :] = 0, 0, 0, 0, 0, 0, 0, 0
+            remove = remove + 1
+            print(f"Removed data point because too high far.")
+        else:
+            # eta_th is redundant I suppose
+            y[i - 1, :] = T_out, eta_th, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc
+            #print(y[i - 1, :])
 
-        print(far - throttle)
 
     else:
         # if predicted peak pressure is over 400 bar or temperature is too high
         y[i - 1, :] = 0, 0, 0, 0, 0, 0, 0, 0
         remove = remove + 1
-        print(f"Number of data points removed: {remove} out of {i} in total")
+        #print(f"Number of data points removed: {remove} out of {i} in total")
 
     if not (i % (ndoe // 800)):
         mellantid = timer()
@@ -132,6 +139,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         avg_iteration_time = elapsed_time / i
         total_time = avg_iteration_time * ndoe
         print(f'Simulation {i} out of {ndoe}.'
+              f'Datapoints removed: {remove}. '
               f'Elapsed time: {elapsed_time} [s]'
               f'Avg iteration time: {avg_iteration_time} [s]'
               f'Estimated total sampling time: {total_time} [s]'

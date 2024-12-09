@@ -73,7 +73,8 @@ phi_cd = (55/180)*np.pi  # angle related to combustion duration
 T_fuel = 300
 p_fuel = 2500e5
 
-it = 30
+# used to be 30
+it = 100
 
 throttle = 0  # just for input so program is satisfied
 cylinders = 1

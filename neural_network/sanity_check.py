@@ -26,7 +26,7 @@ flags = ['sweep']  # normal case no plots
 
 
 # Create new model and load states
-model = load_inference("models_old/narrowing_512_2.pth")
+model = load_inference("models/H2_2048_0.pth")
 print(model)
 
 # putting the model in output mode

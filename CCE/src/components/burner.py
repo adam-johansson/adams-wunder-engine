@@ -12,7 +12,7 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     if fuel_type == "H2":
         cp_f, hf, s_f, M_f = H2(t_fuel, p1)
     elif fuel_type == "jetA":
-        cp_f, hf = JETA(t_fuel)
+        cp_f, hf, s_f, M_f = JETA(t_fuel)
 
     # note that the fuel air ratio that is sought is ratio of added fuel to pure air in the gas
     f0 = 0.01  # initial guess

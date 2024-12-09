@@ -62,7 +62,7 @@ valve_type = "valve"
 lv_max = 0.1 * d
 cd = 0.8
 
-eta_c = 1.0
+eta_c = 0.999
 
 throttle = 0.02923 / 3.0
 

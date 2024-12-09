@@ -13,6 +13,8 @@ def dqfdt_kaiser(Qf, t, t_soc, t_eoc, wa, wm):
 @jit(nopython=True)
 def dqfdt_single(phi, m, phi_sc, phi_cd, Qf):
     # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
+
+    # only 99.9% of Qf will be added to the fluid
     if phi > phi_sc:
         # and phi < phi_sc + phi_cd + 0.5:
         y = (phi - phi_sc) / phi_cd
@@ -30,3 +32,20 @@ def dmfdphi_double(phi, c1, c2, c3, c4, c5, mf_tot):
         mdotf = mf_tot * (c4 * f2 + (1 - c4) * f1)
         return mdotf
     return 0.0
+
+
+def dqfdt_single_vector(phi, m, phi_sc, phi_cd, Qf):
+    # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
+
+    # only 99.9% of Qf will be added to the fluid
+
+    y = (phi - phi_sc) / phi_cd
+    f1 = 6.908 * (m + 1) * (y ** m) * np.exp(-6.908 * y ** (m + 1))
+
+    dqfdphi = f1 * Qf / phi_cd
+
+    idx = dqfdphi < 0
+
+    dqfdphi[idx] = 0.0
+
+    return dqfdphi

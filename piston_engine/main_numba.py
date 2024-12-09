@@ -15,7 +15,9 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen"
 #input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-input_file = "nasa_validation_singlewiebe"
+#input_file = "validation.nasa_validation_singlewiebe"
+#input_file = "4stroke_hydrogen_sampling"
+input_file = "4stroke_sampling"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -26,8 +28,8 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
-#flags = ['plot_essentials', 'output', 'output_all', 'plot_convergence', 'single', 'save']  # normal case
+#flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
 #flags = ['sweep']  # parametric study
@@ -37,13 +39,13 @@ flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essenti
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
         d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
-        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, d.throttle,
+        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, d.far_goal,
         d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
 if 'single' in flags:
     start = timer()
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
-        heat_loss, p_tdc = run_piston_engine(data, flags)
+        heat_loss, p_tdc, outflow = run_piston_engine(data, flags)
     end = timer()
     print(f'Time: {end - start}')
     #print(far / 0.02923)

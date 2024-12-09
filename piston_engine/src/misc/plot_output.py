@@ -208,14 +208,15 @@ def plot_manifolds(phi, equ_IP, m_IP, T_IP, equ_EP, m_EP, T_EP):
     return
 
 
-def plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff):
-    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1)
+def plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff, m_fuel_diff):
+    fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(6, 1)
 
     ax1.plot(pdiff[1:])
     ax2.plot(Tdiff[1:])
     ax3.plot(mdiff[1:])
     ax4.plot(equdiff[1:])
     ax5.plot(T_out_diff[1:])
+    ax6.plot(m_fuel_diff[1:])
 
     ax1.set_ylabel(r'pdiff [Pa]')
     ax1.set_xticklabels([])
@@ -242,7 +243,11 @@ def plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff):
     ax5.grid()
     ax5.set_yscale('log')
 
-    plt.show()
+    ax6.set_ylabel(r'm_fuel_diff [-]')
+    ax6.set_xticklabels([])
+    ax6.grid()
+    ax6.set_yscale('log')
+
     return
 
 
@@ -550,3 +555,155 @@ def plot_pvts(p, v, t, s, s2):
 
     return
 
+
+def plot_massconservation(m_in, mfuel, mout):
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
+
+    ax1.plot(m_in)
+    ax2.plot(mfuel)
+    ax3.plot(mout)
+    ax4.plot(np.abs(m_in + mfuel - mout))
+
+
+    ax1.set_ylabel(r'mass in [kg]')
+    ax1.set_xticklabels([])
+    ax1.grid()
+    #ax1.set_yscale('log')
+
+    ax2.set_ylabel(r'mass fuel in [kg]')
+    ax2.set_xticklabels([])
+    ax2.grid()
+    #ax2.set_yscale('log')
+
+    ax3.set_ylabel(r'mass out [kg]')
+    ax3.set_xticklabels([])
+    ax3.grid()
+    #ax3.set_yscale('log')
+
+    ax4.set_ylabel(r'mass conservation (absolute value) [kg]')
+    ax4.set_xticklabels([])
+    ax4.grid()
+    ax4.set_yscale('log')
+
+    return
+
+
+def plot_energyconservation(enthalpy_in, heat_in, fuel_enthalpy_in, enthalpy_out, heat_out, work_out):
+    fig, (ax1, ax2, ax3, ax4, ax5, ax6, ax7) = plt.subplots(7, 1)
+
+    energy_in = enthalpy_in + heat_in + fuel_enthalpy_in
+    energy_out = enthalpy_out + work_out + heat_out
+
+    conservation = energy_in - energy_out
+
+    #print(f"Energy conservation: {conservation} [J]")
+
+    ax1.plot(enthalpy_in)
+    ax2.plot(heat_in)
+    ax3.plot(fuel_enthalpy_in)
+    ax4.plot(enthalpy_out)
+    ax5.plot(heat_out)
+    ax6.plot(work_out)
+    ax7.plot(np.abs(conservation))
+
+
+    ax1.set_ylabel(r'enthalpy in [J]')
+    ax1.set_xticklabels([])
+    ax1.grid()
+    #ax1.set_yscale('log')
+
+    ax2.set_ylabel(r'heat in [J]')
+    ax2.set_xticklabels([])
+    ax2.grid()
+    #ax2.set_yscale('log')
+
+    ax3.set_ylabel(r'fuel enthalpy [J]')
+    ax3.set_xticklabels([])
+    ax3.grid()
+    #ax3.set_yscale('log')
+
+    ax4.set_ylabel(r'enthalpy out [J]')
+    ax4.set_xticklabels([])
+    ax4.grid()
+    #ax4.set_yscale('log')
+
+    ax5.set_ylabel(r'heat out [J]')
+    ax5.set_xticklabels([])
+    ax5.grid()
+    #ax4.set_yscale('log')
+
+    ax6.set_ylabel(r'work out [J]')
+    ax6.set_xticklabels([])
+    ax6.grid()
+    #ax4.set_yscale('log')
+
+    ax7.set_ylabel(r'energy conservation [J]')
+    ax7.set_xticklabels([])
+    ax7.grid()
+    ax7.set_yscale('log')
+
+    plt.show()
+    return
+
+def plot_convergence2(mEPdiff, mIPdiff):
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+
+    ax1.plot(mEPdiff[1:])
+    ax2.plot(mIPdiff[1:])
+
+
+    ax1.set_ylabel(r'mEP diff [kg]')
+    ax1.set_xticklabels([])
+    ax1.grid()
+    ax1.set_yscale('log')
+
+    ax2.set_ylabel(r'mIP diff [kg]')
+    ax2.set_xticklabels([])
+    ax2.grid()
+    ax2.set_yscale('log')
+
+    return
+
+
+
+def plot_twozone(phi, t2, t1, t, dqf, evo, sc):
+
+    # high pressure crank angles
+    #phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+
+    # high pressure pressure curve
+    #P_hp = np.array(P[np.argwhere((phi > sc) & (phi < evo))])
+
+    # temperature before sc
+    T_before = np.array(t[np.argwhere((phi < sc))])
+
+    # temperature after evo
+    T_after= np.array(t[np.argwhere((phi > evo))])
+
+    t1 = np.concatenate((T_before, t1, T_after))
+
+    t2 = np.concatenate((T_before, t2, T_after))
+
+
+    fig, ax1 = plt.subplots()
+    ax1.plot(phi * 180 / np.pi, t, label='Single zone')
+    ax1.plot(phi * 180 / np.pi, t2, label='Zone 1')
+    ax1.plot(phi * 180 / np.pi, t1, label='Zone 2')
+
+    ax1.set_xlabel('phi [deg]')
+    ax1.set_ylabel(r'T [K]')
+    plt.legend(loc='best', fontsize='small', frameon=False)
+    ax1.grid()
+
+    #fig, ax2 = plt.subplots()
+    #ax2.plot(phi * 180 / np.pi, dqf, label='Single zone')
+
+
+    #ax2.set_xlabel('phi [deg]')
+    #x2.set_ylabel(r'T [K]')
+    #plt.legend(loc='best', fontsize='small', frameon=False)
+    #ax2.grid()
+
+
+    plt.show()
+    return

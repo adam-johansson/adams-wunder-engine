@@ -57,7 +57,7 @@ lv_max = 0.1 * d
 
 cd = 0.8
 
-eta_c = 1.0
+eta_c = 0.999
 
 throttle = 0.0294
 throttle = 0.0275

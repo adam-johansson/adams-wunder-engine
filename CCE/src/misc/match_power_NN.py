@@ -191,6 +191,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         # use meta model to get outputs from the piston egnine
         output_final = meta_model.inference(piston_input_final)[0]
 
+        # DENNA SKALL RÄKNAS UT ISTÄLLET!!!!
         T34_final = output_final[0]
         eta_th_final = output_final[1]
         air_flow_final = output_final[2] * cylinders

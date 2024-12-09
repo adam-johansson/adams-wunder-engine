@@ -15,7 +15,7 @@ cr = 7.3
 cylinders = 1  # V12
 
 # piston
-d = 0.16915  # diameter
+d = 0.10  # diameter
 #d = 0.1699  # diameter
 v_mean = 15  # mean velocity from Kaiser's thesis
 bsr = 1  # bore stroke ratio
@@ -23,8 +23,8 @@ bsr = 1  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 912.02e3 * 0.99  # inlet pressure
-T_in = 708.827  # inlet temperature
+p_in = 10e5  # inlet pressure
+T_in = 750  # inlet temperature
 p_ratio = 1.1  # pressure ratio after and before engine
 
 # Heat transfer
@@ -57,10 +57,11 @@ lv_max = 0.1 * d
 
 cd = 0.8
 
-eta_c = 1.0
+# 99.9 should be used
+eta_c = 0.999
 
 throttle = 0.0294
-throttle = 0.0275
+far_goal = 0.0275
 
 
 wiebe_type = "Single"
@@ -85,10 +86,10 @@ phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SING
 #phi_sc = (362/180)*np.pi  # angle at combustion start
 #phi_cd = (40/180)*np.pi  # angle related to combustion duration
 
-T_fuel = 300
+T_fuel = 500
 p_fuel = 2500e5
 
-it = 40
+it = 100
 
 mf_tot = 1.5e-4
 

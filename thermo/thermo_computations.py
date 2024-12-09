@@ -14,7 +14,7 @@ def mixture(t, p, equ=0, fuel_type=False):
     ----------
     equ : float
         Equivalence ratio of the gas That is fuel air ratio divided by
-        stochiometric fuel air ratio.
+        stochiometric fuel air ratio, weight ratios that is.
     t : float
         Temperature of the gas.
     p : float
@@ -42,8 +42,14 @@ def mixture(t, p, equ=0, fuel_type=False):
 
     """
 
+    #if equ > 1:
+    #    #print(f"Equivalence ratio: {equ} is larger than 1")
+    #    equ = 1.0
+
+
     Runiv = 8.3144626  # J mol^-1 K^-1
 
+    # O2 + N2 + Ar
     N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
     x_O2_air = 1 / N_air  # molar fraction of O2
     x_N2_air = 3.7274 / N_air  # molar fraction of N2
@@ -51,11 +57,11 @@ def mixture(t, p, equ=0, fuel_type=False):
     x_CO2_air = 0  # no co2 in air for now
 
     # retrieve the molar masses
-    cp_N2, h_N2, s_N2, M_N2 = N2(t, p)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t, p)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
-    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p)
-    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p)
+    _, _, _, M_N2 = N2(t, p)
+    _, _, _, M_O2 = O2(t, p)
+    _, _, _, M_Ar = Ar(t, p)
+    _, _, _, M_H2O = H2O(t, p)
+    _ ,_, _, M_CO2 = CO2(t, p)
 
     M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_CO2_air * M_CO2
     # air consisting of N2, O2, Ar and CO2
@@ -129,6 +135,7 @@ def mixture(t, p, equ=0, fuel_type=False):
     cp_N2, h_N2, s_N2, M_N2 = N2(t, p_N2)
     cp_O2, h_O2, s_O2, M_O2 = O2(t, p_O2)
     cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p_Ar)
+
     if mu_H2O > 0:
         cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p_H2O)
     if mu_CO2 > 0:
@@ -176,6 +183,9 @@ def equivalence_derivative(equ, t, p, fuel_type):
     """
 
     # THESE CALCULATIONS CAN PROBABLY BE QUICKER IF MU IS TARGETED DIRECTLY
+    #if equ > 1:
+    #    #print(f"Equivalence ratio: {equ} is larger than 1")
+    #    equ = 1.0
 
     Runiv = 8.3144626  # J mol^-1 K^-1
 

@@ -39,7 +39,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, train_size=0.8, test_size=0.2, random_state=42)
 
 
-scaler = "minmax"
+scaler = "standard"
 if scaler == "standard":
     # normalise the data, fit the normalisation on training data (mean 0 std 1)
     X_mean = np.mean(X_train,0)

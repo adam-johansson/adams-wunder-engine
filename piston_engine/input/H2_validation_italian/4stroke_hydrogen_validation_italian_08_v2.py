@@ -97,6 +97,6 @@ c1 = 2.0  # shape factor for diffusion burning
 c4 = 0.3  # premixed / diffusion burning distribution
 c5 = 2.0  # shape factor for premixed burning function
 
-it = 40
+it = 500
 
 mf_tot = 1.5e-4
