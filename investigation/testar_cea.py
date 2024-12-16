@@ -6,18 +6,18 @@ from CCE.src.components import burner
 #TP (Specified Temperature and Pressure) Problem Constructor Additional Parameters:
 #Very similar to an HP problem, but temperature is specified per-problem and material temperatures are ignored
 
-airtemp = 500
+airtemp = 1300
 fueltemp = 400
-phicea = 0.8
+phicea = 1.0
 # all materials must be either fuel or oxidizer
 
-air2 = cea.Oxidizer("Air", temp = airtemp)
+air2 = cea.Oxidizer("Air", temp=airtemp)
 
 jetA = cea.Fuel("Jet-A(L)", temp=fueltemp)
 
-h2 = cea.Fuel("H2", temp=400)
+h2 = cea.Fuel("H2", temp=fueltemp)
 
-o2 = cea.Oxidizer("O2")
+#o2 = cea.Oxidizer("O2")
 
 
 # HP problem is like a burner

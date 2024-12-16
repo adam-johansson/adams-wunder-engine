@@ -1,5 +1,7 @@
 from .fuel import fuel_props
-from .thermo_computations import mixture, equivalence_derivative
-from .polynomials import N2, O2, Ar, H2, H2O, CO2, JETA
+from .thermo_computations import mixture, equivalence_derivative, molar_fractions
+from .polynomials import N2, O2, Ar, H2, H2O, CO2, JETA, CO
 from .work_potential import work_potential
 from .entropy_func import entropy_func
+from .adiabatic_flame_temperature import flame_temp_inhouse, flame_temp_cea
+from .chemical_equilibrium import equilibrium_OHC

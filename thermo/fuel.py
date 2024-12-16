@@ -11,12 +11,12 @@ def fuel_props(fuel_type):
     _, _, _, _, _, _, _, M_air = mixture(t=999, p=1e5) # mole mass is constant with temperature
 
     if fuel_type == 'jetA':
-        LHV = 42.8e6  # 43.0 jet A and 42.6 diesel (engineering toolbox), but 42.8 jet A from Kaiser
+        LHV = 43.0319e6  # from the difference of formation enthalpies
         Mfuel = 167.31e-3  # using c12h23 (JET-A)
         far_s = (Mfuel / (17.75 * M_air * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)))
 
     elif fuel_type == 'H2':
-        LHV = 119.96e6  # wikipedia
+        LHV = 119.9605e6  # from the difference of formation enthalpies
         Mfuel = 2.01588e-3  # from Coolprop
         far_s = (Mfuel / (0.5 * M_air * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)))
 

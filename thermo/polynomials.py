@@ -1,8 +1,15 @@
 import numpy as np
 from numba import jit
 
-# Universal gas constant (from Wikipedia) or maybe the database?
-R = 8.3144626  # J mol^-1 K^-1
+# Universal gas constant from NASA polynomials pdf
+R = 8.314510  # J mol^-1 K^-1
+
+# Also from NASA pdf
+# Sackur-Tetrode constant S^0/R for p0 = 1 bar is -1.151693
+
+
+# INFORMATION:
+# Inside the polynomials, the units are kJ/mol
 
 
 @jit(nopython=True)
@@ -21,6 +28,8 @@ def N2(T, p):
     Rspec = R / M  # J kg^-1 K^-1
 
     if T < 1000.0007:  # between 200K and 1000K
+
+
         a1 = 2.210371497e+04
         a2 = -3.818461820e+02
         a3 = 6.082738360e+00
@@ -49,9 +58,6 @@ def N2(T, p):
 
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
-
-    # if we want to use reference 0K
-    #h = h + 8.670104*1e3 / M
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -102,10 +108,7 @@ def O2(T, p):
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
-    # reference 0K
-    #h = h + 8.680104e3 / M
-
-    # standards state pressure is 1 bar
+    # standard state pressure is 1 bar
     p_std = 1e5
 
     # pressure dependence of the entropy
@@ -152,9 +155,6 @@ def Ar(T, p):
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
-
-    # reference 0K
-    #h = h + 6.197*1e3 / M
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -208,17 +208,10 @@ def CO2(T, p):
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
-    # WORKING IS TO USE THESE FOR CO2 and H2O and none for N2, Ar and O2
-    # enthalpy of formation 298.15 K
-    h = h + 393510.000 / M
-
-    # enthalpy of formation 0k
-    #h = h + 393142.000 / M
-
-    # standard enthalpy 0K
-    #h = h + 402875.0 / M
-
-    #h = h + 9365.469 / M
+    # enthalpy of formation 298.15 K (J/mol) (convert to /kg by dividing by molar mass)
+    hf = - 393510.000 / M
+    hf = 0.0
+    h = h - hf
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -270,16 +263,10 @@ def H2O(T, p):
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
-    # Enthalpy at 298.15K
-    h = h + 241826.000 / M    # J kg^-1
-
-    # enthalpy of formation
-    #h = h + 238922.0 / M
-
-    # enthalpy at 0K
-    #h = h + 251730.0 / M
-
-    #h = h + 9.904 / M
+    # Enthalpy of formation at 298.15K (J/mol so we divide by M to get J/kg)
+    hf = - 241826.000 / M
+    hf = 0
+    h = h - hf    # J kg^-1
 
     # standards state pressure is 1 bar
     p_std = 1e5
@@ -320,8 +307,11 @@ def JETA(T):
     s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
-    # reference 298.15K
-    h = h + 303.403e3 / M   # J kg^-1
+    # enthalpy of formation
+    hf = - 303403.000 / M
+    hf = 0
+    h = h - hf   # J kg^-1
+
     return cp, h, s, M
 
 
@@ -380,3 +370,347 @@ def H2(T, p):
 
 
 
+@jit(nopython=True)
+def CO(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 200:
+        T = 200
+        #print(f'Temperature under 200 K was found')
+    M = 28.0101000e-3  # kg/mol
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = 1.489045326e+04
+        a2 = -2.922285939e+02
+        a3 = 5.724527170e+00
+        a4 = -8.176235030e-03
+        a5 = 1.456903469e-05
+        a6 = -1.087746302e-08
+        a7 = 3.027941827e-12
+        b1 = -1.303131878e+04
+        b2 = -7.859241350e+00
+    else:  # 1000K to 6000K
+        a1 = 4.619197250e+05
+        a2 = -1.944704863e+03
+        a3 = 5.916714180e+00
+        a4 = -5.664282830e-04
+        a5 = 1.398814540e-07
+        a6 = -1.787680361e-11
+        a7 = 9.620935570e-16
+        b1 = -2.466261084e+03
+        b2 = -1.387413108e+01
+
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # add enthalpy of formation or something like that (heat of formation)
+    # divide by M to make it per kg instead of per mole
+    hf = -110535.196 / M
+    hf = 0
+    h = h - hf
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+
+    return cp, h, s, M
+
+
+
+@jit(nopython=True)
+def H(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 200:
+        T = 200
+        #print(f'Temperature under 200 K was found')
+    M = 1.0079400e-3  # kg/mol
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = 0.00
+        a2 = 0.00
+        a3 = 2.500000000e+00
+        a4 = 0.00
+        a5 = 0.00
+        a6 = 0.00
+        a7 = 0.00
+        b1 = 2.547370801e+04
+        b2 = -4.466828530e-01
+    else:  # 1000K to 6000K
+        a1 = 6.078774250e+01
+        a2 = -1.819354417e-01
+        a3 = 2.500211817e+00
+        a4 = -1.226512864e-07
+        a5 = 3.732876330e-11
+        a6 = -5.687744560e-15
+        a7 = 3.410210197e-19
+        b1 = 2.547486398e+04
+        b2 = -4.481917770e-01
+
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # add enthalpy of formation or something like that (heat of formation)
+    # divide by M to make it per kg instead of per mole
+    hf = + 217998.828 / M
+    hf = 0
+    h = h - hf  # (J/kg)
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+
+    return cp, h, s, M
+
+
+
+@jit(nopython=True)
+def N(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 200:
+        T = 200
+        #print(f'Temperature under 200 K was found')
+    M = 14.0067000e-3  # kg/mol
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = 0.00
+        a2 = 0.00
+        a3 = 2.500000000e+00
+        a4 = 0.00
+        a5 = 0.00
+        a6 = 0.00
+        a7 = 0.00
+        b1 = 5.610463780e+04
+        b2 = 4.193905036e+00
+    else:  # 1000K to 6000K
+        a1 = 8.876501380e+04
+        a2 = -1.071231500e+02
+        a3 = 2.362188287e+00
+        a4 = 2.916720081e-04
+        a5 = -1.729515100e-07
+        a6 = 4.012657880e-11
+        a7 = -2.677227571e-15
+        b1 = 5.697351330e+04
+        b2 = 4.865231506e+00
+
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # add enthalpy of formation or something like that (heat of formation)
+    # divide by M to make it per kg instead of per mole
+    hf = + 472680.000 / M
+    hf = 0
+    h = h - hf  # (J/kg)
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+    return cp, h, s, M
+
+
+@jit(nopython=True)
+def NO(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 200:
+        T = 200
+        #print(f'Temperature under 200 K was found')
+    M = 30.0061000e-3  # kg/mol
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = -1.143916503e+04
+        a2 = 1.536467592e+02
+        a3 = 3.431468730e+00
+        a4 = -2.668592368e-03
+        a5 = 8.481399120e-06
+        a6 = -7.685111050e-09
+        a7 = 2.386797655e-12
+        b1 = 9.098214410e+03
+        b2 = 6.728725490e+00
+    else:  # 1000K to 6000K
+        a1 = 2.239018716e+05
+        a2 = -1.289651623e+03
+        a3 = 5.433936030e+00
+        a4 = -3.656034900e-04
+        a5 = 9.880966450e-08
+        a6 = -1.416076856e-11
+        a7 = 9.380184620e-16
+        b1 = 1.750317656e+04
+        b2 = -8.501669090e+00
+
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # add enthalpy of formation or something like that (heat of formation)
+    # divide by M to make it per kg instead of per mole
+    hf = + 91271.310 / M
+    hf = 0
+    h = h - hf  # (J/kg)
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+
+    return cp, h, s, M
+
+
+
+@jit(nopython=True)
+def O(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 200:
+        T = 200
+        #print(f'Temperature under 200 K was found')
+    M = 15.9994000e-3  # kg/mol
+    #M = 32e-3
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = -7.953611300e+03
+        a2 = 1.607177787e+02
+        a3 = 1.966226438e+00
+        a4 = 1.013670310e-03
+        a5 = -1.110415423e-06
+        a6 = 6.517507500e-10
+        a7 = -1.584779251e-13
+        b1 = 2.840362437e+04
+        b2 = 8.404241820e+00
+    else:  # 1000K to 6000K
+        a1 = 2.619020262e+05
+        a2 = -7.298722030e+02
+        a3 = 3.317177270e+00
+        a4 = -4.281334360e-04
+        a5 = 1.036104594e-07
+        a6 = -9.438304330e-12
+        a7 = 2.725038297e-16
+        b1 = 3.392428060e+04
+        b2 = -6.679585350e-01
+
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # add enthalpy of formation or something like that (heat of formation)
+    # divide by M to make it per kg instead of per mole
+    hf = + 249175.003 / M
+    hf = 0
+    h = h - hf  # (J/kg)
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+
+    return cp, h, s, M
+
+
+
+@jit(nopython=True)
+def OH(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 200:
+        T = 200
+        #print(f'Temperature under 200 K was found')
+    M = 17.0073400e-3  # kg/mol
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = -1.998858990e+03
+        a2 = 9.300136160e+01
+        a3 = 3.050854229e+00
+        a4 = 1.529529288e-03
+        a5 = -3.157890998e-06
+        a6 = 3.315446180e-09
+        a7 = -1.138762683e-12
+        b1 = 2.991214235e+03
+        b2 = 4.674110790e+00
+    else:  # 1000K to 6000K
+        a1 = 1.017393379e+06
+        a2 = -2.509957276e+03
+        a3 = 5.116547860e+00
+        a4 = 1.305299930e-04
+        a5 = -8.284322260e-08
+        a6 = 2.006475941e-11
+        a7 = -1.556993656e-15
+        b1 = 2.019640206e+04
+        b2 = -1.101282337e+01
+
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+
+    # add enthalpy of formation or something like that (heat of formation)
+    # divide by M to make it per kg instead of per mole
+    hf = + 37278.206 / M
+    hf = 0
+    h = h - hf  # (J/kg)
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * np.log(p / p_std)
+
+
+    return cp, h, s, M

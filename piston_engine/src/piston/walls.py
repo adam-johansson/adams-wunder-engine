@@ -1,6 +1,8 @@
 import numpy as np
 from numba import jit
 
+
+@jit(nopython=True)
 def dqdphi(T,P,V,gamma,Twalls,Awalls,v_mean,d,V_d,ref,dtdphi,type1,type2):
     
     # Woschni heat transfer model
@@ -21,12 +23,16 @@ def dqdphi(T,P,V,gamma,Twalls,Awalls,v_mean,d,V_d,ref,dtdphi,type1,type2):
         k1 = 7
     else:
         print("Unknown type, error in dqdphi")
-        return 0.0
+        return 0.0, 0.0
 
     dqdphi = 0
     for (i, j) in zip(Twalls, Awalls):
         if type2:
-            c2 = np.max([3.24e-3, 2.3e-5 * (i - 600) + 5e-3])
+            if 3.24e-3 > 2.3e-5 * (i - 600) + 5e-3:
+                c2 = 3.24e-3
+            else:
+                c2 = 2.3e-5 * (i - 600) + 5e-3
+            #print(gamma)
             Pmotor = Psc * (Vsc / V) ** gamma
             Pmotor_bar = Pmotor * 1e-5
         else:

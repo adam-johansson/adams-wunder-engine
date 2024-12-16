@@ -94,7 +94,7 @@ batch_size = 32
 epochs = 3000
 
 # number of neurons of hidden layers
-hidden_dim = 256
+hidden_dim = 32
 
 # number of hidden layers - 1
 layers = 1
@@ -214,7 +214,7 @@ for epoch in range(start_epoch, epochs):
         break  # terminate the training loop
 
     # display statistics
-    if not ((epoch + 1) % (epochs // 10)):
+    if not ((epoch + 1) % (epochs // 3000)):
         print(f'Epochs:{epoch + 1:5d} | ' \
               f'Batches per epoch: {i + 1:3d} | ' \
               f'Training loss: {running_loss / (i + 1):.10f} | ' \

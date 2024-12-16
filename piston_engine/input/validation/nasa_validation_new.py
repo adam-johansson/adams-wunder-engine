@@ -49,23 +49,25 @@ valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
 valve_type = "port"
 n_valve = 2
 
+# den används såklart inte för vi har ports
 lv_max = 0.01235
+# cd = 0.84 worked well
 cd = 0.84
 
-eta_c = 1.0
+# this is assumed in the wiebe function
+eta_c = 0.999
 
-#TODO: Change this to far
-#mf_tot = 1.0375e-4 #for single wiebe
-mf_tot = 9.98e-5 #for double wiebe
-#mf_tot = 9.6e-5
+# fuel mass per cycle
+mf_tot = 9.979e-5
 
-wiebe_type = "Single"
+
+wiebe_type = "Single_mass"
 
 wa = 6
 wm = 0.94
 
-# this if for single wiebe function
-m_wiebe = 1.0
+# this if for single wiebe function from NASA validation paper
+m_wiebe = 3.5
 
 phi_sc = (345/180)*np.pi  # angle at combustion start
 phi_cd = (55/180)*np.pi  # angle related to combustion duration

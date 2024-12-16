@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # This example assumes my_ml_model has a method `initialize` to load
     # architecture, weights, and place in inference mode
     folder = "H2"
-    hidden_dim = 256
+    hidden_dim = 32
     layers = 1
 
     trained_model = load_ANN(f'./models/{folder}_{hidden_dim}_{layers}.pth')
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     # FPTLIB-TODO
     # Set the name of the file you want to save the torchscript model to:
-    saved_ts_filename = "models/torchscript/h2_ts_model.pt"
+    saved_ts_filename = "models/torchscript/h2_ts_model_new.pt"
     # A filepath may also be provided. To do this, pass the filepath as an argument to
     # this script when it is run from the command line, i.e. `./pt2ts.py path/to/model`.
 
@@ -164,11 +164,17 @@ if __name__ == "__main__":
 
 
     #scale input
-    x_max = trained_model.x_max
-    x_min = trained_model.x_min
+    if trained_model.scaler == "minmax":
+        x_max = trained_model.x_max
+        x_min = trained_model.x_min
 
-    trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_min) / (x_max - x_min)
+        trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_min) / (x_max - x_min)
 
+    elif trained_model.scaler == "standard":
+        x_mean = trained_model.x_mean
+        x_std = trained_model.x_std
+
+        trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_mean) / x_std
     # convert to tensor
     trained_model_dummy_input_1_tensor = torch.tensor(trained_model_dummy_input_1, dtype=torch.float32)
 
@@ -176,14 +182,25 @@ if __name__ == "__main__":
     ts_model_outputs = ts_model(trained_model_dummy_input_1_tensor)
 
     # scale output
-    y_max = trained_model.y_max
-    y_min = trained_model.y_min
+    if trained_model.scaler == "minmax":
+        y_max = trained_model.y_max
+        y_min = trained_model.y_min
 
-    print(f"xmin: {x_min}")
-    print(f"xmax: {x_max}")
-    print(f"ymin: {y_min}")
-    print(f"ymax: {y_max}")
-    ts_model_outputs = y_min + (y_max - y_min) * ts_model_outputs.detach().numpy()
+        print(f"xmin: {x_min}")
+        print(f"xmax: {x_max}")
+        print(f"ymin: {y_min}")
+        print(f"ymax: {y_max}")
+        ts_model_outputs = y_min + (y_max - y_min) * ts_model_outputs.detach().numpy()
+
+    elif trained_model == "standard":
+        y_mean = trained_model.y_mean
+        y_std = trained_model.y_std
+
+        print(f"xmean: {x_mean}")
+        print(f"xstd: {x_std}")
+        print(f"ymean: {y_mean}")
+        print(f"ystd: {y_std}")
+        ts_model_outputs = y_mean + y_std * ts_model_outputs.detach().numpy()
 
     print(f"Output normal model: {trained_model_testing_outputs}")
 

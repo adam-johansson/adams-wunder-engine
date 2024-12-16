@@ -216,7 +216,7 @@ def plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff, m_fuel_diff):
     ax3.plot(mdiff[1:])
     ax4.plot(equdiff[1:])
     ax5.plot(T_out_diff[1:])
-    ax6.plot(m_fuel_diff[1:])
+    ax6.plot(np.abs(m_fuel_diff[1:]))
 
     ax1.set_ylabel(r'pdiff [Pa]')
     ax1.set_xticklabels([])
@@ -591,7 +591,7 @@ def plot_massconservation(m_in, mfuel, mout):
 def plot_energyconservation(enthalpy_in, heat_in, fuel_enthalpy_in, enthalpy_out, heat_out, work_out):
     fig, (ax1, ax2, ax3, ax4, ax5, ax6, ax7) = plt.subplots(7, 1)
 
-    energy_in = enthalpy_in + heat_in + fuel_enthalpy_in
+    energy_in = enthalpy_in + fuel_enthalpy_in
     energy_out = enthalpy_out + work_out + heat_out
 
     conservation = energy_in - energy_out
@@ -666,7 +666,7 @@ def plot_convergence2(mEPdiff, mIPdiff):
 
 
 
-def plot_twozone(phi, t2, t1, t, dqf, evo, sc):
+def plot_twozone(phi, t1, t2, t, evo, sc):
 
     # high pressure crank angles
     #phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
@@ -687,8 +687,8 @@ def plot_twozone(phi, t2, t1, t, dqf, evo, sc):
 
     fig, ax1 = plt.subplots()
     ax1.plot(phi * 180 / np.pi, t, label='Single zone')
-    ax1.plot(phi * 180 / np.pi, t2, label='Zone 1')
-    ax1.plot(phi * 180 / np.pi, t1, label='Zone 2')
+    ax1.plot(phi * 180 / np.pi, t1, label='Zone 1')
+    ax1.plot(phi * 180 / np.pi, t2, label='Zone 2')
 
     ax1.set_xlabel('phi [deg]')
     ax1.set_ylabel(r'T [K]')

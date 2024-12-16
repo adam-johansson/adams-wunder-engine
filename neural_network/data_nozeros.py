@@ -22,6 +22,9 @@ y_cleaned = y[mask]
 X_cleaned = X[mask]
 
 
+# convert bar to pascal
+#y_cleaned.p_max = y_cleaned.p_max * 1e5
+
 mask = temp_lim.t_in_lim(X_cleaned.p_in) > X_cleaned.T_in
 
 print(f"Number of data points with too high temperature {np.count_nonzero(mask == 0)}")
@@ -82,10 +85,10 @@ print(f"Maximum pressure at top dead centre is {max_ptdc} bar")
 print(f"Minimum pressure at top dead centre is {min_ptdc} bar")
 
 # count how many data points have peak pressure below 300 bar
-print(f"Number of data points with peak pressure under 300 bar {np.count_nonzero(y_cleaned.p_max < 300)}")
+print(f"Number of data points with peak pressure under 300 bar {np.count_nonzero(y_cleaned.p_max < 300 * 1e5)}")
 
 
-plt.plot(y_cleaned.p_max, 'o', markersize=1)
+plt.plot(y_cleaned.p_max * 1e-5, 'o', markersize=1)
 plt.ylabel("peak pressure [bar]")
 plt.xlabel("data point")
 plt.show()

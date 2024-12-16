@@ -98,8 +98,8 @@ def run_piston_engine(indata, flags):
     Ahead = Apiston
 
     # Starts here (vilken välja?)
-    #n = 10000
-    n = 50000
+    n = 10000
+    #n = 50000
     #n = 20000
 
     phi = np.linspace(phi_start, cycle_phi + phi_start, n)
@@ -125,10 +125,7 @@ def run_piston_engine(indata, flags):
     m0 = rho0 * V1[0]
 
     if 'validation' in flags:
-        # this is used for efficiency calcuations
         Qf = LHV * mf_tot
-
-        # this is only used for initial value of equivalence ratio in exhaust port
         m_air_theo = V1[np.argwhere(phi >= phi_close_out)[0][0]] * rho_in
         far_tot = mf_tot / m_air_theo
     else:
@@ -211,11 +208,6 @@ def run_piston_engine(indata, flags):
             dmfdphi = wiebe.dmfdphi_double(phi, c1, phi_sc, phi_cd, c4, c5, mf_tot)
             # Rate of injected heat
             dqfdphi = dmfdphi * (LHV * eta_c)
-        elif wiebe_type == "Single_mass":
-            # Rate of injected fuel mass
-            dmfdphi = wiebe.dmfdphi_single_mass(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
-            # Rate of injected heat (only used for two zone calculations)
-            dqfdphi = dmfdphi * LHV
         else:
             raise Exception(f'Unknown Wiebe function. The Wiebe function was {wiebe_type}.')
 
@@ -391,8 +383,7 @@ def run_piston_engine(indata, flags):
             h_out_cyl = h_EP
 
         # Energy equation
-        # no heat addition term here. It is incorporated in the enthalpies
-        dudphi = (- dqdphi - P * dVdphi - u * dmdphi + dmfdphi * h_fuel +
+        dudphi = (dqfdphi - dqdphi - P * dVdphi - u * dmdphi + dmfdphi * h_fuel +
                   dmindphi * h_in_cyl - dmoutdphi * h_out_cyl) / m
 
         dTdphi = (dudphi - delludellequ * dequdphi) / cv
@@ -416,7 +407,6 @@ def run_piston_engine(indata, flags):
                 dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
                 dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi]
 
-    # from initial guess of fuel air ratio
     equ_EP0 = far_tot / far_s
 
     # Init simulation
@@ -481,7 +471,7 @@ def run_piston_engine(indata, flags):
                 Tref = T[-1][np.argwhere(phi > phi_close_out)[0]][0]
                 Vref = V[-1][np.argwhere(phi > phi_close_out)[0]][0]
             elif cycle == "4T":
-                Pref = P[-1][-1]
+                Pref = P[-1][-1]  #TODO: check if this works
                 Tref = T[-1][-1]
                 Vref = V[-1][-1]
             try:
@@ -586,19 +576,10 @@ def run_piston_engine(indata, flags):
         else:
             mf_diff.append(0.0)
 
-
-        if "validation" in flags:
-            # avg far
-            far_avg = mf_tot / m_in_IP[-1][-1]
-            def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_avg / far_s, fuel_type)
-                return h - energy_out[-1][-1] / m_out_EP[-1][-1]
-
-        else:
-            #using far_goal for t_out calculations should be good since that is the average far in exhaust
-            def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_goal / far_s, fuel_type)
-                return h - energy_out[-1][-1] / m_out_EP[-1][-1]
+        #using far_goal for t_out calculations should be good since that is the average far in exhaust
+        def find_tout(t):
+            h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_goal / far_s, fuel_type)
+            return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
 
         try:
@@ -689,12 +670,8 @@ def run_piston_engine(indata, flags):
     #fuel_flow = mf[-1][-1] / t_cycle
     out_flow = m_out_EP[-1][-1] / t_cycle
     heat_flow = Q_in[-1][-1] / t_cycle
-
-    eta_th = W[-1][-1] / (mf_tot * LHV)  # work from total fuel heat
-    hl = Q[-1][-1] / (mf_tot * LHV)  # heat loss
-
-    #eta_th = W[-1][-1] / Q_in[-1][-1]
-    #hl = Q[-1][-1] / Q_in[-1][-1]  # heat loss
+    eta_th = W[-1][-1] / Q_in[-1][-1]
+    hl = Q[-1][-1] / Q_in[-1][-1]  # heat loss
 
     # Retrieve maximum pressure and temperature
     p_max = np.max(P[-1])
@@ -744,13 +721,9 @@ def run_piston_engine(indata, flags):
     heat_outs = np.array([item[-1] for item in Q])
     works_outs = np.array([item[-1] for item in W])
 
-    term1 = enthalpy_ins[-1] + fuel_enthalpy_ins[-1]
+    term1 = enthalpy_ins[-1] + heat_ins[-1] + fuel_enthalpy_ins[-1]
     term2 = enthalpy_outs[-1] + heat_outs[-1] + works_outs[-1]
     diff = np.abs(term1 - term2)
-    if "validation" in flags:
-        print(f"Energy conservation: {diff / heat_ins[-1]}")
-
-    print(f"Energy conservation: {diff / heat_ins[-1]}")
 
     if "validation" not in flags:
         # if energy error larger than 0.1% of fuel energy
@@ -762,10 +735,10 @@ def run_piston_engine(indata, flags):
     if "validation" not in flags:
         ## NOX calculations
         # get the heat addition from fuel curve
-        dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
+        dqfdphi = wiebe.dqfdt_single_vector(phi, m_wiebe, phi_sc, phi_cd, Qf)
 
         # get temperature and mass from reaction zone
-        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2 = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dmfdphi,
+        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2 = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dqfdphi,
                                                                           phi_open_out, phi_sc, LHV, far_s,
                                                                           equ[-1], fuel_type)
 

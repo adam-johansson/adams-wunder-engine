@@ -15,9 +15,10 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen"
 #input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-#input_file = "validation.nasa_validation_singlewiebe"
+#input_file = "validation.nasa_validation_new"
 #input_file = "4stroke_hydrogen_sampling"
-input_file = "4stroke_sampling"
+#input_file = "4stroke_sampling"
+input_file = "two_zone_check"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -29,7 +30,7 @@ d = importlib.import_module(path)
 # to plot validation: first run validation case then run load
 
 #flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
-flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
+flags = ['plot_twozone', 'output', 'output_all', 'single', 'save', 'plot_essentials']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
 #flags = ['sweep']  # parametric study
