@@ -79,7 +79,7 @@ def run_piston_engine(indata, flags):
     if fuel_type == 'jetA':
         cp_fuel, h_fuel, _, _ = thermo.polynomials.JETA(T_fuel)
     elif fuel_type == 'H2':
-        cp_fuel, h_fuel, s_fuel, M_fuel = thermo.polynomials.H2(T_fuel, p_fuel)
+        cp_fuel, h_fuel, s_fuel, _, M_fuel = thermo.polynomials.H2(T_fuel, p_fuel)
     else:
         raise Exception('Unknown fuel.')
 
@@ -769,8 +769,8 @@ def run_piston_engine(indata, flags):
                                                                           phi_open_out, phi_sc, LHV, far_s,
                                                                           equ[-1], fuel_type)
 
-        nox = nox_model.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
-                                          m_out_EP[-1][-1], far_avg / far_s,)
+        #nox = nox_model.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
+        #                                  m_out_EP[-1][-1], far_avg / far_s,)
 
 
     # post processing

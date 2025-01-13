@@ -20,7 +20,7 @@ def flame_temp_inhouse(t_soc, equ_sc, fuel_type):
     if fuel_type == "jetA":
         cp_f, h_f, s_f, M_f = JETA(t_fuel)
     elif fuel_type == "H2":
-        cp_f, h_f, s_f, M_f = H2(t_fuel, p_dummy)
+        cp_f, h_f, s_f, _, M_f = H2(t_fuel, p_dummy)
 
     # mixture properties before combustion
     h_soc, _, _, _, _, _, _, _ = mixture(t_soc, p_dummy, equ_sc, fuel_type)
@@ -51,7 +51,7 @@ def flame_temp_inhouse(t_soc, equ_sc, fuel_type):
         return energy_out - energy_in
 
     # find adiabatic flame temperature
-    t_flame = brentq(find_t_flame, 1000, 6000)
+    t_flame = brentq(find_t_flame, 200, 6000)
 
     return t_flame
 

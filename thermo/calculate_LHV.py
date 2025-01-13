@@ -5,10 +5,10 @@ from thermo import polynomials
 T = 298.15
 p = 1e5
 
-cp_h2, h_h2, s_h2, M_h2 = polynomials.H2(T, p)
-cp_o2, h_o2, s_o2, M_o2 = polynomials.O2(T, p)
-cp_h2o, h_h2o, s_h2o, M_h2o = polynomials.H2O(T, p)
-cp_co2, h_co2, s_co2, M_co2 = polynomials.CO2(T, p)
+cp_h2, h_h2, s_h2, _, M_h2 = polynomials.H2(T, p)
+cp_o2, h_o2, s_o2, _, M_o2 = polynomials.O2(T, p)
+cp_h2o, h_h2o, s_h2o, _, M_h2o = polynomials.H2O(T, p)
+cp_co2, h_co2, s_co2, _, M_co2 = polynomials.CO2(T, p)
 cp_jetA, h_jetA, s_jetA, M_jetA = polynomials.JETA(T)
 
 # M (molar mass) is kg/mol

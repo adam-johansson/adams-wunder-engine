@@ -5,3 +5,4 @@ from .work_potential import work_potential
 from .entropy_func import entropy_func
 from .adiabatic_flame_temperature import flame_temp_inhouse, flame_temp_cea
 from .chemical_equilibrium import equilibrium_OHC
+#from .newton_raphson import newton_method

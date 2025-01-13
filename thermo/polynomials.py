@@ -1,4 +1,4 @@
-import numpy as np
+from math import log
 from numba import jit
 
 # Universal gas constant from NASA polynomials pdf
@@ -49,23 +49,29 @@ def N2(T, p):
         a7 = 1.061954386e-15
         b1 = 1.283210415e+04
         b2 = -1.586640027e+01
-
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * (log(T) + 1) * T ** (-1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # standards state pressure is 1 bar
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    # pressure dependence of the Gibbs
+    #g = g + T * Rspec * log(p / p_std)
+
+    return cp, h, s, g, M
 
 @jit(nopython=True)
 def O2(T, p):
@@ -101,20 +107,29 @@ def O2(T, p):
         b1 = -1.689010929e+04
         b2 = 1.738716506e+01
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
-    # standard state pressure is 1 bar
+    # standards state pressure is 1 bar
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    # pressure dependence of the Gibbs
+    #g = g + T * Rspec * log(p / p_std)
+
+    return cp, h, s, g, M
 
 @jit(nopython=True)
 def Ar(T, p):
@@ -149,20 +164,26 @@ def Ar(T, p):
         b1 = -7.449939610e+02
         b2 = 4.379180110e+00
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # standards state pressure is 1 bar
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    return cp, h, s, g, M
 
 
 @jit(nopython=True)
@@ -200,13 +221,18 @@ def CO2(T, p):
         b1 = -3.908350590e+04
         b2 = -2.652669281e+01
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # enthalpy of formation 298.15 K (J/mol) (convert to /kg by dividing by molar mass)
     hf = - 393510.000 / M
@@ -217,9 +243,11 @@ def CO2(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    return cp, h, s, g, M
+
+
 
 @jit(nopython=True)
 def H2O(T, p):
@@ -254,14 +282,18 @@ def H2O(T, p):
         b1 = -1.384286509e+04
         b2 = -7.978148510e+00
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
-                  a6 * T ** 3 + a7 * T ** 4)  # J kg^-1 K^-1
-
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # Enthalpy of formation at 298.15K (J/mol so we divide by M to get J/kg)
     hf = - 241826.000 / M
@@ -272,12 +304,13 @@ def H2O(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-    #
-    #s = s - 3500
+    # pressure dependence of the Gibbs
+    #g = g + T * Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    return cp, h, s, g, M
+
 
 
 @jit(nopython=True)
@@ -302,9 +335,9 @@ def JETA(T):
 
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)  # J kg^-1 K^-1
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
 
     # enthalpy of formation
@@ -349,24 +382,29 @@ def H2(T, p):
         b1 = 5.339824410e+03
         b2 = -2.202774769e+00
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
-
-    # if we want reference 0K
-    #h = h + 8.468*1e3 / M
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # standards state pressure is 1 bar
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
+    # pressure dependence of the Gibbs
+    #g = g + T * Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    return cp, h, s, g, M
 
 
 
@@ -404,12 +442,18 @@ def CO(T, p):
         b1 = -2.466261084e+03
         b2 = -1.387413108e+01
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # add enthalpy of formation or something like that (heat of formation)
     # divide by M to make it per kg instead of per mole
@@ -421,10 +465,9 @@ def CO(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-
-    return cp, h, s, M
+    return cp, h, s, g, M
 
 
 
@@ -462,12 +505,18 @@ def H(T, p):
         b1 = 2.547486398e+04
         b2 = -4.481917770e-01
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # add enthalpy of formation or something like that (heat of formation)
     # divide by M to make it per kg instead of per mole
@@ -479,10 +528,9 @@ def H(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-
-    return cp, h, s, M
+    return cp, h, s, g, M
 
 
 
@@ -520,12 +568,18 @@ def N(T, p):
         b1 = 5.697351330e+04
         b2 = 4.865231506e+00
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # add enthalpy of formation or something like that (heat of formation)
     # divide by M to make it per kg instead of per mole
@@ -537,9 +591,10 @@ def N(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-    return cp, h, s, M
+    return cp, h, s, g, M
+
 
 
 @jit(nopython=True)
@@ -576,12 +631,18 @@ def NO(T, p):
         b1 = 1.750317656e+04
         b2 = -8.501669090e+00
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # add enthalpy of formation or something like that (heat of formation)
     # divide by M to make it per kg instead of per mole
@@ -593,10 +654,9 @@ def NO(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-
-    return cp, h, s, M
+    return cp, h, s, g, M
 
 
 
@@ -611,7 +671,6 @@ def O(T, p):
         T = 200
         #print(f'Temperature under 200 K was found')
     M = 15.9994000e-3  # kg/mol
-    #M = 32e-3
     Rspec = R / M  # J kg^-1 K^-1
 
     if T < 1000.0007:  # between 200K and 1000K
@@ -635,12 +694,18 @@ def O(T, p):
         b1 = 3.392428060e+04
         b2 = -6.679585350e-01
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # add enthalpy of formation or something like that (heat of formation)
     # divide by M to make it per kg instead of per mole
@@ -652,10 +717,9 @@ def O(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-
-    return cp, h, s, M
+    return cp, h, s, g, M
 
 
 
@@ -693,12 +757,18 @@ def OH(T, p):
         b1 = 2.019640206e+04
         b2 = -1.101282337e+01
 
+    # mass specific constant pressure heat capacity
     cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
                   a6 * T ** 3 + a7 * T ** 4)
-    h = Rspec * T * (-a1 * T ** (-2) + a2 * np.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
                      a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
-    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * np.log(T) + a4 * T +
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
                  a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
 
     # add enthalpy of formation or something like that (heat of formation)
     # divide by M to make it per kg instead of per mole
@@ -710,7 +780,6 @@ def OH(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * np.log(p / p_std)
+    s = s - Rspec * log(p / p_std)
 
-
-    return cp, h, s, M
+    return cp, h, s, g, M

@@ -8,7 +8,7 @@ fuel_type = "H2"
 t_soc = 298
 Psc = 5e5
 
-equ_sc = 0.0
+equ_sc = 0.9
 
 t_adam = flame_temp_inhouse(t_soc, equ_sc, fuel_type)
 

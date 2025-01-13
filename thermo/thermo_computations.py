@@ -57,11 +57,11 @@ def mixture(t, p, equ=0, fuel_type=False):
     x_CO2_air = 0  # no co2 in air for now
 
     # retrieve the molar masses
-    _, _, _, M_N2 = N2(t, p)
-    _, _, _, M_O2 = O2(t, p)
-    _, _, _, M_Ar = Ar(t, p)
-    _, _, _, M_H2O = H2O(t, p)
-    _ ,_, _, M_CO2 = CO2(t, p)
+    _, _, _, _, M_N2 = N2(t, p)
+    _, _, _, _, M_O2 = O2(t, p)
+    _, _, _, _, M_Ar = Ar(t, p)
+    _, _, _, _, M_H2O = H2O(t, p)
+    _ ,_, _, _, M_CO2 = CO2(t, p)
 
     M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_CO2_air * M_CO2
     # air consisting of N2, O2, Ar and CO2
@@ -132,14 +132,14 @@ def mixture(t, p, equ=0, fuel_type=False):
     p_CO2 = mu_CO2 * p
 
     # now use the partial pressures to get the correct entropy values
-    cp_N2, h_N2, s_N2, M_N2 = N2(t, p_N2)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t, p_O2)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p_Ar)
+    cp_N2, h_N2, s_N2, _, M_N2 = N2(t, p_N2)
+    cp_O2, h_O2, s_O2, _, M_O2 = O2(t, p_O2)
+    cp_Ar, h_Ar, s_Ar, _, M_Ar = Ar(t, p_Ar)
 
     if mu_H2O > 0:
-        cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p_H2O)
+        cp_H2O, h_H2O, s_H2O, _, M_H2O = H2O(t, p_H2O)
     if mu_CO2 > 0:
-        cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p_CO2)
+        cp_CO2, h_CO2, s_CO2, _, M_CO2 = CO2(t, p_CO2)
 
     cp = mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar  # heat capacity at constant
     # pressure
@@ -189,11 +189,11 @@ def equivalence_derivative(equ, t, p, fuel_type):
 
     Runiv = 8.3144626  # J mol^-1 K^-1
 
-    cp_N2, h_N2, s_N2, M_N2 = N2(t, p)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t, p)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p)
-    cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p)
-    cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p)
+    cp_N2, h_N2, s_N2, _, M_N2 = N2(t, p)
+    cp_O2, h_O2, s_O2, _, M_O2 = O2(t, p)
+    cp_Ar, h_Ar, s_Ar, _, M_Ar = Ar(t, p)
+    cp_CO2, h_CO2, s_CO2, _, M_CO2 = CO2(t, p)
+    cp_H2O, h_H2O, s_H2O, _, M_H2O = H2O(t, p)
 
     N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
     x_O2_air = 1 / N_air  # molar fraction of O2
@@ -364,11 +364,11 @@ def molar_fractions(t, p, equ=0, fuel_type=False):
     x_CO2_air = 0  # no co2 in air for now
 
     # retrieve the molar masses
-    _, _, _, M_N2 = N2(t, p)
-    _, _, _, M_O2 = O2(t, p)
-    _, _, _, M_Ar = Ar(t, p)
-    _, _, _, M_H2O = H2O(t, p)
-    _, _, _, M_CO2 = CO2(t, p)
+    _, _, _, _, M_N2 = N2(t, p)
+    _, _, _, _, M_O2 = O2(t, p)
+    _, _, _, _, M_Ar = Ar(t, p)
+    _, _, _, _, M_H2O = H2O(t, p)
+    _, _, _, _, M_CO2 = CO2(t, p)
 
     M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_CO2_air * M_CO2
     # air consisting of N2, O2, Ar and CO2
@@ -440,14 +440,14 @@ def molar_fractions(t, p, equ=0, fuel_type=False):
     p_CO2 = mu_CO2 * p
 
     # now use the partial pressures to get the correct entropy values
-    cp_N2, h_N2, s_N2, M_N2 = N2(t, p_N2)
-    cp_O2, h_O2, s_O2, M_O2 = O2(t, p_O2)
-    cp_Ar, h_Ar, s_Ar, M_Ar = Ar(t, p_Ar)
+    cp_N2, h_N2, s_N2, _, M_N2 = N2(t, p_N2)
+    cp_O2, h_O2, s_O2, _, M_O2 = O2(t, p_O2)
+    cp_Ar, h_Ar, s_Ar, _, M_Ar = Ar(t, p_Ar)
 
     if mu_H2O > 0:
-        cp_H2O, h_H2O, s_H2O, M_H2O = H2O(t, p_H2O)
+        cp_H2O, h_H2O, s_H2O, _, M_H2O = H2O(t, p_H2O)
     if mu_CO2 > 0:
-        cp_CO2, h_CO2, s_CO2, M_CO2 = CO2(t, p_CO2)
+        cp_CO2, h_CO2, s_CO2, _, M_CO2 = CO2(t, p_CO2)
 
     cp = mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar  # heat capacity at constant
     # pressure
@@ -459,4 +459,4 @@ def molar_fractions(t, p, equ=0, fuel_type=False):
     cv = cp - R  # specific heat capacity at constant volume
     gamma = cp / cv  # isentropic exponent
 
-    return R, M, x_N2, x_O2
+    return R, M, x_N2, x_O2, x_CO2, x_H2O, x_Ar
