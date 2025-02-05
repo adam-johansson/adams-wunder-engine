@@ -27,7 +27,7 @@ from numba import jit
 ### ÖPPEN FRÅGA: KAN/BÖR DENNA FUNKTION GÅ ATT KÖRA MED VEKTORER?
 
 
-def equilibrium_OHC(T, equ, p, x0):
+def equilibrium_OHC(T, equ, p, fuel_type, x0):
     """
     Function that calculates the chemical equilibrium of oxygen, hydrogen and carbon (OHC). This is the zone 2,
     behind the flame front, of hydrocarbon combustion.
@@ -121,7 +121,8 @@ def equilibrium_OHC(T, equ, p, x0):
     t_dummy = 298
     p_dummy = 1e5
 
-    fuel_type = "jetA"
+    # NOTE THAT FOR HYDROGEN THIS HAS TO BE CHANGED
+
     # retrieve the initial molar fractions before chemical equilibrium
     R, M, x_N2, x_O2, x_CO2, x_H2O, x_Ar = molar_fractions(t_dummy, p_dummy, equ=equ, fuel_type=fuel_type)
 
@@ -337,7 +338,7 @@ def equilibrium_OHC(T, equ, p, x0):
     # Extract the solution
     #partial_pressures = result.x
 
-    mol_fractions = partial_pressures / p
+    #mol_fractions = partial_pressures / p
 
-    return mol_fractions
+    return partial_pressures
     #return errors

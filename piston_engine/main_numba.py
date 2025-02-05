@@ -18,24 +18,25 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "validation.nasa_validation_new"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
-input_file = "two_zone_check"
+input_file = "validation_twozone.two_zone_heider"
 input_dir = "input"
 path = input_dir + "." + input_file
 
 d = importlib.import_module(path)
 
 # flags: plot_all, plot_essentials, plot_convergence, validation, output_all, output_power
-# sweep, plot_details
+# sweep, plot_details, plot_twozone, validate_twozone
 
 # to plot validation: first run validation case then run load
 
 #flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
-flags = ['plot_twozone', 'output', 'output_all', 'single', 'save', 'plot_essentials']  # normal case
+flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
 #flags = ['sweep']  # parametric study
 #flags = ['optimise']  # optimisation
 #flags = ['load']
+flags = ['validate_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,

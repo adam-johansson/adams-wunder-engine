@@ -1,11 +1,15 @@
+import math
+
 import numpy as np
 from scipy import integrate
 import matplotlib.pyplot as plt
 
-from thermo import mixture, molar_fractions
+from scipy.integrate import solve_ivp
+
+from thermo import mixture, molar_fractions, equilibrium_OHC, polynomials, euler
 
 
-def nox_calculations(T, m, p, V, fuel_type, lambda_z1, phi, rpm, m_tot, equ_tot):
+def nox_calculations(temperatures, masses, pressures, volumes, fuel_type, lambda_z1, phi, rpm, m_tot, equ_tot):
 
     """
     This model calculates the nox produced in the reaction zone of the two-zone model. That is the burned zone.
@@ -20,86 +24,161 @@ def nox_calculations(T, m, p, V, fuel_type, lambda_z1, phi, rpm, m_tot, equ_tot)
     :return:
     """
 
-    # rate of change of NO (from textbook). Simplification.
+    # Universal gas constant from NASA polynomials pdf
+    R = 8.314510  # J mol^-1 K^-1
 
-    # species concentrations are in mol/dm^3 maybe. At least mol / volume
+    # standard state pressure
+    p_std = 1e5
 
-    # question is, where do I get N2 and O2 from? they are supposed to be in the burned zone, but there is no oxygen
-    # there?   maybe I get them from zone 1?
+    equ = 1 / lambda_z1  # Equivalence ratio in the burned zone
 
-    # temperature and pressure does not affect molar mass
-    t_dummy = 1000
-    p_dummy = 1e5
+    # initial guess for the OHC-system molar fractions
+    x0 = np.array(
+        [0.0049914, 0.0011238, 0.0107067, 0.001178, 0.114522, 0.0085485, 0.098127, 0.03164, 0.7, 0.01]) * pressures[0]
 
-    # molar mass of gas in reaction zone and molar fractions of nitrogen and oxygen
-    R, M, x_N2, x_O2 = molar_fractions(t_dummy, p_dummy, equ=1/lambda_z1, fuel_type=fuel_type)
-
-    # total number of moles in the reaction zone (kg divided by kg / mol)
-    # skip first value since that is 0
-    n = m[1:] / M
-
-    # total number of moles of nitrogen and oxygen
-    n_N2 = x_N2 * n
-    n_O2 = x_O2 * n
-
-    # get molar concentrations of nitrogen and oxygen in reaction zone (mole per m^3?)
-    N2 = n_N2 / V[1:]
-    O2 = n_O2 / V[1:]
-
-    # convert to mole / cm^3 since that is the unit of the reaction coefficients
-    N2 = N2 * 1e-6
-    O2 = O2 * 1e-6
-
-    # get reaction rate (mole per second)??
-    dNOdt = 4.7 * 1e13 * N2 * np.sqrt(O2) * np.exp(-67837/T[1:])
 
     # convert crank angles to time
     rps = rpm / 60
     radians_per_s = rps * 2 * np.pi
 
-    t = phi[1:] / radians_per_s
+    #times = phi[1:] / radians_per_s
+    times = phi / radians_per_s
+
+    def dNOdt_fun(t, NO, x0):
+
+        c_NO = NO
+
+        i = np.nonzero(times==t)
+
+        T = temperatures[i][0]
+        p = pressures[i][0]
+
+        p_i = equilibrium_OHC(T, equ, p, fuel_type, x0)
+        # results are the partial_pressures
+
+        # mol fractions
+        mol = p_i / p
+
+        # initial guess for next equilibrium
+        x0 = mol * p
+
+        # convert partial pressure to molar concentrations (mol / m^3)
+        c_i = p_i.T / (R * T)
+
+        # extract concentrations needed for Zeldovich mechanism
+        c_H = c_i[1,0]
+        c_O2 = c_i[2,0]
+        c_O = c_i[3,0]
+        c_OH = c_i[5,0]
+        c_N2 = c_i[8,0]
 
 
-    # integrate reaction rate
-    # nox is in mole??
-    nox = integrate.cumulative_simpson(dNOdt, x=t, axis=0, initial=0.0)
+        # thermodynamic properties, mass bases
+        # Gibbs free energy is for standard state, meaning no pressure dependence
+        _, _, _, g_N2, M_N2 = polynomials.N2(T, p_std)
+        _, _, _, g_O, M_O = polynomials.O(T, p_std)
+        _, _, _, g_NO, M_NO = polynomials.NO(T, p_std)
+        _, _, _, g_N, M_N = polynomials.N(T, p_std)
+        _, _, _, g_O2, M_O2 = polynomials.O2(T, p_std)
+        _, _, _, g_OH, M_OH = polynomials.OH(T, p_std)
+        _, _, _, g_H, M_H = polynomials.H(T, p_std)
 
-    # number of NOx molecules per total number of molecules
-    # (of total number of molecules in the cylinder gases, not only reaction zone)
+        # convert to molar based free energy (J / mol)
+        g_N2 = g_N2 * M_N2
+        g_O = g_O * M_O
+        g_NO = g_NO * M_NO
+        g_N = g_N * M_N
+        g_O2 = g_O2 * M_O2
+        g_OH = g_OH * M_OH
+        g_H = g_H * M_H
 
-    # molar mass of outflow gas
-    _, M_tot, _, _ = molar_fractions(t_dummy, p_dummy, equ=equ_tot, fuel_type=fuel_type)
+        # The stoichiometric coefficients for the three reactions
+        # (1) N2 + O = NO + N
+        # (2) N + O2 = NO + O
+        # (3) N + OH = NO + H
 
-    # total number of moles of molecules leaving the cylinder during one cycle
-    n_tot = m_tot / M_tot
+        # Stoichiometric coefficients
+        nu_1_N2, nu_1_O, nu_1_NO, nu_1_N = -1, -1, 1, 1
+        nu_2_N, nu_2_O2, nu_2_NO, nu_2_O = -1, -1, 1, 1
+        nu_3_N, nu_3_OH, nu_3_NO, nu_3_H = -1, -1, 1, 1
 
-    # NOx concentration (total number of moles NOx created divided by total number of moles leaving cylinder)
-    nox_concentration = nox / n_tot
+        # sum of stoichiometric coefficients
+        #sum_nu_1 = nu_1_N2 + nu_1_O + nu_1_NO + nu_1_N
+        #sum_nu_2 = nu_2_N + nu_2_O2 + nu_2_NO + nu_2_O
+        #sum_nu_3 = nu_3_N + nu_3_OH + nu_3_NO + nu_3_H
 
-    # convert to ppm
-    nox_concentration = nox_concentration * 1e6
+        # calculate the free molar reactions enthalpy of the reactions (energy after - energy before)
+        Delta_g_R_1 = nu_1_N2 * g_N2 + nu_1_O * g_O + nu_1_NO * g_NO + nu_1_N * g_N
+        Delta_g_R_2 = nu_2_N * g_N + nu_2_O2 * g_O2 + nu_2_NO * g_NO + nu_2_O * g_O
+        Delta_g_R_3 = nu_3_N * g_N + nu_3_OH * g_OH + nu_3_NO * g_NO + nu_3_H * g_H
 
 
-    # should get less or around 2000 ppm NOx
+        # partial pressure equilibrium constants for all the reactions
+        Kp_1 = math.exp(-Delta_g_R_1 / (R * T))
+        Kp_2 = math.exp(-Delta_g_R_2 / (R * T))
+        Kp_3 = math.exp(-Delta_g_R_3 / (R * T))
+
+        # concentration equilibrium constants are equal to partial pressure constants since all reactions have sums
+        # of stoichiometric coefficients equal to 0. I.e. same amount of molecules before and after reaction
+        Kc_1 = Kp_1
+        Kc_2 = Kp_2
+        Kc_3 = Kp_3
+
+
+        # forward reaction coefficents (from GRI_MECH 3.0 from the simulating combustion book)
+        # Units (cm^3 / (mol s)
+        k1_f = 0.544e14 * T ** 0.1 * math.exp(-38020/T)
+        k2_f = 9.0e9 * T * math.exp(-3280 / T)
+        k3_f = 3.36e13 * math.exp(-195 / T)
+
+        # reverse reaction coefficients (not that convention is either f (forward) and r (reverse) OR r (right) and l (left)
+        k1_r = k1_f / Kc_1
+        k2_r = k2_f / Kc_2
+        k3_r = k3_f / Kc_3
+
+        # assuming the concentration to be quasi-steady (dNdT = 0) (MAYBE NEED TO CHANGE UNITS OF CONCENTRATIONS)
+        c_N = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H) / (k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH)
+
+        # time derivative of NO concentration
+        dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
+
+
+        return dc_NOdt, x0
+
+    #fun_args = (x0)
+    #sol = solve_ivp(dNOdt, args=fun_args, t_span=(min(times), max(times)), method='RK45', y0=np.array([0.0]), t_eval=times)
+
+    NO_0 = 0.0
+    c_NO, dNOdt = euler(dNOdt_fun, NO_0, times, x0)
 
     # plot temperatures and pressure
     fig, ax1 = plt.subplots()
 
     ax2 = ax1.twinx()
-    ax1.plot(t, dNOdt, 'm', label="dNOdt")
-    ax2.plot(t, nox_concentration, 'r', label="NO")
 
+    lns1 = ax1.plot(times, c_NO, color='red', label="NO concentration")
+    lns2 = ax2.plot(times, dNOdt, label="dNOdt")
 
-    ax1.set_xlabel('Time [s]')
-    ax1.set_ylabel('dNOdt [mole/s]', color='m')
-    ax2.set_ylabel('NOx [ppm]', color='r')
+    # Set y limits and grid visibility
+    #for ax, ylim in zip([ax1, ax2], [16, 4]):
+    #    ax.set_ylim(0, ylim)
+    #    ax.grid(True)
 
-    #ax2.legend()
-    ax1.legend()
+    #ax1.set_xlim(1500, 3000)
+
+    # set which axis to which side
+    ax1.yaxis.tick_left()
+    ax2.yaxis.tick_right()
+
+    # added these three lines
+    lns = lns1 + lns2
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns, labs, loc="lower left")
+    ax1.set_title("NO production")
+    ax1.set_ylabel("NO concentration [mol/m^3]")
 
     plt.show()
 
-
-
-
-    return nox
+    # total NOx
+    NO_tot = c_NO[-1]
+    return NO_tot

@@ -11,6 +11,9 @@ def newton_method(fun, x0, jacobian):
     # tolerance for convergence
     tol = 1e-7
 
+    # step length
+    alpha = 1e-3
+
     # maximum number of iterations
     max_iter = int(1e5)
 
@@ -40,7 +43,7 @@ def newton_method(fun, x0, jacobian):
             break
 
         dx = - np.linalg.solve(J_scaled, F_scaled)
-        x_n = x_n + dx * 1e-3
+        x_n = x_n + dx * alpha
 
 
 

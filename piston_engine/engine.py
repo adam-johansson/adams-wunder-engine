@@ -1,7 +1,7 @@
 import numpy as np
 from timeit import default_timer as timer
 
-from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model
+from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera
 #from piston_engine.src.piston import thermo_computations, polynomials
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
@@ -659,7 +659,7 @@ def run_piston_engine(indata, flags):
                 break
 
 
-    ## Post processing
+    ## Post processing ##
     # Calculate power and induced mean effective pressure
     n_r = cycle_phi/(2*np.pi)  # crank revolutions per power stroke ( 1 for two-stroke and 2 for four-stroke)
     rps = rpm/60  # revolutions per second
@@ -692,6 +692,9 @@ def run_piston_engine(indata, flags):
 
     eta_th = W[-1][-1] / (mf_tot * LHV)  # work from total fuel heat
     hl = Q[-1][-1] / (mf_tot * LHV)  # heat loss
+
+    # mass of cylinder gasses just before exhaust opening
+    m_trapped = m[-1][np.argwhere(phi <= phi_open_out)[-1][0]]
 
     #eta_th = W[-1][-1] / Q_in[-1][-1]
     #hl = Q[-1][-1] / Q_in[-1][-1]  # heat loss
@@ -747,8 +750,6 @@ def run_piston_engine(indata, flags):
     term1 = enthalpy_ins[-1] + fuel_enthalpy_ins[-1]
     term2 = enthalpy_outs[-1] + heat_outs[-1] + works_outs[-1]
     diff = np.abs(term1 - term2)
-    if "validation" in flags:
-        print(f"Energy conservation: {diff / heat_ins[-1]}")
 
     print(f"Energy conservation: {diff / heat_ins[-1]}")
 
@@ -760,17 +761,23 @@ def run_piston_engine(indata, flags):
 
 
     if "validation" not in flags:
+        print(rpm)
         ## NOX calculations
         # get the heat addition from fuel curve
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
         # get temperature and mass from reaction zone
-        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2 = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dmfdphi,
+        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dmfdphi,
                                                                           phi_open_out, phi_sc, LHV, far_s,
                                                                           equ[-1], fuel_type)
 
-        #nox = nox_model.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
-        #                                  m_out_EP[-1][-1], far_avg / far_s,)
+
+        start = timer()
+        no_ppm, no_mol, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
+                                          m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
+        end = timer()
+        print(f'NOx calculations done in: {end - start} [s]')
+
 
 
     # post processing
@@ -798,9 +805,19 @@ def run_piston_engine(indata, flags):
             plot_essentials(phi, T, P, m, equ, validation)
             #plot_rohr(phi, Q[-1], Q_in[-1], V[-1], Apiston, dtdphi, d, P[-1], T[-1])
 
-        if "plot_twozone" in flags:
-            from piston_engine.src.misc.plot_output import plot_twozone
-            plot_twozone(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
+        if "validate_twozone" not in flags:
+            if "plot_twozone" in flags:
+                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only
+                plot_twozone_full(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
+                plot_twozone_only(phi_z1, T_z1, T_z2, T_hp, m_z1, m_z2)
+        else:
+            from piston_engine.src.misc.plot_output import plot_twozone_validation, plot_no_validation
+
+            # validate twozone model against Heider paper 1998 (from Simulating combustion textbook)
+            plot_twozone_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc)
+            plot_no_validation(no_ppm, phi_z1, no_mol)
+
+
 
         if "plot_pv" in flags:
             from src.misc.plot_output import plot_pvts

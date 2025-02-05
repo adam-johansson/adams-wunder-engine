@@ -61,10 +61,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # lambda_0 is the air-fuel-ratio in the reaction zone, assumed to be constant.
     # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
 
-    # HOWEVER, if we are to have any oxygen in the reaction zone, we need lambda > 1.
-
     # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
-    lambda_0 = 1.01
+    lambda_0 = 1.0
 
     # L_min is minmal air requirement (kg of air per kg of fuel)
     # this is the stochiometric air requirements + taken the residual exhaust gases into account
@@ -156,7 +154,9 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
 
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
-    factor = 1.0
+    factor = 0.85
+
+    # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor
 
     # adjust accorind to Heider
@@ -167,7 +167,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     lambda_gl = 1 / equ_hp[-1]
 
     # test with and without this when we get some numbers for nox (Astar gives slightly higher temp)
-    #Astar = A * (1.2 + (lambda_gl - 1.2)**C) / (2.2 * lambda_0)
+    #Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
     Astar = A
     print(f"Twozone factor Astar: {Astar}")
 
@@ -182,40 +182,5 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # zone 1 volume
     V1 = m1 * R1 * T1 / P_hp
 
-    plt.plot(phi_hp * 180 / np.pi, qf_hp)
-    plt.title("Heat release rate")
-    plt.show()
-
-    # plot temperatures and pressure
-    fig, ax1 = plt.subplots()
-
-    #ax2 = ax1.twinx()
-    #ax2.plot(phi_hp * 180 / np.pi, P_hp*1e-5, label="Cylinder pressure")
-    ax1.plot(phi_hp * 180 / np.pi, T1, label="Zone 1")
-    ax1.plot(phi_hp * 180 / np.pi, T2, label="Zone 2")
-    ax1.plot(phi_hp * 180 / np.pi, T_hp, label="Single zone")
-
-    ax1.set_xlabel('Crank angle [deg]')
-    #ax1.set_ylabel('Cylinder pressure [bar]', color='g')
-    ax1.set_ylabel('Temperature [K]', color='b')
-
-    #ax2.legend()
-    ax1.legend()
-
-
-    # plot temperatures and pressure
-    fig, ax2 = plt.subplots()
-
-    ax2.plot(phi_hp * 180 / np.pi, m1, label="Zone 1")
-    ax2.plot(phi_hp * 180 / np.pi, m2, label="Zone 2")
-    ax2.plot(phi_hp * 180 / np.pi, m_hp, label="Single zone")
-
-    ax2.set_xlabel('Crank angle [deg]')
-    ax2.set_ylabel('Mass [kg]', color='b')
-
-    ax2.legend()
-
-    #plt.show()
-
-    return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2
+    return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp
 

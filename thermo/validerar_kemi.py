@@ -7,12 +7,14 @@ import cantera as ct
 from thermo import molar_fractions
 from numba import jit
 
+import time
+
 gas = ct.Solution('gri30.yaml')
 
 # pressure adjusted to fit fig 6.22 from "Simulating combustion" by Merker et al (100bar)
 p = 70e5
 
-num = 100
+num = 10
 T = np.linspace(1500,3000, num)
 
 i = 0
@@ -46,13 +48,22 @@ R, M, x_N2, x_O2, x_CO2, x_H2O, x_Ar = molar_fractions(t_dummy, p_dummy, equ=equ
 
 x0 = np.array([0.0049914, 0.0011238, 0.0107067, 0.001178, 0.114522, 0.0085485, 0.098127, 0.03164, x_N2, x_Ar]) * p
 
+# replace N2 with Ar
+x_Ar = x_Ar + x_N2
+
+start = time.time()
 for t in T:
-    print(f"Temperature: {t} out of {T[-1]}")
+    #print(f"Temperature: {t} out of {T[-1]}")
     # cantera
-    gas.TPX = t, p, f'CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, N2:{x_N2}, Ar:{x_Ar}'
+    # with nitrogen in the air
+    #gas.TPX = t, p, f'CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, N2:{x_N2}, Ar:{x_Ar}'
+
+    # since we want to look at the OHC system isolated, we replace all N2 with Ar
+    gas.TPX = t, p, f'CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, Ar:{x_Ar}'
+
     gas.equilibrate('TP')
 
-    mixture = gas.mole_fraction_dict(threshold=0)
+    mixture = gas.mole_fraction_dict(threshold=1e-20)
 
     # OHC system (FAST)
     co2[i] = mixture["CO2"]
@@ -65,18 +76,31 @@ for t in T:
     h[i] = mixture["H"]
 
     # Nitrogen (slow)
-    N2[i] = mixture["N2"]
-    NO[i] = mixture["NO"]
-    NO2[i] = mixture["NO2"]
+    #N2[i] = mixture["N2"]
+    #NO[i] = mixture["NO"]
+    #NO2[i] = mixture["NO2"]
+
+    i = i + 1
+
+end = time.time()
+print(f"Sampling time cantera: {end - start} seconds")
+
+start = time.time()
+
+i = 0
+
+for t in T:
+    #print(f"Temperature: {t} out of {T[-1]}")
 
     # in house
-    mol_fracs[i, :] = equilibrium_OHC(t, equ, p, x0)
+    mol_fracs[i, :] = equilibrium_OHC(t, equ, p, fuel_type, x0) / p
     # guess for next calculation
     x0 = mol_fracs[i, :] * p
 
 
     i = i + 1
-
+end = time.time()
+print(f"Sampling time inhouse: {end - start} seconds")
 
 
 # plot temperatures and pressure

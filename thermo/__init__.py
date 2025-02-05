@@ -6,3 +6,4 @@ from .entropy_func import entropy_func
 from .adiabatic_flame_temperature import flame_temp_inhouse, flame_temp_cea
 from .chemical_equilibrium import equilibrium_OHC
 #from .newton_raphson import newton_method
+from .ode_solvers import euler, euler_cantera
