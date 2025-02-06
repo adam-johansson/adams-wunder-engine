@@ -43,7 +43,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # high pressure volume(only between start of combustion and exhaust valve opening)
     V_hp = np.array(V[np.argwhere((phi > sc) & (phi < evo))])
 
-    # high pressure heat addition (only between start of combustion and exhaust valve opening)
+    # high pressure fuel injection (only between start of combustion and exhaust valve opening)
     mf_hp = np.array(mf[np.argwhere((phi > sc) & (phi < evo))])
 
     # high pressure heat addition (only between start of combustion and exhaust valve opening)
@@ -72,15 +72,18 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     far_sc = equ_sc * far_s
 
     # air amount (not pure air)
+    # this means that if the fuel air ratio is not 0 at start of combustion, we get a higher stoichiometric air
+    # ratio (more air is needed to completely combust the fuel)
     L_min = 1 / (far_s - far_sc)
 
     # mass in zone 1 (reaction zone, burned zone, kärt barn har många namn)
+    # the mass is the fuel mass + air needed for combusting the fuel with air/fuel ratio lambda_0
     m1 = (lambda_0 * L_min + 1) * m_fuel
 
     # mass in zone 2 (unburned gas)
     m2 = m_hp - m1
 
-    # gas constants
+    # gas constants in burned zone 1 and unburned zone 2
     # pressure and temperature doesnt effect R
     t_dummy = 1000
     p_dummy = 1e5
@@ -148,13 +151,9 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     #t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc)
 
 
-    #t_flame = 2093 + 273.15 # wikipedia for kerosene (but this is for 20C air) need to adjust for temperature
-    # 2254 + 273.15 # wikipedia for hydrogen and air
-
-
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
-    factor = 0.85
+    factor = 0.8
 
     # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor
@@ -171,8 +170,6 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     Astar = A
     print(f"Twozone factor Astar: {Astar}")
 
-
-
     # solve for temperature in zone 1, T1
     T1 = (P_hp * V_hp + m2 * R2 * Astar * B) / ( m1 * R1 + m2 * R2)
 
@@ -181,6 +178,12 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
 
     # zone 1 volume
     V1 = m1 * R1 * T1 / P_hp
+
+    # zone 2 volume
+    V2 = m2 * R2 * T2 / P_hp
+
+    # check that the two zones' volumes add upp to total volume
+    diff = V_hp - (V1 + V2)
 
     return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp
 

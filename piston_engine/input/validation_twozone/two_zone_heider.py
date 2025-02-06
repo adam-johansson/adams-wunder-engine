@@ -65,7 +65,8 @@ far_goal = 0.035
 
 
 wiebe_type = "Single_mass"
-#wiebe_type = "Double"
+
+
 # This is for Kaisers wiebe function (double)
 wa = 6.91  # funkar
 wm = 1.40  # funkar

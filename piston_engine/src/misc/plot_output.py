@@ -846,7 +846,7 @@ def plot_no_validation(no, phi, no_mol):
     # d ppm /dca
     dnodca = np.gradient(no, ca)
 
-    dnomoldca = np.gradient(no_mol, ca)
+    #dnomoldca = np.gradient(no_mol, ca)
 
     # load data from Heider
     import os
@@ -864,8 +864,8 @@ def plot_no_validation(no, phi, no_mol):
 
     lns1 = ax1.plot(phi * 180 / np.pi, no, color='red', label="NO concentration")
     lns2 = ax2.plot(phi * 180 / np.pi, dnodca, color='blue', label="dNOdphi")
-    #lns3 = ax1.plot(no_heider[:, 0], no_heider[:, 1], color='red', label="NO validation", marker='x')
-    #lns4 = ax2.plot(dnodca_heider[:, 0], dnodca_heider[:, 1], color='blue', label="dNOdt validation", marker='x')
+    lns3 = ax1.plot(no_heider[:, 0], no_heider[:, 1], color='red', label="NO validation", marker='x')
+    lns4 = ax2.plot(dnodca_heider[:, 0], dnodca_heider[:, 1], color='blue', label="dNOdt validation", marker='x')
 
     #ax1.set_xlim(1500, 3000)
 
@@ -874,7 +874,7 @@ def plot_no_validation(no, phi, no_mol):
     ax2.yaxis.tick_right()
 
     # added these three lines
-    lns = lns1 + lns2
+    lns = lns1 + lns2 + lns3 + lns4
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc="upper right")
     ax1.set_title("NO production")
