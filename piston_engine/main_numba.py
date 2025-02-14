@@ -19,24 +19,31 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 input_file = "validation_twozone.two_zone_heider"
+#input_file = "validation_twozone.nox_diesel_rakopolous"
+#input_file = "validation_twozone.scania_d12"
 input_dir = "input"
 path = input_dir + "." + input_file
 
 d = importlib.import_module(path)
 
 # flags: plot_all, plot_essentials, plot_convergence, validation, output_all, output_power
-# sweep, plot_details, plot_twozone, validate_twozone
+# sweep, plot_details, plot_twozone, validate_twozone, validate_nox_diesel, fuel_mass
+
+# fuel_mass: specify mass of fuel instead of fuel air ratio
 
 # to plot validation: first run validation case then run load
 
-#flags = ['validation', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
-flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
+#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+#flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
 #flags = ['sweep']  # parametric study
 #flags = ['optimise']  # optimisation
 #flags = ['load']
-flags = ['validate_twozone', 'output', 'output_all', 'single', 'save']  # normal case
+flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
+#flags = ['output', 'output_all', 'sweep_no_greek', 'save']  # sweep NO validation Rakoplpous
+#flags = ['validate_nox_diesel', 'save', 'single']  # validate design point Rakoplpous
+#flags = ['validate_scania_single', 'single']  # Scania validation
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
@@ -47,9 +54,11 @@ data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr
 if 'single' in flags:
     start = timer()
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
-        heat_loss, p_tdc, outflow = run_piston_engine(data, flags)
+        heat_loss, p_tdc, outflow, no, imep = run_piston_engine(data, flags)
     end = timer()
     print(f'Time: {end - start}')
+
+    #print(f"IMEP: {imep * 1e-5} bar")
     #print(far / 0.02923)
     #print(far)
     #print(d.throttle - far)
@@ -68,7 +77,7 @@ if 'single' in flags:
     #print(f'mass flow out: {air_flow * (1 + far)}')
     #print(p_max)
     #print(T4)
-    #print(eta_th)
+    print(eta_th)
     #print(T_max)
 
 
@@ -101,6 +110,15 @@ elif 'load' in flags:
     phi = genfromtxt('simulation_data/phi.csv', delimiter=',')
     plot_validation(phi, P, T, m, equ)
     validation_error(phi, P, T, m, equ)
+
+
+elif 'sweep_no_greek' in flags:
+    from piston_engine.src.misc.sweep_no_validation import sweep_no_diesel_greek_validation
+
+    sweep_no_diesel_greek_validation(d, flags)
+
+
+
 
 else:
     print('What to you want to do?')

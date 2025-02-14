@@ -21,8 +21,8 @@ d = 0.37  # diameter  # 4 liter is it supposed to be (V * 4/pi)^(1/3)
 v_mean = (1400 / 60 ) * 2 * d  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 bsr = 1  # bore stroke ratio
 
-#lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
-lms = 1 / (2 * 1.5)  # connecting rod ratio
+lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
+#lms = 1 / (2 * 1.5)  # connecting rod ratio
 
 # inlet and outlet conditions (1.5 bar)
 p_in = 1.5e5  # inlet pressure
@@ -60,7 +60,7 @@ cd = 0.8
 # 99.9 should be used
 eta_c = 0.999
 
-# 0.05
+# 0.035 works
 far_goal = 0.035
 
 
@@ -74,7 +74,7 @@ wm = 1.40  # funkar
 
 
 # this is for single wiebe function
-m_wiebe = 0.35
+m_wiebe = 0.36
 
 # 0.35 + 359 + 80 works best so far
 

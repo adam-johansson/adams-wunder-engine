@@ -124,7 +124,7 @@ def run_piston_engine(indata, flags):
 
     m0 = rho0 * V1[0]
 
-    if 'validation' in flags:
+    if 'fuel_mass' in flags:
         # this is used for efficiency calcuations
         Qf = LHV * mf_tot
 
@@ -407,7 +407,9 @@ def run_piston_engine(indata, flags):
         # Entropy (Gibbs equation)
         dsdphi = dudphi / T + dVdphi * ( P / T)
 
+        # Apparent rate of heat release
         dQ_appdphi = (1 / (1.4 - 1)) * V * dPdphi + (1 / (1.4 - 1)) * P * dVdphi
+        #dQ_appdphi = (1 / (gamma - 1)) * V * dPdphi + (1 / (gamma - 1)) * P * dVdphi
 
         #if np.mod(phi, 0.1) < 0.01:
         #    print(phi*180/np.pi, T, P*1e-5, dmindphi, dmoutdphi, dmfdphi, equ, m)
@@ -506,7 +508,7 @@ def run_piston_engine(indata, flags):
             #                rtol=5e-11)  # 1e-12 works
             try:
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                                rtol=1e-10, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
+                                rtol=1e-9, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
                 # LSODA is needed for stability in 4 stroke. DOP853 also works with limitations on T.
                 #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='BDF', y0=x, t_eval=phi,
                 #                rtol=1e-12, atol=1e-9)  # 1e-12 needed to not fuck up with latest limits
@@ -558,7 +560,7 @@ def run_piston_engine(indata, flags):
         equ_avg = (mf[-1][-1] / m_in_IP[-1][-1]) / far_s
 
         # this way to calculate far works quite well
-        if 'validation' not in flags:
+        if 'fuel_mass' not in flags:
             if cycle == "2T":
                 m_air_inlet_closing = m[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]] \
                                       / (1 + far_s * equ[-1][np.argwhere(phi >= phi_close_in  - cycle_phi)[0][0]])
@@ -588,7 +590,7 @@ def run_piston_engine(indata, flags):
             mf_diff.append(0.0)
 
 
-        if "validation" in flags:
+        if "fuel_mass" in flags:
             # avg far
             far_avg = mf_tot / m_in_IP[-1][-1]
             def find_tout(t):
@@ -762,7 +764,7 @@ def run_piston_engine(indata, flags):
 
 
     if "validation" not in flags:
-        print(rpm)
+
         ## NOX calculations
         # get the heat addition from fuel curve
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
@@ -806,17 +808,35 @@ def run_piston_engine(indata, flags):
             plot_essentials(phi, T, P, m, equ, validation)
             #plot_rohr(phi, Q[-1], Q_in[-1], V[-1], Apiston, dtdphi, d, P[-1], T[-1])
 
-        if "validate_twozone" not in flags:
-            if "plot_twozone" in flags:
-                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only
-                plot_twozone_full(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
-                plot_twozone_only(phi_z1, T_z1, T_z2, T_hp, m_z1, m_z2)
-        else:
+
+        if "validate_twozone" in flags:
+            # validate twozone model with the Heider picture
             from piston_engine.src.misc.plot_output import plot_twozone_validation, plot_no_validation
 
             # validate twozone model against Heider paper 1998 (from Simulating combustion textbook)
             plot_twozone_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc)
             plot_no_validation(no_ppm, phi_z1, no_mol)
+
+        elif "validate_nox_diesel" in flags:
+            # validate NOx model with data from diesel engine (Rakopoulos et al)
+            from piston_engine.src.misc.plot_output import plot_nox_diesel_validation
+            plot_nox_diesel_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc, mf[-1], no_ppm)
+
+
+        elif 'validate_scania_single' in flags:
+            # validate NOx model with data from scania engine (KTH msc thesis)
+            from piston_engine.src.misc.plot_output import plot_scania_single
+            print(f"Fuel injected: {mf_tot*1e6} mg")
+            print(f"Air sucked in: {m_in_IP[-1][-1] * 1e6} mg")
+            #print(f"Displacement: {V_d * 1e6} cm^3")
+            plot_scania_single(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
+
+        else:
+            # no validation
+            if "plot_twozone" in flags:
+                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only
+                plot_twozone_full(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
+                plot_twozone_only(phi_z1, T_z1, T_z2, T_hp, m_z1, m_z2)
 
 
 
@@ -873,4 +893,4 @@ def run_piston_engine(indata, flags):
 
 
     return T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
-        power_engine, friction_losses, aux_losses, heat_losses, p_tdc, out_flow
+        power_engine, friction_losses, aux_losses, heat_losses, p_tdc, out_flow, no_ppm[-1], imep

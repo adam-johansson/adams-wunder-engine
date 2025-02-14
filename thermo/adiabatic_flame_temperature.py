@@ -5,7 +5,7 @@ from thermo.polynomials import JETA, H2
 
 
 
-def flame_temp_inhouse(t_soc, equ_sc, fuel_type):
+def flame_temp_inhouse(t_soc, equ_sc, equ_combustion, fuel_type):
 
     # lower heating value for the fuel
     far_s, lhv = fuel_props(fuel_type)
@@ -14,7 +14,7 @@ def flame_temp_inhouse(t_soc, equ_sc, fuel_type):
     p_dummy = 1e5
 
     # fuel temperature
-    t_fuel = 300
+    t_fuel = 298
 
     # fuel enthalpy before combustion
     if fuel_type == "jetA":
@@ -35,18 +35,18 @@ def flame_temp_inhouse(t_soc, equ_sc, fuel_type):
     m_air = m_mix / (1 + far_soc)
 
     # mass of fresh fuel (that is to be burned) before burning
-    m_f = far_s * m_air
+    m_f = far_s * m_air * equ_combustion
 
 
     def find_t_flame(t):
         # get enthalpy for stochiometric combustion end products
-        h_flame, _, _, _, _, _, _, _ = mixture(t, p_dummy, 1.0, fuel_type)
+        h_flame, _, _, _, _, _, _, _ = mixture(t, p_dummy, equ_combustion, fuel_type)
 
         # energy in the control volume before combustion
         energy_in = h_soc + m_mix + h_f * m_f
 
         # energy out
-        energy_out =  h_flame * (m_mix + m_f)
+        energy_out = h_flame * (m_mix + m_f)
 
         return energy_out - energy_in
 
@@ -57,10 +57,10 @@ def flame_temp_inhouse(t_soc, equ_sc, fuel_type):
 
 
 
-def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc):
+def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
 
     # could add fuel temp here
-    fueltemp = 400
+    fueltemp = 298
 
     air = cea.Oxidizer("Air", temp=t_soc)
 
@@ -73,7 +73,7 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc):
         fuel = h2
 
     # HP problem is like a burner
-    burning = cea.HPProblem(pressure=Psc, pressure_units="bar", materials=[air, fuel], massf=True, phi=1.0)
+    burning = cea.HPProblem(pressure=Psc, pressure_units="bar", materials=[air, fuel], massf=True, phi=equ_combustion)
     exhaust = burning.run()
 
     t_flame = exhaust.t

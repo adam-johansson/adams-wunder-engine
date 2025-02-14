@@ -68,20 +68,11 @@ def nox_calculations(
     # replace N2 with argon
     xi_Ar_0 = xi_Ar_0 + xi_N2_0
 
-    # skip the first data point where the volume is 0
-    # times = times[1:]
-    # temperatures = temperatures[1:]
-    # masses = masses[1:]
-    # pressures = pressures[1:]
-    # volumes = volumes[1:]
-    # dVdt_s = dVdt_s[1:]
 
     def dNOdt_fun(t, var):
 
         c_NO = var[0]
-        #c_N = var[1]
 
-        # i = np.nonzero(times==t)
         idx = (np.abs(times - t)).argmin()
 
         T = temperatures[idx][0]
@@ -101,8 +92,12 @@ def nox_calculations(
         # maybe the concentrations should be effeceted by the NO production
         xi_O2 = mixture["O2"]
         xi_OH = mixture["OH"]
-        xi_O = mixture["O"]
-        xi_H = mixture["H"]
+        try:
+            xi_O = mixture["O"]
+            xi_H = mixture["H"]
+        except:
+            xi_O = 0.0
+            xi_H = 0.0
 
         # extract concentrations needed for Zeldovich mechanism
         c_H = (xi_H * p) / (R_univ * T)
@@ -112,6 +107,10 @@ def nox_calculations(
 
         # N2 should be effected?
         c_N2 = (xi_N2_0 * p) / (R_univ * T)
+
+        # First step for reducing O2 and O
+        c_O2 -= 0.5 * c_NO
+        c_N2 -= 0.5 * c_NO
 
         # thermodynamic properties, mass bases
         # Gibbs free energy is for standard state, meaning no pressure dependence
@@ -164,62 +163,70 @@ def nox_calculations(
         Kc_2 = Kp_2
         Kc_3 = Kp_3
 
-        # forward reaction coefficents (from GRI_MECH 3.0 from the simulating combustion book)
-        # Units (cm^3 / (mol s)
-        k1_f = 0.544e14 * (T**0.1) * math.exp(-38020 / T)
-        k2_f = 9.0e9 * T * math.exp(-3280 / T)
-        k3_f = 3.36e13 * math.exp(-195 / T)
-
-        # convert to m^3 from cm^3
-        k1_f = k1_f * 1e-6
-        k2_f = k2_f * 1e-6
-        k3_f = k3_f * 1e-6
-
-        # reverse reaction coefficients (note that convention is either f (forward) and r (reverse) OR r (right) and l (left)
-        k1_r = k1_f / Kc_1
-        k2_r = k2_f / Kc_2
-        k3_r = k3_f / Kc_3
 
 
+        coefficients = "grimech"
 
-        """
-        if V > 0:
-            dc_Ndt = (
-                k1_f * c_O * c_N2
-                - k2_f * c_N * c_O2
-                - k3_f * c_N * c_OH
-                - k1_r * c_NO * c_N
-                + k2_r * c_NO * c_O
-                + k3_r * c_NO * c_H
-                - (c_N / V) * dVdt
-            )
-            dc_NOdt = (
-                k1_f * c_O * c_N2
-                + k2_f * c_N * c_O2
-                + k3_f * c_N * c_OH
-                - k1_r * c_NO * c_N
-                - k2_r * c_NO * c_O
-                - k3_r * c_NO * c_H
-                - (c_NO / V) * dVdt
-            )
+        if coefficients == "book":
+
+            # forward reaction coefficents (from GRI_MECH 3.0 from the simulating combustion book)
+            # Units (cm^3 / (mol s)
+            k1_f = 0.544e14 * (T**0.1) * math.exp(-38020 / T)
+            k2_f = 9.0e9 * T * math.exp(-3280 / T)
+            k3_f = 3.36e13 * math.exp(-195 / T)
+
+            # convert to m^3 from cm^3
+            k1_f = k1_f * 1e-6
+            k2_f = k2_f * 1e-6
+            k3_f = k3_f * 1e-6
+
+            # reverse reaction coefficients (note that convention is either f (forward) and r (reverse) OR r (right) and l (left)
+            k1_r = k1_f / Kc_1
+            k2_r = k2_f / Kc_2
+            k3_r = k3_f / Kc_3
+
         else:
-            dc_Ndt = (
-                k1_f * c_O * c_N2
-                - k2_f * c_N * c_O2
-                - k3_f * c_N * c_OH
-                - k1_r * c_NO * c_N
-                + k2_r * c_NO * c_O
-                + k3_r * c_NO * c_H
-            )
-            dc_NOdt = (
-                k1_f * c_O * c_N2
-                + k2_f * c_N * c_O2
-                + k3_f * c_N * c_OH
-                - k1_r * c_NO * c_N
-                - k2_r * c_NO * c_O
-                - k3_r * c_NO * c_H
-            )
-        """
+            # from GRI_MECH 3.0 (the same as above??)
+            # they are on the form: k = A T ^ m exp(-E / RT)
+            # concentrations: mol/cm3. A are 1/s, cm3/mol/s, cm6/mol2/s for first, second, and third order reactions, respectively;
+            # T is in K; and E is in cal/mol.
+
+            # (1) N+NO<=>N2+O                              2.700E+13     .000     355.00
+            # (2) N+O2<=>NO+O                              9.000E+09    1.000    6500.00
+            # (3) N+OH<=>NO+H                              3.360E+13     .000     385.00
+
+            # The stoichiometric coefficients for the three reactions
+            # (1) N2 + O = NO + N
+            # (2) N + O2 = NO + O
+            # (3) N + OH = NO + H
+
+            A1 = 2.70e13
+            E1 = 355.0
+            A2 = 9.0e9
+            E2 = 6500.0
+            A3 = 3.360e13
+            E3 = 385.0
+
+            # Universal gas constant in cal / (K * mol)
+            R_univ_cal = 1.98720425864083
+
+            k1_r = A1 * math.exp(- E1 / (R_univ_cal * T))
+            k2_f = A2 * T * math.exp(- E2 / (R_univ_cal * T))
+            k3_f = A3 * math.exp(- E3 / (R_univ_cal * T))
+
+
+            # convert to m^3 from cm^3
+            k1_r = k1_r * 1e-6
+            k2_f = k2_f * 1e-6
+            k3_f = k3_f * 1e-6
+
+            # k1_f is different because the gri mech reaction was defined backwards
+            k1_f = k1_r * Kc_1
+            k2_r = k2_f / Kc_2
+            k3_r = k3_f / Kc_3
+
+
+
         # time derivative of NO concentration (accounting for volume change)
         # d[A]dt = R - [A] / V * dVdt (R is reaction rate)
         if V > 0:
@@ -289,91 +296,15 @@ def nox_calculations(
     # number of moles of NO divided by total number of moles in cylinder (ignoring any chemical reactions)
     no_concentration_volume = NO_mol / mol_global
 
-    # base it only on zone two (NOT CORRECT)
-    # nox_concentration = m_NO / masses[-1][0]
-
     # convert to ppm
     no_concentration_mass = no_concentration_mass * 1e6
     no_concentration_volume = no_concentration_volume * 1e6
 
     # Emission (g/kg)
-    EI_nox = (m_NO / mf_tot) * 1e3
+    EI_nox = (m_NO[-1] / mf_tot) * 1e3
 
     print(f"NOx concentration in exhaust volume {no_concentration_volume[-1]} PPM")
     print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
-    print(f"Emission index (g NO per kg fueL) {EI_nox[-1]} g/kg")
-
-    """
-    # plot temperatures and pressure
-    fig, ax1 = plt.subplots()
-
-    ax2 = ax1.twinx()
-
-    lns1 = ax1.plot(times * 1000, NO_concentration, color='red', label="NO concentration")
-    lns2 = ax2.plot(times * 1000, dNOdt_concentration, label="dNOdt")
-
-    #ax1.set_xlim(1500, 3000)
-
-    # set which axis to which side
-    ax1.yaxis.tick_left()
-    ax2.yaxis.tick_right()
-
-    # added these three lines
-    lns = lns1 + lns2
-    labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc="lower left")
-    ax1.set_title("NO production")
-    ax1.set_ylabel(" NO concentration [mol / m^3]")
-    ax2.set_ylabel("NO production [mol/ m^3 s]")
-    ax1.set_xlabel("Time [ms]")
-
-    # plot temperatures and pressure
-    fig, ax3 = plt.subplots()
-
-    ax4 = ax3.twinx()
-
-    lns1 = ax3.plot(times * 1000, volumes, color='red', label="V")
-    lns2 = ax4.plot(times * 1000, masses * 1000, label="m")
-
-
-
-    # set which axis to which side
-    ax3.yaxis.tick_left()
-    ax4.yaxis.tick_right()
-
-    # added these three lines
-    lns = lns1 + lns2
-    labs = [l.get_label() for l in lns]
-    ax3.legend(lns, labs, loc="lower left")
-    ax3.set_title("m and V burned zone")
-    ax3.set_ylabel("V [m^3]")
-    ax4.set_ylabel("m [g]")
-    ax3.set_xlabel("Time [ms]")
-
-    # plot NO mol amount
-    fig, ax5 = plt.subplots()
-
-    ax6 = ax5.twinx()
-
-    lns1 = ax5.plot(times * 1000, NO_mol, color='red', label="NO")
-    lns2 = ax6.plot(times * 1000, dNOdt_mol, label="dNOdt")
-
-
-
-    # set which axis to which side
-    ax5.yaxis.tick_left()
-    ax6.yaxis.tick_right()
-
-    # added these three lines
-    lns = lns1 + lns2
-    labs = [l.get_label() for l in lns]
-    ax5.legend(lns, labs, loc="lower left")
-    ax5.set_title("Mol NO")
-    ax5.set_ylabel("NO [mol]")
-    ax6.set_ylabel("dNOdt [mol / s]")
-    ax5.set_xlabel("Time [ms]")
-
-    plt.show()
-    """
+    print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
 
     return no_concentration_mass, NO_mol, dNOdt_mol, times

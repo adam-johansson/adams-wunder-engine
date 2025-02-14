@@ -798,7 +798,7 @@ def plot_twozone_validation(phi, t1, t2, t, p, evo, sc):
     ax2.plot(phi_hp * 180 / np.pi, t1, label='T zone 1', color="g")
     ax2.plot(phi_hp * 180 / np.pi, t2, label='T zone 2', color="b")
 
-    ax2.plot(T0_heider[:, 0], T0_heider[:, 1], label='0 dim validation', color="k", lw=1, marker='o')
+    ax2.plot(T0_heider[:, 0], T0_heider[:, 1], label='0 dim validation', color="r", lw=1, marker='o')
     ax2.plot(T1_heider[:, 0], T1_heider[:, 1], label='Zone 1 validation', color="g", lw=1, marker='o')
     ax2.plot(T2_heider[:, 0], T2_heider[:, 1], label='Zone 2 validation', color="b", lw=1, marker='o')
 
@@ -885,5 +885,221 @@ def plot_no_validation(no, phi, no_mol):
 
 
     plt.show()
+
+    return
+
+
+def plot_nox_diesel_validation(phi, t1, t2, t, p, evo, sc, mf, no):
+
+    # high pressure crank angles
+    phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+
+
+
+    # load data from Rakopoulos
+    import os
+    dirname = os.path.dirname(__file__)
+    filename_p = os.path.join(dirname, '../../validation_output_data/NO_diesel/p_T.txt')
+    filename_T0 = os.path.join(dirname, '../../validation_output_data/NO_diesel/T_0.txt')
+    filename_T1 = os.path.join(dirname, '../../validation_output_data/NO_diesel/T_1.txt')
+    filename_fuel = os.path.join(dirname, '../../validation_output_data/NO_diesel/fuel.txt')
+    filename_NO = os.path.join(dirname, '../../validation_output_data/NO_diesel/NO.txt')
+    p_val = np.loadtxt(filename_p, delimiter=",")
+    T0_val = np.loadtxt(filename_T0, delimiter=",")
+    T1_val = np.loadtxt(filename_T1, delimiter=",")
+    fuel_val = np.loadtxt(filename_fuel, delimiter=",")
+    no_val = np.loadtxt(filename_NO, delimiter=",")
+
+
+
+
+    #fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    #fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+
+    ax1.plot(phi * 180 / np.pi, p*1e-5, label='p', color="r", lw=1)
+    ax1.plot(p_val[:, 0], p_val[:, 1], label='p validation', color="k", lw=1, marker="o")
+
+    ax1.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax1.legend(loc='best', fontsize='small', frameon=False)
+    ax1.grid()
+    ax1.set_xlim(300, evo * 180 / np.pi)
+    ax1.set_ylim(-50, 100)
+    ax1.set_xticks([300, 360, 420, 480])
+    ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+
+
+    ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
+
+
+    fig, ax2 = plt.subplots()
+    ax2.plot(phi * 180 / np.pi, t, label='Single zone', color="k", lw=1)
+    ax2.plot(phi_hp * 180 / np.pi, t1, label='T zone 1', color="g")
+
+    ax2.plot(T0_val[:, 0], T0_val[:, 1], label='0 dim validation', color="r", lw=1, marker='o')
+    ax2.plot(T1_val[:, 0], T1_val[:, 1], label='Zone 1 validation', color="g", lw=1, marker='o')
+
+    ax2.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax2.legend(loc='best', fontsize='small', frameon=False)
+    ax2.grid()
+    ax2.set_xlim(300, evo * 180 / np.pi)
+    ax2.set_ylim(500, 3500)
+    ax2.set_xticks([300, 360, 420, 480])
+    ax2.set_yticks([1000, 2000, 3000])
+    ax2.tick_params(labelsize=fs)
+
+    fig, ax3 = plt.subplots()
+    ax3.plot(phi * 180 / np.pi, mf * 1e6, label='Burned fuel', color="k", lw=2)
+    ax3.plot(fuel_val[:, 0], fuel_val[:, 1], label='Validation', color="b", lw=2, marker='o')
+
+    ax3.set_xlim(340, 400)
+
+    ax3.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax3.set_ylabel(r'Burned fuel (mg)', fontsize=fs)
+    ax3.legend(loc='best', fontsize='small', frameon=False)
+    ax3.grid()
+
+    #ax2.plot(phi_hp * 180 / np.pi, t1, label='T zone 1', color="g")
+
+
+    fig, ax4 = plt.subplots()
+    ax4.plot(phi_hp * 180 / np.pi, no, label='NO concentration', color="k", lw=2)
+    ax4.plot(no_val[:, 0], no_val[:, 1], label='Validation', color="b", lw=2, marker='o')
+
+    ax4.set_xlim(260, 460)
+
+    ax4.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax4.set_ylabel(r'NO concentration (ppm)', fontsize=fs)
+    ax4.legend(loc='best', fontsize='small', frameon=False)
+    ax4.grid()
+
+
+
+
+    #ax3.scatter(ca_NASA_order, T_NASA_order, marker="X", label='NASA-CR-185155', color="r", s=512)
+
+
+
+    #plt.legend(loc='best', frameon=True, fontsize=fs)
+    #plt.savefig('simulation_data/two_zone_validation/T_p_validation.pdf', dpi=res, bbox_inches='tight')
+
+    #fig, ax2 = plt.subplots()
+    #ax2.plot(phi * 180 / np.pi, dqf, label='Single zone')
+
+
+    #ax2.set_xlabel('phi [deg]')
+    #x2.set_ylabel(r'T [K]')
+    #plt.legend(loc='best', fontsize='small', frameon=False)
+
+    #phi = phi[1:]
+    """
+    ca = np.ndarray.flatten(phi * 180 / np.pi)
+    # d ppm /dca
+    dnodca = np.gradient(no, ca)
+
+    #dnomoldca = np.gradient(no_mol, ca)
+
+    # load data from Heider
+    import os
+    dirname = os.path.dirname(__file__)
+    filename_no = os.path.join(dirname, '../../validation_output_data/Heider/no.txt')
+    filename_dnodca = os.path.join(dirname, '../../validation_output_data/Heider/dnodca.txt')
+
+    no_heider = np.loadtxt(filename_no, delimiter=",")
+    dnodca_heider = np.loadtxt(filename_dnodca, delimiter=",")
+
+    # plot temperatures and pressure
+    fig, ax1 = plt.subplots()
+
+    ax2 = ax1.twinx()
+
+    lns1 = ax1.plot(phi * 180 / np.pi, no, color='red', label="NO concentration")
+    lns2 = ax2.plot(phi * 180 / np.pi, dnodca, color='blue', label="dNOdphi")
+    lns3 = ax1.plot(no_heider[:, 0], no_heider[:, 1], color='red', label="NO validation", marker='x')
+    lns4 = ax2.plot(dnodca_heider[:, 0], dnodca_heider[:, 1], color='blue', label="dNOdt validation", marker='x')
+
+    #ax1.set_xlim(1500, 3000)
+
+    # set which axis to which side
+    ax1.yaxis.tick_left()
+    ax2.yaxis.tick_right()
+
+    # added these three lines
+    lns = lns1 + lns2 + lns3 + lns4
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns, labs, loc="upper right")
+    ax1.set_title("NO production")
+    ax1.set_ylabel(" NO concentration [ppm] (mass based)")
+    ax2.set_ylabel("NO production [ppm/ $^{\circ}$]")
+    ax1.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]')
+    #ax1.legend(loc='upper right', fontsize='small', frameon=False)
+
+    """
+    plt.show()
+
+    return
+
+
+def plot_scania_single(phi, p, mf, LHV, Q_apparent):
+
+
+    # load data from Diotavelli
+    import os
+    dirname = os.path.dirname(__file__)
+    filename_p_low = os.path.join(dirname, '../../validation_output_data/Scania/low_load.txt')
+    filename_p_high = os.path.join(dirname, '../../validation_output_data/Scania/high_load.txt')
+    filename_heat_high = os.path.join(dirname, '../../validation_output_data/Scania/heat_high.txt')
+    p_low_val = np.loadtxt(filename_p_low, delimiter=",")
+    p_high_val = np.loadtxt(filename_p_high, delimiter=",")
+    heat_high_val = np.loadtxt(filename_heat_high, delimiter=",")
+
+    # get apparent rate of heat relase
+    Q_apparent = np.gradient(Q_apparent, phi)
+
+
+
+
+    #fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    #fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+    ax1.plot(phi * 180 / np.pi, p*1e-5, label='p', color="r", lw=1)
+    ax1.plot(p_low_val[:, 0], p_low_val[:, 1], label='low load validation', color="k", lw=1, marker="o")
+    ax1.plot(p_high_val[:, 0], p_high_val[:, 1], label='high load validation', color="b", lw=1, marker="o")
+    ax1.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax1.legend(loc='best', fontsize='small', frameon=False)
+    ax1.grid()
+    ax1.set_xlim(260, 510)
+    #ax1.set_ylim(-50, 100)
+    #ax1.set_xticks([300, 360, 420, 480])
+    #ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+    ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
+
+    fig, ax2 = plt.subplots()
+    ax2.plot(phi * 180 / np.pi, mf * LHV * np.pi / 180, label='p', color="r", lw=1)
+    ax2.plot(heat_high_val[:, 0], heat_high_val[:, 1], label='validation', color="k", lw=1, marker="o")
+    #ax2.plot(phi * 180 / np.pi, Q_apparent * np.pi / 180, label='Apparent', color="b", lw=1)
+    ax2.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax2.legend(loc='best', fontsize='small', frameon=False)
+    ax2.grid()
+    ax2.set_xlim(350, 420)
+    #ax1.set_ylim(-50, 100)
+    #ax1.set_xticks([300, 360, 420, 480])
+    #ax1.set_yticks([0, 50, 100])
+    ax2.tick_params(labelsize=fs)
+    ax2.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
+
+    plt.show()
+
+
 
     return

@@ -62,7 +62,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
 
     # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
-    lambda_0 = 1.0
+    lambda_0 = 1.00
 
     # L_min is minmal air requirement (kg of air per kg of fuel)
     # this is the stochiometric air requirements + taken the residual exhaust gases into account
@@ -145,7 +145,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # otherwise we can't investigate EGR
 
     # use my own flame temp function (switch to cantera later when I implement it for NOx maybe) (gave 3000K flame temp)
-    t_flame = flame_temp_inhouse(t_soc, equ_sc, fuel_type)
+    t_flame = flame_temp_inhouse(t_soc, equ_sc, 1/lambda_0, fuel_type)
 
     # this is the cea program
     #t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc)
@@ -153,7 +153,9 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
 
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
-    factor = 0.8
+    # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
+    # 0.81 for Heider
+    factor = 0.82
 
     # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor
@@ -166,9 +168,10 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     lambda_gl = 1 / equ_hp[-1]
 
     # test with and without this when we get some numbers for nox (Astar gives slightly higher temp)
-    #Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
-    Astar = A
+    Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
+    #Astar = A
     print(f"Twozone factor Astar: {Astar}")
+    print(f"Twozone factor A: {A}")
 
     # solve for temperature in zone 1, T1
     T1 = (P_hp * V_hp + m2 * R2 * Astar * B) / ( m1 * R1 + m2 * R2)

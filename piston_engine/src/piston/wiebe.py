@@ -72,6 +72,7 @@ def dmfdphi_single_mass_vector(phi, m, phi_sc, phi_cd, mf_tot):
 
     y = (phi - phi_sc) / phi_cd
     f1 = 6.908 * (m + 1) * (y ** m) * np.exp(-6.908 * y ** (m + 1))
+    f1 = np.nan_to_num(f1)
 
     dmfdphi = f1 * mf_tot / phi_cd
 
