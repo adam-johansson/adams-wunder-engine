@@ -71,14 +71,18 @@ def nox_calculations(
 
     def dNOdt_fun(t, var):
 
-        c_NO = var[0]
-
         idx = (np.abs(times - t)).argmin()
 
         T = temperatures[idx][0]
         p = pressures[idx][0]
         V = volumes[idx][0]
         dVdt = dVdt_s[idx]
+
+        # concentration
+        if V > 0:
+            c_NO = var[0] / V
+        else:
+            c_NO = 0.0
 
         # since we want to look at the OHC system isolated, we replace all N2 with Ar
         gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, Ar:{xi_Ar_0}"
@@ -108,10 +112,15 @@ def nox_calculations(
         # N2 should be effected?
         c_N2 = (xi_N2_0 * p) / (R_univ * T)
 
-        # First step for reducing O2 and O
-        c_O2 -= 0.5 * c_NO
-        c_N2 -= 0.5 * c_NO
+        # First step for reducing O2 and O and N2
+        c_O2old = c_O2
+        c_N2old = c_N2
 
+        c_O2 = c_O2 - 0.5 * c_NO
+        c_N2 = c_N2 - 0.5 * c_NO
+
+        print(f" O2 old: {c_O2old} O2 :{c_O2}")
+        print(f" N2 old: {c_N2old} N2 :{c_N2}")
         # thermodynamic properties, mass bases
         # Gibbs free energy is for standard state, meaning no pressure dependence
         _, _, _, g_N2, M_N2 = polynomials.N2(T, p_std)
@@ -226,33 +235,22 @@ def nox_calculations(
             k3_r = k3_f / Kc_3
 
 
+        # assuming the concentration of N to be quasi-steady (dNdT = 0)
 
-        # time derivative of NO concentration (accounting for volume change)
-        # d[A]dt = R - [A] / V * dVdt (R is reaction rate)
         if V > 0:
-
-            # assuming the concentration to be quasi-steady (dNdT = 0)
             c_N = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H) / (
-                        k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V)
+                    k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V)
 
-            dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N - (c_NO / V ) * dVdt - (c_N / V ) * dVdt
-
+            dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N - (c_NO / V) * dVdt - (c_N / V ) * dVdt
         else:
-            # assuming the concentration to be quasi-steady (dNdT = 0)
             c_N = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H) / (
-                        k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH)
+                    k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH)
 
             dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
 
-        # I DONT THINK THIS IS CORRECT BUT IT MATCHES VALIDATION BETTER
-        #dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
+        dNOdt = dc_NOdt * V + c_NO * dVdt
 
-        # I think N2 concentration should decrease with increasing NO (can probably ignore that)
-        # it wont effect much I think. This is probably a later problem.
-        # print(f"N2: {c_N2}, N: {c_N}, NO: {c_NO}")
-
-        #return dc_NOdt, dc_Ndt
-        return dc_NOdt
+        return dNOdt
 
     # All methods except DOP853 seems to be equal fast
     # sol = solve_ivp(dNOdt_fun, t_span=(min(times), max(times)), method='RK45', y0=np.array([0.0]), t_eval=times)
@@ -264,16 +262,8 @@ def nox_calculations(
         t_eval=times,
     )
 
-    NO_concentration = np.ndarray.flatten(sol.y[0])
-    dNOdt_concentration = np.gradient(NO_concentration, times)
-
-    # absolute amount of NO molecules (mol)
-    NO_mol = NO_concentration * np.ndarray.flatten(volumes)
+    NO_mol = np.ndarray.flatten(sol.y[0])
     dNOdt_mol = np.gradient(NO_mol, times)
-
-    # NO_mol = NO_concentration
-
-    # now we want ppm. Question is if it is mass based or volume based?
 
     # mass of NO
     # (kg/mol molar mass)
@@ -307,4 +297,4 @@ def nox_calculations(
     print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
     print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
 
-    return no_concentration_mass, NO_mol, dNOdt_mol, times
+    return no_concentration_mass, dNOdt_mol, times

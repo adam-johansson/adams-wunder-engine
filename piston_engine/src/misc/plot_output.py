@@ -832,7 +832,7 @@ def plot_twozone_validation(phi, t1, t2, t, p, evo, sc):
     return
 
 
-def plot_no_validation(no, phi, no_mol):
+def plot_no_validation(no, phi):
     """
 
     :param no: concentration of NO in ppm

@@ -154,8 +154,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
     # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
-    # 0.81 for Heider
-    factor = 0.82
+    # 0.815 for Heider
+    factor = 0.815
 
     # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor

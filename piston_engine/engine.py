@@ -776,7 +776,7 @@ def run_piston_engine(indata, flags):
 
 
         start = timer()
-        no_ppm, no_mol, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
+        no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
                                           m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
         end = timer()
         print(f'NOx calculations done in: {end - start} [s]')
@@ -815,7 +815,7 @@ def run_piston_engine(indata, flags):
 
             # validate twozone model against Heider paper 1998 (from Simulating combustion textbook)
             plot_twozone_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc)
-            plot_no_validation(no_ppm, phi_z1, no_mol)
+            plot_no_validation(no_ppm, phi_z1)
 
         elif "validate_nox_diesel" in flags:
             # validate NOx model with data from diesel engine (Rakopoulos et al)
