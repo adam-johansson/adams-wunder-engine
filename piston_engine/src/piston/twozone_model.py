@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy import integrate
-from thermo import flame_temp_inhouse, flame_temp_cea, mixture
+from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cantera
 
 
 def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
@@ -140,12 +140,16 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # temperature at start of combustion
     t_soc = T[np.argwhere(phi > sc)[0]][0]
 
+    # pressure at start of combustion
+    p_soc = P[np.argwhere(phi > sc)[0]][0]
+
     # adiabatic flame temperature
     # thoughts: adiabatic flame temperature gets lower when we are not using pure air. this needs to be adjusted for.
     # otherwise we can't investigate EGR
 
     # use my own flame temp function (switch to cantera later when I implement it for NOx maybe) (gave 3000K flame temp)
-    t_flame = flame_temp_inhouse(t_soc, equ_sc, 1/lambda_0, fuel_type)
+    #t_flame = flame_temp_inhouse(t_soc, equ_sc, 1/lambda_0, fuel_type)
+    t_flame = flame_temp_cantera(t_soc, p_soc, equ_sc, equ_combustion=1/lambda_0)
 
     # this is the cea program
     #t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc)
@@ -154,8 +158,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
     # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
-    # 0.815 for Heider
-    factor = 0.815
+    # 0.88 for Heider
+    factor = 0.82
 
     # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor
@@ -167,7 +171,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # global air-fuel equivalence ratio (when all fuel is injected)
     lambda_gl = 1 / equ_hp[-1]
 
-    # test with and without this when we get some numbers for nox (Astar gives slightly higher temp)
+    # test with and without this when we get some numbers for nox
     Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
     #Astar = A
     print(f"Twozone factor Astar: {Astar}")

@@ -113,14 +113,14 @@ def nox_calculations(
         c_N2 = (xi_N2_0 * p) / (R_univ * T)
 
         # First step for reducing O2 and O and N2
-        c_O2old = c_O2
-        c_N2old = c_N2
+        #c_O2old = c_O2
+        #c_N2old = c_N2
 
-        c_O2 = c_O2 - 0.5 * c_NO
-        c_N2 = c_N2 - 0.5 * c_NO
+        #c_O2 = c_O2 - 0.5 * c_NO
+        #c_N2 = c_N2 - 0.5 * c_NO
 
-        print(f" O2 old: {c_O2old} O2 :{c_O2}")
-        print(f" N2 old: {c_N2old} N2 :{c_N2}")
+        #print(f" O2 old: {c_O2old} O2 :{c_O2}")
+        #print(f" N2 old: {c_N2old} N2 :{c_N2}")
         # thermodynamic properties, mass bases
         # Gibbs free energy is for standard state, meaning no pressure dependence
         _, _, _, g_N2, M_N2 = polynomials.N2(T, p_std)
