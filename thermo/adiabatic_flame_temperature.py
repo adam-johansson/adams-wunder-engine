@@ -1,5 +1,5 @@
 from scipy.optimize import brentq
-from thermo import mixture, fuel_props
+from thermo import mixture, fuel_props, molar_fractions
 import CEA_Wrap as cea
 from thermo.polynomials import JETA, H2
 import cantera as ct
@@ -62,18 +62,33 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
     # could add fuel temp here
     fueltemp = 298
 
-    air = cea.Oxidizer("Air", temp=t_soc)
+    # air composition before combustion
+    x_N2, x_O2, x_CO2, x_H2O, x_Ar = molar_fractions(equ_sc, fuel_type)
 
-    jetA = cea.Fuel("Jet-A(L)", temp=fueltemp)
+    #air = cea.Oxidizer("Air", temp=t_soc)
+    o2 = cea.Oxidizer("O2", temp=t_soc, mols=x_O2)
+    n2 = cea.Oxidizer("N2",  temp=t_soc, mols=x_N2)
+    h2o = cea.Oxidizer("H2O", temp=t_soc, mols=x_H2O)
+    co2 = cea.Oxidizer("CO2", temp=t_soc, mols=x_CO2)
 
-    h2 = cea.Fuel("H2", temp=fueltemp)
+    print(x_O2, x_CO2, x_H2O, x_N2)
+
+    x_jetA = x_O2 * 17.75 * equ_combustion
+    x_H2 = x_O2 * 2.0 * equ_combustion
+
+    jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_jetA)
+
+    h2 = cea.Fuel("H2", temp=fueltemp, mols=x_H2)
     if fuel_type == "jetA":
         fuel = jetA
     elif fuel_type == "H2":
         fuel = h2
 
     # HP problem is like a burner
-    burning = cea.HPProblem(pressure=Psc, pressure_units="bar", materials=[air, fuel], massf=True, phi=equ_combustion)
+    #burning = cea.HPProblem(pressure=Psc*1e-5, pressure_units="bar", materials=[n2, o2, h2o, co2, fuel], massf=True,
+    #                        phi=equ_combustion)
+    burning = cea.HPProblem(pressure=Psc*1e-5, pressure_units="bar", materials=[n2, o2, h2o, co2, fuel], massf=True,
+                            phi=equ_combustion)
     exhaust = burning.run()
 
     t_flame = exhaust.t
@@ -82,7 +97,7 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
 
 
 
-def flame_temp_cantera(T_soc, p_soc, equ_sc, equ_combustion):
+def flame_temp_cantera(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
     """
     Calculate the flame temperature using Cantera.
 
@@ -96,10 +111,21 @@ def flame_temp_cantera(T_soc, p_soc, equ_sc, equ_combustion):
     float: Flame temperature in Kelvin.
     """
     try:
-        # Get all of the Species objects defined in the GRI 3.0 mechanism
-        species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
-        # Create an IdealGas object including incomplete combustion species
-        gas2 = ct.Solution(thermo="ideal-gas", species=species.values())
+        if fuel_type == "CH4":
+            # Get all of the Species objects defined in the GRI 3.0 mechanism
+            species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
+
+            # Create an IdealGas object including incomplete combustion species
+            gas2 = ct.Solution(thermo="ideal-gas", species=species.values())
+
+        elif fuel_type == "jetA":
+            species = {S.name: S for S in ct.Species.list_from_file('nDodecane_Reitz.yaml')}
+            #reaction_mechanism = 'nDodecane_Reitz.yaml'
+            #phase_name = 'nDodecane_IG'
+
+            #
+            gas2 = ct.Solution(thermo="ideal-gas", species=species.values())
+
 
         gas2.TP = T_soc, p_soc
 
@@ -122,7 +148,11 @@ def flame_temp_cantera(T_soc, p_soc, equ_sc, equ_combustion):
         x_H2O = f4 / N
         x_Ar = f5 / N
 
-        gas2.set_equivalence_ratio(equ_combustion, "CH4", f"O2:{x_O2}, N2:{x_N2}, CO2:{x_CO2}, H2O:{x_H2O}, Ar:{x_Ar}")
+        if fuel_type == "CH4":
+            gas2.set_equivalence_ratio(equ_combustion, "CH4",
+                                       f"O2:{x_O2}, N2:{x_N2}, CO2:{x_CO2}, H2O:{x_H2O}, Ar:{x_Ar}")
+        elif fuel_type == "jetA":
+            gas2.set_equivalence_ratio(equ_combustion, "c12h26:1", f"O2:{x_O2}, N2:{x_N2}, CO2:{x_CO2}, H2O:{x_H2O}")
         gas2.equilibrate("HP")
         T_flame = gas2.T
 

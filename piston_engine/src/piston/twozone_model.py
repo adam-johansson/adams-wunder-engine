@@ -64,6 +64,12 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
     lambda_0 = 1.00
 
+    # Kaiser used a factor here. Could be used to fit model to experimental data
+    # he used 0.9 when validating. look at his thesis
+    # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
+    # 0.88 for Heider
+    factor = 0.875
+
     # L_min is minmal air requirement (kg of air per kg of fuel)
     # this is the stochiometric air requirements + taken the residual exhaust gases into account
 
@@ -149,17 +155,10 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
 
     # use my own flame temp function (switch to cantera later when I implement it for NOx maybe) (gave 3000K flame temp)
     #t_flame = flame_temp_inhouse(t_soc, equ_sc, 1/lambda_0, fuel_type)
-    t_flame = flame_temp_cantera(t_soc, p_soc, equ_sc, equ_combustion=1/lambda_0)
+    #t_flame = flame_temp_cantera(t_soc, p_soc, equ_sc, equ_combustion=1/lambda_0, fuel_type=fuel_type)
 
     # this is the cea program
-    #t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc)
-
-
-    # Kaiser used a factor here. Could be used to fit model to experimental data
-    # he used 0.9 when validating. look at his thesis
-    # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
-    # 0.88 for Heider
-    factor = 0.82
+    t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion=1/lambda_0)
 
     # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor

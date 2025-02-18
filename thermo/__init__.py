@@ -7,3 +7,4 @@ from .adiabatic_flame_temperature import flame_temp_inhouse, flame_temp_cea, fla
 from .chemical_equilibrium import equilibrium_OHC
 #from .newton_raphson import newton_method
 from .ode_solvers import euler, euler_cantera
+from .cantera_combustion_fractions import molar_fractions_combustion
