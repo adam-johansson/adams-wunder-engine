@@ -10,7 +10,7 @@ import cantera as ct
 
 from numba import jit
 
-from thermo import mixture, molar_fractions, equilibrium_OHC, polynomials, euler_cantera
+from thermo import mixture, molar_fractions, equilibrium_OHC, polynomials, euler_cantera, molar_fractions_combustion
 
 
 def nox_calculations(
@@ -61,9 +61,17 @@ def nox_calculations(
 
     t_dummy = 1000
     p_dummy = 1e5
-    R_mixture, M_mixture, xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions(
-        t_dummy, p_dummy, equ=equ, fuel_type=fuel_type
+    xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions(
+        equ=equ, fuel_type=fuel_type
     )
+
+    # Cantera
+    T0 = temperatures[0][0]
+    p0 = pressures[0][0]
+
+
+    #xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions_combustion(T0, p0, equ_sc=0.0, equ_combustion=equ)
+
 
     # replace N2 with argon
     xi_Ar_0 = xi_Ar_0 + xi_N2_0
@@ -89,16 +97,16 @@ def nox_calculations(
 
         gas.equilibrate("TP")
 
-        mixture = gas.mole_fraction_dict(threshold=1e-20)
+        fractions = gas.mole_fraction_dict(threshold=1e-20)
 
         # OHC system (FAST) assuming equilibirum
         # mol fractions
         # maybe the concentrations should be effeceted by the NO production
-        xi_O2 = mixture["O2"]
-        xi_OH = mixture["OH"]
+        xi_O2 = fractions["O2"]
+        xi_OH = fractions["OH"]
         try:
-            xi_O = mixture["O"]
-            xi_H = mixture["H"]
+            xi_O = fractions["O"]
+            xi_H = fractions["H"]
         except:
             xi_O = 0.0
             xi_H = 0.0
