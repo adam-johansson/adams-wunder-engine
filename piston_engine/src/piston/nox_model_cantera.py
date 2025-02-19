@@ -26,6 +26,7 @@ def nox_calculations(
     mf_tot,
     equ_global,
     m_global,
+    equ_sc
 ):
     """
     This model calculates the nox produced in the reaction zone of the two-zone model. That is the burned zone.
@@ -46,7 +47,12 @@ def nox_calculations(
     # standard state pressure
     p_std = 1e5
 
-    gas = ct.Solution("gri30.yaml")
+    species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
+    # Create an IdealGas object including incomplete combustion species
+
+    ohc_species = [species[S] for S in ("CO2", "H2O", "O2", "CO", "OH", "H2", "O", "H", "N2")]
+
+    gas = ct.Solution(thermo="ideal-gas", species=ohc_species)
 
     equ = 1 / lambda_z1  # Equivalence ratio in the burned zone
 
@@ -61,20 +67,18 @@ def nox_calculations(
 
     t_dummy = 1000
     p_dummy = 1e5
-    xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions(
-        equ=equ, fuel_type=fuel_type
-    )
+    #xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions(
+    #    equ=equ, fuel_type=fuel_type
+    #)
 
     # Cantera
     T0 = temperatures[0][0]
     p0 = pressures[0][0]
 
 
-    #xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions_combustion(T0, p0, equ_sc=0.0, equ_combustion=equ)
+    xi_N2_0, xi_CO2_0, xi_H2O_0, xi_CO_0, xi_O2_0, xi_OH_0, xi_H2_0, xi_O_0, xi_H_0 = (
+        molar_fractions_combustion(T0, p0, equ_sc=equ_sc, equ_combustion=equ, fuel_type=fuel_type))
 
-
-    # replace N2 with argon
-    xi_Ar_0 = xi_Ar_0 + xi_N2_0
 
 
     def dNOdt_fun(t, var):
@@ -92,8 +96,10 @@ def nox_calculations(
         else:
             c_NO = 0.0
 
+
         # since we want to look at the OHC system isolated, we replace all N2 with Ar
-        gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, Ar:{xi_Ar_0}"
+        #gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}"
+        gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}, CO:{xi_CO_0}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} "
 
         gas.equilibrate("TP")
 
@@ -102,14 +108,16 @@ def nox_calculations(
         # OHC system (FAST) assuming equilibirum
         # mol fractions
         # maybe the concentrations should be effeceted by the NO production
-        xi_O2 = fractions["O2"]
-        xi_OH = fractions["OH"]
         try:
             xi_O = fractions["O"]
             xi_H = fractions["H"]
+            xi_O2 = fractions["O2"]
+            xi_OH = fractions["OH"]
         except:
             xi_O = 0.0
             xi_H = 0.0
+            xi_O2 = 0.0
+            xi_OH = 0.0
 
         # extract concentrations needed for Zeldovich mechanism
         c_H = (xi_H * p) / (R_univ * T)

@@ -62,7 +62,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
 
     # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
-    lambda_0 = 1.0
+    lambda_0 = 1.00
 
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
@@ -193,5 +193,5 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     diff = V_hp - (V1 + V2)
 
 
-    return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp
+    return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
 

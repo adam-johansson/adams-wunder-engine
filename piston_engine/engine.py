@@ -771,7 +771,7 @@ def run_piston_engine(indata, flags):
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
         """
-        num = 100
+        num = 10
         factors = np.linspace(0.5, 1.0, num)
 
         noxss = []
@@ -807,10 +807,12 @@ def run_piston_engine(indata, flags):
         plt.show()
         
     
+        
+
         """
-        factor = 0.9
+        factor = 0.87
         # get temperature and mass from reaction zone
-        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp = twozone_model.twozone(phi, P[-1], T[-1],
+        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
                                                                                                     phi_open_out, phi_sc,
                                                                                                     LHV, far_s,
@@ -820,7 +822,7 @@ def run_piston_engine(indata, flags):
         # start = timer()
         no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
-                                                                     m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
+                                                                     m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
 
     # post processing

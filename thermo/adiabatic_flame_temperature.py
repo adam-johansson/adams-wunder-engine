@@ -93,6 +93,9 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
 
     t_flame = exhaust.t
 
+    # mass fractions of combustion products
+    #testar = exhaust.prod_c
+
     return t_flame
 
 
