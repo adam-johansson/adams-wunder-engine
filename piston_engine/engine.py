@@ -810,7 +810,8 @@ def run_piston_engine(indata, flags):
         
 
         """
-        factor = 0.87
+        # Greek: 0.88. Heider: 0.9
+        factor = 0.88
         # get temperature and mass from reaction zone
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,

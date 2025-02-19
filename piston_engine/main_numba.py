@@ -19,8 +19,8 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider"
-input_file = "validation_twozone.nox_diesel_rakopolous"
-#input_file = "validation_twozone.scania_d12"
+#input_file = "validation_twozone.nox_diesel_rakopolous"
+input_file = "validation_twozone.scania_d12"
 input_dir = "input"
 path = input_dir + "." + input_file
 
@@ -41,9 +41,9 @@ d = importlib.import_module(path)
 #flags = ['optimise']  # optimisation
 #flags = ['load']
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-flags = ['output', 'output_all', 'sweep_no_greek', 'save']  # sweep NO validation Rakoplpous
+#flags = ['output', 'output_all', 'sweep_no_greek', 'save']  # sweep NO validation Rakoplpous
 #flags = ['validate_nox_diesel', 'save', 'single']  # validate design point Rakoplpous
-#flags = ['validate_scania_single', 'single']  # Scania validation
+flags = ['validate_scania_single', 'single']  # Scania validation
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,

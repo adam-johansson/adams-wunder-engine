@@ -99,7 +99,11 @@ def nox_calculations(
 
         # since we want to look at the OHC system isolated, we replace all N2 with Ar
         #gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}"
-        gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}, CO:{xi_CO_0}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} "
+
+        xi_NO = c_NO * (R_univ * T) / p
+        xi_O2 = xi_O2_0 - 0.5 * xi_NO
+        xi_N2 = xi_N2_0 - 0.5 * xi_NO
+        gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2}, N2:{xi_N2}, CO:{xi_CO_0}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} "
 
         gas.equilibrate("TP")
 
