@@ -268,6 +268,7 @@ def nox_calculations(
         method="RK45",
         y0=np.array([0.0]),
         t_eval=times,
+        max_step=1e-4,
     )
 
     NO_mol = np.ndarray.flatten(sol.y[0])

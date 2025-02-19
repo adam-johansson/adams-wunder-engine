@@ -71,7 +71,7 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
     h2o = cea.Oxidizer("H2O", temp=t_soc, mols=x_H2O)
     co2 = cea.Oxidizer("CO2", temp=t_soc, mols=x_CO2)
 
-    print(x_O2, x_CO2, x_H2O, x_N2)
+    #print(x_O2, x_CO2, x_H2O, x_N2)
 
     x_jetA = x_O2 * 17.75 * equ_combustion
     x_H2 = x_O2 * 2.0 * equ_combustion

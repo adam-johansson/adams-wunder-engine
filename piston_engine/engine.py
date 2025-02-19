@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from timeit import default_timer as timer
 
@@ -769,18 +770,57 @@ def run_piston_engine(indata, flags):
         # get the heat addition from fuel curve
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
-        # get temperature and mass from reaction zone
-        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dmfdphi,
-                                                                          phi_open_out, phi_sc, LHV, far_s,
-                                                                          equ[-1], fuel_type)
+        """
+        num = 100
+        factors = np.linspace(0.5, 1.0, num)
 
-
+        noxss = []
+        temps = []
         start = timer()
-        no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
-                                          m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
+        for factor in factors:
+            # get temperature and mass from reaction zone
+            T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dmfdphi,
+                                                                              phi_open_out, phi_sc, LHV, far_s,
+                                                                              equ[-1], fuel_type, factor)
+
+
+            #start = timer()
+            no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
+                                              m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
+            #end = timer()
+            #print(f'NOx calculations done in: {end - start} [s]')
+            noxss.append(no_ppm[-1])
+            temps.append(no_ppm)
+
         end = timer()
         print(f'NOx calculations done in: {end - start} [s]')
 
+        fig, ax1 = plt.subplots()
+        ax1.plot(factors, noxss)
+
+        fig, ax2 = plt.subplots()
+        for i in range(0, num):
+            #ax2.plot(temps[i][:], label=f"factor: {i}")
+            ax2.plot(temps[i][:])
+
+        #plt.legend()
+        plt.show()
+        
+    
+        """
+        factor = 0.9
+        # get temperature and mass from reaction zone
+        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp = twozone_model.twozone(phi, P[-1], T[-1],
+                                                                                                    V[-1], m[-1], dmfdphi,
+                                                                                                    phi_open_out, phi_sc,
+                                                                                                    LHV, far_s,
+                                                                                                    equ[-1], fuel_type,
+                                                                                                    factor)
+
+        # start = timer()
+        no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+                                                                     rpm,
+                                                                     m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
 
 
     # post processing

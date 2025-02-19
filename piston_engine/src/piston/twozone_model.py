@@ -5,7 +5,7 @@ from scipy import integrate
 from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cantera
 
 
-def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
+def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
 
     """
     Divides the cylinder volume into two zones, for more accurate NOx calculations.
@@ -62,13 +62,14 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
     # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
 
     # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
-    lambda_0 = 1.00
+    lambda_0 = 1.0
 
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
     # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
-    # 0.88 for Heider
-    factor = 0.875
+    # 0.875 for Heider
+    # 0.84 more nox than 0.85???
+    #factor = 0.81
 
     # L_min is minmal air requirement (kg of air per kg of fuel)
     # this is the stochiometric air requirements + taken the residual exhaust gases into account
@@ -190,6 +191,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type):
 
     # check that the two zones' volumes add upp to total volume
     diff = V_hp - (V1 + V2)
+
 
     return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp
 
