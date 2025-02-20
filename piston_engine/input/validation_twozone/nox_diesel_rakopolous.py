@@ -35,9 +35,10 @@ T_in = 298  # inlet temperature
 p_ratio = 1 / 0.88  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 430          # Liner temperature
-Tpiston = 430
-Thead = 430
+# given
+Twall = 450          # Liner temperature
+Tpiston = 450
+Thead = 450
 Twalls = [Twall, Tpiston, Thead]
 
 

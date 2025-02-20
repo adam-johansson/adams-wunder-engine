@@ -1040,7 +1040,7 @@ def plot_nox_diesel_validation(phi, t1, t2, t, p, evo, sc, mf, no):
     #ax1.legend(loc='upper right', fontsize='small', frameon=False)
 
     """
-    plt.show()
+    #plt.show()
 
     return
 
