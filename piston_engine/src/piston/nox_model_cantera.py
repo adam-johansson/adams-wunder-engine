@@ -315,8 +315,8 @@ def nox_calculations(
     # Emission (g/kg)
     EI_nox = (m_NO[-1] / mf_tot) * 1e3
 
-    print(f"NOx concentration in exhaust volume {no_concentration_volume[-1]} PPM")
-    print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
-    print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
+    #print(f"NOx concentration in exhaust volume {no_concentration_volume[-1]} PPM")
+    #print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
+    #print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
 
     return no_concentration_mass, dNOdt_mol, times

@@ -30,11 +30,11 @@ bsr = 0.08026 / 0.08890  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions (1.5 bar)
-p_in = 1.0125e5 * 0.925  # inlet pressure
+p_in = 1.0125e5 * 0.85  # inlet pressure
 T_in = 298  # inlet temperature
-p_ratio = 1.05  # pressure ratio after and before engine
+p_ratio = 1.0  # pressure ratio after and before engine
 
-ch = 1.2  # multiplier to decrease or increase heat transfer
+ch = 1.0  # multiplier to decrease or increase heat transfer
 
 # Heat transfer
 # given

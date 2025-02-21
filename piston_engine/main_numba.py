@@ -41,7 +41,7 @@ d = importlib.import_module(path)
 #flags = ['optimise']  # optimisation
 #flags = ['load']
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-flags = ['output', 'output_all', 'sweep_no_greek', 'save']  # sweep NO validation Rakoplpous
+flags = ['sweep_no_greek', 'save']  # sweep NO validation Rakoplpous
 #flags = ['validate_nox_diesel', 'save', 'single']  # validate design point Rakoplpous
 #flags = ['validate_scania_single', 'single']  # Scania validation
 

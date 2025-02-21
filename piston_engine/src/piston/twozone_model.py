@@ -62,7 +62,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
 
     # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
-    lambda_0 = 1.00
+    lambda_0 = 1.03
 
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
@@ -174,8 +174,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     # test with and without this when we get some numbers for nox
     Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
     #Astar = A
-    print(f"Twozone factor Astar: {Astar}")
-    print(f"Twozone factor A: {A}")
+    #print(f"Twozone factor Astar: {Astar}")
+    #print(f"Twozone factor A: {A}")
 
     # solve for temperature in zone 1, T1
     T1 = (P_hp * V_hp + m2 * R2 * Astar * B) / ( m1 * R1 + m2 * R2)
@@ -192,6 +192,6 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     # check that the two zones' volumes add upp to total volume
     diff = V_hp - (V1 + V2)
 
-
+    print(lambda_gl, Astar, A, lambda_0)
     return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
 

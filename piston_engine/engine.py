@@ -555,8 +555,8 @@ def run_piston_engine(indata, flags):
         energy_in.append(sol.y[24])
         fuel_enthalpy_in.append(sol.y[25])
 
-        if "sweep" not in flags:
-            print(f"iter {i + 1} of {it}")
+        #if "sweep" not in flags:
+        #    print(f"iter {i + 1} of {it}")
 
         equ_avg = (mf[-1][-1] / m_in_IP[-1][-1]) / far_s
 
@@ -810,8 +810,8 @@ def run_piston_engine(indata, flags):
         
 
         """
-        # Greek: 0.88. Heider: 0.9
-        factor = 0.88
+        # Greek: 0.86. Heider: 0.9
+        factor = 0.84
         # get temperature and mass from reaction zone
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
