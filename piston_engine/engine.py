@@ -509,7 +509,7 @@ def run_piston_engine(indata, flags):
             #                rtol=5e-11)  # 1e-12 works
             try:
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                                rtol=1e-9, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
+                                rtol=1e-8, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
                 # LSODA is needed for stability in 4 stroke. DOP853 also works with limitations on T.
                 #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='BDF', y0=x, t_eval=phi,
                 #                rtol=1e-12, atol=1e-9)  # 1e-12 needed to not fuck up with latest limits
@@ -860,10 +860,15 @@ def run_piston_engine(indata, flags):
             plot_twozone_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc)
             plot_no_validation(no_ppm, phi_z1)
 
-        elif "validate_nox_diesel" in flags:
+        elif "validate_nox_diesel_early" in flags:
             # validate NOx model with data from diesel engine (Rakopoulos et al)
             from piston_engine.src.misc.plot_output import plot_nox_diesel_validation
             plot_nox_diesel_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc, mf[-1], no_ppm)
+
+        elif "validate_nox_diesel_late" in flags:
+            # validate NOx model with data from diesel engine (Rakopoulos et al)
+            from piston_engine.src.misc.plot_output import plot_nox_diesel_validation_late
+            plot_nox_diesel_validation_late(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc, mf[-1], no_ppm)
 
 
         elif 'validate_scania_single' in flags:

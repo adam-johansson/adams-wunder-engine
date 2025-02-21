@@ -7,9 +7,20 @@ from piston_engine.engine import run_piston_engine
 
 def sweep_no_diesel_greek_validation(d, flags):
 
+    num = 5
     # validate against the Rakolpoulos paper
     # the three different load cases (-20 degrees injection timing)
-    fuel_air_ratios = np.array([0.028, 0.0345, 0.041])
+
+    # design point far
+    far_dp = 0.0405
+    fuel_air_ratios = np.linspace(0.029, far_dp, num)
+    #cds = np.linspace(35, 41.72, num) * np.pi / 180
+    #m_wiebes = np.linspace(2.20,2.21,num)
+
+    phi_sc = (352.0 / 180) * np.pi  # angle at combustion start
+    phi_cd = (40.0 / 180) * np.pi
+    m_wiebe = 1.0
+
 
     nitrogen_oxides_early = []
     peak_pressures_early = []
@@ -17,14 +28,18 @@ def sweep_no_diesel_greek_validation(d, flags):
     IMEPs_early = []
 
     for far_goal in fuel_air_ratios:
+
+        # from combustion book
+        phi_cd_adjusted = phi_cd * (far_goal / far_dp) ** 0.6
+
         data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
                 d.v_mean, d.lms, d.Twalls, d.ch,
                 d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
-                d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
+                d.wm, m_wiebe, phi_sc, phi_cd_adjusted, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
                 d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
         if far_goal > 0.04:
-            flags.append('validate_nox_diesel')
+            flags.append('validate_nox_diesel_early')
 
         T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
             heat_loss, p_tdc, outflow, no, imep = run_piston_engine(data, flags)
@@ -35,24 +50,39 @@ def sweep_no_diesel_greek_validation(d, flags):
         peak_pressures_early.append(p_max * 1e-5)
         indicated_effs_early.append(eta_th * 1e2)
 
-    flags.remove('validate_nox_diesel')
+    flags.remove('validate_nox_diesel_early')
     nitrogen_oxides_late = []
     peak_pressures_late = []
     indicated_effs_late = []
     IMEPs_late = []
 
     # the three different load cases (-15 degrees injection timing)
-    fuel_air_ratios = np.array([0.028, 0.0345, 0.041])
+    far_dp = 0.041
+    fuel_air_ratios = np.linspace(0.029, far_dp, num)
+    # matches Woschni
+    #fuel_air_ratios = np.array([0.031, 0.038, 0.0465])
 
-    phi_sc = (350.0 / 180) * np.pi  # angle at combustion start
+    phi_sc = (357.0 / 180) * np.pi  # angle at combustion start
+    phi_cd = (40.0 / 180) * np.pi
+    m_wiebe = 1.0
+
+    #m_wiebes = np.linspace(2.28, 2.28, num)
+    #cds = np.linspace(35,39.96, num) * np.pi/180
+
 
     for far_goal in fuel_air_ratios:
+
+        # from combustion book
+        phi_cd_adjusted = phi_cd * (far_goal / far_dp) ** 0.6
+
         data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
                 d.v_mean, d.lms, d.Twalls, d.ch,
                 d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
-                d.wm, d.m_wiebe, phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
+                d.wm, m_wiebe, phi_sc, phi_cd_adjusted, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
                 d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
+        if far_goal > 0.04:
+            flags.append('validate_nox_diesel_late')
 
         T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
             heat_loss, p_tdc, outflow, no, imep = run_piston_engine(data, flags)
@@ -109,8 +139,6 @@ def sweep_no_diesel_greek_validation(d, flags):
     ax7.set_xlabel(r'Indicated mean effective pressure (IMEP) [$bar$]', fontsize=fs)
     ax7.set_ylabel(r'Indicated efficiency (%)', fontsize=fs)
     ax7.legend(loc='best', fontsize='small', frameon=False)
-
-
 
     plt.show()
 
