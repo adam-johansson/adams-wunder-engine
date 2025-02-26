@@ -19,15 +19,16 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider"
-input_file = "validation_twozone.nox_diesel_rakopolous"
-#input_file = "validation_twozone.scania_d12"
+#input_file = "validation_twozone.nox_diesel_rakopolous"
+input_file = "validation_twozone.scania_d12"
+
 input_dir = "input"
 path = input_dir + "." + input_file
 
 d = importlib.import_module(path)
 
 # flags: plot_all, plot_essentials, plot_convergence, validation, output_all, output_power
-# sweep, plot_details, plot_twozone, validate_twozone, validate_nox_diesel, fuel_mass
+# sweep, plot_details, plot_twozone, validate_twozone, validate_nox_diesel, fuel_mass, sweep_no_kth
 
 # fuel_mass: specify mass of fuel instead of fuel air ratio
 
@@ -41,9 +42,10 @@ d = importlib.import_module(path)
 #flags = ['optimise']  # optimisation
 #flags = ['load']
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-flags = ['sweep_no_greek', 'save']  # sweep NO validation Rakoplpous
-#flags = ['validate_nox_diesel', 'save', 'single']  # validate design point Rakoplpous
-#flags = ['validate_scania_single', 'single']  # Scania validation
+#flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
+#flags = ['validate_scania_lowload', 'single']  # Scania validation low load
+#flags = ['validate_scania_highload', 'single']  # Scania validation high load
+flags = ['sweep_no_kth']  # Scania validation
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
@@ -116,6 +118,12 @@ elif 'sweep_no_greek' in flags:
     from piston_engine.src.misc.sweep_no_validation import sweep_no_diesel_greek_validation
 
     sweep_no_diesel_greek_validation(d, flags)
+
+
+elif 'sweep_no_kth' in flags:
+    from piston_engine.src.misc.sweep_no_validation_kth import sweep_no_diesel_kth_validation
+
+    sweep_no_diesel_kth_validation(d, flags)
 
 
 

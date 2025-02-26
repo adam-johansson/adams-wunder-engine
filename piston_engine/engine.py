@@ -53,6 +53,9 @@ def run_piston_engine(indata, flags):
     phi_open_out = valve_timings[2]
     phi_close_out = valve_timings[3]
 
+    # number of outputs from the function
+    nr_output = 16
+
     s = d/bsr  # stroke retrieved from bore stroke ratio
     l_con = s/(2*lms)  # connecting rod length
     rpm = 60*v_mean/(2*s)  # rpm from mean velocity
@@ -493,7 +496,7 @@ def run_piston_engine(indata, flags):
                 Vmotor = V[-1][np.argwhere(phi > phi_sc)[0]][0]
             except IndexError as e:
                 print(e)
-                return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                return np.zeros(nr_output)
 
         woschni_args = (Pref, Tref, Vref, Pmotor, Vmotor)
         if cycle == "2T":
@@ -509,13 +512,10 @@ def run_piston_engine(indata, flags):
             #                rtol=5e-11)  # 1e-12 works
             try:
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                                rtol=1e-8, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
-                # LSODA is needed for stability in 4 stroke. DOP853 also works with limitations on T.
-                #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='BDF', y0=x, t_eval=phi,
-                #                rtol=1e-12, atol=1e-9)  # 1e-12 needed to not fuck up with latest limits
+                                rtol=1e-7, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
             except UserWarning as e:
                 print(e)
-                return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                return np.zeros(nr_output)
         else:
             raise Exception(f'Unknown cycle. The cycle was {cycle}.')
 
@@ -609,7 +609,7 @@ def run_piston_engine(indata, flags):
             T_out.append(fsolve(find_tout, T[-1][-1])[0])
         except RuntimeWarning as e:
             print(e)
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            return np.zeros(nr_output)
 
         if i > 0:
             T_out_diff.append(np.abs(T_out[-1] - T_out[-2]))
@@ -649,7 +649,7 @@ def run_piston_engine(indata, flags):
 
             if convergence:
                 end = timer()
-                # print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
+                print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
                 #print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1])
                 break
 
@@ -658,8 +658,10 @@ def run_piston_engine(indata, flags):
             if "sweep" in flags:
                 print(f'Simulation never converged. p_in, T_in, cr, far_goal, rpm, bore: {p_in * 1e-5, T_in, cr, far_goal, rpm, d}')
                 # Return zeros so that the data can be cleaned from simulations that never converged
-                return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                return np.zeros(nr_output)
             else:
+                end = timer()
+                print(f'Simulation never converged. Reached {i + 1} iterations. Runtime of script: {end - start} [s]')
                 break
 
 
@@ -735,7 +737,7 @@ def run_piston_engine(indata, flags):
         friction_losses = 0.0
         aux_losses = 0.0
 
-
+    print(f"Fuel injected: {mf_tot * 1e6} mg")
     # check for energy conservation
     # get the last values for the arrays for each iteration
     # mass in intake, fuel mass in, mass out outlet
@@ -761,7 +763,7 @@ def run_piston_engine(indata, flags):
         # if energy error larger than 0.1% of fuel energy
         if np.abs(diff / heat_ins[-1]) > 0.001:
             print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            return np.zeros(nr_output)
 
 
     if "validation" not in flags:
@@ -805,13 +807,12 @@ def run_piston_engine(indata, flags):
 
         #plt.legend()
         plt.show()
-        
-    
-        
 
         """
-        # Greek: 0.86. Heider: 0.9
+
+        # Greek: 0.84. Heider: 0.9, Scania: 1.0
         factor = 0.84
+
         # get temperature and mass from reaction zone
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
@@ -871,13 +872,21 @@ def run_piston_engine(indata, flags):
             plot_nox_diesel_validation_late(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc, mf[-1], no_ppm)
 
 
-        elif 'validate_scania_single' in flags:
+        elif 'validate_scania_highload' in flags:
             # validate NOx model with data from scania engine (KTH msc thesis)
-            from piston_engine.src.misc.plot_output import plot_scania_single
+            from piston_engine.src.misc.plot_output import plot_scania_highload
             print(f"Fuel injected: {mf_tot*1e6} mg")
-            print(f"Air sucked in: {m_in_IP[-1][-1] * 1e6} mg")
+            #print(f"Air sucked in: {m_in_IP[-1][-1] * 1e6} mg")
             #print(f"Displacement: {V_d * 1e6} cm^3")
-            plot_scania_single(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
+            plot_scania_highload(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
+
+        elif 'validate_scania_lowload' in flags:
+            # validate NOx model with data from scania engine (KTH msc thesis)
+            from piston_engine.src.misc.plot_output import plot_scania_lowload
+            print(f"Fuel injected: {mf_tot*1e6} mg")
+            #print(f"Air sucked in: {m_in_IP[-1][-1] * 1e6} mg")
+            #print(f"Displacement: {V_d * 1e6} cm^3")
+            plot_scania_lowload(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
 
         else:
             # no validation
