@@ -23,6 +23,7 @@ def sweep_no_diesel_greek_validation(d, flags):
 
 
     nitrogen_oxides_early = []
+    EI_early = []
     peak_pressures_early = []
     indicated_effs_early = []
     IMEPs_early = []
@@ -42,19 +43,21 @@ def sweep_no_diesel_greek_validation(d, flags):
             flags.append('validate_nox_diesel_early')
 
         T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
-            heat_loss, p_tdc, outflow, no, imep = run_piston_engine(data, flags)
+            heat_loss, p_tdc, outflow, no, imep, EI_nox = run_piston_engine(data, flags)
 
-
+        #print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
         nitrogen_oxides_early.append(no)
         IMEPs_early.append(imep * 1e-5)
         peak_pressures_early.append(p_max * 1e-5)
         indicated_effs_early.append(eta_th * 1e2)
+        EI_early.append(EI_nox)
 
     flags.remove('validate_nox_diesel_early')
     nitrogen_oxides_late = []
     peak_pressures_late = []
     indicated_effs_late = []
     IMEPs_late = []
+    EI_late = []
 
     # the three different load cases (-15 degrees injection timing)
     far_dp = 0.043
@@ -85,13 +88,14 @@ def sweep_no_diesel_greek_validation(d, flags):
             flags.append('validate_nox_diesel_late')
 
         T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
-            heat_loss, p_tdc, outflow, no, imep = run_piston_engine(data, flags)
+            heat_loss, p_tdc, outflow, no, imep, EI_nox = run_piston_engine(data, flags)
 
-
+        #print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
         nitrogen_oxides_late.append(no)
         IMEPs_late.append(imep * 1e-5)
         peak_pressures_late.append(p_max * 1e-5)
         indicated_effs_late.append(eta_th * 1e2)
+        EI_late.append(EI_nox)
 
     # load data from Rakopoulos
 
@@ -113,10 +117,10 @@ def sweep_no_diesel_greek_validation(d, flags):
     fig, ax5 = plt.subplots()
 
     fs = 18
-    ax5.plot(IMEPs_early, nitrogen_oxides_early, marker='o', label="Simulation")
-    ax5.plot(IMEPs_late, nitrogen_oxides_late, marker='o', label="Simulation")
-    ax5.plot(no_early_val[:, 0], no_early_val[:, 1], marker='x', label="Validation")
-    ax5.plot(no_late_val[:, 0], no_late_val[:, 1], marker='x', label="Validation")
+    ax5.plot(IMEPs_early, nitrogen_oxides_early, marker='o', label="Simulation early")
+    ax5.plot(IMEPs_late, nitrogen_oxides_late, marker='o', label="Simulation late")
+    ax5.plot(no_early_val[:, 0], no_early_val[:, 1], marker='x', label="Validation early")
+    ax5.plot(no_late_val[:, 0], no_late_val[:, 1], marker='x', label="Validation late")
     ax5.set_xlabel(r'Indicated mean effective pressure (IMEP) [$bar$]', fontsize=fs)
     ax5.set_ylabel(r'NO concentration (ppm)', fontsize=fs)
     ax5.legend(loc='best', fontsize='small', frameon=False)
@@ -132,13 +136,24 @@ def sweep_no_diesel_greek_validation(d, flags):
     ax6.legend(loc='best', fontsize='small', frameon=False)
 
     fig, ax7 = plt.subplots()
-    ax7.plot(IMEPs_early, indicated_effs_early, marker='o', label="Simulation")
-    ax7.plot(IMEPs_late, indicated_effs_late, marker='o', label="Simulation")
-    ax7.plot(eff_early_val[:, 0], eff_early_val[:, 1], marker='x', label="Validation")
-    ax7.plot(eff_late_val[:, 0], eff_late_val[:, 1], marker='x', label="Validation")
+    ax7.plot(IMEPs_early, indicated_effs_early, marker='o', label="Simulation early")
+    ax7.plot(IMEPs_late, indicated_effs_late, marker='o', label="Simulation late")
+    ax7.plot(eff_early_val[:, 0], eff_early_val[:, 1], marker='x', label="Validation early")
+    ax7.plot(eff_late_val[:, 0], eff_late_val[:, 1], marker='x', label="Validation late")
     ax7.set_xlabel(r'Indicated mean effective pressure (IMEP) [$bar$]', fontsize=fs)
     ax7.set_ylabel(r'Indicated efficiency (%)', fontsize=fs)
     ax7.legend(loc='best', fontsize='small', frameon=False)
+
+    fig, ax8 = plt.subplots()
+    ax8.plot(IMEPs_early, EI_early, marker='o', label="Simulation early")
+    ax8.plot(IMEPs_late, EI_late, marker='o', label="Simulation late")
+    ax8.set_xlabel(r'Indicated mean effective pressure (IMEP) [$bar$]', fontsize=fs)
+    ax8.set_ylabel(r'NO emission index (g/kg)', fontsize=fs)
+    ax8.legend(loc='best', fontsize='small', frameon=False)
+
+
+
+
 
     plt.show()
 

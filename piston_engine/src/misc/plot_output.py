@@ -732,7 +732,7 @@ def plot_twozone_only(phi_hp, T1, T2, T_hp, m1, m2):
     # m_total is just the sum of zone 1 and zone 2
     m_hp = m1 + m2
 
-    # plot temperatures and pressure
+    # plot masses
     fig, ax2 = plt.subplots()
 
     ax2.plot(phi_hp * 180 / np.pi, m1, label="Zone 1")
@@ -1123,7 +1123,7 @@ def plot_scania_highload(phi, p, mf, LHV, Q_apparent):
     ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
 
     fig, ax2 = plt.subplots()
-    ax2.plot(phi * 180 / np.pi, mf * LHV * np.pi / 180, label='p', color="r", lw=1)
+    ax2.plot(phi * 180 / np.pi, mf * LHV * np.pi / 180, label='simulation', color="r", lw=1)
     ax2.plot(heat_high_val[:, 0], heat_high_val[:, 1], label='validation', color="k", lw=1, marker="o")
     #ax2.plot(phi * 180 / np.pi, Q_apparent * np.pi / 180, label='Apparent', color="b", lw=1)
     ax2.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
@@ -1178,7 +1178,7 @@ def plot_scania_lowload(phi, p, mf, LHV, Q_apparent):
     ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
 
     fig, ax2 = plt.subplots()
-    ax2.plot(phi * 180 / np.pi, mf * LHV * np.pi / 180, label='p', color="r", lw=1)
+    ax2.plot(phi * 180 / np.pi, mf * LHV * np.pi / 180, label='simulation', color="r", lw=1)
     ax2.plot(heat_low_val[:, 0], heat_low_val[:, 1], label='validation', color="k", lw=1, marker="o")
     #ax2.plot(phi * 180 / np.pi, Q_apparent * np.pi / 180, label='Apparent', color="b", lw=1)
     ax2.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)

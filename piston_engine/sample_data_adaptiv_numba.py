@@ -116,7 +116,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
                 d.cylinders, d.fuel, d.c1, d.c4, d.c5]
 
         # run the simulation
-        #print(p*1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
+        print(p*1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
         T_out, work_piston, eta_th, air_flow, p_max, T_max, _, equ_trapped, induced_power, _, _, \
             heat_loss, p_tdc, _, nox, _ = run_piston_engine(data, flags)
         # save the output that is relevant

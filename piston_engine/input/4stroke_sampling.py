@@ -9,8 +9,7 @@ fuel = 'jetA'
 cooling = "Hohenberg"
 
 opposed = False
-#cr = 9.6  # geometric compression ratio (Kaiser used 9.6 ToC and 6.4 TO and 18 in Cruise)
-cr = 7.3
+cr = 6.0
 
 cylinders = 1  # V12
 
@@ -23,8 +22,8 @@ bsr = 1  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 10e5  # inlet pressure
-T_in = 750  # inlet temperature
+p_in = 8e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
+T_in = 670  # inlet temperature (670 cruise 770 TO)
 p_ratio = 1.1  # pressure ratio after and before engine
 
 # Heat transfer
@@ -61,7 +60,7 @@ cd = 0.8
 eta_c = 0.999
 
 throttle = 0.0294
-far_goal = 0.0275
+far_goal = 0.04
 
 
 wiebe_type = "Single"

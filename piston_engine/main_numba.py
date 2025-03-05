@@ -43,9 +43,9 @@ d = importlib.import_module(path)
 #flags = ['load']
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
-#flags = ['validate_scania_lowload', 'single']  # Scania validation low load
-#flags = ['validate_scania_highload', 'single']  # Scania validation high load
 flags = ['sweep_no_kth']  # Scania validation
+#flags = ['sweep_wiebe']
+#flags = ["single"]
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
@@ -56,7 +56,7 @@ data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr
 if 'single' in flags:
     start = timer()
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
-        heat_loss, p_tdc, outflow, no, imep = run_piston_engine(data, flags)
+        heat_loss, p_tdc, outflow, no, imep, EI_nox = run_piston_engine(data, flags)
     end = timer()
     print(f'Time: {end - start}')
 
@@ -79,8 +79,9 @@ if 'single' in flags:
     #print(f'mass flow out: {air_flow * (1 + far)}')
     #print(p_max)
     #print(T4)
-    print(eta_th)
+    #print(eta_th)
     #print(T_max)
+    print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}, EI_no: {EI_nox}")
 
 
 elif 'sweep' in flags:
@@ -124,6 +125,11 @@ elif 'sweep_no_kth' in flags:
     from piston_engine.src.misc.sweep_no_validation_kth import sweep_no_diesel_kth_validation
 
     sweep_no_diesel_kth_validation(d, flags)
+
+elif 'sweep_wiebe' in flags:
+    from piston_engine.src.misc.sweep_wiebe import sweep_wiebe
+
+    sweep_wiebe(d, flags)
 
 
 

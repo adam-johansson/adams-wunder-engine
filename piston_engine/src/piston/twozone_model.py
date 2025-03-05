@@ -201,5 +201,6 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     #print(lambda_gl, Astar, A, lambda_0)
     #print(f"Air-fuel trapped: {lambda_gl[0]}")
     #print(f"A: {Astar}")
+
     return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
 

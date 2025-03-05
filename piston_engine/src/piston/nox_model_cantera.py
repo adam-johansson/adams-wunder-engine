@@ -196,6 +196,7 @@ def nox_calculations(
 
 
         coefficients = "grimech"
+        #coefficients = "book"
 
         if coefficients == "book":
 
@@ -281,7 +282,7 @@ def nox_calculations(
         method="RK45",
         y0=np.array([0.0]),
         t_eval=times,
-        max_step=1e-4,
+        max_step=5e-5,
     )
 
     NO_mol = np.ndarray.flatten(sol.y[0])
@@ -319,4 +320,4 @@ def nox_calculations(
     #print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
     #print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
 
-    return no_concentration_mass, dNOdt_mol, times
+    return no_concentration_mass, dNOdt_mol, times, EI_nox

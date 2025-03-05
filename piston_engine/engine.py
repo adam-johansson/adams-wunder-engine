@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from timeit import default_timer as timer
+import time
 
 from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera
 #from piston_engine.src.piston import thermo_computations, polynomials
@@ -423,6 +424,12 @@ def run_piston_engine(indata, flags):
                 dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
                 dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi]
 
+
+    def stop_event(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
+        # Stop after 10 seconds
+        return time.time() - start_time - 5 - phi*1e-1
+
+
     # from initial guess of fuel air ratio
     equ_EP0 = far_tot / far_s
 
@@ -511,8 +518,11 @@ def run_piston_engine(indata, flags):
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='RK45', y0=x, t_eval=phi,
             #                rtol=5e-11)  # 1e-12 works
             try:
+                start_time = time.time()
+
+                stop_event.terminal = True
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                                rtol=1e-7, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
+                                rtol=1e-8, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
             except UserWarning as e:
                 print(e)
                 return np.zeros(nr_output)
@@ -737,7 +747,6 @@ def run_piston_engine(indata, flags):
         friction_losses = 0.0
         aux_losses = 0.0
 
-    print(f"Fuel injected: {mf_tot * 1e6} mg")
     # check for energy conservation
     # get the last values for the arrays for each iteration
     # mass in intake, fuel mass in, mass out outlet
@@ -757,7 +766,8 @@ def run_piston_engine(indata, flags):
     term2 = enthalpy_outs[-1] + heat_outs[-1] + works_outs[-1]
     diff = np.abs(term1 - term2)
 
-    print(f"Energy conservation: {diff / heat_ins[-1]}")
+    #print(f"Energy conservation: {diff / heat_ins[-1]}")
+    #print(f"Fuel injected: {mf_tot * 1e6} mg")
 
     if "validation" not in flags:
         # if energy error larger than 0.1% of fuel energy
@@ -810,8 +820,8 @@ def run_piston_engine(indata, flags):
 
         """
 
-        # Greek: 0.84. Heider: 0.9, Scania: 1.0
-        factor = 0.84
+        # Greek: 0.84. Heider: 0.91, Scania: 1.0
+        factor = 0.91
 
         # get temperature and mass from reaction zone
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
@@ -822,7 +832,7 @@ def run_piston_engine(indata, flags):
                                                                                                     factor)
 
         # start = timer()
-        no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+        no_ppm, dNOdt, no_times, EI_nox = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
@@ -950,4 +960,4 @@ def run_piston_engine(indata, flags):
 
 
     return T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
-        power_engine, friction_losses, aux_losses, heat_losses, p_tdc, out_flow, no_ppm[-1], imep
+        power_engine, friction_losses, aux_losses, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox
