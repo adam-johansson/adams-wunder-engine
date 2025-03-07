@@ -314,13 +314,13 @@ def H2O(T, p):
 
 
 @jit(nopython=True)
-def JETA(T):
+def JETA_L(T):
     # LIQUID JET A
 
     if T < 220 or T > 550:
         print(f"Temperature {T} outside valid range for Jet-A.")
         return
-    M = 167.31102e-3
+    M = 167.31102e-3 # kg/mol
     Rspec = R / M
 
     a1 = -4.218262130e+05
@@ -346,6 +346,68 @@ def JETA(T):
     h = h - hf   # J kg^-1
 
     return cp, h, s, M
+
+
+@jit(nopython=True)
+def JETA_G(T, p):
+    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
+    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    # Gaseous Jet A
+
+    if T > 6000:
+        T = 6000
+        #print(f'Temperature over 6000 K was found')
+    if T < 273.150:
+        T = 273.150
+        #print(f'Temperature under 200 K was found')
+
+    M = 167.31102e-3 # kg/mol
+    Rspec = R / M  # J kg^-1 K^-1
+
+    if T < 1000.0007:  # between 200K and 1000K
+        a1 = -6.068695590e+05
+        a2 =  8.328259590e+03
+        a3 = -4.312321270e+01
+        a4 =  2.572390455e-01
+        a5 = -2.629316040e-04
+        a6 = 1.644988940e-07
+        a7 = -4.645335140e-11
+        b1 = -7.606962760e+04
+        b2 = 2.794305937e+02
+    else:  # 1000K to 6000K
+        a1 = 1.858356102e+07
+        a2 = -7.677219890e+04
+        a3 =  1.419826133e+02
+        a4 = -7.437524530e-03
+        a5 = 5.856202550e-07
+        a6 = 1.223955647e-11
+        a7 = -3.149201922e-15
+        b1 =  4.221989520e+05
+        b2 = -8.986061040e+02
+
+    # mass specific constant pressure heat capacity
+    cp = Rspec * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 +
+                  a6 * T ** 3 + a7 * T ** 4)
+    # mass specific enthalpy
+    h = Rspec * T * (-a1 * T ** (-2) + a2 * log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 +
+                     a6 * T ** 3 / 4 + a7 * T ** 4 / 5 + b1 / T)
+    # standard state entropy, per mass
+    s = Rspec * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * log(T) + a4 * T +
+                 a5 * T ** 2 / 2 + a6 * T ** 3 / 3 + a7 * T ** 4 / 4 + b2)
+    # standard state molar Gibbs free energy, per mass
+    g = Rspec * T * (-a1 * T ** (-2) / 2 + a2 * T ** (-1) * (log(T) + 1) + a3 * (1 - log(T)) - a4 * T / 2 -
+                     a5 * T ** 2 / 6 - a6 * T ** 3 / 12 - a7 * T ** 4 / 20 + b1 / T - b2)
+
+    # standards state pressure is 1 bar
+    p_std = 1e5
+
+    # pressure dependence of the entropy
+    s = s - Rspec * log(p / p_std)
+
+    # pressure dependence of the Gibbs
+    #g = g + T * Rspec * log(p / p_std)
+
+    return cp, h, s, g, M
 
 
 @jit(nopython=True)
