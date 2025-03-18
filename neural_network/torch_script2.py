@@ -82,9 +82,9 @@ if __name__ == "__main__":
     # Insert code here to load your model as `trained_model`.
     # This example assumes my_ml_model has a method `initialize` to load
     # architecture, weights, and place in inference mode
-    folder = "H2"
-    hidden_dim = 32
-    layers = 1
+    folder = "straight"
+    hidden_dim = 2048
+    layers = 0
 
     trained_model = load_ANN(f'./models/{folder}_{hidden_dim}_{layers}.pth')
 
@@ -133,7 +133,10 @@ if __name__ == "__main__":
 
     # FPTLIB-TODO
     # Set the name of the file you want to save the torchscript model to:
-    saved_ts_filename = "models/torchscript/h2_ts_model_new.pt"
+    #saved_ts_filename = "models/torchscript/h2_ts_model_new.pt"
+    saved_ts_filename = "models/torchscript/jetA_ts_model.pt"
+
+
     # A filepath may also be provided. To do this, pass the filepath as an argument to
     # this script when it is run from the command line, i.e. `./pt2ts.py path/to/model`.
 
@@ -192,7 +195,7 @@ if __name__ == "__main__":
         print(f"ymax: {y_max}")
         ts_model_outputs = y_min + (y_max - y_min) * ts_model_outputs.detach().numpy()
 
-    elif trained_model == "standard":
+    elif trained_model.scaler == "standard":
         y_mean = trained_model.y_mean
         y_std = trained_model.y_std
 

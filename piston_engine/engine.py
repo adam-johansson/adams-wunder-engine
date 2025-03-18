@@ -43,8 +43,9 @@ def run_piston_engine(indata, flags):
     [p_in, T_in, p_ratio, cycle, thermo_unused, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
      valve_timings, n_valve, lv_max, cd, eta_c, mf_tot, wa, wm, m_wiebe,
      phi_sc, phi_cd, T_fuel, p_fuel, it, wiebe_type, valve_type, far_goal, cylinders, fuel_type,
-     c1, c4, c5] = indata
+     c1, c4, c5, mixture_formation] = indata
 
+    # outlet pressure
     p_out = p_ratio * p_in
 
     Twalls = np.array(Twalls)
@@ -55,7 +56,7 @@ def run_piston_engine(indata, flags):
     phi_close_out = valve_timings[3]
 
     # number of outputs from the function
-    nr_output = 16
+    nr_output = 17
 
     s = d/bsr  # stroke retrieved from bore stroke ratio
     l_con = s/(2*lms)  # connecting rod length
@@ -70,19 +71,17 @@ def run_piston_engine(indata, flags):
     V_clearance = V_d / (cr - 1)
     V_max = V_clearance + V_d
 
-    rpm = v_mean / (2 * s) * 60
-
-    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equ=0, fuel_type=fuel_type)  # assuming pure air in intake
-
-    #R_in = Runiv / M_in
-    rho_in = p_in / (R_in * T_in)
-
     far_s, LHV = thermo.fuel_props(fuel_type)
+
+    # assuming pure air in intake for direct injection and a fuel-air mixture for external mixture formation
+    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equ=0, fuel_type=fuel_type, premixed=mixture_formation, equ_fuel=far_goal/far_s)
+
+    rho_in = p_in / (R_in * T_in)
 
     phi_ec = (phi_sc + phi_cd)  # angle at combustion end
 
     if fuel_type == 'jetA':
-        cp_fuel, h_fuel, _, _ = thermo.polynomials.JETA(T_fuel)
+        cp_fuel, h_fuel, _, _ = thermo.polynomials.JETA_L(T_fuel)
     elif fuel_type == 'H2':
         cp_fuel, h_fuel, s_fuel, _, M_fuel = thermo.polynomials.H2(T_fuel, p_fuel)
     else:
@@ -130,6 +129,7 @@ def run_piston_engine(indata, flags):
     m0 = rho0 * V1[0]
 
     if 'fuel_mass' in flags:
+        # I DONT THINK THIS WORKS
         # this is used for efficiency calcuations
         Qf = LHV * mf_tot
 
@@ -182,9 +182,11 @@ def run_piston_engine(indata, flags):
         h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type)
 
         # Intake port values
+        #TODO: CHANGE FOR PREMIXED
         h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type)
 
         # Exhaust port values
+        # TODO: CHANGE FOR PREMIXED
         h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP, _ = thermo.mixture(T_EP, p_out, equ_EP, fuel_type)
 
         # Phi derivative of the volume (without Taylor expansion)
@@ -202,6 +204,7 @@ def run_piston_engine(indata, flags):
         t_eoc = phi_ec / np.pi * s / v_mean
 
         # Rate of added heat through combustion
+        # TODO: CHANGE FOR PREMIXED
         if wiebe_type == "Kaiser":
             dqfdphi = wiebe.dqfdt_kaiser(Qf, t, t_soc, t_eoc, wa, wm) * dtdphi
             # Rate of injected fuel mass
@@ -315,9 +318,11 @@ def run_piston_engine(indata, flags):
 
         h_in_IP = h_in
 
+        # TODO: CHANGE FOR PREMIXED
         dellRdellequ_IP, delludellequ_IP = \
             thermo.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type)
 
+        # TODO: MAYBE CHANGE FOR PREMIXED
         term1 = T_IP + h_out_IP / cv_IP + \
             (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (cv_IP * (1 + equ_out_IP * far_s)) * delludellequ_IP - \
             (T_IP / R_IP) * (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (1 + equ_out_IP * far_s)
@@ -331,6 +336,7 @@ def run_piston_engine(indata, flags):
         # Continuity equation of the intake port
         dmdphi_IP = dmindphi_IP - dmindphi
 
+        # TODO: MAYBE CHANGE FOR PREMIXED
         # Change of equivalence ratio in the intake port
         dequdphi_IP = ((1 + equ_IP * far_s) / m_IP) * (
                 (equ_IP - equ_out_IP) * dmindphi / (1 + equ_out_IP * far_s) - equ_IP * dmindphi_IP)
@@ -353,6 +359,7 @@ def run_piston_engine(indata, flags):
         # Assuming backflow into exhaust port has same properties as exhaust port
         h_out_EP = h_EP
 
+        # TODO: MAYBE CHANGE FOR PREMIXED
         dellRdellequ_EP, delludellequ_EP = \
             thermo.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type)
 
@@ -397,6 +404,7 @@ def run_piston_engine(indata, flags):
             h_out_cyl = h_EP
 
         # Energy equation
+        # TODO: MAYBE CHANGE FOR PREMIXED
         # no heat addition term here. It is incorporated in the enthalpies
         dudphi = (- dqdphi - P * dVdphi - u * dmdphi + dmfdphi * h_fuel +
                   dmindphi * h_in_cyl - dmoutdphi * h_out_cyl) / m

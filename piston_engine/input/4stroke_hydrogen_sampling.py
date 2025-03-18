@@ -10,6 +10,9 @@ thermo = "NASA"
 cooling = "Woschni"
 #cooling = "H2"
 
+# premixed or direct_injection or external?
+mixture_formation = "premixed"
+
 opposed = False
 cr = 6
 
@@ -36,7 +39,7 @@ Thead = 600
 Twalls = [Twall, Tpiston, Thead]
 
 
-ch = 1.8  # multiplier to decrease/increase heat transfer
+ch = 1.4  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
 phi_open_in = (715/180)*np.pi  # pressure rise
