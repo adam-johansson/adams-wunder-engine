@@ -447,7 +447,7 @@ def run_piston_engine(indata, flags):
     equ_EP0 = far_tot / far_s
 
     # Init simulation
-    x = [T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1*m0, T_in, 0.0, m0 * 1e-3, T_in, equ_EP0, 0.0,
+    x = [T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m0*1e-1, T_in, 0.0, m0 * 1e-5, T_in, equ_EP0, 0.0,
          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # initial state value
 
     T = []
@@ -486,6 +486,8 @@ def run_piston_engine(indata, flags):
     mf_diff = []
     mEP_diff = []
     mIP_diff = []
+    T_EP_diff = []
+    T_IP_diff = []
 
     Pref = p_in
     Tref = T_in
@@ -523,7 +525,9 @@ def run_piston_engine(indata, flags):
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='Radau', y0=x, t_eval=phi,
             #                rtol=1e-12)
             sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                            rtol=1e-9, atol=1e-12)
+                            rtol=1e-8, atol=1e-12)
+            #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='RK45', y0=x, t_eval=phi,
+            #                rtol=1e-3, atol=1e-6, max_step=(max(phi)-min(phi))/1e4)
             # Radau/LSODA (if LSODA you dont see mdotin and mdotout)
         elif cycle == "4T":
             # LSODA IS THE FASTEST AND PROBABLY MOST ROBUST. RK45 with rtol 1e-12 also works but is a bit slower
@@ -549,6 +553,8 @@ def run_piston_engine(indata, flags):
             equdiff.append(np.abs(sol.y[9][-1] - equ[-1][-1]))
             mEP_diff.append(np.abs(sol.y[15][-1] - m_EP[-1][-1]))
             mIP_diff.append(np.abs(sol.y[12][-1] - m_IP[-1][-1]))
+            T_EP_diff.append(np.abs(sol.y[16][-1] - T_EP[-1][-1]))
+            T_IP_diff.append(np.abs(sol.y[13][-1] - T_IP[-1][-1]))
 
 
         T.append(sol.y[0])
@@ -897,7 +903,7 @@ def run_piston_engine(indata, flags):
                                                             plot_energyconservation, plot_convergence2)
 
             plot_convergence(pdiff, Tdiff, mdiff, equdiff, T_out_diff, mf_diff)
-            plot_convergence2(mEP_diff, mIP_diff)
+            plot_convergence2(mEP_diff, mIP_diff, T_EP_diff, T_IP_diff)
             plot_massconservation(inflows, fuel_flows, outflows)
             plot_energyconservation(enthalpy_ins, heat_ins, fuel_enthalpy_ins, enthalpy_outs, heat_outs, works_outs)
 

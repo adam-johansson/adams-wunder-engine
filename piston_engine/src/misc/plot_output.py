@@ -645,11 +645,13 @@ def plot_energyconservation(enthalpy_in, heat_in, fuel_enthalpy_in, enthalpy_out
     plt.show()
     return
 
-def plot_convergence2(mEPdiff, mIPdiff):
-    fig, (ax1, ax2) = plt.subplots(2, 1)
+def plot_convergence2(mEPdiff, mIPdiff, TEPdiff, TIPdiff):
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
 
     ax1.plot(mEPdiff[1:])
     ax2.plot(mIPdiff[1:])
+    ax3.plot(TEPdiff[1:])
+    ax4.plot(TIPdiff[1:])
 
 
     ax1.set_ylabel(r'mEP diff [kg]')
@@ -661,6 +663,16 @@ def plot_convergence2(mEPdiff, mIPdiff):
     ax2.set_xticklabels([])
     ax2.grid()
     ax2.set_yscale('log')
+
+    ax3.set_ylabel(r'T EP diff [K]')
+    ax3.set_xticklabels([])
+    ax3.grid()
+    ax3.set_yscale('log')
+
+    ax4.set_ylabel(r'T IP diff [K]')
+    ax4.set_xticklabels([])
+    ax4.grid()
+    ax4.set_yscale('log')
 
     return
 

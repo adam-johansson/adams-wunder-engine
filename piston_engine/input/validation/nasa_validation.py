@@ -54,7 +54,7 @@ n_valve = 2
 # den används såklart inte för vi har ports
 lv_max = 0.01235
 # cd = 0.84 worked well
-cd = 0.84
+cd = 0.8
 
 # this is assumed in the wiebe function
 eta_c = 0.999
@@ -78,7 +78,7 @@ T_fuel = 300
 p_fuel = 2500e5
 
 # used to be 30
-it = 100
+it = 300
 
 far_goal = 0  # just for input so program is satisfied
 cylinders = 1
