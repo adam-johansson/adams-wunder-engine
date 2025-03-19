@@ -15,8 +15,8 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen"
 #input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-#input_file = "validation.nasa_validation_new"
-input_file = "4stroke_hydrogen_sampling"
+input_file = "validation.nasa_validation_new"
+#input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
@@ -34,7 +34,7 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
 #flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
@@ -45,13 +45,13 @@ d = importlib.import_module(path)
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ['sweep_no_kth']  # Scania validation
 #flags = ['sweep_wiebe']
-flags = ["single", "plot_essentials"]
+#flags = ["single", "plot_essentials"]
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
         d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
         d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, d.far_goal,
-        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+        d.cylinders, d.fuel, d.c1, d.c4, d.c5, d.premixed]
 
 if 'single' in flags:
     start = timer()

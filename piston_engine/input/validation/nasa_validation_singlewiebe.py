@@ -50,7 +50,7 @@ valve_type = "port"
 n_valve = 2
 
 lv_max = 0.01235
-cd = 0.84
+cd = 0.8
 
 eta_c = 1.0
 

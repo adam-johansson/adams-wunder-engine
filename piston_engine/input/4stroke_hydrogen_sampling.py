@@ -11,7 +11,7 @@ cooling = "Woschni"
 #cooling = "H2"
 
 # premixed or direct_injection or external?
-mixture_formation = "premixed"
+premixed = False
 
 opposed = False
 cr = 6

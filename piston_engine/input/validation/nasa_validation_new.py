@@ -8,6 +8,8 @@ fuel = 'jetA'
 cooling = "Hohenberg"
 #cooling = "Woschni"
 
+premixed = False
+
 opposed = True
 cr = 9.1712  # geometric compression ratio
 
@@ -67,7 +69,7 @@ wa = 6
 wm = 0.94
 
 # this if for single wiebe function from NASA validation paper
-m_wiebe = 3.5
+m_wiebe = 1.0
 
 phi_sc = (345/180)*np.pi  # angle at combustion start
 phi_cd = (55/180)*np.pi  # angle related to combustion duration

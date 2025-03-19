@@ -43,7 +43,7 @@ def run_piston_engine(indata, flags):
     [p_in, T_in, p_ratio, cycle, thermo_unused, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
      valve_timings, n_valve, lv_max, cd, eta_c, mf_tot, wa, wm, m_wiebe,
      phi_sc, phi_cd, T_fuel, p_fuel, it, wiebe_type, valve_type, far_goal, cylinders, fuel_type,
-     c1, c4, c5, mixture_formation] = indata
+     c1, c4, c5, premixed] = indata
 
     # outlet pressure
     p_out = p_ratio * p_in
@@ -74,7 +74,7 @@ def run_piston_engine(indata, flags):
     far_s, LHV = thermo.fuel_props(fuel_type)
 
     # assuming pure air in intake for direct injection and a fuel-air mixture for external mixture formation
-    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equ=0, fuel_type=fuel_type, premixed=mixture_formation, equ_fuel=far_goal/far_s)
+    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equ=0, fuel_type=fuel_type, pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
 
     rho_in = p_in / (R_in * T_in)
 
@@ -179,15 +179,20 @@ def run_piston_engine(indata, flags):
 
 
         # Gas properties inside the cylinder
-        h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type)
+        h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type,
+                                                            pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
 
         # Intake port values
         #TODO: CHANGE FOR PREMIXED
-        h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type)
+        h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type,
+                                                                                 pure_fuel=premixed,
+                                                                                 fuel_equ_ratio=far_goal/far_s)
 
         # Exhaust port values
         # TODO: CHANGE FOR PREMIXED
-        h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP, _ = thermo.mixture(T_EP, p_out, equ_EP, fuel_type)
+        h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP, _ = thermo.mixture(T_EP, p_out, equ_EP, fuel_type,
+                                                                                 pure_fuel=premixed,
+                                                                                 fuel_equ_ratio=far_goal/far_s)
 
         # Phi derivative of the volume (without Taylor expansion)
         # Opposed piston
@@ -518,7 +523,7 @@ def run_piston_engine(indata, flags):
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='Radau', y0=x, t_eval=phi,
             #                rtol=1e-12)
             sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                            rtol=1e-10, atol=1e-12)
+                            rtol=1e-9, atol=1e-12)
             # Radau/LSODA (if LSODA you dont see mdotin and mdotout)
         elif cycle == "4T":
             # LSODA IS THE FASTEST AND PROBABLY MOST ROBUST. RK45 with rtol 1e-12 also works but is a bit slower
@@ -613,13 +618,15 @@ def run_piston_engine(indata, flags):
             # avg far
             far_avg = mf_tot / m_in_IP[-1][-1]
             def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_avg / far_s, fuel_type)
+                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_avg / far_s, fuel_type,
+                                                        pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
                 return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
         else:
             #using far_goal for t_out calculations should be good since that is the average far in exhaust
             def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_goal / far_s, fuel_type)
+                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_goal / far_s, fuel_type,
+                                                        pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
                 return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
 
@@ -777,56 +784,16 @@ def run_piston_engine(indata, flags):
     #print(f"Energy conservation: {diff / heat_ins[-1]}")
     #print(f"Fuel injected: {mf_tot * 1e6} mg")
 
-    if "validation" not in flags:
-        # if energy error larger than 0.1% of fuel energy
-        if np.abs(diff / heat_ins[-1]) > 0.001:
-            print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
-            return np.zeros(nr_output)
+    # if energy error larger than 0.1% of fuel energy
+    if np.abs(diff / heat_ins[-1]) > 0.001:
+        print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
+        return np.zeros(nr_output)
 
-
-    if "validation" not in flags:
-
+    if cycle == "4T":
         ## NOX calculations
         # get the heat addition from fuel curve
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
-        """
-        num = 10
-        factors = np.linspace(0.5, 1.0, num)
-
-        noxss = []
-        temps = []
-        start = timer()
-        for factor in factors:
-            # get temperature and mass from reaction zone
-            T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp = twozone_model.twozone(phi, P[-1], T[-1], V[-1], m[-1], dmfdphi,
-                                                                              phi_open_out, phi_sc, LHV, far_s,
-                                                                              equ[-1], fuel_type, factor)
-
-
-            #start = timer()
-            no_ppm, dNOdt, no_times = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1, rpm,
-                                              m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped)
-            #end = timer()
-            #print(f'NOx calculations done in: {end - start} [s]')
-            noxss.append(no_ppm[-1])
-            temps.append(no_ppm)
-
-        end = timer()
-        print(f'NOx calculations done in: {end - start} [s]')
-
-        fig, ax1 = plt.subplots()
-        ax1.plot(factors, noxss)
-
-        fig, ax2 = plt.subplots()
-        for i in range(0, num):
-            #ax2.plot(temps[i][:], label=f"factor: {i}")
-            ax2.plot(temps[i][:])
-
-        #plt.legend()
-        plt.show()
-
-        """
 
         # Greek: 0.84. Heider: 0.91, Scania: 1.0
         factor = 0.91
@@ -843,6 +810,10 @@ def run_piston_engine(indata, flags):
         no_ppm, dNOdt, no_times, EI_nox = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+    elif cycle == "2T":
+        EI_nox = 999
+        no_ppm = np.array([999])
 
 
     # post processing
@@ -963,7 +934,6 @@ def run_piston_engine(indata, flags):
             from piston_engine.src.misc.output import output_power
             output_power(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single,
                          equ_avg)
-
 
 
 

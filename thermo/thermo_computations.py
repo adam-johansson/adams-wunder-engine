@@ -1,10 +1,10 @@
-from thermo.polynomials import N2, O2, CO2, H2O, Ar
+from thermo.polynomials import N2, O2, CO2, H2O, Ar, JETA_G, H2
 #from scipy.optimize import fsolve
 from numba import jit
 
 
 @jit(nopython=True)
-def mixture(t, p, equ=0, fuel_type=False):
+def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
     """
     Function that return thermodynamic properties of a mixture based on the 
     properties of the individual species. This is for a combustion gas of
@@ -49,12 +49,31 @@ def mixture(t, p, equ=0, fuel_type=False):
 
     Runiv = 8.3144626  # J mol^-1 K^-1
 
-    # O2 + N2 + Ar
-    N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
+    # The amount of moles of the gas before combustion. Could be pure air or air + fuel mixture
+
+    if pure_fuel is True and fuel_type == "jetA":
+        # O2 + N2 + Ar + C12H23
+        N_air = 1 + 3.7274 + 0.0444 + fuel_equ_ratio * (1 / 17.75)
+        x_JETA_air = fuel_equ_ratio * (1 / 17.75) / N_air  # molar fraction of C12H23
+        x_H2_air = 0.0  # molar fraction of H2 (0 for JetA)
+        _, _, _, _, M_JETA = JETA_G(t, p)
+        _, _, _, _, M_H2 = H2(t, p)
+
+    elif pure_fuel is True and fuel_type == "H2":
+        # O2 + N2 + Ar + H2
+        N_air = 1 + 3.7274 + 0.0444 + fuel_equ_ratio * 2
+        x_H2_air = fuel_equ_ratio * 2 / N_air  # molar fraction of H2
+        x_JETA_air = 0.0  # molar fraction of JetA (0 for H2)
+        _, _, _, _, M_H2 = H2(t, p)
+        _, _, _, _, M_JETA = JETA_G(t, p)
+
+    else:
+        # O2 + N2 + Ar
+        N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air (per 1 mole of O2)
+
     x_O2_air = 1 / N_air  # molar fraction of O2
     x_N2_air = 3.7274 / N_air  # molar fraction of N2
     x_Ar_air = 0.0444 / N_air  # molar fraction of Ar
-    x_CO2_air = 0  # no co2 in air for now
 
     # retrieve the molar masses
     _, _, _, _, M_N2 = N2(t, p)
@@ -63,10 +82,20 @@ def mixture(t, p, equ=0, fuel_type=False):
     _, _, _, _, M_H2O = H2O(t, p)
     _ ,_, _, _, M_CO2 = CO2(t, p)
 
-    M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_CO2_air * M_CO2
-    # air consisting of N2, O2, Ar and CO2
+    if pure_fuel:
+        # fuel in mixture
+        M_air = (x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar + x_JETA_air * M_JETA
+                 + x_H2_air * M_H2)
+    else:
+        # no fuel in mixture
+        M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar
 
     if equ == 0:
+
+        if pure_fuel:
+            mu_JETA = x_JETA_air * (M_JETA / M_air)
+            mu_H2 = x_H2_air * (M_H2 / M_air)
+
         # if the fluid is pure air
         mu_N2 = x_N2_air * (M_N2 / M_air)  # mass fraction of N2 in the fluid
         mu_O2 = x_O2_air * (M_O2 / M_air)  # mass fraction of O2 in the fluid
@@ -77,54 +106,117 @@ def mixture(t, p, equ=0, fuel_type=False):
         M = M_air
 
     else:
-        if fuel_type == 'jetA':
-            N = 5.75 * equ + 17.75 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+        # THIS IS FORE THE CASE OF FUEL IN THE AIR
+        if pure_fuel is True:
+            if fuel_type == 'jetA':
 
-            f1 = 17.75 * (x_N2_air / x_O2_air)  # N2
-            f2 = 17.75 * (1 - equ)  # O2
-            f3 = 12 * equ  # CO2
-            f4 = 11.5 * equ  # H2O
-            f5 = 17.75 * (x_Ar_air / x_O2_air)  # Ar
+                # (CO2 + H2O - O2 - JETA) * equ + O2 + N2 + Ar + JETA
+                N = 4.75 * equ + 17.75 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air) + 1  # total number of moles in gas
 
-            x_N2 = f1 / N  # molar fractions
-            x_O2 = f2 / N
-            x_CO2 = f3 / N
-            x_H2O = f4 / N
-            x_Ar = f5 / N
+                f1 = 17.75 * (x_N2_air / x_O2_air)  # N2
+                f2 = 17.75 * (1 - equ)  # O2
+                f3 = 12 * equ  # CO2
+                f4 = 11.5 * equ  # H2O
+                f5 = 17.75 * (x_Ar_air / x_O2_air)  # Ar
+                f6 = 1 - equ  # C12H23
 
-            M = x_N2 * M_N2 + x_O2 * M_O2 + x_CO2 * M_CO2 + x_H2O * M_H2O + x_Ar * M_Ar  # molar mass of the fluid
+                x_N2 = f1 / N  # molar fractions
+                x_O2 = f2 / N
+                x_CO2 = f3 / N
+                x_H2O = f4 / N
+                x_Ar = f5 / N
+                x_JETA = f6 / N
 
-            mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
-            mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
-            mu_CO2 = x_CO2 * (M_CO2 / M)  # mass fraction of CO2 in the fluid
-            mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
-            mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
+                M = x_N2 * M_N2 + x_O2 * M_O2 + x_CO2 * M_CO2 + x_H2O * M_H2O + x_Ar * M_Ar + x_JETA * M_JETA  # molar mass of the fluid
 
-        elif fuel_type == 'H2':
-            N = 0.5 * equ + 0.5 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+                mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
+                mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
+                mu_CO2 = x_CO2 * (M_CO2 / M)  # mass fraction of CO2 in the fluid
+                mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
+                mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
+                mu_JETA = x_JETA * (M_JETA / M)  # mass fraction of Ar in the fluid
 
-            f1 = 0.5 * (x_N2_air / x_O2_air)  # N2
-            f2 = 0.5 * (1 - equ)  # O2
-            f4 = equ  # H2O
-            f5 = 0.5 * (x_Ar_air / x_O2_air)  # Ar
+            elif fuel_type == 'H2':
+                # (H2O - O2 - H2) * equ + O2 + N2 + Ar + H2
+                N = - 0.5 * equ + 0.5 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air) + 1  # total number of moles in gas
 
-            x_N2 = f1 / N  # molar fractions
-            x_O2 = f2 / N
-            x_H2O = f4 / N
-            x_Ar = f5 / N
+                f1 = 0.5 * (x_N2_air / x_O2_air)  # N2
+                f2 = 0.5 * (1 - equ)  # O2
+                f4 = equ  # H2O
+                f5 = 0.5 * (x_Ar_air / x_O2_air)  # Ar
+                f6 = 1 - equ # H2
 
-            M = x_N2 * M_N2 + x_O2 * M_O2 + x_H2O * M_H2O + x_Ar * M_Ar  # molar mass of the fluid
+                x_N2 = f1 / N  # molar fractions
+                x_O2 = f2 / N
+                x_H2O = f4 / N
+                x_Ar = f5 / N
+                x_H2 = f6 / N
 
-            mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
-            mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
-            mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
-            mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
-            mu_CO2 = 0.0  # no CO2 for H2
+                M = x_N2 * M_N2 + x_O2 * M_O2 + x_H2O * M_H2O + x_Ar * M_Ar + x_H2 * M_H2  # molar mass of the fluid
 
+                mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
+                mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
+                mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
+                mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
+                mu_CO2 = 0.0  # no CO2 for H2
+                mu_H2 = x_H2 * (M_H2 / M)  # mass fraction of H2 in the fluid
+
+            else:
+                raise Exception('Fuel type must be specified.')
+
+         # THIS IS FOR NO FUEL IN THE AIR. ONLY PURE AIR AND COMBUSTION PRODUCTS
         else:
-            raise Exception('Fuel type must be specified.')
+            if fuel_type == 'jetA':
+                N = 5.75 * equ + 17.75 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+
+                f1 = 17.75 * (x_N2_air / x_O2_air)  # N2
+                f2 = 17.75 * (1 - equ)  # O2
+                f3 = 12 * equ  # CO2
+                f4 = 11.5 * equ  # H2O
+                f5 = 17.75 * (x_Ar_air / x_O2_air)  # Ar
+
+                x_N2 = f1 / N  # molar fractions
+                x_O2 = f2 / N
+                x_CO2 = f3 / N
+                x_H2O = f4 / N
+                x_Ar = f5 / N
+
+                M = x_N2 * M_N2 + x_O2 * M_O2 + x_CO2 * M_CO2 + x_H2O * M_H2O + x_Ar * M_Ar  # molar mass of the fluid
+
+                mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
+                mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
+                mu_CO2 = x_CO2 * (M_CO2 / M)  # mass fraction of CO2 in the fluid
+                mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
+                mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
+
+            elif fuel_type == 'H2':
+                N = 0.5 * equ + 0.5 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+
+                f1 = 0.5 * (x_N2_air / x_O2_air)  # N2
+                f2 = 0.5 * (1 - equ)  # O2
+                f4 = equ  # H2O
+                f5 = 0.5 * (x_Ar_air / x_O2_air)  # Ar
+
+                x_N2 = f1 / N  # molar fractions
+                x_O2 = f2 / N
+                x_H2O = f4 / N
+                x_Ar = f5 / N
+
+                M = x_N2 * M_N2 + x_O2 * M_O2 + x_H2O * M_H2O + x_Ar * M_Ar  # molar mass of the fluid
+
+                mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
+                mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
+                mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
+                mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
+                mu_CO2 = 0.0  # no CO2 for H2
+
+            else:
+                raise Exception('Fuel type must be specified.')
 
     # partial pressures
+    if pure_fuel:
+        p_JETA = mu_JETA * p
+        p_H2 = mu_H2 * p
     p_N2 = mu_N2 * p
     p_O2 = mu_O2 * p
     p_Ar = mu_Ar * p
@@ -141,10 +233,24 @@ def mixture(t, p, equ=0, fuel_type=False):
     if mu_CO2 > 0:
         cp_CO2, h_CO2, s_CO2, _, M_CO2 = CO2(t, p_CO2)
 
-    cp = mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar  # heat capacity at constant
-    # pressure
-    h = mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar  # specific enthalpy
-    s = mu_N2 * s_N2 + mu_O2 * s_O2 + mu_CO2 * s_CO2 + mu_H2O * s_H2O + mu_Ar * s_Ar  # specific entropy
+    if pure_fuel:
+        if mu_JETA > 0:
+            cp_JETA, h_JETA, s_JETA, _, M_JETA = JETA_G(t, p_JETA)
+        if mu_H2 > 0:
+            cp_H2, h_H2, s_H2, _, M_H2 = H2(t, p_H2)
+
+    if pure_fuel:
+        cp = (mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar
+              + mu_JETA * cp_JETA + mu_H2 * cp_H2)
+        h = (mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar
+             + mu_JETA * h_JETA + mu_H2 * h_H2)
+        s = (mu_N2 * s_N2 + mu_O2 * s_O2 + mu_CO2 * s_CO2 + mu_H2O * s_H2O + mu_Ar * s_Ar
+             + mu_JETA * s_JETA + mu_H2 * s_H2)
+    else:
+        cp = mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar  # heat capacity at constant
+        # pressure
+        h = mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar  # specific enthalpy
+        s = mu_N2 * s_N2 + mu_O2 * s_O2 + mu_CO2 * s_CO2 + mu_H2O * s_H2O + mu_Ar * s_Ar  # specific entropy
 
     R = Runiv / M  # specific gas constant
     u = h - R * t  # inner energy

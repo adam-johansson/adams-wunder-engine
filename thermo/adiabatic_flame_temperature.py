@@ -1,7 +1,7 @@
 from scipy.optimize import brentq
 from thermo import mixture, fuel_props, molar_fractions
 import CEA_Wrap as cea
-from thermo.polynomials import JETA, H2
+from thermo.polynomials import JETA_L, H2
 import cantera as ct
 
 
