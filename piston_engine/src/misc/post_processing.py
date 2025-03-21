@@ -2,9 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def friction_kaiser(d, rpm, s, v_mean, p_in, cr):
+def friction_kaiser(d, s, v_mean, p_in, cr):
     # Crankshaft losses
     # NOTES: model sensitive to main bearing diameter predictions
+
+    rpm = v_mean / (2 * s) * 60
 
     n_b = 2  # number of bearings: (1 + n_cyl for inline and 1 + 0.5*n_cyl for V)
     d_b = 0.62 * d  # main bearing diameter [m]. ( this is for 2 connecting rods per crank pin (typical v8))
@@ -52,7 +54,7 @@ def friction_kaiser(d, rpm, s, v_mean, p_in, cr):
     return fmep
 
 
-def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max):
+def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycle):
     # Note that this model is for spark ignition engines
     # All units here are in mm and kPa. Velocity in m/s
     # Converting all lengths to mm from m
@@ -150,7 +152,26 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max):
     #fmep = (fmep_crankshaft + fmep_piston) * 1e3  # for two-stroke
 
     # multiply by 1000 so that the unit is Pa for output
-    return fmep * 1e3, fmep_aux * 1e3, fmep_pe_loss * 1e3
+    fmep = fmep * 1e3,
+    fmep_aux = fmep_aux * 1e3
+    fmep_pe_loss = fmep_pe_loss * 1e3
+
+    # convert to power
+    if cycle == '4T':
+        n_r = 2
+    else:
+        n_r = 1
+
+    rps = rpm / 60
+
+    Vd_tot = (d_meter/2)**2 * np.pi * s_meter * n_cyl
+
+    # convert losses to power
+    friction_loss = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+    aux_loss = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
+    total_loss = friction_loss + aux_loss
+
+    return friction_loss, aux_loss, total_loss
 
 
 def scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_d, m):

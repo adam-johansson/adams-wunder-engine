@@ -49,7 +49,7 @@ def sweep_no_diesel_kth_validation(d, flags):
                 d.v_mean, d.lms, Twalls, d.ch,
                 d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
                 d.wm, m_wiebe_adjusted, phi_sc, phi_cd_adjusted, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
-                d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                d.cylinders, d.fuel, d.c1, d.c4, d.c5, d.premixed]
 
         if p_in > 1.7e5:
             flags.append('validate_scania_lowload')
@@ -96,7 +96,7 @@ def sweep_no_diesel_kth_validation(d, flags):
                 d.v_mean, d.lms, Twalls, d.ch,
                 d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
                 d.wm, m_wiebe_adjusted, phi_sc, phi_cd_adjusted, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
-                d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                d.cylinders, d.fuel, d.c1, d.c4, d.c5, d.premixed]
 
 
         if p_in > 1.7e5:

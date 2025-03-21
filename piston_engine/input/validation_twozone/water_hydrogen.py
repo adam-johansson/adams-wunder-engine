@@ -8,46 +8,46 @@ thermo = "NASA"
 
 #cooling = "Hohenberg"
 cooling = "Woschni"
-#cooling = "H2"
 
 # premixed or direct_injection or external?
-premixed = False
+premixed = True
 
 opposed = False
-cr = 6
+cr = 9
 
 cylinders = 1  # for sampling data use 1
 
 # piston
-d = 0.10  # diameter / bore
-# s = 0.074676  # stroke
-v_mean = 15.0  # mean velocity
-# l_con = 0.182067  # rod length
-bsr = 1.0  # bore stroke ratio
-lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
+d = 0.085  # diameter / bore
+s = 0.09  # stroke
+v_mean = (2500 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+l_con = 0.1395  # rod length
+bsr = d / s  # bore stroke ratio
+rod_stroke_ratio = l_con / s
+lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio
 
 # inlet and outlet conditions
 p_in = 1e5  # inlet pressure
-T_in = 300  # inlet temperature
-#T_in = 1000
-p_ratio = 0.9  # pressure ratio after and before engine
+T_in = 298  # inlet temperature
+
+p_ratio = 1.0  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 500          # Wall temperature
-Tpiston = 600
-Thead = 600
+Twall = 400          # Wall temperature
+Tpiston = 400
+Thead = 400
 Twalls = [Twall, Tpiston, Thead]
 
 
 ch = 1.4  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
-phi_open_in = (715/180)*np.pi  # pressure rise
-phi_close_in = (918/180)*np.pi  # pressure rise
+phi_open_in = (716/180)*np.pi  #
+phi_close_in = (938/180)*np.pi  #
 
 # outlet valve
-phi_open_out = (515/180)*np.pi  # for pressure rise
-phi_close_out = (729/180)*np.pi  # for pressure rise
+phi_open_out = (505/180)*np.pi  #
+phi_close_out = (717/180)*np.pi  #
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -60,7 +60,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-far_goal = 0.0291755 / 1.0
+far_goal = 0.0291755 / 2.0
 
 
 wiebe_type = "Single"
@@ -74,10 +74,10 @@ wm = 0.6
 m_wiebe = 1.75  # from validation italian
 
 phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
-phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation italian
+phi_cd = (55/180)*np.pi  # angle related to combustion duration from validation italian
 
-T_fuel = 450
-p_fuel = 300e5
+T_fuel = 300
+p_fuel = 50e5
 
 it = 100
 

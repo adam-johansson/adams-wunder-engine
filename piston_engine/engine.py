@@ -151,7 +151,7 @@ def run_piston_engine(indata, flags):
         far_tot = far_goal
         Qf = LHV * mf_tot  #hmmm eta_c or not
 
-        print(f"Equ in intake: {far_goal / far_s}")
+        #print(f"Equ in intake: {far_goal / far_s}")
 
     @jit(nopython=True)
     def dxdphi(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
@@ -547,7 +547,7 @@ def run_piston_engine(indata, flags):
 
                 stop_event.terminal = True
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                                rtol=1e-8, atol=1e-12)  # 1e-12 needed to not fuck up with latest limits
+                                rtol=1e-8, atol=1e-10)  # 1e-12 needed to not fuck up with latest limits
             except UserWarning as e:
                 print(e)
                 return np.zeros(nr_output)
@@ -732,15 +732,21 @@ def run_piston_engine(indata, flags):
     Vd_tot = V_d * cylinders
 
     if 'sweep' not in flags:
-        fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders, lv_max)
-        bmep = imep - fmep
+        #fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders, lv_max)
+        #bmep = imep - fmep
 
-        friction_power = fmep * V_d * rps / n_r  # power lost from piston to crankshaft
-        break_power = bmep * V_d * rps / n_r  # total power at the crankshaft
+        #friction_power = fmep * V_d * rps / n_r  # power lost from piston to crankshaft
+        #break_power = bmep * V_d * rps / n_r  # total power at the crankshaft
 
-        # Calculate some scavenging things
-        purity, residual_fraction, eta_trapping, eta_charging, delivery_ratio, eta_sc = \
-            post_processing.scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_d, m)
+        tot_loss_power, aux_loss_power, friction_loss_power = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders,
+                                                                        lv_max, cycle)
+
+        break_power = power_engine - tot_loss_power
+
+        if not premixed:
+            # Calculate some scavenging things
+            purity, residual_fraction, eta_trapping, eta_charging, delivery_ratio, eta_sc = \
+                post_processing.scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_d, m)
 
     heat_loss_single = Q[-1][-1] / t_cycle
 
@@ -768,12 +774,11 @@ def run_piston_engine(indata, flags):
     # Maximum pressure before combustion (for calculating injector pressure)
     p_tdc = P[-1][np.argwhere(phi >= 2*np.pi)[0][0]]
 
-    # For multiple cylinders. Values for the entire engine (for example for one V10 engine)
     if "sweep" not in flags:
-        friction_power_engine = fmep * Vd_tot * rps / n_r  # power lost from piston to crankshaft
-        break_power_engine = break_power * cylinders  # total power at the crankshaft
-        friction_losses = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
-        aux_losses = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
+        #friction_power_engine = fmep * Vd_tot * rps / n_r  # power lost from piston to crankshaft
+        #break_power_engine = break_power * cylinders  # total power at the crankshaft
+        #friction_losses = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+        #aux_losses = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
 
         # Calculate entropy for the last cycle
         s_specific = entropy_calc(T[-1], equ[-1], fuel_type, P[-1])
@@ -789,8 +794,8 @@ def run_piston_engine(indata, flags):
     if "sweep" in flags:
         #removed friction for now when sampling/sweeping
         break_power_engine = 0.0
-        friction_losses = 0.0
-        aux_losses = 0.0
+        friction_loss_power = 0.0
+        aux_loss_power = 0.0
 
     # check for energy conservation
     # get the last values for the arrays for each iteration
@@ -972,5 +977,5 @@ def run_piston_engine(indata, flags):
 
 
 
-    return T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
-        power_engine, friction_losses, aux_losses, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox
+    return T_out[-1], break_power, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
+        power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox

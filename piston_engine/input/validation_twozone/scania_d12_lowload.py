@@ -21,11 +21,11 @@ cylinders = 1  # V12
 d = 0.127  # diameter
 
 # given
-v_mean = (1200 / 60 ) * 2 * d  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
-
-# given
 stroke = 0.154
 bsr = d / stroke  # bore stroke ratio
+
+# given
+v_mean = (1200 / 60 ) * 2 * d  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 
 rod_stroke_ratio = 0.255 / stroke
 lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
