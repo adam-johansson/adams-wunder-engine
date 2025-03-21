@@ -15,8 +15,8 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "4stroke_hydrogen"
 #input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-input_file = "validation.nasa_validation"
-#input_file = "4stroke_hydrogen_sampling"
+#input_file = "validation.nasa_validation"
+input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
@@ -34,7 +34,7 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
 #flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
@@ -45,7 +45,7 @@ flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ['sweep_no_kth']  # Scania validation
 #flags = ['sweep_wiebe']
-#flags = ["single", "plot_essentials"]
+flags = ["single", "plot_essentials"]
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
@@ -55,7 +55,7 @@ data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr
 
 if 'single' in flags:
     start = timer()
-    T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
+    T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, indicated_power, friction_loss, aux_loss,\
         heat_loss, p_tdc, outflow, no, imep, EI_nox = run_piston_engine(data, flags)
     end = timer()
     print(f'Time: {end - start}')
@@ -81,7 +81,7 @@ if 'single' in flags:
     #print(T4)
     #print(eta_th)
     #print(T_max)
-    print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}, EI_no: {EI_nox}")
+    print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}, EI_no: {EI_nox}, power: {indicated_power*1e-3} kW")
 
 
 elif 'sweep' in flags:

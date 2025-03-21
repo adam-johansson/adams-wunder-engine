@@ -142,10 +142,16 @@ def run_piston_engine(indata, flags):
         if cycle == "4T":
             # 4 stroke starts at inlet closing, so first value is inlet closing volume
             m_air_theo = V1[0] * rho_in
-        mf_tot = far_goal * m_air_theo
+
+        if premixed:
+            mf_tot = far_goal * m_air_theo / (1 + far_goal)
+        else:
+            mf_tot = far_goal * m_air_theo
         # far_tot is used for init
         far_tot = far_goal
         Qf = LHV * mf_tot  #hmmm eta_c or not
+
+        print(f"Equ in intake: {far_goal / far_s}")
 
     @jit(nopython=True)
     def dxdphi(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
@@ -183,13 +189,11 @@ def run_piston_engine(indata, flags):
                                                             pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
 
         # Intake port values
-        #TODO: CHANGE FOR PREMIXED
         h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type,
                                                                                  pure_fuel=premixed,
                                                                                  fuel_equ_ratio=far_goal/far_s)
 
         # Exhaust port values
-        # TODO: CHANGE FOR PREMIXED
         h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP, _ = thermo.mixture(T_EP, p_out, equ_EP, fuel_type,
                                                                                  pure_fuel=premixed,
                                                                                  fuel_equ_ratio=far_goal/far_s)
@@ -209,7 +213,6 @@ def run_piston_engine(indata, flags):
         t_eoc = phi_ec / np.pi * s / v_mean
 
         # Rate of added heat through combustion
-        # TODO: CHANGE FOR PREMIXED
         if wiebe_type == "Kaiser":
             dqfdphi = wiebe.dqfdt_kaiser(Qf, t, t_soc, t_eoc, wa, wm) * dtdphi
             # Rate of injected fuel mass
@@ -305,10 +308,15 @@ def run_piston_engine(indata, flags):
         else:
             raise Exception(f'Unknown cycle. The cycle was {cycle}.')
 
+        # convert to phi from time
         dmindphi = dmindphi * dtdphi
         dmoutdphi = dmoutdphi * dtdphi
 
-        dmdphi = dmindphi - dmoutdphi + dmfdphi
+        if premixed:
+            # no fuel is injected (dmfdphi is only used for the other calculations)
+            dmdphi = dmindphi - dmoutdphi
+        else:
+            dmdphi = dmindphi - dmoutdphi + dmfdphi
 
         x[20] = dmindphi
         x[21] = dmoutdphi
@@ -325,9 +333,8 @@ def run_piston_engine(indata, flags):
 
         # TODO: CHANGE FOR PREMIXED
         dellRdellequ_IP, delludellequ_IP = \
-            thermo.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type)
+            thermo.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type, premixed, far_goal/far_s)
 
-        # TODO: MAYBE CHANGE FOR PREMIXED
         term1 = T_IP + h_out_IP / cv_IP + \
             (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (cv_IP * (1 + equ_out_IP * far_s)) * delludellequ_IP - \
             (T_IP / R_IP) * (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (1 + equ_out_IP * far_s)
@@ -341,7 +348,6 @@ def run_piston_engine(indata, flags):
         # Continuity equation of the intake port
         dmdphi_IP = dmindphi_IP - dmindphi
 
-        # TODO: MAYBE CHANGE FOR PREMIXED
         # Change of equivalence ratio in the intake port
         dequdphi_IP = ((1 + equ_IP * far_s) / m_IP) * (
                 (equ_IP - equ_out_IP) * dmindphi / (1 + equ_out_IP * far_s) - equ_IP * dmindphi_IP)
@@ -364,9 +370,8 @@ def run_piston_engine(indata, flags):
         # Assuming backflow into exhaust port has same properties as exhaust port
         h_out_EP = h_EP
 
-        # TODO: MAYBE CHANGE FOR PREMIXED
         dellRdellequ_EP, delludellequ_EP = \
-            thermo.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type)
+            thermo.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type, premixed, far_goal/far_s)
 
         # Change of equivalence ratio in the exhaust port
         dequdphi_EP = dmoutdphi * (1 + equ_EP * far_s) * (equ_in_EP - equ_EP) / (1 + equ_in_EP * far_s)
@@ -393,7 +398,7 @@ def run_piston_engine(indata, flags):
                                               - ((equ_in_EP - equ) / (1 + equ_in_EP * far_s)) * dmoutdphi
                                               + dmfdphi / far_s)
 
-        dellRdellequ, delludellequ = thermo.equivalence_derivative(equ, T, P, fuel_type)
+        dellRdellequ, delludellequ = thermo.equivalence_derivative(equ, T, P, fuel_type, premixed, far_goal/far_s)
 
         dRdphi = dellRdellequ * dequdphi
 
@@ -409,10 +414,13 @@ def run_piston_engine(indata, flags):
             h_out_cyl = h_EP
 
         # Energy equation
-        # TODO: MAYBE CHANGE FOR PREMIXED
         # no heat addition term here. It is incorporated in the enthalpies
-        dudphi = (- dqdphi - P * dVdphi - u * dmdphi + dmfdphi * h_fuel +
-                  dmindphi * h_in_cyl - dmoutdphi * h_out_cyl) / m
+        if premixed:
+            dudphi = (- dqdphi - P * dVdphi - u * dmdphi +
+                      dmindphi * h_in_cyl - dmoutdphi * h_out_cyl) / m
+        else:
+            dudphi = (- dqdphi - P * dVdphi - u * dmdphi + dmfdphi * h_fuel +
+                      dmindphi * h_in_cyl - dmoutdphi * h_out_cyl) / m
 
         dTdphi = (dudphi - delludellequ * dequdphi) / cv
 
@@ -591,23 +599,39 @@ def run_piston_engine(indata, flags):
 
         # this way to calculate far works quite well
         if 'fuel_mass' not in flags:
-            if cycle == "2T":
-                m_air_inlet_closing = m[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]] \
-                                      / (1 + far_s * equ[-1][np.argwhere(phi >= phi_close_in  - cycle_phi)[0][0]])
-                equ_inlet_closing = equ[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]]
-            elif cycle == "4T":
-                m_air_inlet_closing = m[-1][-1] \
-                                      / (1 + far_s * equ[-1][-1])
-                equ_inlet_closing = equ[-1][-1]
 
             mf_tot_old = mf_tot
 
-            # this is to specify the trapped far
-            #mf_tot = (far_goal - equ_inlet_closing * far_s) * m_air_inlet_closing
 
-            # we now care about actual fuel flow and far in exhausts out of the engine
-            mf_tot = m_in_IP[-1][-1] * far_goal
-            #print(m_in_IP[-1][-1])
+            # TODO: maybe account for some fuel passing through the engine
+            if premixed:
+
+                if cycle == "2T":
+                    m_air_inlet_closing = m[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]] \
+                                          / (1 + far_s * equ[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]])
+                    equ_inlet_closing = equ[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]]
+                elif cycle == "4T":
+                    equ_inlet_closing = equ[-1][-1]
+
+                    m_mixture_inlet_closing = m[-1][-1] \
+                                          / (1 + far_s * equ_inlet_closing)
+
+                _, _, _, _, _, mass_fraction_fuel = thermo.mass_fractions(equ_inlet_closing, fuel_type, premixed, far_goal/far_s)
+                mf_tot = m[-1][-1] * mass_fraction_fuel
+                #print(mf_tot, equ_inlet_closing, mass_fraction_fuel, far_goal, premixed, fuel_type)
+                #print(f"fuel mass trapped: {mf_tot*1e6} mg")
+                # the mass of fuel being sucked into the cylinder
+                #mf_tot = far_goal * m_in_IP[-1][-1] / (1 + far_goal)
+
+                #print(f"old express: {far_goal * m_in_IP[-1][-1] / (1 + far_goal) * 1e6} mg")
+
+                # this is to specify the trapped far
+                #mf_tot = ((far_goal - equ_inlet_closing * far_s) * m_air_inlet_closing
+                #          / (1 + (far_goal - equ_inlet_closing * far_s) ))
+
+            else:
+                # we now care about actual fuel flow and far in exhausts out of the engine
+                mf_tot = m_in_IP[-1][-1] * far_goal
 
             #print(f"Inflow into IP: {m_in_IP[-1][-1]*1000} [g/cycle] ")
 
@@ -783,12 +807,17 @@ def run_piston_engine(indata, flags):
     heat_outs = np.array([item[-1] for item in Q])
     works_outs = np.array([item[-1] for item in W])
 
-    term1 = enthalpy_ins[-1] + fuel_enthalpy_ins[-1]
+    if premixed:
+        # In premixed operation, no fuel is injected and therefore
+        # no enthalpy from the fuel (it is in the mixture already)
+        term1 = enthalpy_ins[-1]
+    else:
+        term1 = enthalpy_ins[-1] + fuel_enthalpy_ins[-1]
     term2 = enthalpy_outs[-1] + heat_outs[-1] + works_outs[-1]
     diff = np.abs(term1 - term2)
 
-    #print(f"Energy conservation: {diff / heat_ins[-1]}")
-    #print(f"Fuel injected: {mf_tot * 1e6} mg")
+    #print(f"Energy conservation: {diff / heat_ins[-1] * 100} %")
+
 
     # if energy error larger than 0.1% of fuel energy
     if np.abs(diff / heat_ins[-1]) > 0.001:

@@ -8,6 +8,8 @@ fuel = 'jetA'
 
 cooling = "Hohenberg"
 
+premixed = False
+
 opposed = False
 cr = 6.0
 

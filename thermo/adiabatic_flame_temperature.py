@@ -63,7 +63,7 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
     fueltemp = 298
 
     # air composition before combustion
-    x_N2, x_O2, x_CO2, x_H2O, x_Ar = molar_fractions(equ_sc, fuel_type)
+    x_N2, x_O2, x_CO2, x_H2O, x_Ar, _ = molar_fractions(equ_sc, fuel_type)
 
     #air = cea.Oxidizer("Air", temp=t_soc)
     o2 = cea.Oxidizer("O2", temp=t_soc, mols=x_O2)

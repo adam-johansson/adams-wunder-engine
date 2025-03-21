@@ -1,5 +1,5 @@
 from .fuel import fuel_props
-from .thermo_computations import mixture, equivalence_derivative, molar_fractions
+from .thermo_computations import mixture, equivalence_derivative, molar_fractions, mass_fractions
 from .polynomials import N2, O2, Ar, H2, H2O, CO2, JETA_L, JETA_G, CO
 from .work_potential import work_potential
 from .entropy_func import entropy_func

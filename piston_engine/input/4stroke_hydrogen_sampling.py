@@ -60,7 +60,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-far_goal = 0.0291755 / 3.0
+far_goal = 0.0291755 / 1.3
 
 
 wiebe_type = "Single"
@@ -79,7 +79,7 @@ phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation 
 T_fuel = 450
 p_fuel = 300e5
 
-it = 300
+it = 100
 
 mf_tot = 1.5e-4
 
