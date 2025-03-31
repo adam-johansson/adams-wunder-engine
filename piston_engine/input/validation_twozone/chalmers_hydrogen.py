@@ -20,7 +20,7 @@ cylinders = 1  # for sampling data use 1
 # piston
 d = 0.09  # diameter / bore
 s = 0.082  # stroke
-v_mean = (2000 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+v_mean = (3000 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 l_con = 0.1395  # rod length
 bsr = d / s  # bore stroke ratio
 rod_stroke_ratio = l_con / s

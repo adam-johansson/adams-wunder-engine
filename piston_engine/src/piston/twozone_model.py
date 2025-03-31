@@ -5,7 +5,7 @@ from scipy import integrate
 from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cantera
 
 
-def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
+def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, premixed):
 
     """
     Divides the cylinder volume into two zones, for more accurate NOx calculations.
@@ -61,8 +61,14 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     # lambda_0 is the air-fuel-ratio in the reaction zone, assumed to be constant.
     # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
 
-    # NOTE THAT FOR spark ignition (hydrogen??) then we use lambda_0 = lambda_global
-    lambda_0 = 1.00
+    # global air-fuel equivalence ratio (when all fuel is injected)
+    lambda_gl = 1 / equ_hp[-1]
+
+    # NOTE THAT FOR spark ignition (premixed) then we use lambda_0 = lambda_global
+    if premixed:
+        lambda_0 = lambda_gl[0]
+    else:
+        lambda_0 = 1.00
 
     # Kaiser used a factor here. Could be used to fit model to experimental data
     # he used 0.9 when validating. look at his thesis
@@ -95,7 +101,14 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     t_dummy = 1000
     p_dummy = 1e5
     _, _, _, _, R1, _, _, _ = mixture(t_dummy, p_dummy, equ=1 / lambda_0, fuel_type=fuel_type)
-    _, _, _, _, R2, _, _, _ = mixture(t_dummy, p_dummy, equ=equ_sc, fuel_type=fuel_type)
+
+    if premixed:
+        # air fuel mixture
+        _, _, _, _, R2, _, _, _ = mixture(t_dummy, p_dummy, equ=equ_sc, fuel_type=fuel_type, pure_fuel=premixed,
+                                          fuel_equ_ratio=1/lambda_0)
+    else:
+        # pure air gas
+        _, _, _, _, R2, _, _, _ = mixture(t_dummy, p_dummy, equ=equ_sc, fuel_type=fuel_type)
 
 
 
@@ -151,31 +164,31 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor):
     p_soc = P[np.argwhere(phi > sc)[0]][0]
 
     # adiabatic flame temperature
-    # thoughts: adiabatic flame temperature gets lower when we are not using pure air. this needs to be adjusted for.
-    # otherwise we can't investigate EGR
 
     # use my own flame temp function (switch to cantera later when I implement it for NOx maybe) (gave 3000K flame temp)
     #t_flame = flame_temp_inhouse(t_soc, equ_sc, 1/lambda_0, fuel_type)
     #t_flame = flame_temp_cantera(t_soc, p_soc, equ_sc, equ_combustion=1/lambda_0, fuel_type=fuel_type)
 
     # this is the cea program
-    t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion=1/lambda_0)
+    t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, 1/lambda_0, premixed=premixed)
+    #print(t_flame)
 
     # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor
 
-    # adjust accorind to Heider
+    # adjust according to Heider
     # C = 0.15 for 4 valves and central injection
     C = 0.15
 
-    # global air-fuel equivalence ratio (when all fuel is injected)
-    lambda_gl = 1 / equ_hp[-1]
-
-    # test with and without this when we get some numbers for nox
-    if lambda_gl[0] > 1.2:
-        Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
+    if premixed:
+        # constant Astar for premixed
+        Astar = A
     else:
-        Astar = A * 1.2 / (2.2 * lambda_0)
+        # test with and without this when we get some numbers for nox
+        if lambda_gl[0] > 1.2:
+            Astar = A * (1.2 + (lambda_gl[0] - 1.2)**C) / (2.2 * lambda_0)
+        else:
+            Astar = A * 1.2 / (2.2 * lambda_0)
 
 
 

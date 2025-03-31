@@ -10,8 +10,8 @@ equ_combustion = 1.0
 fuel_type = 'jetA'
 t_flame = flame_temp_cantera(T_soc, p_soc, equ_soc, equ_combustion, fuel_type)
 
-R_mixture, M_mixture, xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0 = molar_fractions(
-    T_soc, p_soc, equ=equ_combustion, fuel_type=fuel_type
+xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0, _ = molar_fractions(
+    equ=equ_combustion, fuel_type=fuel_type
 )
 
 # for the OHC equilibirum

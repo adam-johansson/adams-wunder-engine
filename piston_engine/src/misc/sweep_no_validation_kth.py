@@ -55,7 +55,7 @@ def sweep_no_diesel_kth_validation(d, flags):
             flags.append('validate_scania_lowload')
 
         T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss, \
-            heat_loss, p_tdc, outflow, no, imep, EI_nox = run_piston_engine(data, flags)
+            heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff = run_piston_engine(data, flags)
 
         print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
         #print(f"NOx: {no}")
@@ -103,7 +103,7 @@ def sweep_no_diesel_kth_validation(d, flags):
             flags.append('validate_scania_highload')
 
         T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, induced_power, friction_loss, aux_loss,\
-            heat_loss, p_tdc, outflow, no, imep, EI_nox = run_piston_engine(data, flags)
+            heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff = run_piston_engine(data, flags)
 
         print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
         #print(f"NOx: {no}")

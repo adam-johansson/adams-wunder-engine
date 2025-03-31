@@ -18,7 +18,7 @@ def flame_temp_inhouse(t_soc, equ_sc, equ_combustion, fuel_type):
 
     # fuel enthalpy before combustion
     if fuel_type == "jetA":
-        cp_f, h_f, s_f, M_f = JETA(t_fuel)
+        cp_f, h_f, s_f, M_f = JETA_L(t_fuel)
     elif fuel_type == "H2":
         cp_f, h_f, s_f, _, M_f = H2(t_fuel, p_dummy)
 
@@ -57,13 +57,28 @@ def flame_temp_inhouse(t_soc, equ_sc, equ_combustion, fuel_type):
 
 
 
-def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
+def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion, premixed=False):
 
     # could add fuel temp here
-    fueltemp = 298
+    if premixed:
+        fueltemp = t_soc
+    else:
+        fueltemp = 298
 
     # air composition before combustion
-    x_N2, x_O2, x_CO2, x_H2O, x_Ar, _ = molar_fractions(equ_sc, fuel_type)
+    if premixed:
+        x_N2, x_O2, x_CO2, x_H2O, x_Ar, x_fuel = molar_fractions(equ_sc, fuel_type, premixed, equ_combustion)
+        if fuel_type == "H2":
+            x_H2 = x_fuel
+        else:
+            x_jetA = x_fuel
+    else:
+        x_N2, x_O2, x_CO2, x_H2O, x_Ar, _ = molar_fractions(equ_sc, fuel_type)
+        x_jetA = x_O2 * 17.75 * equ_combustion
+        x_H2 = x_O2 * 2.0 * equ_combustion
+
+
+    #print(x_N2, x_O2, x_CO2, x_H2O, x_Ar, x_fuel)
 
     #air = cea.Oxidizer("Air", temp=t_soc)
     o2 = cea.Oxidizer("O2", temp=t_soc, mols=x_O2)
@@ -73,20 +88,21 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion):
 
     #print(x_O2, x_CO2, x_H2O, x_N2)
 
-    x_jetA = x_O2 * 17.75 * equ_combustion
-    x_H2 = x_O2 * 2.0 * equ_combustion
-
-    jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_jetA)
-
-    h2 = cea.Fuel("H2", temp=fueltemp, mols=x_H2)
     if fuel_type == "jetA":
+        if premixed:
+            jetA = cea.Fuel("Jet-A(g)", temp=fueltemp, mols=x_jetA)
+        else:
+            jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_jetA)
         fuel = jetA
     elif fuel_type == "H2":
+        h2 = cea.Fuel("H2", temp=fueltemp, mols=x_H2)
         fuel = h2
 
+    #print(x_H2O)
+
     # HP problem is like a burner
-    #burning = cea.HPProblem(pressure=Psc*1e-5, pressure_units="bar", materials=[n2, o2, h2o, co2, fuel], massf=True,
-    #                        phi=equ_combustion)
+    #massf means output is in mass fraction
+
     burning = cea.HPProblem(pressure=Psc*1e-5, pressure_units="bar", materials=[n2, o2, h2o, co2, fuel], massf=True,
                             phi=equ_combustion)
     exhaust = burning.run()
@@ -126,8 +142,13 @@ def flame_temp_cantera(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
             #reaction_mechanism = 'nDodecane_Reitz.yaml'
             #phase_name = 'nDodecane_IG'
 
+        elif fuel_type == "H2":
+            species = {S.name: S for S in ct.Species.list_from_file('h2o2.yaml')}
+            # reaction_mechanism = 'nDodecane_Reitz.yaml'
+            # phase_name = 'nDodecane_IG'
+
             #
-            gas2 = ct.Solution(thermo="ideal-gas", species=species.values())
+        gas2 = ct.Solution(thermo="ideal-gas", species=species.values())
 
 
         gas2.TP = T_soc, p_soc
@@ -156,6 +177,9 @@ def flame_temp_cantera(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
                                        f"O2:{x_O2}, N2:{x_N2}, CO2:{x_CO2}, H2O:{x_H2O}, Ar:{x_Ar}")
         elif fuel_type == "jetA":
             gas2.set_equivalence_ratio(equ_combustion, "c12h26:1", f"O2:{x_O2}, N2:{x_N2}, CO2:{x_CO2}, H2O:{x_H2O}")
+
+        elif fuel_type == "H2":
+            gas2.set_equivalence_ratio(equ_combustion, "h2:1", f"O2:{x_O2}, N2:{x_N2}, H2O:{x_H2O}")
         gas2.equilibrate("HP")
         T_flame = gas2.T
 

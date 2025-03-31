@@ -1206,3 +1206,98 @@ def plot_scania_lowload(phi, p, mf, LHV, Q_apparent):
 
 
     return
+
+
+
+
+def val_water_paper_h2(phi, p, mf, LHV, Q_apparent):
+
+
+    # load data from the H2 water paper
+    import os
+    dirname = os.path.dirname(__file__)
+    filename_p = os.path.join(dirname, '../../validation_output_data/H2_water/pressure.txt')
+    filename_heat = os.path.join(dirname, '../../validation_output_data/H2_water/heat.txt')
+    p_val = np.loadtxt(filename_p, delimiter=",")
+    heat_val = np.loadtxt(filename_heat, delimiter=",")
+
+    # get apparent rate of heat relase
+    Q_apparent = np.gradient(Q_apparent, phi)
+
+    pressure = np.array([phi * 180 / np.pi, p])
+
+
+    # Find the index where time is greater than or equal to the threshold
+    index_threshold = np.where(pressure[0] >= 720)[0][0]
+
+    pressure[0, index_threshold:] = pressure[0, index_threshold:] - 720
+
+    # Rearrange the data so all values for time after the threshold are placed first
+    pressure = np.concatenate((pressure[:, index_threshold:], pressure[:, :index_threshold]), axis=1)
+
+
+
+
+
+    #fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    #fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+    ax1.plot(pressure[0, :], pressure[1, :] * 1e-5, label='p', color="r", lw=1)
+    ax1.plot(p_val[:, 0], p_val[:, 1], label='validation', color="b", lw=1, marker="o")
+    ax1.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax1.legend(loc='best', fontsize='small', frameon=False)
+    ax1.grid()
+    #ax1.set_xlim(260, 510)
+    #ax1.set_ylim(-50, 100)
+    #ax1.set_xticks([300, 360, 420, 480])
+    #ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+    ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
+
+    fig, ax2 = plt.subplots()
+    #ax2.plot(phi * 180 / np.pi, mf * LHV * np.pi / 180, label='simulation', color="r", lw=1)
+    ax2.plot(heat_val[:, 0], heat_val[:, 1], label='validation', color="k", lw=1, marker="o")
+    ax2.plot(phi * 180 / np.pi, Q_apparent * np.pi / 180, label='Apparent', color="b", lw=1)
+
+
+    ax2.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax2.legend(loc='best', fontsize='small', frameon=False)
+    ax2.grid()
+    ax2.set_xlim(355, 380)
+    #ax1.set_ylim(-50, 100)
+    #ax1.set_xticks([300, 360, 420, 480])
+    #ax1.set_yticks([0, 50, 100])
+    ax2.tick_params(labelsize=fs)
+    ax2.set_ylabel(r'Heat release [J/deg]', fontsize=fs)
+
+    plt.show()
+
+
+    return
+
+
+def plot_no(phi, evo, sc, no):
+
+    # high pressure crank angles
+    phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+
+    fs = 18
+
+
+    fig, ax4 = plt.subplots()
+    ax4.plot(phi_hp * 180 / np.pi, no, label='NO concentration', color="k", lw=2)
+
+    #ax4.set_xlim(260, 460)
+    ax4.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax4.set_ylabel(r'NO concentration (ppm)', fontsize=fs)
+    ax4.legend(loc='best', fontsize='small', frameon=False)
+    ax4.grid()
+
+
+    #plt.show()
+
+    return

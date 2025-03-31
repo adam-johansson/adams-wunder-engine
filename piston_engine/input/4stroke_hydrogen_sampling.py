@@ -60,7 +60,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-far_goal = 0.0291755 / 1.0
+far_goal = 0.0291755 / 2.0
 
 
 wiebe_type = "Single"

@@ -4,10 +4,10 @@ import numpy as np
 from thermo import flame_temp_inhouse, flame_temp_cea, flame_temp_cantera
 
 
-fuel_type = "jetA"
+fuel_type = "H2"
 
-t_soc = 1000
-Psc = 10e5
+t_soc = 700
+Psc = 1e5
 
 equ_sc = 0.0
 equ_combustion = 1.0
@@ -16,7 +16,7 @@ adam = []
 cea = []
 cantera = []
 
-for equ_sc in np.linspace(0.0,0.9):
+for equ_combustion in np.linspace(0.1,1.0):
 
     t_adam = flame_temp_inhouse(t_soc, equ_sc, equ_combustion, fuel_type)
 

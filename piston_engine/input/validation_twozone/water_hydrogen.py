@@ -1,5 +1,9 @@
 import numpy as np
 
+
+
+# article: Effect of water injection and spark timing on the nitric oxide emission and combustion parameters of a hydrogen fuelled spark ignition engine
+
 cycle = "4T"
 
 fuel = 'H2'
@@ -27,7 +31,7 @@ rod_stroke_ratio = l_con / s
 lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio
 
 # inlet and outlet conditions
-p_in = 1e5  # inlet pressure
+p_in = 1.01e5  # inlet pressure
 T_in = 298  # inlet temperature
 
 p_ratio = 1.0  # pressure ratio after and before engine
@@ -39,15 +43,23 @@ Thead = 400
 Twalls = [Twall, Tpiston, Thead]
 
 
-ch = 1.4  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
+ch = 3  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
-phi_open_in = (716/180)*np.pi  #
-phi_close_in = (938/180)*np.pi  #
+#phi_open_in = (716/180)*np.pi  #
+#phi_close_in = (938/180)*np.pi  #
 
 # outlet valve
-phi_open_out = (505/180)*np.pi  #
-phi_close_out = (717/180)*np.pi  #
+#phi_open_out = (535/180)*np.pi  #
+#phi_close_out = (717/180)*np.pi  #
+
+# inlet valve
+phi_open_in = (718.0/180)*np.pi  # given
+phi_close_in = (931.0/180)*np.pi  # given
+
+# outlet valve
+phi_open_out = (506.0/180)*np.pi  # given
+phi_close_out = (734.0/180)*np.pi  # given
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -60,7 +72,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-far_goal = 0.0291755 / 2.0
+far_goal = 0.0291755 * 0.9
 
 
 wiebe_type = "Single"
@@ -71,10 +83,10 @@ wm = 0.6
 
 
 # this is for single wiebe function
-m_wiebe = 1.75  # from validation italian
+m_wiebe = 4.0  # from validation italian
 
-phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
-phi_cd = (55/180)*np.pi  # angle related to combustion duration from validation italian
+phi_sc = (359/180)*np.pi  # angle at combustion start  from validation italian
+phi_cd = (19.0/180)*np.pi  # angle related to combustion duration from validation italian
 
 T_fuel = 300
 p_fuel = 50e5

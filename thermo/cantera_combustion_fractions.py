@@ -25,7 +25,7 @@ def molar_fractions_combustion(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
     elif fuel_type == "H2":
         # calculate H2
 
-        species = {S.name: S for S in ct.Species.list_from_file('h2o2.yaml')}
+        species = {S.name: S for S in ct.Species.list_from_file('gri30.yaml')}
         ohc_species = [species[S] for S in ("H2O", "O2", "OH", "H2", "O", "H", "N2")]
 
         # Load the H2 mechanism
@@ -38,9 +38,10 @@ def molar_fractions_combustion(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
     x_N2_air = 3.7274 / N_air  # molar fraction of N2
     x_Ar_air = 0.0444 / N_air  # molar fraction of Ar
 
-    N = 5.75 * equ_sc + 17.75 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+    if fuel_type in ("jetA", "CH4"):
 
-    if fuel_type == "jetA" or "CH4":
+        N = 5.75 * equ_sc + 17.75 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+
         f1 = 17.75 * (x_N2_air / x_O2_air)  # N2
         f2 = 17.75 * (1 - equ_sc)  # O2
         f3 = 12 * equ_sc  # CO2
@@ -80,8 +81,8 @@ def molar_fractions_combustion(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
         xi_O2 = fractions["O2"]
         xi_OH = fractions["OH"]
         xi_H2 = fractions["H2"]
-        xi_O = fractions["H"]
-        xi_H = fractions["O"]
+        xi_O = fractions["O"]
+        xi_H = fractions["H"]
 
     elif fuel_type == "jetA":
         gas2.set_equivalence_ratio(equ_combustion, "c12h26:1", f"O2:{x_O2}, N2:{x_N2}, CO2:{x_CO2}, H2O:{x_H2O}")
@@ -96,15 +97,21 @@ def molar_fractions_combustion(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
         xi_O2 = fractions["o2"]
         xi_OH = fractions["oh"]
         xi_H2 = fractions["h2"]
-        xi_O = fractions["h"]
-        xi_H = fractions["o"]
+        xi_O = fractions["o"]
+        xi_H = fractions["h"]
 
 
     elif fuel_type == "H2":
-        gas2.set_equivalence_ratio(equ_combustion, "h2:1", f"O2:{x_O2}, N2:{x_N2}, H2O:{x_H2O}")
+        #print(x_O2, x_N2, x_H2O)
+        #print(equ_combustion)
+        gas2.set_equivalence_ratio(phi=equ_combustion, fuel="h2:1", oxidizer=f"O2:{x_O2}, N2:{x_N2}, H2O:{x_H2O}",
+                                   basis="mole")
         gas2.equilibrate("HP")
+        #gas2.equilibrate("TP")
 
-        fractions = gas2.mole_fraction_dict(threshold=1e-20)
+        #fractions = gas2.mole_fraction_dict(threshold=1e-20)
+        fractions = gas2.mole_fraction_dict()
+        #print(fractions)
 
         xi_N2 = fractions["N2"]
         xi_CO2 = 0.0
@@ -113,8 +120,14 @@ def molar_fractions_combustion(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
         xi_O2 = fractions["O2"]
         xi_OH = fractions["OH"]
         xi_H2 = fractions["H2"]
-        xi_O = fractions["H"]
-        xi_H = fractions["O"]
+        xi_O = fractions["O"]
+        xi_H = fractions["H"]
+        #print(f"NO: {fractions['NO']}")
+
+        #print(gas2.T)
+
+        #print(xi_N2)
+
 
 
 

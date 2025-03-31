@@ -64,13 +64,18 @@ def dmfdphi_single_mass(phi, m, phi_sc, phi_cd, mf_tot):
     return 0.0
 
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def dmfdphi_single_mass_vector(phi, m, phi_sc, phi_cd, mf_tot):
     # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
 
     # only 99.9% of Qf will be added to the fluid
 
     y = (phi - phi_sc) / phi_cd
+
+    idx = y < 0
+
+    y[idx] = 0.0
+
     f1 = 6.908 * (m + 1) * (y ** m) * np.exp(-6.908 * y ** (m + 1))
     f1 = np.nan_to_num(f1)
 

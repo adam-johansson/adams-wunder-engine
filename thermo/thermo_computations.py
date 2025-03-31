@@ -227,16 +227,12 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
     cp_O2, h_O2, s_O2, _, M_O2 = O2(t, p_O2)
     cp_Ar, h_Ar, s_Ar, _, M_Ar = Ar(t, p_Ar)
 
-    if mu_H2O > 0:
-        cp_H2O, h_H2O, s_H2O, _, M_H2O = H2O(t, p_H2O)
-    if mu_CO2 > 0:
-        cp_CO2, h_CO2, s_CO2, _, M_CO2 = CO2(t, p_CO2)
+    cp_H2O, h_H2O, s_H2O, _, M_H2O = H2O(t, p_H2O)
+    cp_CO2, h_CO2, s_CO2, _, M_CO2 = CO2(t, p_CO2)
 
     if pure_fuel:
-        if mu_JETA > 0:
-            cp_JETA, h_JETA, s_JETA, _, M_JETA = JETA_G(t, p_JETA)
-        if mu_H2 > 0:
-            cp_H2, h_H2, s_H2, _, M_H2 = H2(t, p_H2)
+        cp_JETA, h_JETA, s_JETA, _, M_JETA = JETA_G(t, p_JETA)
+        cp_H2, h_H2, s_H2, _, M_H2 = H2(t, p_H2)
 
     if pure_fuel:
         cp = (mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar
@@ -704,7 +700,7 @@ def molar_fractions(equ, fuel_type, pure_fuel=False, fuel_equ_ratio=0.0):
     if pure_fuel and fuel_type == "jetA":
         x_fuel = x_JETA
     elif pure_fuel and fuel_type == "H2":
-        x_fuel = x_JETA
+        x_fuel = x_H2
     else:
         x_fuel = 0.0
 

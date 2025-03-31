@@ -751,7 +751,25 @@ def run_piston_engine(indata, flags):
     heat_loss_single = Q[-1][-1] / t_cycle
 
     # Calculate mass flow
-    air_flow = m_in_IP[-1][-1] / t_cycle
+    if premixed:
+        # inflow of pure air
+        air_flow = (m_in_IP[-1][-1] / (1 + far_goal)) / t_cycle
+
+        # calculating properties for the pure air
+        _, _, _, _, R_in_air, _, _, _ = thermo.mixture(t=T_in, p=p_in)
+
+        # density of the air at the inlet (before mixing with the fuel)
+        rho_in_air = p_in / (R_in_air * T_in)
+
+        # pure air sucked in vs theoretical max
+        # only account for the swept volume of the piston
+        V_swept = V_d - V_clearance
+        volume_eff = (m_in_IP[-1][-1] / (1 + far_goal)) / (V_swept * rho_in_air)
+
+    else:
+        air_flow = m_in_IP[-1][-1] / t_cycle
+        # air sucked in vs theoretical max
+        volume_eff = m_in_IP[-1][-1] / (rho_in * V_d)
     fuel_flow = mf_tot / t_cycle
     #fuel_flow = mf[-1][-1] / t_cycle
     out_flow = m_out_EP[-1][-1] / t_cycle
@@ -844,7 +862,7 @@ def run_piston_engine(indata, flags):
                                                                                                     phi_open_out, phi_sc,
                                                                                                     LHV, far_s,
                                                                                                     equ[-1], fuel_type,
-                                                                                                    factor)
+                                                                                                    factor, premixed)
 
         # start = timer()
         no_ppm, dNOdt, no_times, EI_nox = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
@@ -917,10 +935,17 @@ def run_piston_engine(indata, flags):
             #print(f"Displacement: {V_d * 1e6} cm^3")
             plot_scania_lowload(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
 
+        elif 'fit_water_paper' in flags:
+            # validate NOx model with data from scania engine (KTH msc thesis)
+            from piston_engine.src.misc.plot_output import val_water_paper_h2
+
+            val_water_paper_h2(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
+
         else:
             # no validation
             if "plot_twozone" in flags:
-                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only
+                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only, plot_no
+                plot_no(phi, phi_open_out, phi_sc, no_ppm)
                 plot_twozone_full(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
                 plot_twozone_only(phi_z1, T_z1, T_z2, T_hp, m_z1, m_z2)
 
@@ -977,5 +1002,6 @@ def run_piston_engine(indata, flags):
 
 
 
-    return T_out[-1], break_power, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
-        power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox
+    return (T_out[-1], break_power, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
+        power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,
+            volume_eff)
