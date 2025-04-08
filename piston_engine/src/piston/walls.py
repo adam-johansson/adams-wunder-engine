@@ -152,18 +152,19 @@ def dqdphi_woschni_h2(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdph
             # c1 = 10, c2 = 1.7 e-2, for ch = 1 to fit curve. gives 40% heat loss
             c2 = 3.24 * 1e-3
             Pmotor = Psc * (Vsc / V) ** gamma
+            Pmotor_bar = Pmotor * 1e-5
 
         else:
             # compression phase
             c2 = 0
-            Pmotor = P
+            Pmotor_bar = P
 
 
     elif type1 == "Charge changing":
         # 6.18 original formulation
         c1 = 6.18
         c2 = 0
-        Pmotor = P
+        Pmotor_bar = P
     else:
         print("Unknown type, error in dqdphi")
         return 0.0, 0.0
@@ -172,7 +173,7 @@ def dqdphi_woschni_h2(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdph
     #alpha = 0
     for (i, j) in zip(Twalls, Awalls):
 
-        C = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (P - Pmotor)
+        C = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (Pbar - Pmotor_bar)
         alpha = 0.012991 * d ** (-0.2) * P ** 0.8 * C ** 0.8 * T ** (-0.53)
         dqdphi += alpha * j * (T - i) * dtdphi
     return dqdphi, alpha
