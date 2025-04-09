@@ -8,9 +8,9 @@ from piston_engine.src.misc import post_processing
 
 def sweep_equ(d, flags):
 
-    num = 10
+    num = 30
 
-    equs = np.linspace(0.26, 0.90, num)
+    equs = np.linspace(0.26, 0.99, num)
     phi_cds = np.linspace(63 * np.pi / 180 , 19 * np.pi / 180, num)
     #phi_cds = np.linspace(63 * np.pi / 180, 19 * np.pi / 180, 10)
 
@@ -29,10 +29,10 @@ def sweep_equ(d, flags):
 
         far_goal = equ * far_s
 
-        m_wiebe = 2.5  # 2.5
+        m_wiebe = 2.5  # 4.0
 
         phi_sc = (359.0 / 180) * np.pi  # 359
-        phi_cd = (19.0 / 180) * np.pi  # 19.0
+        #phi_cd = (23.0 / 180) * np.pi  # 19.0
 
         data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
                 d.v_mean, d.lms, d.Twalls, d.ch,
@@ -42,7 +42,7 @@ def sweep_equ(d, flags):
 
 
         T4, brake_power, eta_th, air_flow, p_max, T_max, far, equ_trapped, indicated_power, friction_loss, aux_loss, \
-            heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff = run_piston_engine(data, flags)
+            heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff, nox_spec = run_piston_engine(data, flags)
 
         print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
 

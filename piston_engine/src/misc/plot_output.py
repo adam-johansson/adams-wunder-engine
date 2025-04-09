@@ -1301,3 +1301,125 @@ def plot_no(phi, evo, sc, no):
     #plt.show()
 
     return
+
+
+def plot_addedfuel(phi, dmfdphi):
+    from scipy.integrate import cumtrapz
+    # high pressure crank angles
+    #phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+
+    fs = 18
+
+    fuel = cumtrapz(dmfdphi, phi, initial=0) * 1e6
+
+
+    # we want phi where 50% of fuel is added. for chalmers h2 engine it is supposed to be at 368 deg
+
+    fig, ax4 = plt.subplots()
+    ax4.plot(phi * 180 / np.pi, fuel, color="k", lw=2)
+
+    ax4.set_xlim(300, 425)
+    ax4.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax4.set_ylabel(r'Added fuel (mg)', fontsize=fs)
+    ax4.grid()
+
+
+    #plt.show()
+
+    return
+
+
+def val_newcastle(phi, p):
+
+
+    import os
+    dirname = os.path.dirname(__file__)
+    filename_p = os.path.join(dirname, '../../validation_output_data/newcastle/pressure.txt')
+    p_val = np.loadtxt(filename_p, delimiter=",")
+
+    pressure = np.array([phi * 180 / np.pi, p])
+
+
+    # Find the index where time is greater than or equal to the threshold
+    index_threshold = np.where(pressure[0] >= 720)[0][0]
+
+    pressure[0, index_threshold:] = pressure[0, index_threshold:] - 720
+
+    # Rearrange the data so all values for time after the threshold are placed first
+    pressure = np.concatenate((pressure[:, index_threshold:], pressure[:, :index_threshold]), axis=1)
+
+
+
+
+
+    #fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    #fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+    ax1.plot(pressure[0, :], pressure[1, :] * 1e-5, label='p', color="r", lw=1)
+    ax1.plot(p_val[:, 0], p_val[:, 1], label='validation', color="b", lw=1, marker="o")
+    ax1.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax1.legend(loc='best', fontsize='small', frameon=False)
+    ax1.grid()
+    #ax1.set_xlim(260, 510)
+    #ax1.set_ylim(-50, 100)
+    #ax1.set_xticks([300, 360, 420, 480])
+    #ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+    ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
+
+    plt.show()
+
+
+    return
+
+
+def val_hcci(phi, p):
+
+
+    import os
+    dirname = os.path.dirname(__file__)
+    filename_p = os.path.join(dirname, '../../validation_output_data/newcastle/pressure.txt')
+    p_val = np.loadtxt(filename_p, delimiter=",")
+
+    pressure = np.array([phi * 180 / np.pi, p])
+
+
+    # Find the index where time is greater than or equal to the threshold
+    index_threshold = np.where(pressure[0] >= 720)[0][0]
+
+    pressure[0, index_threshold:] = pressure[0, index_threshold:] - 720
+
+    # Rearrange the data so all values for time after the threshold are placed first
+    pressure = np.concatenate((pressure[:, index_threshold:], pressure[:, :index_threshold]), axis=1)
+
+
+
+
+
+    #fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    #fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+    ax1.plot(pressure[0, :], pressure[1, :] * 1e-5, label='p', color="r", lw=1)
+    ax1.plot(p_val[:, 0], p_val[:, 1], label='validation', color="b", lw=1, marker="o")
+    ax1.set_xlabel(r'Crank angle $\theta$ [$^{\circ}$]', fontsize=fs)
+    ax1.legend(loc='best', fontsize='small', frameon=False)
+    ax1.grid()
+    #ax1.set_xlim(260, 510)
+    #ax1.set_ylim(-50, 100)
+    #ax1.set_xticks([300, 360, 420, 480])
+    #ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+    ax1.set_ylabel(r'Pressure $p$ [bar]', fontsize=fs)
+
+    plt.show()
+
+
+    return

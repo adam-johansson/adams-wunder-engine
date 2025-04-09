@@ -188,7 +188,11 @@ def scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_
     residual_fraction = (mr_ba + mr_fuel + mr_ua) / (m_FC + mr_ba + mr_fuel + mr_ua)
     eta_trapping = m_FC / (m_in_IP[-1][-1])
     eta_charging = m_FC / (rho_in * V_d)
-    delivery_ratio = eta_charging / eta_trapping
+    # I DONT KNOW WHY THIS IS A PROBLEM FOR THE CHALMERS H2 ENGINE
+    if eta_trapping == 0:
+        delivery_ratio = 1.0
+    else:
+        delivery_ratio = eta_charging / eta_trapping
     eta_sc = 1 / (1 + (1 / purity - 1) / equ_evo)  # scavenging efficency
 
     return purity, residual_fraction, eta_trapping, eta_charging, delivery_ratio, eta_sc

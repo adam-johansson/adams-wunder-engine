@@ -66,7 +66,8 @@ def N2(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     # pressure dependence of the Gibbs
     #g = g + T * Rspec * log(p / p_std)
@@ -124,7 +125,8 @@ def O2(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     # pressure dependence of the Gibbs
     #g = g + T * Rspec * log(p / p_std)
@@ -181,7 +183,8 @@ def Ar(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -243,7 +246,8 @@ def CO2(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -304,7 +308,8 @@ def H2O(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     # pressure dependence of the Gibbs
     #g = g + T * Rspec * log(p / p_std)
@@ -402,7 +407,8 @@ def JETA_G(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     # pressure dependence of the Gibbs
     #g = g + T * Rspec * log(p / p_std)
@@ -461,7 +467,8 @@ def H2(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     # pressure dependence of the Gibbs
     #g = g + T * Rspec * log(p / p_std)
@@ -527,7 +534,8 @@ def CO(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -590,7 +598,8 @@ def H(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -653,7 +662,8 @@ def N(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -716,7 +726,8 @@ def NO(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -779,7 +790,8 @@ def O(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -842,6 +854,7 @@ def OH(T, p):
     p_std = 1e5
 
     # pressure dependence of the entropy
-    s = s - Rspec * log(p / p_std)
+    if p>0:
+        s = s - Rspec * log(p / p_std)
 
     return cp, h, s, g, M

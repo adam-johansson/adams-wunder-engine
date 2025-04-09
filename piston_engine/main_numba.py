@@ -21,8 +21,10 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "validation_twozone.two_zone_heider"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
 #input_file = "validation_twozone.scania_d12"
-#input_file = "validation_twozone.chalmers_hydrogen"
-input_file = "validation_twozone.water_hydrogen"
+input_file = "validation_twozone.chalmers_hydrogen"
+#input_file = "validation_twozone.water_hydrogen"
+#input_file = "validation_twozone.newcastle_h2_CI"
+#input_file = "validation_twozone.newcastle_h2_HCCI"
 
 input_dir = "input"
 path = input_dir + "." + input_file
@@ -48,10 +50,13 @@ d = importlib.import_module(path)
 #flags = ['sweep_no_kth']  # Scania validation
 #flags = ['sweep_wiebe']
 #flags = ['sweep_water_paper']
+#flags = ['sweep_newcastle']
+#flags = ['sweep_hcci']
 #flags = ['fit_water_paper', 'single']
-flags = ['single', 'plot_twozone']
+#flags = ['single', 'plot_twozone']
 #flags = ["single", "plot_essentials"]
-#flags = ["sweep_chalmers_h2"]
+#flags = ["single", "fit_newcastle"]
+flags = ["sweep_chalmers_h2"]
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
@@ -62,11 +67,11 @@ data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr
 if 'single' in flags:
     start = timer()
     T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, indicated_power, friction_loss, aux_loss,\
-        heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff = run_piston_engine(data, flags)
+        heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff, nox_spec = run_piston_engine(data, flags)
     end = timer()
     print(f'Time: {end - start}')
 
-    #print(f"IMEP: {imep * 1e-5} bar")
+    print(f"IMEP: {imep * 1e-5} bar")
     #print(far / 0.02923)
     #print(far)
     #print(d.throttle - far)
@@ -142,11 +147,23 @@ elif 'sweep_water_paper' in flags:
 
     sweep_equ(d, flags)
 
+elif 'sweep_newcastle' in flags:
+    from piston_engine.src.misc.sweep_newcastle import sweep_equ
+
+    sweep_equ(d, flags)
+
+elif 'sweep_hcci' in flags:
+    from piston_engine.src.misc.sweep_hcci import sweep_equ
+
+    sweep_equ(d, flags)
+
 
 elif 'sweep_chalmers_h2' in flags:
-    from piston_engine.src.misc.sweep_water_paper import sweep_chalmers
+    from piston_engine.src.misc.sweep_chalmers_h2 import sweep_chalmers
 
     sweep_chalmers(d, flags)
+
+
 
 
 else:

@@ -84,6 +84,7 @@ def nox_calculations(
     T0 = temperatures[0][0]
     p0 = pressures[0][0]
 
+    # equ_sc has no effect here since the end composition is independent (should be)
     xi_N2_0, xi_CO2_0, xi_H2O_0, xi_CO_0, xi_O2_0, xi_OH_0, xi_H2_0, xi_O_0, xi_H_0 = (
         molar_fractions_combustion(T0, p0, equ_sc=equ_sc, equ_combustion=equ, fuel_type=fuel_type))
 
@@ -105,12 +106,12 @@ def nox_calculations(
         # since we want to look at the OHC system isolated, we replace all N2 with Ar
         #gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}"
 
-        # detta är ju inte korrekt antar jag...
         xi_NO = c_NO * (R_univ * T) / p
+
+        # remove oxygen and nitrogen atoms converted to NO
         xi_O2 = xi_O2_0 - 0.5 * xi_NO
         xi_N2 = xi_N2_0 - 0.5 * xi_NO
 
-        #xi_O2 = xi_O2_0
 
         if fuel_type == "jetA":
             gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2}, N2:{xi_N2}, CO:{xi_CO_0}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} "
@@ -149,9 +150,7 @@ def nox_calculations(
         c_O2 = (xi_O2 * p) / (R_univ * T)
         c_O = (xi_O * p) / (R_univ * T)
         c_OH = (xi_OH * p) / (R_univ * T)
-
-        # N2 should be effected?
-        c_N2 = (xi_N2_0 * p) / (R_univ * T)
+        c_N2 = (xi_N2 * p) / (R_univ * T)
 
         # First step for reducing O2 and O and N2
         #c_O2old = c_O2
@@ -214,7 +213,7 @@ def nox_calculations(
         Kc_3 = Kp_3
 
 
-        if fuel_type == "jetA":
+        if fuel_type in ("H2","jetA"):
             coefficients = "grimech"
             #coefficients = "book"
 
@@ -276,8 +275,8 @@ def nox_calculations(
                 k2_r = k2_f / Kc_2
                 k3_r = k3_f / Kc_3
 
-        elif fuel_type == "H2":
-
+        elif fuel_type == "obsolete":
+            # WARNING!!! THESE COEFFICIENTS GIVE TOO MUCH NOX
             # from Modelling of combustion and nitrogen oxide formation in hydrogen-fuelled internal combustion engines within a 3D CFD code
             # forward coefficients
             # mol/m3/s
@@ -322,7 +321,7 @@ def nox_calculations(
             print("Unknown fuel type´in NOx calculations")
 
         # assuming the concentration of N to be quasi-steady (dNdT = 0)
-        print(xi_O2, xi_O, xi_N2, xi_OH, xi_NO)
+        #print(xi_O2, xi_O, xi_N2, xi_OH, xi_NO)
 
         # expression for the concentration (mol/m^3)
         if V > 0:
@@ -390,4 +389,4 @@ def nox_calculations(
     #print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
     #print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
 
-    return no_concentration_mass, dNOdt_mol, times, EI_nox
+    return no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO[-1]

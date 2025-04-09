@@ -89,7 +89,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
         # no fuel in mixture
         M_air = x_N2_air * M_N2 + x_O2_air * M_O2 + x_Ar_air * M_Ar
 
-    if equ == 0:
+    if equ == 0 and fuel_equ_ratio == 0:
 
         if pure_fuel:
             mu_JETA = x_JETA_air * (M_JETA / M_air)
@@ -106,7 +106,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
 
     else:
         # THIS IS FORE THE CASE OF FUEL IN THE AIR
-        if pure_fuel is True:
+        if pure_fuel:
             if fuel_type == 'jetA':
 
                 # (CO2 + H2O - O2 - JETA) * equ + O2 + N2 + Ar + JETA
@@ -134,6 +134,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
                 mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
                 mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
                 mu_JETA = x_JETA * (M_JETA / M)  # mass fraction of JETA in the fluid
+                mu_H2 = 0.0
 
             elif fuel_type == 'H2':
                 # (H2O - O2 - H2) * equ + O2 + N2 + Ar + H2
@@ -159,6 +160,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
                 mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
                 mu_CO2 = 0.0  # no CO2 for H2
                 mu_H2 = x_H2 * (M_H2 / M)  # mass fraction of H2 in the fluid
+                mu_JETA = 0.0
 
             else:
                 raise Exception('Fuel type must be specified.')
@@ -216,6 +218,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
     if pure_fuel:
         p_JETA = mu_JETA * p
         p_H2 = mu_H2 * p
+
     p_N2 = mu_N2 * p
     p_O2 = mu_O2 * p
     p_Ar = mu_Ar * p

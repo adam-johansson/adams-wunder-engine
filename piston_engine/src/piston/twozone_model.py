@@ -65,7 +65,12 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     lambda_gl = 1 / equ_hp[-1]
 
     # NOTE THAT FOR spark ignition (premixed) then we use lambda_0 = lambda_global
+
+    #if fuel_type == "H2":
+    #    premixed = True
+
     if premixed:
+        # maybe add factor here
         lambda_0 = lambda_gl[0]
     else:
         lambda_0 = 1.00

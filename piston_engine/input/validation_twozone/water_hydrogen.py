@@ -12,6 +12,7 @@ thermo = "NASA"
 
 #cooling = "Hohenberg"
 cooling = "Woschni"
+#cooling = "H2"
 
 # premixed or direct_injection or external?
 premixed = True
@@ -34,7 +35,7 @@ lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio
 p_in = 1.01e5  # inlet pressure
 T_in = 298  # inlet temperature
 
-p_ratio = 1.0  # pressure ratio after and before engine
+p_ratio = 0.9  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 400          # Wall temperature
@@ -43,7 +44,7 @@ Thead = 400
 Twalls = [Twall, Tpiston, Thead]
 
 
-ch = 3  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
+ch = 3.5  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
 #phi_open_in = (716/180)*np.pi  #
@@ -54,12 +55,12 @@ ch = 3  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 #phi_close_out = (717/180)*np.pi  #
 
 # inlet valve
-phi_open_in = (718.0/180)*np.pi  # given
-phi_close_in = (931.0/180)*np.pi  # given
+phi_open_in = (718.0/180)*np.pi
+phi_close_in = (931.0/180)*np.pi
 
 # outlet valve
-phi_open_out = (506.0/180)*np.pi  # given
-phi_close_out = (734.0/180)*np.pi  # given
+phi_open_out = (506.0/180)*np.pi
+phi_close_out = (734.0/180)*np.pi
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -83,10 +84,11 @@ wm = 0.6
 
 
 # this is for single wiebe function
-m_wiebe = 4.0  # from validation italian
-
+m_wiebe = 2.5  # 4
 phi_sc = (359/180)*np.pi  # angle at combustion start  from validation italian
-phi_cd = (19.0/180)*np.pi  # angle related to combustion duration from validation italian
+phi_cd = (23/180)*np.pi  # 19
+
+
 
 T_fuel = 300
 p_fuel = 50e5

@@ -20,7 +20,7 @@ cylinders = 1  # for sampling data use 1
 # piston
 d = 0.09  # diameter / bore
 s = 0.082  # stroke
-v_mean = (3000 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+v_mean = (2800 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 l_con = 0.1395  # rod length
 bsr = d / s  # bore stroke ratio
 rod_stroke_ratio = l_con / s
@@ -28,18 +28,18 @@ lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio
 
 # inlet and outlet conditions
 p_in = 1e5  # inlet pressure
-T_in = 300  # inlet temperature
+T_in = 310  # inlet temperature
 #T_in = 1000
-p_ratio = 1.0  # pressure ratio after and before engine
+p_ratio = 1.1  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 400          # Wall temperature
-Tpiston = 400
-Thead = 400
+Twall = 500         # Wall temperature
+Tpiston = 500
+Thead = 500
 Twalls = [Twall, Tpiston, Thead]
 
 
-ch = 1.4  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
+ch = 1.8  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
 phi_open_in = (716/180)*np.pi  #
@@ -60,6 +60,7 @@ cd = 0.8
 
 eta_c = 0.999
 
+# given for the standard cases
 far_goal = 0.0291755 / 2.0
 
 
@@ -71,10 +72,10 @@ wm = 0.6
 
 
 # this is for single wiebe function
-m_wiebe = 1.75  # from validation italian
+m_wiebe = 2.5
 
-phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
-phi_cd = (55/180)*np.pi  # angle related to combustion duration from validation italian
+phi_sc = (353/180)*np.pi
+phi_cd = (30/180)*np.pi
 
 T_fuel = 300
 p_fuel = 50e5

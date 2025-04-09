@@ -547,7 +547,7 @@ def run_piston_engine(indata, flags):
 
                 stop_event.terminal = True
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                                rtol=1e-8, atol=1e-10)  # 1e-12 needed to not fuck up with latest limits
+                                rtol=1e-8, atol=1e-10)  # 1e-8 and 1e-10 are standard
             except UserWarning as e:
                 print(e)
                 return np.zeros(nr_output)
@@ -750,6 +750,9 @@ def run_piston_engine(indata, flags):
 
     heat_loss_single = Q[-1][-1] / t_cycle
 
+    # only account for the swept volume of the piston
+    V_swept = V_d - V_clearance
+
     # Calculate mass flow
     if premixed:
         # inflow of pure air
@@ -762,14 +765,12 @@ def run_piston_engine(indata, flags):
         rho_in_air = p_in / (R_in_air * T_in)
 
         # pure air sucked in vs theoretical max
-        # only account for the swept volume of the piston
-        V_swept = V_d - V_clearance
         volume_eff = (m_in_IP[-1][-1] / (1 + far_goal)) / (V_swept * rho_in_air)
 
     else:
         air_flow = m_in_IP[-1][-1] / t_cycle
         # air sucked in vs theoretical max
-        volume_eff = m_in_IP[-1][-1] / (rho_in * V_d)
+        volume_eff = m_in_IP[-1][-1] / (rho_in * V_swept)
     fuel_flow = mf_tot / t_cycle
     #fuel_flow = mf[-1][-1] / t_cycle
     out_flow = m_out_EP[-1][-1] / t_cycle
@@ -841,7 +842,6 @@ def run_piston_engine(indata, flags):
 
     #print(f"Energy conservation: {diff / heat_ins[-1] * 100} %")
 
-
     # if energy error larger than 0.1% of fuel energy
     if np.abs(diff / heat_ins[-1]) > 0.001:
         print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
@@ -856,6 +856,7 @@ def run_piston_engine(indata, flags):
         # Greek: 0.84. Heider: 0.91, Scania: 1.0
         factor = 0.91
 
+        start = timer()
         # get temperature and mass from reaction zone
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
@@ -865,9 +866,20 @@ def run_piston_engine(indata, flags):
                                                                                                     factor, premixed)
 
         # start = timer()
-        no_ppm, dNOdt, no_times, EI_nox = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+
+
+        # calculate specific NOX emissions (g of NO per kWh of work produced)
+
+        # convert from J to kwH and from kg to g
+        nox_spec = (m_NO / W[-1][-1]) * (3600 * 1e3) * 1e3
+
+
+        end = timer()
+        print(f'Runtime of NOx calculations: {end - start} [s]')
 
     elif cycle == "2T":
         EI_nox = 999
@@ -941,11 +953,18 @@ def run_piston_engine(indata, flags):
 
             val_water_paper_h2(phi, P[-1], dmfdphi, LHV, Q_apparent[-1])
 
+        elif 'fit_newcastle' in flags:
+            # validate NOx model with data from scania engine (KTH msc thesis)
+            from piston_engine.src.misc.plot_output import val_newcastle
+
+            val_newcastle(phi, P[-1])
+
         else:
             # no validation
             if "plot_twozone" in flags:
-                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only, plot_no
+                from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only, plot_no, plot_addedfuel
                 plot_no(phi, phi_open_out, phi_sc, no_ppm)
+                plot_addedfuel(phi, dmfdphi)
                 plot_twozone_full(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
                 plot_twozone_only(phi_z1, T_z1, T_z2, T_hp, m_z1, m_z2)
 
@@ -1004,4 +1023,4 @@ def run_piston_engine(indata, flags):
 
     return (T_out[-1], break_power, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
         power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,
-            volume_eff)
+            volume_eff, nox_spec)
