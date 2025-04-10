@@ -79,7 +79,7 @@ phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation 
 T_fuel = 450
 p_fuel = 300e5
 
-it = 100
+it = 300
 
 mf_tot = 1.5e-4
 

@@ -56,7 +56,7 @@ def run_piston_engine(indata, flags):
     phi_close_out = valve_timings[3]
 
     # number of outputs from the function
-    nr_output = 17
+    nr_output = 19
 
     s = d/bsr  # stroke retrieved from bore stroke ratio
     l_con = s/(2*lms)  # connecting rod length
@@ -711,7 +711,7 @@ def run_piston_engine(indata, flags):
 
         if i + 1 == it:
             if "sweep" in flags:
-                print(f'Simulation never converged. p_in, T_in, cr, far_goal, rpm, bore: {p_in * 1e-5, T_in, cr, far_goal, rpm, d}')
+                print(f'Simulation never converged. p_in, T_in, cr, far_goal, rpm, bore, p_ratio: {p_in * 1e-5, T_in, cr, far_goal, rpm, d, p_ratio}')
                 # Return zeros so that the data can be cleaned from simulations that never converged
                 return np.zeros(nr_output)
             else:
@@ -741,7 +741,7 @@ def run_piston_engine(indata, flags):
         tot_loss_power, aux_loss_power, friction_loss_power = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders,
                                                                         lv_max, cycle)
 
-        break_power = power_engine - tot_loss_power
+        break_power_engine = power_engine - tot_loss_power
 
         if not premixed:
             # Calculate some scavenging things
@@ -1021,6 +1021,6 @@ def run_piston_engine(indata, flags):
 
 
 
-    return (T_out[-1], break_power, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
+    return (T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
         power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,
             volume_eff, nox_spec)
