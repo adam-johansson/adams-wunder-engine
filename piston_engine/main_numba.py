@@ -29,6 +29,8 @@ input_file = "validation_twozone.chalmers_hydrogen"
 input_dir = "input"
 path = input_dir + "." + input_file
 
+# hej
+
 d = importlib.import_module(path)
 
 # flags: plot_all, plot_essentials, plot_convergence, validation, output_all, output_power
