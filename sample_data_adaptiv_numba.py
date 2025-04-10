@@ -65,7 +65,7 @@ elif fuel == "jetA":
 xlimits = np.array([p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim])
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 10  # points per variable
+npoints = 10000  # points per variable
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -136,7 +136,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         remove = remove + 1
         #print(f"Number of data points removed: {remove} out of {i} in total")
 
-    if not (i % (ndoe // 80)):
+    if not (i % (ndoe // 800)):
         mellantid = timer()
         elapsed_time = mellantid - start_simulating
         avg_iteration_time = elapsed_time / i
@@ -157,10 +157,12 @@ headers_output = np.array(['T_out', 'eff', 'air_flow', 'p_max', 'T_max', 'power'
 # Adding the labels to the data
 x_data = pd.DataFrame(sample_scaled, columns=headers_input)
 y_data = pd.DataFrame(y, columns=headers_output)
+combined_data = pd.concat([x_data, y_data], axis=1)
 
 # Writing data to file
-x_data.to_csv('sampled_data/' + fuel + '/x.csv')
-y_data.to_csv('sampled_data/' + fuel + '/y.csv')
+x_data.to_csv('piston_engine/sampled_data/' + fuel + '/x.csv')
+y_data.to_csv('piston_engine/sampled_data/' + fuel + '/y.csv')
+combined_data.to_csv('piston_engine/sampled_data/' + fuel + '/data.csv')
 end_sampling = timer()
 print(f'Total time for sampling data: {end_sampling - start_sampling} [s]')
 
