@@ -106,8 +106,8 @@ def molar_fractions_combustion(T_soc, p_soc, equ_sc, equ_combustion, fuel_type):
         #print(equ_combustion)
         gas2.set_equivalence_ratio(phi=equ_combustion, fuel="h2:1", oxidizer=f"O2:{x_O2}, N2:{x_N2}, H2O:{x_H2O}",
                                    basis="mole")
-        gas2.equilibrate("HP")
-        #gas2.equilibrate("TP")
+        #gas2.equilibrate("HP")
+        gas2.equilibrate("TP")
 
         #fractions = gas2.mole_fraction_dict(threshold=1e-20)
         fractions = gas2.mole_fraction_dict()

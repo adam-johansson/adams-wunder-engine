@@ -9,8 +9,8 @@ from scipy.stats import qmc
 
 import pandas as pd
 
-from src.misc.seiliger import seiliger
-from src.misc.temp_lim import t_in_lim
+from piston_engine.src.misc.seiliger import seiliger
+from piston_engine.src.misc.temp_lim import t_in_lim
 
 from numba import jit
 
@@ -24,7 +24,7 @@ if input_file == "4stroke_hydrogen_sampling":
 else:
     fuel = "jetA"
 
-input_dir = "input"
+input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
 
 d = importlib.import_module(path)

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from timeit import default_timer as timer
 import time
+import sys
 
 from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera
 #from piston_engine.src.piston import thermo_computations, polynomials
@@ -11,6 +12,7 @@ from piston_engine.src.misc.entropy import entropy_calc
 #from piston_engine.src.piston.fuel_func import fuel_props
 #from piston_engine.src.piston.fluid_props import properties
 
+#sys.path.append('../thermo')
 import thermo
 
 from scipy.optimize import fsolve

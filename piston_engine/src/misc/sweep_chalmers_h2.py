@@ -36,7 +36,8 @@ def sweep_chalmers(d, flags):
         T4, brake_power, eta_th, air_flow, p_max, T_max, far, equ_trapped, indicated_power, friction_loss, aux_loss, \
             heat_loss, p_tdc, outflow, no, imep, EI_nox, volume_eff, nox_spec  = run_piston_engine(data, flags)
 
-        print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {nox_spec} g/kWh, imep: {imep} bar")
+        print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {nox_spec} g/kWh, imep: {imep * 1e-5} bar")
+
 
         imeps.append(imep * 1e-5)
         effs.append(eta_th * 1e2)

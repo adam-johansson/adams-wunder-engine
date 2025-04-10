@@ -4,7 +4,7 @@ import importlib
 
 import numpy as np
 
-from engine import run_piston_engine  # import the piston engine function
+from piston_engine.engine import run_piston_engine  # import the piston engine function
 from CCE.src.thermo_outdated.fuel_func import fuel_props
 
 # import all the input variables
@@ -26,10 +26,8 @@ input_file = "validation_twozone.chalmers_hydrogen"
 #input_file = "validation_twozone.newcastle_h2_CI"
 #input_file = "validation_twozone.newcastle_h2_HCCI"
 
-input_dir = "input"
+input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
-
-# hej
 
 d = importlib.import_module(path)
 
@@ -56,9 +54,9 @@ d = importlib.import_module(path)
 #flags = ['sweep_hcci']
 #flags = ['fit_water_paper', 'single']
 #flags = ['single', 'plot_twozone']
-#flags = ["single", "plot_essentials"]
+flags = ["single", "plot_essentials"]
 #flags = ["single", "fit_newcastle"]
-flags = ["sweep_chalmers_h2"]
+#flags = ["sweep_chalmers_h2"]
 
 data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
         d.v_mean, d.lms, d.Twalls, d.ch,
