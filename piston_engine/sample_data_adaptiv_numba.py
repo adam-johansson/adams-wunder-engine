@@ -113,12 +113,12 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
                 v_mean, d.lms, d.Twalls, d.ch,
                 d.valve_timings, d.n_valve, lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
                 d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, fuel_t, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
-                d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                d.cylinders, d.fuel, d.c1, d.c4, d.c5, d.premixed]
 
         # run the simulation
         print(p*1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
         T_out, work_piston, eta_th, air_flow, p_max, T_max, _, equ_trapped, induced_power, _, _, \
-            heat_loss, p_tdc, _, nox, _ = run_piston_engine(data, flags)
+            heat_loss, p_tdc, _, nox, _, EI_nox, volume_eff, nox_spec = run_piston_engine(data, flags)
         # save the output that is relevant
         if equ_trapped > 1.0:
             y[i - 1, :] = np.zeros(n_out)
