@@ -161,30 +161,37 @@ def run_piston_engine(indata, flags):
         # solve a system of ODEs for pressure, temperature, volume
         # assign ode to vector element
 
-        T = x[0]  # temperature
-        V = x[1]  # volume
+        #print("Var scaled", x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15],
+        #      x[16], x[17], x[18], x[19], x[20], x[21], x[22], x[23], x[24], x[25])
+
+        T = x[0] * inv_scaler[0]  # temperature
+        V = x[1] * inv_scaler[1] # volume
         #Q = x[2]  # heat loss
         #Qin = x[3]  # heat in
-        m = x[4]  # mass
-        P = x[5]
+        m = x[4] * inv_scaler[4]  # mass
+        P = x[5] * inv_scaler[5]
+        # work
         #m_in = x[7]
         #mf = x[8]
-        equ = x[9]
+        equ = x[9] * inv_scaler[9]
         #m_out = x[10]
         #energy_out = x[11]
-        m_IP = x[12]
-        T_IP = x[13]
-        equ_IP = x[14]
-        m_EP = x[15]
-        T_EP = x[16]
-        equ_EP = x[17]
+        m_IP = x[12] * inv_scaler[12]
+        T_IP = x[13] * inv_scaler[13]
+        equ_IP = x[14] * inv_scaler[14]
+        m_EP = x[15] * inv_scaler[15]
+        T_EP = x[16] * inv_scaler[16]
+        equ_EP = x[17] * inv_scaler[17]
         # m_in_IP = x[18]
         # entropy_cyl = x[19]
         # mdotin = 20
         # mdotout = 21
         #mout_EP = x[22]
         #Q_app = x[23]  # apparent heat release
+        #H_inIP = x[24]
+        #H_fuel_in = x[25]
 
+        #print("Var normal", T, V, m, P, equ, m_IP, T_IP, equ_IP, m_EP, T_EP, equ_EP )
 
         # Gas properties inside the cylinder
         h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type,
@@ -320,8 +327,8 @@ def run_piston_engine(indata, flags):
         else:
             dmdphi = dmindphi - dmoutdphi + dmfdphi
 
-        x[20] = dmindphi
-        x[21] = dmoutdphi
+        #x[20] = dmindphi
+        #x[21] = dmoutdphi
 
         # INTAKE PORT CALCULATIONS    
         if dmindphi > 0:
@@ -333,7 +340,6 @@ def run_piston_engine(indata, flags):
 
         h_in_IP = h_in
 
-        # TODO: CHANGE FOR PREMIXED
         dellRdellequ_IP, delludellequ_IP = \
             thermo.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type, premixed, far_goal/far_s)
 
@@ -442,10 +448,28 @@ def run_piston_engine(indata, flags):
         #if np.mod(phi, 0.1) < 0.01:
         #    print(phi*180/np.pi, T, P*1e-5, dmindphi, dmoutdphi, dmfdphi, equ, m)
 
-        return [dTdphi, dVdphi, dqdphi, dqfdphi, dmdphi, dPdphi,
-                P * dVdphi, dmindphi, dmfdphi, dequdphi, dmoutdphi, h_out_EP * dmoutdphi_EP,
+
+
+        #print("der", dTdphi, dVdphi, dqdphi, dqfdphi, dmdphi, dPdphi,
+        #        P * dVdphi, dmindphi, dmfdphi, dequdphi, dmoutdphi, h_out_EP * dmoutdphi_EP,
+        #        dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
+        #        dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi)
+
+        derivatives = np.array([dTdphi, dVdphi, dqdphi, dqfdphi, dmdphi, dPdphi,
+                P * dVdphi , dmindphi, dmfdphi, dequdphi, dmoutdphi, h_out_EP * dmoutdphi_EP,
                 dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
-                dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi]
+                dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi])
+
+
+        # scale the derivatives
+        derivatives_scaled = derivatives * scaler
+
+        #print("var scaled", x)
+        #print("der scaled", derivatives_scaled)
+
+        return derivatives_scaled
+
+        #return derivatives
 
 
     def stop_event(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
@@ -457,8 +481,26 @@ def run_piston_engine(indata, flags):
     equ_EP0 = far_tot / far_s
 
     # Init simulation
-    x = [T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m0*1e-1, T_in, 0.0, m0 * 1e-5, T_in, equ_EP0, 0.0,
-         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # initial state value
+    x = np.array([T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m0, T_in, 0.0, m0, T_in, equ_EP0, 0.0,
+         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # initial state value (0.1 m0 in IP and 1e-5 m0 in EP)
+
+    scale_ODE = True
+    if scale_ODE == True:
+
+
+        # Scaling factors for the variables to keep them of the same order of magnitude
+        scaler = np.array([1e-3, 1e3, 1e-3, 1e-3, 1e2, 1e-5, 1e-3, 1e2, 1e3, 1e1, 1e2, 1e-3, 1e2,
+                           1e-2, 1e1, 1e2, 1e-2, 1e1, 1e2, 1e-3, 1e-2, 1e-2, 1e2, 1e-3, 1e-3, 1e-3])
+
+        # Scaling factors for the variables to keep them of the same order of magnitude
+        inv_scaler = 1 / scaler
+
+    else:
+        scaler = np.ones((26))
+        inv_scaler = scaler
+
+    # Scaled variables init
+    x_scaled = x * scaler  # initial state value
 
     T = []
     V = []
@@ -510,11 +552,14 @@ def run_piston_engine(indata, flags):
     start = timer()
 
     for i in range(it):
+        #print(i)
         # Iterate the engine simulation until convergence criterion is met
         if i > 0:
             x = [T[-1][-1], V[-1][-1], 0, 0.0, m[-1][-1], P[-1][-1], 0.0, 0.0, 0.0,
                  equ[-1][-1], 0.0, 0.0, m_IP[-1][-1], T_IP[-1][-1], equ_IP[-1][-1],
                  m_EP[-1][-1], T_EP[-1][-1], equ_EP[-1][-1], 0, S[-1][-1], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+            x_scaled = x * scaler
             if cycle == "2T":
                 Pref = P[-1][np.argwhere(phi > phi_close_out)[0]][0]
                 Tref = T[-1][np.argwhere(phi > phi_close_out)[0]][0]
@@ -532,12 +577,10 @@ def run_piston_engine(indata, flags):
 
         woschni_args = (Pref, Tref, Vref, Pmotor, Vmotor)
         if cycle == "2T":
-            #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='Radau', y0=x, t_eval=phi,
-            #                rtol=1e-12)
-            sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                            rtol=1e-8, atol=1e-12)  # standard is rtole 1e-8 and atol 1e-12
-            #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='RK45', y0=x, t_eval=phi,
-            #                rtol=1e-3, atol=1e-6, max_step=(max(phi)-min(phi))/1e4)
+
+            sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
+                            rtol=1e-8, atol=1e-8)  # standard is rtol 1e-7 and atol 1e-10 (no scaling)
+
             # Radau/LSODA (if LSODA you dont see mdotin and mdotout)
         elif cycle == "4T":
             # LSODA IS THE FASTEST AND PROBABLY MOST ROBUST. RK45 with rtol 1e-12 also works but is a bit slower
@@ -548,7 +591,7 @@ def run_piston_engine(indata, flags):
                 start_time = time.time()
 
                 stop_event.terminal = True
-                sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
+                sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
                                 rtol=1e-8, atol=1e-10)  # 1e-8 and 1e-10 are standard
             except UserWarning as e:
                 print(e)
@@ -556,43 +599,59 @@ def run_piston_engine(indata, flags):
         else:
             raise Exception(f'Unknown cycle. The cycle was {cycle}.')
 
+        # the variables but scaled
+        scaled_results = sol.y
+
+        # real values
+        results = scaled_results * inv_scaler[:, np.newaxis]
+
         if i > 0:
-            mdiff.append((np.abs(sol.y[4][-1] - m[-1][-1])))
-            pdiff.append(np.abs(sol.y[5][-1] - P[-1][-1]))
-            Tdiff.append(np.abs(sol.y[0][-1] - T[-1][-1]))
-            equdiff.append(np.abs(sol.y[9][-1] - equ[-1][-1]))
-            mEP_diff.append(np.abs(sol.y[15][-1] - m_EP[-1][-1]))
-            mIP_diff.append(np.abs(sol.y[12][-1] - m_IP[-1][-1]))
-            T_EP_diff.append(np.abs(sol.y[16][-1] - T_EP[-1][-1]))
-            T_IP_diff.append(np.abs(sol.y[13][-1] - T_IP[-1][-1]))
+            """
+            mdiff.append((np.abs(results[4][-1] - m[-1][-1])))
+            pdiff.append(np.abs(results[5][-1] - P[-1][-1]))
+            Tdiff.append(np.abs(results[0][-1] - T[-1][-1]))
+            equdiff.append(np.abs(results[9][-1] - equ[-1][-1]))
+            mEP_diff.append(np.abs(results[15][-1] - m_EP[-1][-1]))
+            mIP_diff.append(np.abs(results[12][-1] - m_IP[-1][-1]))
+            T_EP_diff.append(np.abs(results[16][-1] - T_EP[-1][-1]))
+            T_IP_diff.append(np.abs(results[13][-1] - T_IP[-1][-1]))
+            """
 
+            mdiff.append((results[4][-1] - m[-1][-1]))
+            pdiff.append(results[5][-1] - P[-1][-1])
+            Tdiff.append(results[0][-1] - T[-1][-1])
+            equdiff.append(results[9][-1] - equ[-1][-1])
+            mEP_diff.append(results[15][-1] - m_EP[-1][-1])
+            mIP_diff.append(results[12][-1] - m_IP[-1][-1])
+            T_EP_diff.append(results[16][-1] - T_EP[-1][-1])
+            T_IP_diff.append(results[13][-1] - T_IP[-1][-1])
 
-        T.append(sol.y[0])
-        V.append(sol.y[1])
-        Q.append(sol.y[2])
-        Q_in.append(sol.y[3])
-        m.append(sol.y[4])
-        P.append(sol.y[5])
-        W.append(sol.y[6])
-        m_in.append(sol.y[7])
-        mf.append(sol.y[8])
-        equ.append(sol.y[9])
-        m_out.append(sol.y[10])
-        energy_out.append(sol.y[11])
-        m_IP.append(sol.y[12])
-        T_IP.append(sol.y[13])
-        equ_IP.append(sol.y[14])
-        m_EP.append(sol.y[15])
-        T_EP.append(sol.y[16])
-        equ_EP.append(sol.y[17])
-        m_in_IP.append(sol.y[18])
-        S.append(sol.y[19])
-        mdotin.append(sol.y[20])
-        mdotout.append(sol.y[21])
-        m_out_EP.append(sol.y[22])
-        Q_apparent.append((sol.y[23]))
-        energy_in.append(sol.y[24])
-        fuel_enthalpy_in.append(sol.y[25])
+        T.append(results[0])
+        V.append(results[1])
+        Q.append(results[2])
+        Q_in.append(results[3])
+        m.append(results[4])
+        P.append(results[5])
+        W.append(results[6])
+        m_in.append(results[7])
+        mf.append(results[8])
+        equ.append(results[9])
+        m_out.append(results[10])
+        energy_out.append(results[11])
+        m_IP.append(results[12])
+        T_IP.append(results[13])
+        equ_IP.append(results[14])
+        m_EP.append(results[15])
+        T_EP.append(results[16])
+        equ_EP.append(results[17])
+        m_in_IP.append(results[18])
+        S.append(results[19])
+        mdotin.append(results[20])
+        mdotout.append(results[21])
+        m_out_EP.append(results[22])
+        Q_apparent.append(results[23])
+        energy_in.append(results[24])
+        fuel_enthalpy_in.append(results[25])
 
         #if "sweep" not in flags:
         #    print(f"iter {i + 1} of {it}")
@@ -673,6 +732,7 @@ def run_piston_engine(indata, flags):
 
         # Checking if simulation has converged (minimum 5 iterations and lest three diffs should be smaller than limits)
         if i > 4:
+            print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1], mIP_diff[-1], mEP_diff[-1])
 
             # These values can be motivated at a later stage
             if 'validation' in flags:
@@ -699,9 +759,9 @@ def run_piston_engine(indata, flags):
 
             convergence = True
             for j in range(1,3):
-                if pdiff[-j] > p_lim or mdiff[-j] > m_lim or Tdiff[-j] > T_lim \
-                        or T_out_diff[-j] > T_out_lim or mf_diff[-j] > mf_lim or equdiff[-j] > equ_lim \
-                        or mEP_diff[-j] > mEP_lim or mIP_diff[-j] > mIP_lim:
+                if np.abs(pdiff[-j]) > p_lim or np.abs(mdiff[-j]) > m_lim or np.abs(Tdiff[-j]) > T_lim \
+                        or np.abs(T_out_diff[-j]) > T_out_lim or np.abs(mf_diff[-j]) > mf_lim or np.abs(equdiff[-j]) > equ_lim \
+                        or np.abs(mEP_diff[-j]) > mEP_lim or np.abs(mIP_diff[-j]) > mIP_lim:
                     convergence = False
 
             if convergence:
@@ -743,7 +803,11 @@ def run_piston_engine(indata, flags):
         tot_loss_power, aux_loss_power, friction_loss_power = post_processing.friction_patton(d, rpm, s, v_mean, p_in, cr, cylinders,
                                                                         lv_max, cycle)
 
+        fmep = tot_loss_power * n_r / (V_d * rps)
+
         break_power_engine = power_engine - tot_loss_power
+
+        bmep = break_power_engine * n_r / (V_d * rps)
 
         if not premixed:
             # Calculate some scavenging things
@@ -845,9 +909,10 @@ def run_piston_engine(indata, flags):
     #print(f"Energy conservation: {diff / heat_ins[-1] * 100} %")
 
     # if energy error larger than 0.1% of fuel energy
-    if np.abs(diff / heat_ins[-1]) > 0.001:
-        print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
-        return np.zeros(nr_output)
+    if "sweep" in flags:
+        if np.abs(diff / heat_ins[-1]) > 0.001:
+            print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
+            return np.zeros(nr_output)
 
     if cycle == "4T":
         ## NOX calculations
@@ -886,6 +951,7 @@ def run_piston_engine(indata, flags):
     elif cycle == "2T":
         EI_nox = 999
         no_ppm = np.array([999])
+        nox_spec = 999
 
 
     # post processing
@@ -896,13 +962,13 @@ def run_piston_engine(indata, flags):
             validation = False
 
         if 'save' in flags:
-            np.savetxt("simulation_data/P.csv", P[-1], delimiter=",")
-            np.savetxt("simulation_data/T.csv", T[-1], delimiter=",")
-            np.savetxt("simulation_data/m.csv", m[-1], delimiter=",")
-            np.savetxt("simulation_data/equ.csv", equ[-1], delimiter=",")
-            np.savetxt("simulation_data/rohr.csv", Q_in[-1], delimiter=",")
-            np.savetxt("simulation_data/Qapparent.csv", Q_apparent[-1], delimiter=",")
-            np.savetxt("simulation_data/phi.csv", phi, delimiter=",")
+            np.savetxt("piston_engine/simulation_data/P.csv", P[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/T.csv", T[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/m.csv", m[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/equ.csv", equ[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/rohr.csv", Q_in[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/Qapparent.csv", Q_apparent[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/phi.csv", phi, delimiter=",")
 
         if "plot_validation" in flags:
             from src.misc.plot_output import plot_validation
@@ -997,17 +1063,17 @@ def run_piston_engine(indata, flags):
             plot_manifolds(phi, equ_IP, m_IP, T_IP, equ_EP, m_EP, T_EP)
 
         if 'output_all' and 'validation' in flags:
-            from src.misc.output import output_thermo_validation, output_power_validation, \
+            from piston_engine.src.misc.output import output_thermo_validation, output_power_validation, \
                 output_scavenging_validation, output_efficiencies_validation
             output_thermo_validation(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
-            output_power_validation(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single)
+            output_power_validation(power, imep, friction_loss_power, fmep, break_power_engine, bmep, heat_loss_single)
             output_efficiencies_validation(eta_th, hl)
             output_scavenging_validation(purity, residual_fraction, eta_trapping,
                                          eta_charging, delivery_ratio, eta_sc, equ_avg)
 
         if 'output_power' and 'validation' in flags:
             from piston_engine.src.misc.output import output_power_validation
-            output_power_validation(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep,
+            output_power_validation(power_engine, imep, friction_loss_power, fmep, break_power_engine, bmep,
                                     heat_loss_single)
 
         if 'output_all' in flags and not validation:

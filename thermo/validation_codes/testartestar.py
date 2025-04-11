@@ -1,10 +1,13 @@
-import matplotlib.pyplot as plt
+
 import numpy as np
 
-x = np.linspace(10, 1, 100)
+x = np.array(([1, 2, 3, 6], [8, 9, 10, 11]))
 
-y = np.exp(x-1.25)
+print(x)
 
-equ = 1/x
-plt.plot(equ,y)
-plt.show()
+b = np.array([5, 9])
+
+print(b)
+
+print(x * b[:, np.newaxis])
+

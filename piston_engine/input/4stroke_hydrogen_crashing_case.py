@@ -46,12 +46,12 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.4  # multiplier to decrease/increase heat transfer
 
 # Inlet valve
-phi_open_in = (715/180)*np.pi  # pressure rise
-phi_close_in = (918/180)*np.pi  # pressure rise
+phi_open_in = (715/180)*np.pi
+phi_close_in = (918/180)*np.pi
 
 # outlet valve
-phi_open_out = (515/180)*np.pi  # for pressure rise
-phi_close_out = (729/180)*np.pi  # for pressure rise
+phi_open_out = (515/180)*np.pi
+phi_close_out = (729/180)*np.pi
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -83,7 +83,7 @@ phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation 
 T_fuel = 391.44193190319555
 p_fuel = 300e5
 
-it = 300
+it = 30
 
 mf_tot = 1.5e-4
 
