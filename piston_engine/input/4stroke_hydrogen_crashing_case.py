@@ -10,29 +10,31 @@ thermo = "NASA"
 cooling = "Woschni"
 #cooling = "H2"
 
+premixed = False
 
 
-10.87802882712856 254.86646473468676 8.696823708631488 0.17920054591095363 0.019652998085297933 1.2938272519363732 9.045152901698128 306.8975735624858
+#print(p*1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
+#10.87802882712856 254.86646473468676 8.696823708631488 0.17920054591095363 0.019652998085297933 1.2938272519363732 9.045152901698128 306.8975735624858
 
 
 opposed = False
-cr = 6
+cr = 7.548272190148182
 
 cylinders = 1  # for sampling data use 1
 
 # piston
-d = 0.10  # diameter / bore
+d = 0.16875509154376395   # diameter / bore
 # s = 0.074676  # stroke
-v_mean = 15.0  # mean velocity
+v_mean = 11.947611201257603   # mean velocity
 # l_con = 0.182067  # rod length
 bsr = 1.0  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 10e5  # inlet pressure
-T_in = 750  # inlet temperature
+p_in = 5.586222153126521e5  # inlet pressure
+T_in = 284.6943897271728  # inlet temperature
 #T_in = 1000
-p_ratio = 0.9  # pressure ratio after and before engine
+p_ratio = 1.3943488292879005   # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500          # Wall temperature
@@ -41,7 +43,7 @@ Thead = 600
 Twalls = [Twall, Tpiston, Thead]
 
 
-ch = 1.8  # multiplier to decrease/increase heat transfer
+ch = 1.4  # multiplier to decrease/increase heat transfer
 
 # Inlet valve
 phi_open_in = (715/180)*np.pi  # pressure rise
@@ -62,7 +64,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-far_goal = 0.0291755 / 3.0
+far_goal =  0.022023661416901992
 
 
 wiebe_type = "Single"
@@ -78,7 +80,7 @@ m_wiebe = 1.75  # from validation italian
 phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
 phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation italian
 
-T_fuel = 450
+T_fuel = 391.44193190319555
 p_fuel = 300e5
 
 it = 300

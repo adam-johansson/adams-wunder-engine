@@ -21,10 +21,11 @@ from CCE.src.thermo_outdated.fuel_func import fuel_props
 #input_file = "validation_twozone.two_zone_heider"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
 #input_file = "validation_twozone.scania_d12"
-input_file = "validation_twozone.chalmers_hydrogen"
+#input_file = "validation_twozone.chalmers_hydrogen"
 #input_file = "validation_twozone.water_hydrogen"
 #input_file = "validation_twozone.newcastle_h2_CI"
 #input_file = "validation_twozone.newcastle_h2_HCCI"
+input_file = "4stroke_hydrogen_crashing_case"
 
 input_dir = "piston_engine.input"
 path = input_dir + "." + input_file

@@ -535,7 +535,7 @@ def run_piston_engine(indata, flags):
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='Radau', y0=x, t_eval=phi,
             #                rtol=1e-12)
             sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x, t_eval=phi,
-                            rtol=1e-8, atol=1e-12)
+                            rtol=1e-8, atol=1e-12)  # standard is rtole 1e-8 and atol 1e-12
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='RK45', y0=x, t_eval=phi,
             #                rtol=1e-3, atol=1e-6, max_step=(max(phi)-min(phi))/1e4)
             # Radau/LSODA (if LSODA you dont see mdotin and mdotout)
