@@ -5,7 +5,7 @@ import importlib
 import numpy as np
 
 from piston_engine.engine import run_piston_engine  # import the piston engine function
-from CCE.src.thermo_outdated.fuel_func import fuel_props
+from thermo import fuel_props
 
 # import all the input variables
 
