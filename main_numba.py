@@ -15,7 +15,7 @@ from thermo import fuel_props
 #input_file = "4stroke_hydrogen"
 #input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-input_file = "validation.nasa_validation"
+#input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider"
@@ -25,7 +25,7 @@ input_file = "validation.nasa_validation"
 #input_file = "validation_twozone.water_hydrogen"
 #input_file = "validation_twozone.newcastle_h2_CI"
 #input_file = "validation_twozone.newcastle_h2_HCCI"
-#input_file = "4stroke_hydrogen_crashing_case"
+input_file = "4stroke_hydrogen_crashing_case"
 
 input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
@@ -40,7 +40,7 @@ d = importlib.import_module(path)
 # to plot validation: first run validation case then run load
 
 #flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials']  # NASA validation case
-flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
+#flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
 #flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
 #flags = ['single', 'output_all', 'save']  # normal case no plots
 #flags = ['single', 'output_all']  # normal case no plots
@@ -56,7 +56,7 @@ flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation c
 #flags = ['sweep_hcci']
 #flags = ['fit_water_paper', 'single']
 #flags = ['single', 'plot_twozone']
-#flags = ["single", "plot_essentials"]
+flags = ["single", "plot_essentials"]
 #flags = ["single", "fit_newcastle"]
 #flags = ["sweep_chalmers_h2"]
 

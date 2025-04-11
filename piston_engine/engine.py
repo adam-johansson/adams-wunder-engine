@@ -592,7 +592,7 @@ def run_piston_engine(indata, flags):
 
                 stop_event.terminal = True
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
-                                rtol=1e-8, atol=1e-10)  # 1e-8 and 1e-10 are standard
+                                rtol=1e-8, atol=1e-8)  # 1e-8 and 1e-10 are standard
             except UserWarning as e:
                 print(e)
                 return np.zeros(nr_output)
@@ -748,14 +748,14 @@ def run_piston_engine(indata, flags):
             else:
 
                 # p_lim normally 1e-1
-                p_lim = 1e-3
+                p_lim = 1e-2
                 m_lim = 1e-7
                 T_lim = 1e-3
                 T_out_lim = 1e-3
                 equ_lim = 1e-5
-                mf_lim = 1e-9
-                mEP_lim = 1e-9
-                mIP_lim = 1e-9
+                mf_lim = 1e-8
+                mEP_lim = 1e-6
+                mIP_lim = 1e-6
 
             convergence = True
             for j in range(1,3):

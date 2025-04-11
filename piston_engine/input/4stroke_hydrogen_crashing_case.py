@@ -14,27 +14,27 @@ premixed = False
 
 
 #print(p*1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
-#10.87802882712856 254.86646473468676 8.696823708631488 0.17920054591095363 0.019652998085297933 1.2938272519363732 9.045152901698128 306.8975735624858
+
 
 
 opposed = False
-cr = 7.548272190148182
+cr =  8.696823708631488
 
 cylinders = 1  # for sampling data use 1
 
 # piston
-d = 0.16875509154376395   # diameter / bore
+d = 0.17920054591095363   # diameter / bore
 # s = 0.074676  # stroke
-v_mean = 11.947611201257603   # mean velocity
+v_mean = 9.045152901698128   # mean velocity
 # l_con = 0.182067  # rod length
 bsr = 1.0  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 5.586222153126521e5  # inlet pressure
-T_in = 284.6943897271728  # inlet temperature
+p_in = 10.87802882712856e5  # inlet pressure
+T_in = 254.86646473468676  # inlet temperature
 #T_in = 1000
-p_ratio = 1.3943488292879005   # pressure ratio after and before engine
+p_ratio =  1.2938272519363732   # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500          # Wall temperature
@@ -64,7 +64,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-far_goal =  0.022023661416901992
+far_goal =  0.019652998085297933
 
 
 wiebe_type = "Single"
@@ -80,10 +80,10 @@ m_wiebe = 1.75  # from validation italian
 phi_sc = (361/180)*np.pi  # angle at combustion start  from validation italian
 phi_cd = (35/180)*np.pi  # angle related to combustion duration from validation italian
 
-T_fuel = 391.44193190319555
+T_fuel = 306.8975735624858
 p_fuel = 300e5
 
-it = 30
+it = 300
 
 mf_tot = 1.5e-4
 
