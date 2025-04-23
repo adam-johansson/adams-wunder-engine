@@ -9,10 +9,10 @@ import cantera as ct
 # OBS: denna funkar bara när det inte är standard state på Gibbs
 # Och även då funkar den ej
 
-gas = ct.Solution('gri30.yaml')
+gas = ct.Solution("gri30.yaml")
 
 p = 5e5
-T = np.linspace(1000,5000, 100)
+T = np.linspace(1000, 5000, 100)
 
 i = 0
 
@@ -22,8 +22,8 @@ h2os = np.zeros(100)
 
 for t in T:
 
-    gas.TPX = t, p, 'H2:1, O2:0.5'
-    gas.equilibrate('TP')
+    gas.TPX = t, p, "H2:1, O2:0.5"
+    gas.equilibrate("TP")
 
     # initialise
     xi_H2 = 0.05
@@ -75,11 +75,10 @@ for t in T:
     o2s[i] = xi_O2
     h2os[i] = xi_H2O
 
-
     i = i + 1
 
 print(gas.mole_fraction_dict(threshold=0.001))
-#print(gas.mole_fraction_dict(threshold=0.001)["H"])
+# print(gas.mole_fraction_dict(threshold=0.001)["H"])
 
 plt.figure()
 plt.plot(T, h2s, label="H2")

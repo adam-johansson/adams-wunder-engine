@@ -2,7 +2,6 @@ from CoolProp.CoolProp import PropsSI
 from scipy.optimize import fsolve
 
 
-
 def hx(pc_i, tc_i, heating_power, m_c, th_i):
 
     # assuming pressure losses
@@ -13,10 +12,10 @@ def hx(pc_i, tc_i, heating_power, m_c, th_i):
     # hot oil
     ph_i = 10e5
     m_h = 6.6
-    cp_h = PropsSI('Cpmass', 'T', th_i, 'P', ph_i, 'INCOMP::PNF2')
+    cp_h = PropsSI("Cpmass", "T", th_i, "P", ph_i, "INCOMP::PNF2")
 
     # cold bypass air
-    hc_i = PropsSI('Hmass', 'T', tc_i, 'P', pc_i, 'Air')
+    hc_i = PropsSI("Hmass", "T", tc_i, "P", pc_i, "Air")
 
     # assuming constant cp for the oil
     C_oil = m_h * cp_h
@@ -30,7 +29,7 @@ def hx(pc_i, tc_i, heating_power, m_c, th_i):
     # finding output temperature of air
     def find_tc_o(tc_o):
         # guessing outlet air enthalpy
-        hc_o_guess = PropsSI('Hmass', 'T', tc_o, 'P', pc_o, 'Air')
+        hc_o_guess = PropsSI("Hmass", "T", tc_o, "P", pc_o, "Air")
 
         return hc_o_guess - hc_o
 

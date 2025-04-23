@@ -4,10 +4,10 @@ cycle = "4T"
 
 thermo = "NASA"
 
-fuel = 'jetA'
+fuel = "jetA"
 
 cooling = "Hohenberg"
-#cooling = "Woschni"
+# cooling = "Woschni"
 
 opposed = False
 
@@ -25,19 +25,21 @@ stroke = 0.154
 bsr = d / stroke  # bore stroke ratio
 
 # given
-v_mean = (1200 / 60 ) * 2 * d  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+v_mean = (1200 / 60) * 2 * d  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 
 rod_stroke_ratio = 0.255 / stroke
-lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
+lms = 1 / (
+    2 * rod_stroke_ratio
+)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-#p_in = 1.93e5  # inlet pressure
+# p_in = 1.93e5  # inlet pressure
 p_in = 1.01325e5 + 0.754e5  # inlet pressure
 T_in = 345  # inlet temperature
 p_ratio = 0.9  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 400          # Liner temperature
+Twall = 400  # Liner temperature
 Tpiston = 400
 Thead = 400
 Twalls = [Twall, Tpiston, Thead]
@@ -46,12 +48,12 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.0  # multiplier to decrease heat transfer
 
 # inlet valve
-phi_open_in = (718.0/180)*np.pi  # given
-phi_close_in = (931.0/180)*np.pi  # given
+phi_open_in = (718.0 / 180) * np.pi  # given
+phi_close_in = (931.0 / 180) * np.pi  # given
 
 # outlet valve
-phi_open_out = (506.0/180)*np.pi  # given
-phi_close_out = (734.0/180)*np.pi  # given
+phi_open_out = (506.0 / 180) * np.pi  # given
+phi_close_out = (734.0 / 180) * np.pi  # given
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
 
@@ -65,8 +67,8 @@ cd = 0.8
 
 # this is for single wiebe function
 m_wiebe = 0.1
-phi_sc = (358.0/180)*np.pi  # angle at combustion start
-phi_cd = (40/180)*np.pi  # angle related to combustion duration 43
+phi_sc = (358.0 / 180) * np.pi  # angle at combustion start
+phi_cd = (40 / 180) * np.pi  # angle related to combustion duration 43
 
 
 T_fuel = 298

@@ -1,18 +1,17 @@
 import numpy as np
 
 
-
 # article: Effect of water injection and spark timing on the nitric oxide emission and combustion parameters of a hydrogen fuelled spark ignition engine
 
 cycle = "4T"
 
-fuel = 'H2'
+fuel = "H2"
 
 thermo = "NASA"
 
-#cooling = "Hohenberg"
+# cooling = "Hohenberg"
 cooling = "Woschni"
-#cooling = "H2"
+# cooling = "H2"
 
 # premixed or direct_injection or external?
 premixed = False
@@ -25,7 +24,7 @@ cylinders = 1  # for sampling data use 1
 # piston
 d = 0.100  # diameter / bore
 s = 0.105  # stroke
-v_mean = (2100 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60
+v_mean = (2100 / 60) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60
 
 bsr = d / s  # bore stroke ratio
 
@@ -38,7 +37,7 @@ T_in = 393  # inlet temperature
 p_ratio = 1.001  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 500          # Wall temperature
+Twall = 500  # Wall temperature
 Tpiston = 500
 Thead = 500
 Twalls = [Twall, Tpiston, Thead]
@@ -47,12 +46,12 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.8  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # inlet valve
-phi_open_in = (688.0/180)*np.pi
-phi_close_in = (959.0/180)*np.pi
+phi_open_in = (688.0 / 180) * np.pi
+phi_close_in = (959.0 / 180) * np.pi
 
 # outlet valve
-phi_open_out = (469.0/180)*np.pi
-phi_close_out = (752.0/180)*np.pi
+phi_open_out = (469.0 / 180) * np.pi
+phi_close_out = (752.0 / 180) * np.pi
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -72,9 +71,8 @@ wiebe_type = "Single"
 
 # this is for single wiebe function
 m_wiebe = 0.3  # 4
-phi_sc = (359/180)*np.pi  # angle at combustion start
-phi_cd = (10/180)*np.pi  # given
-
+phi_sc = (359 / 180) * np.pi  # angle at combustion start
+phi_cd = (10 / 180) * np.pi  # given
 
 
 T_fuel = 300
@@ -89,7 +87,7 @@ c1 = 2.0  # shape factor for diffusion burning
 c4 = 0.3  # premixed / diffusion burning distribution
 c5 = 2.0  # shape factor for premixed burning function
 
-#wiebe_type = "Double"
+# wiebe_type = "Double"
 # This is for Kaisers wiebe function (double)
 wa = 11.0
 wm = 0.6

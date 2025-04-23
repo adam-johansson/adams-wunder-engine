@@ -8,9 +8,16 @@ from scipy.integrate import solve_ivp
 
 import cantera as ct
 
-from numba import jit
+from numba import njit
 
-from thermo import mixture, molar_fractions, equilibrium_OHC, polynomials, euler_cantera, molar_fractions_combustion
+from thermo import (
+    mixture,
+    molar_fractions,
+    equilibrium_OHC,
+    polynomials,
+    euler_cantera,
+    molar_fractions_combustion,
+)
 
 
 def nox_calculations(
@@ -26,7 +33,7 @@ def nox_calculations(
     mf_tot,
     equ_global,
     m_global,
-    equ_sc
+    equ_sc,
 ):
     """
     This model calculates the nox produced in the reaction zone of the two-zone model. That is the burned zone.
@@ -53,11 +60,13 @@ def nox_calculations(
         species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
         # Create an IdealGas object including incomplete combustion species
 
-        ohc_species = [species[S] for S in ("CO2", "H2O", "O2", "CO", "OH", "H2", "O", "H", "N2")]
+        ohc_species = [
+            species[S] for S in ("CO2", "H2O", "O2", "CO", "OH", "H2", "O", "H", "N2")
+        ]
 
     elif fuel_type == "H2":
 
-        species = {S.name: S for S in ct.Species.list_from_file('gri30.yaml')}
+        species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
 
         ohc_species = [species[S] for S in ("H2O", "O2", "OH", "H2", "O", "H", "N2")]
 
@@ -86,7 +95,10 @@ def nox_calculations(
 
     # equ_sc has no effect here since the end composition is independent (should be)
     xi_N2_0, xi_CO2_0, xi_H2O_0, xi_CO_0, xi_O2_0, xi_OH_0, xi_H2_0, xi_O_0, xi_H_0 = (
-        molar_fractions_combustion(T0, p0, equ_sc=equ_sc, equ_combustion=equ, fuel_type=fuel_type))
+        molar_fractions_combustion(
+            T0, p0, equ_sc=equ_sc, equ_combustion=equ, fuel_type=fuel_type
+        )
+    )
 
     def dNOdt_fun(t, var):
 
@@ -104,7 +116,7 @@ def nox_calculations(
             c_NO = 0.0
 
         # since we want to look at the OHC system isolated, we replace all N2 with Ar
-        #gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}"
+        # gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2_0}, N2:{xi_N2_0}"
 
         xi_NO = c_NO * (R_univ * T) / p
 
@@ -112,12 +124,19 @@ def nox_calculations(
         xi_O2 = xi_O2_0 - 0.5 * xi_NO
         xi_N2 = xi_N2_0 - 0.5 * xi_NO
 
-
         if fuel_type == "jetA":
-            gas.TPX = T, p, f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2}, N2:{xi_N2}, CO:{xi_CO_0}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} "
+            gas.TPX = (
+                T,
+                p,
+                f"CO2:{xi_CO2_0}, H2O:{xi_H2O_0}, O2:{xi_O2}, N2:{xi_N2}, CO:{xi_CO_0}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} ",
+            )
 
         elif fuel_type == "H2":
-            gas.TPX = T, p, f"H2O:{xi_H2O_0}, O2:{xi_O2}, N2:{xi_N2}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} "
+            gas.TPX = (
+                T,
+                p,
+                f"H2O:{xi_H2O_0}, O2:{xi_O2}, N2:{xi_N2}, OH:{xi_OH_0}, H2:{xi_H2_0}, O:{xi_O_0}, H:{xi_H_0} ",
+            )
         else:
             print(f"Unknown fuel type.")
 
@@ -153,14 +172,14 @@ def nox_calculations(
         c_N2 = (xi_N2 * p) / (R_univ * T)
 
         # First step for reducing O2 and O and N2
-        #c_O2old = c_O2
-        #c_N2old = c_N2
+        # c_O2old = c_O2
+        # c_N2old = c_N2
 
-        #c_O2 = c_O2 - 0.5 * c_NO
-        #c_N2 = c_N2 - 0.5 * c_NO
+        # c_O2 = c_O2 - 0.5 * c_NO
+        # c_N2 = c_N2 - 0.5 * c_NO
 
-        #print(f" O2 old: {c_O2old} O2 :{c_O2}")
-        #print(f" N2 old: {c_N2old} N2 :{c_N2}")
+        # print(f" O2 old: {c_O2old} O2 :{c_O2}")
+        # print(f" N2 old: {c_N2old} N2 :{c_N2}")
         # thermodynamic properties, mass bases
         # Gibbs free energy is for standard state, meaning no pressure dependence
         _, _, _, g_N2, M_N2 = polynomials.N2(T, p_std)
@@ -200,7 +219,6 @@ def nox_calculations(
         Delta_g_R_2 = nu_2_N * g_N + nu_2_O2 * g_O2 + nu_2_NO * g_NO + nu_2_O * g_O
         Delta_g_R_3 = nu_3_N * g_N + nu_3_OH * g_OH + nu_3_NO * g_NO + nu_3_H * g_H
 
-
         # partial pressure equilibrium constants for all the reactions
         Kp_1 = math.exp(-Delta_g_R_1 / (R_univ * T))
         Kp_2 = math.exp(-Delta_g_R_2 / (R_univ * T))
@@ -212,10 +230,9 @@ def nox_calculations(
         Kc_2 = Kp_2
         Kc_3 = Kp_3
 
-
-        if fuel_type in ("H2","jetA"):
+        if fuel_type in ("H2", "jetA"):
             coefficients = "grimech"
-            #coefficients = "book"
+            # coefficients = "book"
 
             if coefficients == "book":
 
@@ -260,10 +277,9 @@ def nox_calculations(
                 # Universal gas constant in cal / (K * mol)
                 R_univ_cal = 1.98720425864083
 
-                k1_r = A1 * math.exp(- E1 / (R_univ_cal * T))
-                k2_f = A2 * T * math.exp(- E2 / (R_univ_cal * T))
-                k3_f = A3 * math.exp(- E3 / (R_univ_cal * T))
-
+                k1_r = A1 * math.exp(-E1 / (R_univ_cal * T))
+                k2_f = A2 * T * math.exp(-E2 / (R_univ_cal * T))
+                k3_f = A3 * math.exp(-E3 / (R_univ_cal * T))
 
                 # convert to m^3 from cm^3
                 k1_r = k1_r * 1e-6
@@ -308,39 +324,44 @@ def nox_calculations(
 
             # THE PROBLEM IS THAT I DEFINED REACTION 1 THE OTHER WAY. THAT IS WHY k1_r and k1_f have different places.
             # forward
-            k1_r = A1_f * (T ** b1_f ) * math.exp(- E1_f / (R_univ * T))
-            k2_f = A2_f * (T ** b2_f ) * math.exp(- E2_f / (R_univ * T))
-            k3_f = A3_f * (T ** b3_f ) * math.exp(- E3_f / (R_univ * T))
+            k1_r = A1_f * (T**b1_f) * math.exp(-E1_f / (R_univ * T))
+            k2_f = A2_f * (T**b2_f) * math.exp(-E2_f / (R_univ * T))
+            k3_f = A3_f * (T**b3_f) * math.exp(-E3_f / (R_univ * T))
 
             # backward
-            k1_f = A1_r * (T ** b1_r ) * math.exp(- E1_r / (R_univ * T))
-            k2_r = A2_r * (T ** b2_r ) * math.exp(- E2_r / (R_univ * T))
-            k3_r = A3_r * (T ** b3_r ) * math.exp(- E3_r / (R_univ * T))
+            k1_f = A1_r * (T**b1_r) * math.exp(-E1_r / (R_univ * T))
+            k2_r = A2_r * (T**b2_r) * math.exp(-E2_r / (R_univ * T))
+            k3_r = A3_r * (T**b3_r) * math.exp(-E3_r / (R_univ * T))
 
         else:
             print("Unknown fuel type´in NOx calculations")
 
         # assuming the concentration of N to be quasi-steady (dNdT = 0)
-        #print(xi_O2, xi_O, xi_N2, xi_OH, xi_NO)
+        # print(xi_O2, xi_O, xi_N2, xi_OH, xi_NO)
 
         # expression for the concentration (mol/m^3)
         if V > 0:
             c_N = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H) / (
-                    k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V)
+                k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V
+            )
 
-            dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N - (c_NO / V) * dVdt - (c_N / V ) * dVdt
+            dc_NOdt = (
+                2 * k1_f * c_O * c_N2
+                - 2 * k1_r * c_NO * c_N
+                - (c_NO / V) * dVdt
+                - (c_N / V) * dVdt
+            )
         else:
             c_N = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H) / (
-                    k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH)
+                k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
+            )
 
             dc_NOdt = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
-
 
         # amount of moles of NO
         dNOdt = dc_NOdt * V + c_NO * dVdt
 
         return dNOdt
-
 
     # All methods except DOP853 seems to be equal fast
     # sol = solve_ivp(dNOdt_fun, t_span=(min(times), max(times)), method='RK45', y0=np.array([0.0]), t_eval=times)
@@ -366,7 +387,7 @@ def nox_calculations(
 
     # NOx concentration mass of NO divided by total mass of gas leaving cylinder
     # should we instead have mass of cylinder gasses at each point in time?
-    #no_concentration_mass = m_NO[1:] / np.ndarray.flatten(masses[1:])
+    # no_concentration_mass = m_NO[1:] / np.ndarray.flatten(masses[1:])
     no_concentration_mass = m_NO / m_tot
 
     #
@@ -385,8 +406,8 @@ def nox_calculations(
     # Emission (g/kg)
     EI_nox = (m_NO[-1] / mf_tot) * 1e3
 
-    #print(f"NOx concentration in exhaust volume {no_concentration_volume[-1]} PPM")
-    #print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
-    #print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
+    # print(f"NOx concentration in exhaust volume {no_concentration_volume[-1]} PPM")
+    # print(f"NOx concentration in exhaust mass {no_concentration_mass[-1]} PPM")
+    # print(f"Emission index (g NO per kg fueL) {EI_nox} g/kg")
 
     return no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO[-1]

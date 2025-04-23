@@ -2,7 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    StandardScaler,
+    RobustScaler,
+    QuantileTransformer,
+)
 import pandas as pd
 import numpy as np
 from timeit import default_timer as timer
@@ -21,8 +26,7 @@ path_pist = input_dir_pist + "." + input_file_pist
 
 d = importlib.import_module(path_pist)
 
-flags = ['sweep']  # normal case no plots
-
+flags = ["sweep"]  # normal case no plots
 
 
 # Create new model and load states
@@ -42,11 +46,8 @@ v_mean = 15
 fuel_t = 400
 
 
-
-
-
-X = pd.read_csv('./input_data/H2/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./input_data/H2/y_cleaned.csv', index_col=0)
+X = pd.read_csv("./input_data/H2/x_cleaned.csv", index_col=0)
+y = pd.read_csv("./input_data/H2/y_cleaned.csv", index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -54,7 +55,8 @@ y = pd.DataFrame.to_numpy(y)
 
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.8, test_size=0.2, random_state=42)
+    X, y, train_size=0.8, test_size=0.2, random_state=42
+)
 
 
 # test and train predictions
@@ -62,15 +64,14 @@ X_train, X_test, y_train, y_test = train_test_split(
 y_pred_test = model.inference(X_test)
 
 
-
 # go from 12 cylinders to 1, for airflow, power and heat loss
-#divider = np.array([1, 1, 1/12, 1, 1, 1/12, 1/12, 1])
-#y_pred_test = y_pred_test * divider
-#y_test = y_test * divider
+# divider = np.array([1, 1, 1/12, 1, 1, 1/12, 1/12, 1])
+# y_pred_test = y_pred_test * divider
+# y_test = y_test * divider
 
 
 # root square error
-RSE = np.sqrt(np.square(np.subtract(y_test, y_pred_test) ) )
+RSE = np.sqrt(np.square(np.subtract(y_test, y_pred_test)))
 
 # relative error
 rel_error = np.divide(RSE, y_test)
@@ -79,15 +80,16 @@ rel_error = np.divide(RSE, y_test)
 MRE = np.mean(rel_error, axis=0)
 
 
-print(f'MRE T_2: {MRE[0] * 100:.2f} % \n'  
-      f'MRE eff: {MRE[1] * 100:.2f} % \n' 
-      f'MRE airflow: {MRE[2]*100:.2f} % \n' 
-      f'MRE pmax: {MRE[3]*100:.2f} % \n'
-      f'MRE T_max: {MRE[4]*100:.2f} % \n'
-      f'MRE P: {MRE[5]*100:.2f} % \n'
-      f'MRE Q : {MRE[6]*10:.2f} % \n'
-      f'MRE p_tdc: {MRE[7]*100:.2f} %'
-      )
+print(
+    f"MRE T_2: {MRE[0] * 100:.2f} % \n"
+    f"MRE eff: {MRE[1] * 100:.2f} % \n"
+    f"MRE airflow: {MRE[2]*100:.2f} % \n"
+    f"MRE pmax: {MRE[3]*100:.2f} % \n"
+    f"MRE T_max: {MRE[4]*100:.2f} % \n"
+    f"MRE P: {MRE[5]*100:.2f} % \n"
+    f"MRE Q : {MRE[6]*10:.2f} % \n"
+    f"MRE p_tdc: {MRE[7]*100:.2f} %"
+)
 
 
 points = 1000
@@ -106,8 +108,26 @@ p_ins = np.linspace(2e5, 70e5, points)
 T_ins = np.linspace(300, 1200, points)
 compression_ratios = np.linspace(4, 18, points)
 
-independents = [bores, far_s, v_means, p_ratios, fuel_ts, p_ins, T_ins, compression_ratios]
-independents_labels = ["bores", "far_s", "v_means", "p_ratios", "fuel_ts", "p_ins", "T_ins", "compression_ratios"]
+independents = [
+    bores,
+    far_s,
+    v_means,
+    p_ratios,
+    fuel_ts,
+    p_ins,
+    T_ins,
+    compression_ratios,
+]
+independents_labels = [
+    "bores",
+    "far_s",
+    "v_means",
+    "p_ratios",
+    "fuel_ts",
+    "p_ins",
+    "T_ins",
+    "compression_ratios",
+]
 
 j = 0
 start = timer()
@@ -134,7 +154,6 @@ for param, param_label in zip(independents, independents_labels):
         else:
             x = np.array([p_in, t_in, independent, bore, far, p_ratio, v_mean, fuel_t])
 
-
         with torch.no_grad():
             y = model.inference(x)
         outputs[i, :, j] = y
@@ -143,7 +162,7 @@ for param, param_label in zip(independents, independents_labels):
     j = j + 1
 
 end = timer()
-print(f'Sampling time nn: {end - start} s')
+print(f"Sampling time nn: {end - start} s")
 
 if not load:
     j = 0
@@ -154,66 +173,351 @@ if not load:
         for independent in param_real:
             if param_label == "bores":
                 # input data to real simulation
-                data = [p_in, t_in, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, independent, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    t_in,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    independent,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             elif param_label == "far_s":
                 # input data to real simulation
-                data = [p_in, t_in, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, independent,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    t_in,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    bore,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    independent,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             elif param_label == "v_means":
                 # input data to real simulation
-                data = [p_in, t_in, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-                        independent, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    t_in,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    bore,
+                    d.bsr,
+                    independent,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             elif param_label == "p_ratios":
                 # input data to real simulation
-                data = [p_in, t_in, independent, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    t_in,
+                    independent,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    bore,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             elif param_label == "fuel_ts":
                 # input data to real simulation
-                data = [p_in, t_in, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, independent, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    t_in,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    bore,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    independent,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             elif param_label == "p_ins":
                 # input data to real simulation
-                data = [independent, t_in, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    independent,
+                    t_in,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    bore,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             elif param_label == "T_ins":
                 # input data to real simulation
-                data = [p_in, independent, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, cr, bore, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    independent,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    cr,
+                    bore,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
             else:
                 # input data to real simulation
-                data = [p_in, t_in, p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, independent, bore, d.bsr,
-                        v_mean, d.lms, d.Twalls, d.ch,
-                        d.valve_timings, d.n_valve, 0.1 * bore, d.cd, d.eta_c, d.mf_tot, d.wa,
-                        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far,
-                        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+                data = [
+                    p_in,
+                    t_in,
+                    p_ratio,
+                    d.cycle,
+                    d.thermo,
+                    d.cooling,
+                    d.opposed,
+                    independent,
+                    bore,
+                    d.bsr,
+                    v_mean,
+                    d.lms,
+                    d.Twalls,
+                    d.ch,
+                    d.valve_timings,
+                    d.n_valve,
+                    0.1 * bore,
+                    d.cd,
+                    d.eta_c,
+                    d.mf_tot,
+                    d.wa,
+                    d.wm,
+                    d.m_wiebe,
+                    d.phi_sc,
+                    d.phi_cd,
+                    d.T_fuel,
+                    d.p_fuel,
+                    d.it,
+                    d.wiebe_type,
+                    d.valve_type,
+                    far,
+                    d.cylinders,
+                    d.fuel,
+                    d.c1,
+                    d.c4,
+                    d.c5,
+                ]
 
+            (
+                T4,
+                work_piston,
+                eta_th,
+                air_flow,
+                p_max,
+                T_max,
+                far,
+                equ_trapped,
+                indicated_power,
+                friction_loss,
+                aux_loss,
+                heat_loss,
+                p_tdc,
+            ) = run_piston_engine(data, flags)
 
-            T4, work_piston, eta_th, air_flow, p_max, T_max, far, equ_trapped, indicated_power, friction_loss, aux_loss,\
-                heat_loss, p_tdc = run_piston_engine(data, flags)
-
-            tempo_output = [T4, eta_th, air_flow, p_max, T_max, indicated_power * 1e-3, heat_loss * 1e-3, p_tdc * 1e-5]
+            tempo_output = [
+                T4,
+                eta_th,
+                air_flow,
+                p_max,
+                T_max,
+                indicated_power * 1e-3,
+                heat_loss * 1e-3,
+                p_tdc * 1e-5,
+            ]
 
             outputs_real[i, :, j] = tempo_output
 
@@ -221,18 +525,25 @@ if not load:
         j = j + 1
 
     end = timer()
-    print(f'Sampling time real: {end - start} s')
+    print(f"Sampling time real: {end - start} s")
 
     # Writing data to file
-    np.save('sanity_check_data/output_real', outputs_real)
+    np.save("sanity_check_data/output_real", outputs_real)
 
 if load:
-    outputs_real = np.load('sanity_check_data/output_real.npy')
+    outputs_real = np.load("sanity_check_data/output_real.npy")
 
 
-
-output_labels = ["T_2 [K]", "Thermal efficiency [%]", "Airflow [kg/s]", "p_max [bar]", "T_max [K]", "Power [kW]",
-                 "Heat_loss [kW]", "p_tdc [bar]"]
+output_labels = [
+    "T_2 [K]",
+    "Thermal efficiency [%]",
+    "Airflow [kg/s]",
+    "p_max [bar]",
+    "T_max [K]",
+    "Power [kW]",
+    "Heat_loss [kW]",
+    "p_tdc [bar]",
+]
 
 # thermal efficiency converted to percent
 outputs[:, 1, :] = outputs[:, 1, :] * 100
@@ -248,7 +559,7 @@ for param, param_label in zip(independents, independents_labels):
     param_real = np.linspace(param[0], param[-1], points_real)
 
     figs, axs = plt.subplots(3, 3)
-    #plt.figure()
+    # plt.figure()
 
     i = 0
     for ax in axs.flatten():
@@ -256,24 +567,12 @@ for param, param_label in zip(independents, independents_labels):
             i = 7
         ax.plot(param, outputs[:, i, j], label="Neural network")
         ax.plot(param_real, outputs_real[:, i, j], label="Simulation")
-        ax.set_xlabel(f'{param_label}')
-        ax.set_ylabel(f'{output_labels[i]}')
+        ax.set_xlabel(f"{param_label}")
+        ax.set_ylabel(f"{output_labels[i]}")
         ax.legend()
         i = i + 1
-
 
     j = j + 1
 
 
-
-
-
 plt.show()
-
-
-
-
-
-
-
-

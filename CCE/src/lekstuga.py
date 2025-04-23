@@ -150,20 +150,20 @@ equ = np.linspace(0, 1)
 
 y = []
 for x in equ:
-    h, u, cp, cv, R, gamma, s = mixture(x, t, fuel_type='H2')
+    h, u, cp, cv, R, gamma, s = mixture(x, t, fuel_type="H2")
     y.append(R)
 
 
-plt.plot(equ,y)
+plt.plot(equ, y)
 plt.show()
 
-#Runiv = 8.3144626  # J mol^-1 K^-1
-#cp, h, s, M = thermo_outdated.properties(t, equ, fuel_type='jetA')
-#print(h)
+# Runiv = 8.3144626  # J mol^-1 K^-1
+# cp, h, s, M = thermo_outdated.properties(t, equ, fuel_type='jetA')
+# print(h)
 
 
 from CCE.src.thermo_outdated.fuel_func import fuel_props
 
-x, y = fuel_props('H2')
+x, y = fuel_props("H2")
 
-print(1/x, y)
+print(1 / x, y)

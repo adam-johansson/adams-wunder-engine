@@ -1,7 +1,6 @@
 from thermo import polynomials
 
 
-
 T = 298.15
 p = 1e5
 
@@ -17,7 +16,7 @@ cp_jetA, h_jetA, s_jetA, M_jetA = polynomials.JETA(T)
 
 # 1 mole h2 + 0.5 mole O2
 
-#output from polynomials is mass based (per kg)
+# output from polynomials is mass based (per kg)
 # enthalpy has units kJ??
 
 # mass of oxygen
@@ -51,7 +50,7 @@ print(f"LHV of H2= {LHV*1e-6} MJ/kg")
 
 # 1 mole C12_H23
 
-#output from polynomials is mass based (per kg)
+# output from polynomials is mass based (per kg)
 # enthalpy has units J / kg
 
 # mass of jetA

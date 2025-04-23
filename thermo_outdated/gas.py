@@ -22,7 +22,7 @@ class PureSubstance:
 
     def _get_coefficients(self):
         script_dir = os.path.dirname(__file__)  # Get the script directory
-        relative_path = 'coefficients.csv'  # Adjust this to your file's location
+        relative_path = "coefficients.csv"  # Adjust this to your file's location
         full_path = os.path.join(script_dir, relative_path)
         coefficients = pd.read_csv(full_path, index_col=0).loc[self.substance]
 
@@ -39,7 +39,7 @@ class PureSubstance:
 
         R = R_uni / self.molar_mass  # J kg^-1 K^-1 specific gas constant
 
-        if T < 1000.0007: #between 200K and 1000K
+        if T < 1000.0007:  # between 200K and 1000K
             a1 = self._coefficients.loc["a1l"]
             a2 = self._coefficients.loc["a2l"]
             a3 = self._coefficients.loc["a3l"]
@@ -57,7 +57,15 @@ class PureSubstance:
             a6 = self._coefficients.loc["a6h"]
             a7 = self._coefficients.loc["a7h"]
 
-        cp = R * (a1 * T ** (-2) + a2 * T ** (-1) + a3 + a4 * T + a5 * T ** 2 + a6 * T ** 3 + a7 * T ** 4)
+        cp = R * (
+            a1 * T ** (-2)
+            + a2 * T ** (-1)
+            + a3
+            + a4 * T
+            + a5 * T**2
+            + a6 * T**3
+            + a7 * T**4
+        )
 
         return cp
 
@@ -71,7 +79,7 @@ class PureSubstance:
 
         R = R_uni / self.molar_mass  # J kg^-1 K^-1 specific gas constant
 
-        if T < 1000.0007: #between 200K and 1000K
+        if T < 1000.0007:  # between 200K and 1000K
             a1 = self._coefficients.loc["a1l"]
             a2 = self._coefficients.loc["a2l"]
             a3 = self._coefficients.loc["a3l"]
@@ -91,8 +99,20 @@ class PureSubstance:
             a7 = self._coefficients.loc["a7h"]
             b1 = self._coefficients.loc["b1h"]
 
-        h = R * T * (-a1 * T ** (-2) + a2 * math.log(T) / T + a3 + a4 * T / 2 + a5 * T ** 2 / 3 + a6 * T ** 3 / 4
-                     + a7 * T ** 4 / 5 + b1 / T)
+        h = (
+            R
+            * T
+            * (
+                -a1 * T ** (-2)
+                + a2 * math.log(T) / T
+                + a3
+                + a4 * T / 2
+                + a5 * T**2 / 3
+                + a6 * T**3 / 4
+                + a7 * T**4 / 5
+                + b1 / T
+            )
+        )
 
         # All reference elements have assigned enthalpy values equal to zero at 298.15K
         # Add H(298.15) - H(0) to set reference to 0K (doesn't change anything)
@@ -112,9 +132,9 @@ class PureSubstance:
         else:
             T = self.temperature
 
-        R = R_uni / self.molar_mass # J kg^-1 K^-1 specific gas constant
+        R = R_uni / self.molar_mass  # J kg^-1 K^-1 specific gas constant
 
-        if T < 1000.0007: #between 200K and 1000K
+        if T < 1000.0007:  # between 200K and 1000K
             a1 = self._coefficients.loc["a1l"]
             a2 = self._coefficients.loc["a2l"]
             a3 = self._coefficients.loc["a3l"]
@@ -134,12 +154,18 @@ class PureSubstance:
             a7 = self._coefficients.loc["a7h"]
             b2 = self._coefficients.loc["b2h"]
 
-        s = R * (-a1 * T ** (-2) / 2 - a2 * T ** (-1) + a3 * math.log(T) + a4 * T + a5 * T ** 2 / 2 + a6 * T ** 3 / 3
-                 + a7 * T ** 4 / 4 + b2)
+        s = R * (
+            -a1 * T ** (-2) / 2
+            - a2 * T ** (-1)
+            + a3 * math.log(T)
+            + a4 * T
+            + a5 * T**2 / 2
+            + a6 * T**3 / 3
+            + a7 * T**4 / 4
+            + b2
+        )
 
         # pressure dependence of the entropy
         s = s - R * math.log(self.pressure / p_std)
 
         return s
-
-

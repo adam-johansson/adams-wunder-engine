@@ -7,4 +7,3 @@ def load_input(input_file, input_folder):
     print(df["p_in"])
 
     return
-

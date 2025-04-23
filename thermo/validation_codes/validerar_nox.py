@@ -32,7 +32,7 @@ fuel_type = "H2"
 lambda_z1 = 1.2
 
 # crank angle
-phi_z1 = np.linspace(0, 2*np.pi, num)
+phi_z1 = np.linspace(0, 2 * np.pi, num)
 
 # rpm
 rpm = 3000
@@ -48,15 +48,25 @@ mf_tot = 1
 equ_sc = 0.0
 
 
-#ej viktig för detta
+# ej viktig för detta
 m_trapped = 1
 equ_trapped = equ
 
-no_ppm, dNOdt, no_times, EI_nox = nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1,
-                                                                     phi_z1,
-                                                                     rpm,
-                                                                     m_out_total, mf_tot, equ_trapped, m_trapped,
-                                                                     equ_sc)
+no_ppm, dNOdt, no_times, EI_nox = nox_calculations(
+    T_z1,
+    m_z1,
+    p_z1,
+    V_z1,
+    fuel_type,
+    lambda_z1,
+    phi_z1,
+    rpm,
+    m_out_total,
+    mf_tot,
+    equ_trapped,
+    m_trapped,
+    equ_sc,
+)
 
 
 # chemical equilibrium
@@ -81,8 +91,14 @@ elif fuel_type == "H2":
     fuel = h2
 
 
-burning = cea.TPProblem(pressure=p * 1e-5, pressure_units="bar", materials=[n2, o2, h2o, co2, fuel], massf=False,
-                        phi=equ, temperature=T)
+burning = cea.TPProblem(
+    pressure=p * 1e-5,
+    pressure_units="bar",
+    materials=[n2, o2, h2o, co2, fuel],
+    massf=False,
+    phi=equ,
+    temperature=T,
+)
 exhaust = burning.run()
 
 t_flame = exhaust.t
@@ -95,7 +111,7 @@ xi_NO = fracs_cea["NO"]
 # concentration
 c_NO = (xi_NO * p) / (R_univ * T)
 
-#moles of NO
+# moles of NO
 mole_NO = V * c_NO
 
 # mass of NO
@@ -115,6 +131,6 @@ fs = 16
 fig, ax1 = plt.subplots()
 ax1.plot(no_times * 1000, no_ppm)
 ax1.plot([no_times[0], no_times[-1] * 1000], no_concentration_mass)
-ax1.set_xlabel(r'Time [ms]', fontsize=fs)
-ax1.set_ylabel(r'NO ppm (mass)', fontsize=fs)
+ax1.set_xlabel(r"Time [ms]", fontsize=fs)
+ax1.set_ylabel(r"NO ppm (mass)", fontsize=fs)
 plt.show()

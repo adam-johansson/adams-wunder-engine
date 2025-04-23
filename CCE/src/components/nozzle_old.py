@@ -17,7 +17,7 @@ def nozzle_old(p1, T1, pa, eta, cp, gamma, ms):
         choked = False
         p2 = pa
         T2 = T1 - eta * T1 * (1 - (1 / (p1 / p2)) ** ((gamma - 1) / gamma))
-        print(f'Nozzle is not choked and total pressure ratio is: {p1/pa}')
+        print(f"Nozzle is not choked and total pressure ratio is: {p1/pa}")
         c2 = np.sqrt(2 * cp * (T1 - T2))
         As = 0
 

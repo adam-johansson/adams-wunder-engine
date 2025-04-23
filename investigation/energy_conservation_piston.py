@@ -11,27 +11,78 @@ path = input_dir + "." + input_file
 
 d = importlib.import_module(path)
 
-flaggus = ['single', 'output_all', 'plot_convergence', 'plot_essentials']  # normal case no plots
+flaggus = [
+    "single",
+    "output_all",
+    "plot_convergence",
+    "plot_essentials",
+]  # normal case no plots
 
 
 fuel_type = d.fuel
 
 far_s, LHV = fuel_props(fuel_type)
 
-#far_goal = 0.9 * far_s
-#far_goal = 0.024
+# far_goal = 0.9 * far_s
+# far_goal = 0.024
 far_goal = d.far_goal
 
-data = [d.p_in, d.T_in, d.p_ratio, d.cycle, d.thermo, d.cooling, d.opposed, d.cr, d.d, d.bsr,
-        d.v_mean, d.lms, d.Twalls, d.ch,
-        d.valve_timings, d.n_valve, d.lv_max, d.cd, d.eta_c, d.mf_tot, d.wa,
-        d.wm, d.m_wiebe, d.phi_sc, d.phi_cd, d.T_fuel, d.p_fuel, d.it, d.wiebe_type, d.valve_type, far_goal,
-        d.cylinders, d.fuel, d.c1, d.c4, d.c5]
+data = [
+    d.p_in,
+    d.T_in,
+    d.p_ratio,
+    d.cycle,
+    d.thermo,
+    d.cooling,
+    d.opposed,
+    d.cr,
+    d.d,
+    d.bsr,
+    d.v_mean,
+    d.lms,
+    d.Twalls,
+    d.ch,
+    d.valve_timings,
+    d.n_valve,
+    d.lv_max,
+    d.cd,
+    d.eta_c,
+    d.mf_tot,
+    d.wa,
+    d.wm,
+    d.m_wiebe,
+    d.phi_sc,
+    d.phi_cd,
+    d.T_fuel,
+    d.p_fuel,
+    d.it,
+    d.wiebe_type,
+    d.valve_type,
+    far_goal,
+    d.cylinders,
+    d.fuel,
+    d.c1,
+    d.c4,
+    d.c5,
+]
 
 
-T4, work_piston, eta_th, air_flow, p_max, T_max, far_output, equ_trapped, induced_power, friction_loss, aux_loss, \
-    heat_loss, p_tdc, out_flow = engine.run_piston_engine(indata=data, flags=flaggus)
-
+(
+    T4,
+    work_piston,
+    eta_th,
+    air_flow,
+    p_max,
+    T_max,
+    far_output,
+    equ_trapped,
+    induced_power,
+    friction_loss,
+    aux_loss,
+    heat_loss,
+    p_tdc,
+    out_flow,
+) = engine.run_piston_engine(indata=data, flags=flaggus)
 
 
 # actual fuel flow into the engine
@@ -46,7 +97,9 @@ else:
     _, hf, _, _ = polynomials.JETA(d.T_fuel)
 
 h_in, u, cp, cv, R, gamma, s, M = mixture(d.T_in, d.p_in, 0, fuel_type)
-h_out, u, cp, cv, R, gamma, s, M = mixture(T4, d.p_in * d.p_ratio, far_output / far_s, fuel_type)
+h_out, u, cp, cv, R, gamma, s, M = mixture(
+    T4, d.p_in * d.p_ratio, far_output / far_s, fuel_type
+)
 
 energy_in = air_flow * h_in + fuel_flow * LHV + hf * fuel_flow
 
@@ -71,8 +124,8 @@ print(f"Enthalpy flow out: {out_flow * h_out * 1e-3} [kW]")
 
 print(f"far-goal %: {far_goal * 100}")
 print(f"far-output %: {far_output * 100}")
-print(f'Diff in far %: {(far_output - far_goal) * 100}')
-print(f'Mass conservation: {mass_conservation} [kg/s]')
-print(f'Energy conservation: {energy_conservation * 1e-3} [kW]')
+print(f"Diff in far %: {(far_output - far_goal) * 100}")
+print(f"Mass conservation: {mass_conservation} [kg/s]")
+print(f"Energy conservation: {energy_conservation * 1e-3} [kW]")
 
 print(equ_trapped)

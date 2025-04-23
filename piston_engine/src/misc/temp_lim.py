@@ -1,7 +1,3 @@
-
-
-
-
 def t_in_lim(p_in):
 
     pr = p_in / 0.277e5

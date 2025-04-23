@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def euler(f, y0, t, x0):
     """
     Euler method to solve ODEs.
@@ -26,7 +27,7 @@ def euler(f, y0, t, x0):
         h = t[i] - t[i - 1]
         dydt, x0 = f(t[i - 1], y[i - 1], x0)
         y[i] = y[i - 1] + h * dydt
-        dydt_array[i-1] = dydt
+        dydt_array[i - 1] = dydt
 
     return y, dydt_array
 
@@ -57,7 +58,7 @@ def euler_cantera(f, y0, t):
         h = t[i] - t[i - 1]
         dydt = f(t[i - 1], y[i - 1])
         y[i] = y[i - 1] + h * dydt
-        dydt_array[i-1] = dydt
+        dydt_array[i - 1] = dydt
 
     return y, dydt_array
 
@@ -102,5 +103,3 @@ def runge_kutta(f, y0, t0, tf, h):
         y_values.append(y)
 
     return t_values, y_values
-
-

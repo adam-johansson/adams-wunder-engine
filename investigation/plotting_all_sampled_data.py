@@ -6,8 +6,8 @@ from scipy.ndimage import gaussian_filter
 from scipy import stats
 
 
-X = pd.read_csv('./../neural_network/input_data/H2/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./../neural_network/input_data/H2/y_cleaned.csv', index_col=0)
+X = pd.read_csv("./../neural_network/input_data/H2/x_cleaned.csv", index_col=0)
+y = pd.read_csv("./../neural_network/input_data/H2/y_cleaned.csv", index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -17,8 +17,24 @@ y = pd.DataFrame.to_numpy(y)
 data = np.concatenate((X, y), axis=1)
 
 
-labels = ["p_in", "T_in", "cr", "bore", "far", "pressure ratio", "v_mean", "T_fuel", "T_out", "eff", "air_flow",
-          "p_max", "T_max", "power", "heat loss", "p_tdc"]
+labels = [
+    "p_in",
+    "T_in",
+    "cr",
+    "bore",
+    "far",
+    "pressure ratio",
+    "v_mean",
+    "T_fuel",
+    "T_out",
+    "eff",
+    "air_flow",
+    "p_max",
+    "T_max",
+    "power",
+    "heat loss",
+    "p_tdc",
+]
 # 0 = p_in
 # 1 = T_in
 # 2 = cr
@@ -44,17 +60,17 @@ data = data[data[:, independent].argsort()]
 sigma = 8
 
 
-
-
 fig, ax = plt.subplots()
-fig.suptitle('All sampled data points')
+fig.suptitle("All sampled data points")
 
 
-ax.plot(data[:, independent], data[:, dependent], 'k.', markersize=1, label="raw data")
-bin_means, bin_edges, binnumber = (
-    stats.binned_statistic(data[:, independent], data[:, dependent], statistic='mean', bins=100))
-ax.hlines(bin_means, bin_edges[:-1], bin_edges[1:], colors='g', lw=5,
-   label='binned average')
+ax.plot(data[:, independent], data[:, dependent], "k.", markersize=1, label="raw data")
+bin_means, bin_edges, binnumber = stats.binned_statistic(
+    data[:, independent], data[:, dependent], statistic="mean", bins=100
+)
+ax.hlines(
+    bin_means, bin_edges[:-1], bin_edges[1:], colors="g", lw=5, label="binned average"
+)
 ax.set_xlabel(labels[independent])
 ax.set_ylabel(labels[dependent])
 ax.set_title("Scatter plot")

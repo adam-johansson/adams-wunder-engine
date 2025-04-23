@@ -2,7 +2,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    StandardScaler,
+    RobustScaler,
+    QuantileTransformer,
+)
 import pandas as pd
 from torcheval.metrics import R2Score
 import numpy as np
@@ -23,10 +28,10 @@ model = load_inference("models_old/narrowing_512_2.pth")
 print(model)
 
 # putting the model in output mode (this is done in the class already)
-#model.eval()
+# model.eval()
 
-X = pd.read_csv('./input_data/H2/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./input_data/H2/y_cleaned.csv', index_col=0)
+X = pd.read_csv("./input_data/H2/x_cleaned.csv", index_col=0)
+y = pd.read_csv("./input_data/H2/y_cleaned.csv", index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
@@ -34,7 +39,8 @@ y = pd.DataFrame.to_numpy(y)
 
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.8, test_size=0.2, random_state=42)
+    X, y, train_size=0.8, test_size=0.2, random_state=42
+)
 
 
 # prediction on test data
@@ -42,7 +48,7 @@ y_pred_test = model.inference(X_test)
 
 
 # root square error
-RSE = np.sqrt(np.square(np.subtract(y_test, y_pred_test) ) )
+RSE = np.sqrt(np.square(np.subtract(y_test, y_pred_test)))
 
 # relative error
 rel_error = np.divide(RSE, y_test)
@@ -51,41 +57,42 @@ rel_error = np.divide(RSE, y_test)
 MRE = np.mean(rel_error, axis=0)
 
 
-print(f'MRE T_2: {MRE[0] * 100:.2f} % \n'  
-      f'MRE eff: {MRE[1] * 100:.2f} % \n' 
-      f'MRE airflow: {MRE[2]*100:.2f} % \n' 
-      f'MRE pmax: {MRE[3]*100:.2f} % \n'
-      f'MRE T_max: {MRE[4]*100:.2f} % \n'
-      f'MRE P: {MRE[5]*100:.2f} % \n'
-      f'MRE Q : {MRE[6]*10:.2f} % \n'
-      f'MRE p_tdc: {MRE[7]*100:.2f} %'
-      )
+print(
+    f"MRE T_2: {MRE[0] * 100:.2f} % \n"
+    f"MRE eff: {MRE[1] * 100:.2f} % \n"
+    f"MRE airflow: {MRE[2]*100:.2f} % \n"
+    f"MRE pmax: {MRE[3]*100:.2f} % \n"
+    f"MRE T_max: {MRE[4]*100:.2f} % \n"
+    f"MRE P: {MRE[5]*100:.2f} % \n"
+    f"MRE Q : {MRE[6]*10:.2f} % \n"
+    f"MRE p_tdc: {MRE[7]*100:.2f} %"
+)
 
 
-t2 = np.vstack((y_test[:,0], y_pred_test[:,0])).T
-eff = np.vstack((y_test[:,1], y_pred_test[:,1])).T
-airflow = np.vstack((y_test[:,2], y_pred_test[:,2])).T
-pmax = np.vstack((y_test[:,3], y_pred_test[:,3])).T
-tmax = np.vstack((y_test[:,4], y_pred_test[:,4])).T
-P = np.vstack((y_test[:,5], y_pred_test[:,5])).T
-Q = np.vstack((y_test[:,6], y_pred_test[:,6])).T
-ptdc = np.vstack((y_test[:,7], y_pred_test[:,7])).T
+t2 = np.vstack((y_test[:, 0], y_pred_test[:, 0])).T
+eff = np.vstack((y_test[:, 1], y_pred_test[:, 1])).T
+airflow = np.vstack((y_test[:, 2], y_pred_test[:, 2])).T
+pmax = np.vstack((y_test[:, 3], y_pred_test[:, 3])).T
+tmax = np.vstack((y_test[:, 4], y_pred_test[:, 4])).T
+P = np.vstack((y_test[:, 5], y_pred_test[:, 5])).T
+Q = np.vstack((y_test[:, 6], y_pred_test[:, 6])).T
+ptdc = np.vstack((y_test[:, 7], y_pred_test[:, 7])).T
 
-t2 = t2[t2[:,0].argsort()]
-eff = eff[eff[:,0].argsort()]
-airflow = airflow[airflow[:,0].argsort()]
-pmax = pmax[pmax[:,0].argsort()]
-tmax = tmax[tmax[:,0].argsort()]
+t2 = t2[t2[:, 0].argsort()]
+eff = eff[eff[:, 0].argsort()]
+airflow = airflow[airflow[:, 0].argsort()]
+pmax = pmax[pmax[:, 0].argsort()]
+tmax = tmax[tmax[:, 0].argsort()]
 P = P[P[:, 0].argsort()]
 Q = Q[Q[:, 0].argsort()]
 ptdc = ptdc[ptdc[:, 0].argsort()]
 
 # trim some values
-#mask = eff[:, 0] > 0.01
-#eff = eff[mask]
+# mask = eff[:, 0] > 0.01
+# eff = eff[mask]
 
-#mask = P[:, 0] > 20
-#P = P[mask]
+# mask = P[:, 0] > 20
+# P = P[mask]
 
 
 t2_real = t2[:, 0]
@@ -112,6 +119,7 @@ Q_error = (Q[:, 1] - Q[:, 0]) / Q[:, 0] * 100
 ptdc_real = ptdc[:, 0]
 ptdc_error = (ptdc[:, 1] - ptdc[:, 0]) / ptdc[:, 0] * 100
 
+
 def myplot(x, y, s, bins=1000):
     heatmap, xedges, yedges = np.histogram2d(x, y, bins=bins)
     heatmap = gaussian_filter(heatmap, sigma=s)
@@ -120,48 +128,43 @@ def myplot(x, y, s, bins=1000):
     return heatmap.T, extent
 
 
-
-
-
 fig, axs = plt.subplots(2, 2)
-fig.suptitle('T2')
+fig.suptitle("T2")
 
-sigmas = [0, 1, 2, 4] #zoom in
+sigmas = [0, 1, 2, 4]  # zoom in
 zoom_in = True
 sigma = 8
 
 for ax, s in zip(axs.flatten(), sigmas):
     if s == 0:
-        ax.plot(t2_real, t2_error, 'k.', markersize=2)
+        ax.plot(t2_real, t2_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(t2_real, t2_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(t2_real, t2_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-4 / s, 4 / s)
 
 
-
-
 fig2, axs2 = plt.subplots(2, 2)
-fig2.suptitle('Eff')
+fig2.suptitle("Eff")
 
 for ax, s in zip(axs2.flatten(), sigmas):
     if s == 0:
-        ax.plot(eff_real, eff_error, 'k.', markersize=2)
+        ax.plot(eff_real, eff_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(eff_real, eff_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(eff_real, eff_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-10 / s, 10 / s)
@@ -169,19 +172,19 @@ for ax, s in zip(axs2.flatten(), sigmas):
 
 
 fig3, axs3 = plt.subplots(2, 2)
-fig3.suptitle('Airflow')
+fig3.suptitle("Airflow")
 
 for ax, s in zip(axs3.flatten(), sigmas):
     if s == 0:
-        ax.plot(airflow_real, airflow_error, 'k.', markersize=2)
+        ax.plot(airflow_real, airflow_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(airflow_real, airflow_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(airflow_real, airflow_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-10 / s, 10 / s)
@@ -189,19 +192,19 @@ for ax, s in zip(axs3.flatten(), sigmas):
 
 
 fig4, axs4 = plt.subplots(2, 2)
-fig4.suptitle('pmax')
+fig4.suptitle("pmax")
 
 for ax, s in zip(axs4.flatten(), sigmas):
     if s == 0:
-        ax.plot(pmax_real, pmax_error, 'k.', markersize=2)
+        ax.plot(pmax_real, pmax_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(pmax_real, pmax_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(pmax_real, pmax_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-10 / s, 10 / s)
@@ -209,39 +212,39 @@ for ax, s in zip(axs4.flatten(), sigmas):
 
 
 fig5, axs5 = plt.subplots(2, 2)
-fig5.suptitle('Tmax')
+fig5.suptitle("Tmax")
 
 for ax, s in zip(axs5.flatten(), sigmas):
     if s == 0:
-        ax.plot(tmax_real, tmax_error, 'k.', markersize=2)
+        ax.plot(tmax_real, tmax_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(tmax_real, tmax_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
 
     else:
         img, extent = myplot(tmax_real, tmax_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
-            ax.set_ylim(-2 / s,2 / s)
+            ax.set_ylim(-2 / s, 2 / s)
             ax.set_xlim(1500, 3500)
 
 fig6, axs6 = plt.subplots(2, 2)
-fig6.suptitle('Power')
+fig6.suptitle("Power")
 
 for ax, s in zip(axs6.flatten(), sigmas):
     if s == 0:
-        ax.plot(P_real, P_error, 'k.', markersize=2)
+        ax.plot(P_real, P_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(P_real, P_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(P_real, P_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-20 / s, 20 / s)
@@ -249,38 +252,38 @@ for ax, s in zip(axs6.flatten(), sigmas):
 
 
 fig7, axs7 = plt.subplots(2, 2)
-fig7.suptitle('Heat losses')
+fig7.suptitle("Heat losses")
 
 for ax, s in zip(axs7.flatten(), sigmas):
     if s == 0:
-        ax.plot(Q_real, Q_error, 'k.', markersize=2)
+        ax.plot(Q_real, Q_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(Q_real, Q_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(Q_real, Q_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-20 / s, 20 / s)
             ax.set_xlim(0, 1000)
 
 fig8, axs8 = plt.subplots(2, 2)
-fig8.suptitle('p top dead center')
+fig8.suptitle("p top dead center")
 
 for ax, s in zip(axs8.flatten(), sigmas):
     if s == 0:
-        ax.plot(ptdc_real, ptdc_error, 'k.', markersize=2)
+        ax.plot(ptdc_real, ptdc_error, "k.", markersize=2)
         ax.set_title("Scatter plot")
     elif s == 1:
         img, extent = myplot(ptdc_real, ptdc_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
     else:
         img, extent = myplot(ptdc_real, ptdc_error, sigma)
-        ax.imshow(img, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        ax.imshow(img, extent=extent, origin="lower", cmap=cm.jet, aspect="auto")
         ax.set_title("Smoothing with  $\sigma$ = %d" % sigma)
         if zoom_in:
             ax.set_ylim(-10 / s, 10 / s)
@@ -377,21 +380,13 @@ plt.show()
 """
 
 # create data for tikx
-#power_trimmed[:,0], (power_trimmed[:,1] - power_trimmed[:,0]) / power_trimmed[:,0]
+# power_trimmed[:,0], (power_trimmed[:,1] - power_trimmed[:,0]) / power_trimmed[:,0]
 
-#power_diff = 100 * (power_trimmed[:,1] - power_trimmed[:,0]) / power_trimmed[:,0]
-#power_diff = np.atleast_2d()
-#power_true = power_trimmed[:,0]
+# power_diff = 100 * (power_trimmed[:,1] - power_trimmed[:,0]) / power_trimmed[:,0]
+# power_diff = np.atleast_2d()
+# power_true = power_trimmed[:,0]
 
-#power_data = np.concatenate((power_true, power_diff), axis=1)
-
-
+# power_data = np.concatenate((power_true, power_diff), axis=1)
 
 
-
-#np.savetxt("nn_output_data/power_diff.dat", power_data, fmt='%.5f')
-
-
-
-
-
+# np.savetxt("nn_output_data/power_diff.dat", power_data, fmt='%.5f')

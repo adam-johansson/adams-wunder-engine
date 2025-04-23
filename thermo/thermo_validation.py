@@ -11,12 +11,12 @@ from thermo import polynomials
 p = 50e5
 gas = ct.Solution("gri30.yaml")
 
-#gas.TPX = 298, 1e5, "CO2:1"
+# gas.TPX = 298, 1e5, "CO2:1"
 
-#print(gas.standard_enthalpies_RT)
+# print(gas.standard_enthalpies_RT)
 
 n = 1000
-T = np.linspace(200,4000, n)
+T = np.linspace(200, 4000, n)
 
 n_species = 12
 cp_ct = np.zeros([n, n_species])
@@ -98,7 +98,7 @@ for t in T:
     cp_ct[i, 11] = gas.cp_mass
     h_ct[i, 11] = gas.enthalpy_mass
     s_ct[i, 11] = gas.entropy_mass
-    g_ct[i,11] = gas.gibbs_mole
+    g_ct[i, 11] = gas.gibbs_mole
 
     poly_data[i, 0, :] = polynomials.O2(t, p)
     poly_data[i, 1, :] = polynomials.N2(t, p)
@@ -118,15 +118,17 @@ for t in T:
 
 figure, axis = plt.subplots(4, 1)
 species = 0
-axis[0].plot(T, cp_ct[:,0], label="Cantera")
-axis[0].plot(T, poly_data[:,0,0], label="Polynomials")
+axis[0].plot(T, cp_ct[:, 0], label="Cantera")
+axis[0].plot(T, poly_data[:, 0, 0], label="Polynomials")
 
-axis[1].plot(T, h_ct[:,0], label="Cantera")
-axis[1].plot(T, poly_data[:,0,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,0], label="Cantera")
-axis[2].plot(T, poly_data[:,0,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,0], label="Cantera")
-axis[3].plot(T, poly_data[:,0,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[1].plot(T, h_ct[:, 0], label="Cantera")
+axis[1].plot(T, poly_data[:, 0, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, 0], label="Cantera")
+axis[2].plot(T, poly_data[:, 0, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, 0], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, 0, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("O2")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -137,14 +139,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 1
-axis[0].plot(T, cp_ct[:,1], label="Cantera")
-axis[0].plot(T, poly_data[:,1,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,1], label="Cantera")
-axis[1].plot(T, poly_data[:,1,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,1], label="Cantera")
-axis[2].plot(T, poly_data[:,1,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,1], label="Cantera")
-axis[3].plot(T, poly_data[:,1,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, 1], label="Cantera")
+axis[0].plot(T, poly_data[:, 1, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, 1], label="Cantera")
+axis[1].plot(T, poly_data[:, 1, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, 1], label="Cantera")
+axis[2].plot(T, poly_data[:, 1, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, 1], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, 1, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("N2")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -155,14 +159,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 2
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("CO2")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -173,14 +179,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 3
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("Ar")
 axis[0].set_ylim([400, 600])
 axis[0].set_xlabel("Temperature [K]")
@@ -192,14 +200,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 4
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("H2O")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -210,14 +220,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 5
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("H2")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -228,14 +240,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 6
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("CO")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -246,14 +260,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 7
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("OH")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -264,14 +280,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 8
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("O")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -282,14 +300,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 9
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("H")
 axis[0].set_ylim([15000, 25000])
 axis[0].set_xlabel("Temperature [K]")
@@ -301,14 +321,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 10
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("NO")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")
@@ -319,14 +341,16 @@ axis[0].legend()
 
 figure, axis = plt.subplots(4, 1)
 species = 11
-axis[0].plot(T, cp_ct[:,species], label="Cantera")
-axis[0].plot(T, poly_data[:,species,0], label="Polynomials")
-axis[1].plot(T, h_ct[:,species], label="Cantera")
-axis[1].plot(T, poly_data[:,species,1], label="Polynomials")
-axis[2].plot(T, s_ct[:,species], label="Cantera")
-axis[2].plot(T, poly_data[:,species,2], label="Polynomials")
-axis[3].plot(T, g_ct[:,species], label="Cantera")
-axis[3].plot(T, poly_data[:,species,3] * poly_data[:,species,4] * 1000, label="Polynomials")
+axis[0].plot(T, cp_ct[:, species], label="Cantera")
+axis[0].plot(T, poly_data[:, species, 0], label="Polynomials")
+axis[1].plot(T, h_ct[:, species], label="Cantera")
+axis[1].plot(T, poly_data[:, species, 1], label="Polynomials")
+axis[2].plot(T, s_ct[:, species], label="Cantera")
+axis[2].plot(T, poly_data[:, species, 2], label="Polynomials")
+axis[3].plot(T, g_ct[:, species], label="Cantera")
+axis[3].plot(
+    T, poly_data[:, species, 3] * poly_data[:, species, 4] * 1000, label="Polynomials"
+)
 figure.suptitle("N")
 axis[0].set_xlabel("Temperature [K]")
 axis[0].set_ylabel("Specific heat capacity Cp [kJ/(kg K)]")

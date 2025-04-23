@@ -2,7 +2,6 @@ import cantera as ct
 import numpy as np
 
 
-
 T_soc = 900
 p_soc = 10e5
 

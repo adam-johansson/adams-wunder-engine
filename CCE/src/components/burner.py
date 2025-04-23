@@ -20,8 +20,12 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     while not convergence:
         # actual fuel air ratio
         f = f0 / eta
-        cp1, h1, s1, M1 = thermo_outdated.properties(t1, p=p1, equ=equ1, fuel_type=fuel_type)
-        cp2, h2, s2, M2 = thermo_outdated.properties(t2, p=p2, equ=f / far_s + equ1, fuel_type=fuel_type)
+        cp1, h1, s1, M1 = thermo_outdated.properties(
+            t1, p=p1, equ=equ1, fuel_type=fuel_type
+        )
+        cp2, h2, s2, M2 = thermo_outdated.properties(
+            t2, p=p2, equ=f / far_s + equ1, fuel_type=fuel_type
+        )
 
         # theoretical fuel air ratio
         f_theo = ((h2 - h1) / (LHV + hf - h2)) * (1 + equ1 * far_s)

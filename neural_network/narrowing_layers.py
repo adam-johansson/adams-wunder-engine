@@ -1,6 +1,11 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    StandardScaler,
+    RobustScaler,
+    QuantileTransformer,
+)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,32 +19,33 @@ from src import clean_folder, checkpoint, resume
 from src import Data, NET_narrowing
 
 # import data
-X = pd.read_csv('./input_data/H2/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./input_data/H2/y_cleaned.csv', index_col=0)
+X = pd.read_csv("./input_data/H2/x_cleaned.csv", index_col=0)
+y = pd.read_csv("./input_data/H2/y_cleaned.csv", index_col=0)
 
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
 
 # convert to PyTorch tensors
-#X = torch.tensor(X, dtype=torch.float32)
-#y = torch.tensor(y, dtype=torch.float32)
+# X = torch.tensor(X, dtype=torch.float32)
+# y = torch.tensor(y, dtype=torch.float32)
 
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.8, test_size=0.2, random_state=42)
+    X, y, train_size=0.8, test_size=0.2, random_state=42
+)
 
 
 # Normalize the data
 # Which scaler to use???
 X_scaler = StandardScaler()
-#X_scaler = QuantileTransformer(output_distribution='normal')
+# X_scaler = QuantileTransformer(output_distribution='normal')
 # fit transformer on training data
 X_train = X_scaler.fit_transform(X_train)
 # just scale test data without fitting
 X_test = X_scaler.transform(X_test)
 y_scaler = StandardScaler()
-#y_scaler = QuantileTransformer(output_distribution='normal')
+# y_scaler = QuantileTransformer(output_distribution='normal')
 y_train = y_scaler.fit_transform(y_train)
 y_test = y_scaler.transform(y_test)
 
@@ -68,13 +74,10 @@ start_epoch = 0
 
 # Load the training data into data loader with the
 # respective batch_size
-trainloader = DataLoader(traindata, batch_size=batch_size,
-                         shuffle=True)
+trainloader = DataLoader(traindata, batch_size=batch_size, shuffle=True)
 
 # Validate model on validation data
-testloader = DataLoader(testdata, batch_size=batch_size,
-                        shuffle=True)
-
+testloader = DataLoader(testdata, batch_size=batch_size, shuffle=True)
 
 
 # number of inputs
@@ -97,7 +100,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
 # learning rate scheduler
-scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10, factor=0.5)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=10, factor=0.5)
 
 # saving losses for each epoch to visualize
 training_loss = []
@@ -105,7 +108,7 @@ test_loss = []
 
 # delete all checkpoints if new run from epoch 0 is started
 if start_epoch == 0:
-    clean_folder('./checkpoints')
+    clean_folder("./checkpoints")
 
 # use checkpoint number from the file + 1
 if start_epoch > 0:
@@ -152,7 +155,7 @@ for epoch in range(start_epoch, epochs):
     # normally use val loss but for overfitting use training loss
 
     # training loss
-    #scheduler.step(running_loss / (i + 1))
+    # scheduler.step(running_loss / (i + 1))
 
     # test loss
     scheduler.step(running_loss_test)
@@ -163,7 +166,13 @@ for epoch in range(start_epoch, epochs):
     if running_loss_test < best_loss:
         best_loss = running_loss_test
         best_epoch = epoch
-        checkpoint(model, optimizer, X_scaler, y_scaler, f'models_old/narrowing_{hidden_dim}_{layers}.pth')
+        checkpoint(
+            model,
+            optimizer,
+            X_scaler,
+            y_scaler,
+            f"models_old/narrowing_{hidden_dim}_{layers}.pth",
+        )
 
     elif epoch - best_epoch > epoch_threshold:
         print("Early stopped training at epoch %d" % epoch)
@@ -173,30 +182,32 @@ for epoch in range(start_epoch, epochs):
 
     # display statistics
     if not ((epoch + 1) % (epochs // 10)):
-        print(f'Epochs:{epoch + 1:5d} | ' \
-              f'Batches per epoch: {i + 1:3d} | ' \
-              f'Training loss: {running_loss / (i + 1):.10f} | ' \
-              f'Test loss: {running_loss_test:.10f} |' \
-              f'Learning rate: {lr}')
+        print(
+            f"Epochs:{epoch + 1:5d} | "
+            f"Batches per epoch: {i + 1:3d} | "
+            f"Training loss: {running_loss / (i + 1):.10f} | "
+            f"Test loss: {running_loss_test:.10f} |"
+            f"Learning rate: {lr}"
+        )
 
     # save 10 checkpoints
     if not ((epoch + 1) % (epochs // 10)):
         # checkpoint the model parameters
-        checkpoint(model, optimizer, X_scaler, y_scaler, f"./checkpoints/epoch-{epoch}.pth")
+        checkpoint(
+            model, optimizer, X_scaler, y_scaler, f"./checkpoints/epoch-{epoch}.pth"
+        )
         # saving best model found so far based on validation loss
-
 
     training_loss.append(running_loss / (i + 1))
     test_loss.append(running_loss_test.detach().numpy())
 
 
-
 # save the trained model
-#PATH = './models_old/narrowing_256_3.pth'
-#torch.save(model.state_dict(), PATH)
+# PATH = './models_old/narrowing_256_3.pth'
+# torch.save(model.state_dict(), PATH)
 
 # load the best model for validation
-resume(model, optimizer, f'models_old/narrowing_{hidden_dim}_{layers}.pth')
+resume(model, optimizer, f"models_old/narrowing_{hidden_dim}_{layers}.pth")
 
 # Validate trained model using the test dataset
 with torch.no_grad():
@@ -205,7 +216,7 @@ with torch.no_grad():
         # calculate output by running through the network
         predictions = model(inputs)
         loss += F.l1_loss(predictions, labels)
-    print(f'L1 Loss on test dataset, scaled data: {loss / (i + 1):.5f}')
+    print(f"L1 Loss on test dataset, scaled data: {loss / (i + 1):.5f}")
 
 
 # Validate trained model using the test dataset, real values
@@ -217,7 +228,7 @@ with torch.no_grad():
         labels = torch.from_numpy(y_scaler.inverse_transform(labels))
         predictions = torch.from_numpy(y_scaler.inverse_transform(predictions))
         loss += F.l1_loss(predictions, labels)
-    print(f'L1 Loss on test dataset, real numbers: {loss / (i + 1):.5f}')
+    print(f"L1 Loss on test dataset, real numbers: {loss / (i + 1):.5f}")
 
 # dont plot first epochs due to very large initial loss
 skip = 20
@@ -225,13 +236,12 @@ skip = 20
 epochss = np.arange(start_epoch, epochs)
 
 fig, ax1 = plt.subplots()
-ax1.plot(epochss[skip:], training_loss[skip:], label='Training loss')
-ax1.plot(epochss[skip:], test_loss[skip:], label='Test loss')
-ax1.set_xlabel(r'Epoch')
-ax1.set_ylabel(r'MSE loss')
-ax1.set_title(fr'Narrowing. Layers: {layers}, Neurons 1st hidden layer: {hidden_dim}')
-#ax1.set_ylim(0, 0.01)
-#ax1.set_xlim(100, epochs)
+ax1.plot(epochss[skip:], training_loss[skip:], label="Training loss")
+ax1.plot(epochss[skip:], test_loss[skip:], label="Test loss")
+ax1.set_xlabel(r"Epoch")
+ax1.set_ylabel(r"MSE loss")
+ax1.set_title(rf"Narrowing. Layers: {layers}, Neurons 1st hidden layer: {hidden_dim}")
+# ax1.set_ylim(0, 0.01)
+# ax1.set_xlim(100, epochs)
 plt.legend()
 plt.show()
-

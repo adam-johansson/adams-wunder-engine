@@ -5,17 +5,17 @@ from thermo.chemical_equilibrium import equilibrium_OHC
 import cantera as ct
 
 from thermo import molar_fractions
-from numba import jit
+from numba import njit
 
 import time
 
-gas = ct.Solution('gri30.yaml')
+gas = ct.Solution("gri30.yaml")
 
 # pressure adjusted to fit fig 6.22 from "Simulating combustion" by Merker et al (100bar)
 p = 70e5
 
 num = 10
-T = np.linspace(1500,3000, num)
+T = np.linspace(1500, 3000, num)
 
 i = 0
 
@@ -33,7 +33,7 @@ N2 = np.zeros(num)
 NO = np.zeros(num)
 NO2 = np.zeros(num)
 
-#inhouse mole fractions
+# inhouse mole fractions
 mol_fracs = np.zeros([num, 10])
 
 
@@ -44,24 +44,42 @@ p_dummy = 1e5
 equ = 1
 
 fuel_type = "jetA"
-R, M, x_N2, x_O2, x_CO2, x_H2O, x_Ar = molar_fractions(t_dummy, p_dummy, equ=equ, fuel_type=fuel_type)
+R, M, x_N2, x_O2, x_CO2, x_H2O, x_Ar = molar_fractions(
+    t_dummy, p_dummy, equ=equ, fuel_type=fuel_type
+)
 
-x0 = np.array([0.0049914, 0.0011238, 0.0107067, 0.001178, 0.114522, 0.0085485, 0.098127, 0.03164, x_N2, x_Ar]) * p
+x0 = (
+    np.array(
+        [
+            0.0049914,
+            0.0011238,
+            0.0107067,
+            0.001178,
+            0.114522,
+            0.0085485,
+            0.098127,
+            0.03164,
+            x_N2,
+            x_Ar,
+        ]
+    )
+    * p
+)
 
 # replace N2 with Ar
 x_Ar = x_Ar + x_N2
 
 start = time.time()
 for t in T:
-    #print(f"Temperature: {t} out of {T[-1]}")
+    # print(f"Temperature: {t} out of {T[-1]}")
     # cantera
     # with nitrogen in the air
-    #gas.TPX = t, p, f'CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, N2:{x_N2}, Ar:{x_Ar}'
+    # gas.TPX = t, p, f'CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, N2:{x_N2}, Ar:{x_Ar}'
 
     # since we want to look at the OHC system isolated, we replace all N2 with Ar
-    gas.TPX = t, p, f'CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, Ar:{x_Ar}'
+    gas.TPX = t, p, f"CO2:{x_CO2}, H2O:{x_H2O}, O2:{x_O2}, Ar:{x_Ar}"
 
-    gas.equilibrate('TP')
+    gas.equilibrate("TP")
 
     mixture = gas.mole_fraction_dict(threshold=1e-20)
 
@@ -76,9 +94,9 @@ for t in T:
     h[i] = mixture["H"]
 
     # Nitrogen (slow)
-    #N2[i] = mixture["N2"]
-    #NO[i] = mixture["NO"]
-    #NO2[i] = mixture["NO2"]
+    # N2[i] = mixture["N2"]
+    # NO[i] = mixture["NO"]
+    # NO2[i] = mixture["NO2"]
 
     i = i + 1
 
@@ -90,13 +108,12 @@ start = time.time()
 i = 0
 
 for t in T:
-    #print(f"Temperature: {t} out of {T[-1]}")
+    # print(f"Temperature: {t} out of {T[-1]}")
 
     # in house
     mol_fracs[i, :] = equilibrium_OHC(t, equ, p, fuel_type, x0) / p
     # guess for next calculation
     x0 = mol_fracs[i, :] * p
-
 
     i = i + 1
 end = time.time()
@@ -129,11 +146,10 @@ ax1.yaxis.tick_left()
 ax2.yaxis.tick_right()
 
 # added these three lines
-lns = lns1+lns2+lns3+lns4+lns5+lns6+lns7+lns8
+lns = lns1 + lns2 + lns3 + lns4 + lns5 + lns6 + lns7 + lns8
 labs = [l.get_label() for l in lns]
 ax1.legend(lns, labs, loc="lower left")
 ax1.set_title("Cantera")
-
 
 
 # plotting in house results
@@ -165,7 +181,7 @@ ax3.yaxis.tick_left()
 ax4.yaxis.tick_right()
 
 # added these three lines
-lns = lns1+lns2+lns3+lns4+lns5+lns6+lns7+lns8
+lns = lns1 + lns2 + lns3 + lns4 + lns5 + lns6 + lns7 + lns8
 labs = [l.get_label() for l in lns]
 ax3.legend(lns, labs, loc="lower left")
 
@@ -180,16 +196,16 @@ lns1 = ax1.plot(T, N2 * 100, label="N2")
 lns2 = ax2.plot(T, NO * 100, label="NO")
 lns3 = ax2.plot(T, NO * 100, label="NO2")
 # added these three lines
-lns = lns1+lns2+lns3
+lns = lns1 + lns2 + lns3
 labs = [l.get_label() for l in lns]
 ax1.legend(lns, labs, loc="lower left")
 plt.show()
 
 # felsöker
-#plt.plot(T, mol_fracs[:,4] * 100)
-#plt.show()
+# plt.plot(T, mol_fracs[:,4] * 100)
+# plt.show()
 
 # felsöker
-#plt.plot(T, mol_fracs[:,8] * 100)
-#plt.plot(T, mol_fracs[:,9] * 100)
-#plt.show()
+# plt.plot(T, mol_fracs[:,8] * 100)
+# plt.plot(T, mol_fracs[:,9] * 100)
+# plt.show()

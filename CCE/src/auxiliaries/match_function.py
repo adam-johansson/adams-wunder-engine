@@ -8,9 +8,7 @@ def fmatch(func, bound1, bound2, tol):
     x_high = bound2
 
     if np.sign(func(bound1)) == np.sign(func(bound2)):
-        raise Exception(
-            "No solution within given boundary"
-        )
+        raise Exception("No solution within given boundary")
 
     while abs(res) > tol:
         res = func(x)

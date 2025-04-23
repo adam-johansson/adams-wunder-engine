@@ -14,8 +14,8 @@ cea_val = False
 
 T = 900
 p = 1e5
-#equ = 0.5
-#equ2 = 0.5
+# equ = 0.5
+# equ2 = 0.5
 
 
 data = np.zeros((num, num, 8))
@@ -34,12 +34,14 @@ for equ2 in var:
             data_cea[i, j, :] = np.zeros((1, 7)) * np.inf
 
         else:
-            h, u, cp, cv, R, gamma, s, M = mixture(T, p, equ, fuel_type="H2", pure_fuel=True, fuel_equ_ratio=equ2)
-            #h, u, cp, cv, R, gamma, s, M = mixture(T, p, equ, fuel_type="jetA")
+            h, u, cp, cv, R, gamma, s, M = mixture(
+                T, p, equ, fuel_type="H2", pure_fuel=True, fuel_equ_ratio=equ2
+            )
+            # h, u, cp, cv, R, gamma, s, M = mixture(T, p, equ, fuel_type="jetA")
 
             data[i, j, :] = np.array([h * 1e-3, u * 1e-3, cp, cv, R, gamma, s, M * 1e3])
 
-            #print((h - u) * 1e-3)
+            # print((h - u) * 1e-3)
 
             # cea as reference
             air = cea.Oxidizer("Air", temp=T)
@@ -48,12 +50,17 @@ for equ2 in var:
 
             if cea_val:
                 if equ > 0:
-                    burning = cea.TPProblem(pressure=p * 1e-5, pressure_units="bar", materials=[air, jetA],
-                                            phi=equ, temperature=T)
+                    burning = cea.TPProblem(
+                        pressure=p * 1e-5,
+                        pressure_units="bar",
+                        materials=[air, jetA],
+                        phi=equ,
+                        temperature=T,
+                    )
 
                     exhaust = burning.run()
                     # check temperature
-                    #print(exhaust.t)
+                    # print(exhaust.t)
 
                     h_cea = exhaust.h
                     cp_cea = exhaust.cp
@@ -63,24 +70,32 @@ for equ2 in var:
                     cv_cea = cp_cea - R_cea
                     u_cea = h_cea - R_cea * T
 
-                    #print((h_cea - u_cea) * 1e-3)
+                    # print((h_cea - u_cea) * 1e-3)
 
-
-
-                    data_cea[i, j, :] = np.array([h_cea, u_cea, cp_cea * 1e3, cv_cea * 1e3, R_cea * 1e3, gamma_cea, M_cea])
+                    data_cea[i, j, :] = np.array(
+                        [
+                            h_cea,
+                            u_cea,
+                            cp_cea * 1e3,
+                            cv_cea * 1e3,
+                            R_cea * 1e3,
+                            gamma_cea,
+                            M_cea,
+                        ]
+                    )
 
                 else:
                     data_cea[i, j, :] = np.zeros((1, 7)) * np.inf
 
         j += 1
     i += 1
-    #print(i)
+    # print(i)
 
 label = ["h", "u", "cp", "cv", "R", "gamma", "s", "M"]
 
-for k in range(0,8):
+for k in range(0, 8):
     plt.figure()
-    cs = plt.contourf(var, var2, data[:, :,  k], 100)
+    cs = plt.contourf(var, var2, data[:, :, k], 100)
     plt.xlabel("Combustion equ")
     plt.ylabel("Pure fuel equ")
     cbar = plt.colorbar(cs)
@@ -91,20 +106,27 @@ if cea_val:
 
     for k in range(0, 7):
         plt.figure()
-        cs = plt.contourf(var, var2, data_cea[:, :,  k], 20)
+        cs = plt.contourf(var, var2, data_cea[:, :, k], 20)
         plt.xlabel("Combustion equ")
         plt.ylabel("Pure fuel equ")
         cbar = plt.colorbar(cs)
         cbar.ax.set_ylabel(label_cea[k])
 
-
-    label_diff = ["h diff", "u diff", "cp diff", "cv diff", "R diff", "gamma diff", "M diff"]
+    label_diff = [
+        "h diff",
+        "u diff",
+        "cp diff",
+        "cv diff",
+        "R diff",
+        "gamma diff",
+        "M diff",
+    ]
     for k in range(0, 7):
         plt.figure()
         if k == 6:
-            cs = plt.contourf(var, var2, data_cea[:, :, k] - data[:, :, k+1], 20)
+            cs = plt.contourf(var, var2, data_cea[:, :, k] - data[:, :, k + 1], 20)
         else:
-            cs = plt.contourf(var, var2, data_cea[:, :,  k] - data[:, :,  k], 20)
+            cs = plt.contourf(var, var2, data_cea[:, :, k] - data[:, :, k], 20)
         plt.xlabel("Combustion equ")
         plt.ylabel("Pure fuel equ")
         cbar = plt.colorbar(cs)

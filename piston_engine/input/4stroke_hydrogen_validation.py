@@ -6,12 +6,12 @@ import numpy as np
 
 cycle = "4T"
 
-fuel = 'H2'
+fuel = "H2"
 
 thermo = "NASA"
 
-#cooling = "Hohenberg"
-#cooling = "Woschni"
+# cooling = "Hohenberg"
+# cooling = "Woschni"
 cooling = "H2"
 
 opposed = False
@@ -26,15 +26,19 @@ v_mean = 5.7333  # mean velocity 2000 rpm (specified in tysk2)
 # l_con = 0.182067  # rod length
 bsr = 0.086 / 0.086  # bore stroke ratio ( specified)
 
-lms = 1 / (2 * 1.2)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor) (1.7 original)
+lms = 1 / (
+    2 * 1.2
+)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor) (1.7 original)
 
 # inlet and outlet conditions
-p_in = 1.01325e5*0.99  # inlet pressure
+p_in = 1.01325e5 * 0.99  # inlet pressure
 T_in = 293.15  # inlet temperature ASSUMPTION 20 deg Celsius
-p_ratio = 1.01 / 0.99  # pressure ratio after and before engine (assumption based on 1% loss in inlet and outlet)
+p_ratio = (
+    1.01 / 0.99
+)  # pressure ratio after and before engine (assumption based on 1% loss in inlet and outlet)
 
 # Heat transfer
-Twall = 500          # Wall temperature
+Twall = 500  # Wall temperature
 Tpiston = 500
 Thead = 500
 Twalls = [Twall, Tpiston, Thead]
@@ -47,19 +51,19 @@ ch = 1.0  # multiplier to decrease heat transfer
 # camshaft has half speed of engine (110 LSA means 220 angle between exhaust opening and intake opening)
 open_out = 465  # 464 bäst 5.57 454 4.42 458 5.51 NOT SPECIFIED
 diff = 220  # SPECIFIED
-phi_open_in = ((open_out + diff)/180)*np.pi  # working 725
-phi_close_in = ((open_out + diff + 268)/180)*np.pi  # working 935
+phi_open_in = ((open_out + diff) / 180) * np.pi  # working 725
+phi_close_in = ((open_out + diff + 268) / 180) * np.pi  # working 935
 
 # outlet valve
-phi_open_out = (open_out/180)*np.pi  # working 496
-phi_close_out = ((open_out + 268)/180)*np.pi  # working 750
+phi_open_out = (open_out / 180) * np.pi  # working 496
+phi_close_out = ((open_out + 268) / 180) * np.pi  # working 750
 
-#phi_open_in = ((678)/180)*np.pi  # working 725
-#phi_close_in = ((946)/180)*np.pi  # working 935
+# phi_open_in = ((678)/180)*np.pi  # working 725
+# phi_close_in = ((946)/180)*np.pi  # working 935
 
 # outlet valve
-#phi_open_out = (458/180)*np.pi  # working 496
-#phi_close_out = ((716)/180)*np.pi  # working 750
+# phi_open_out = (458/180)*np.pi  # working 496
+# phi_close_out = ((716)/180)*np.pi  # working 750
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -70,13 +74,13 @@ valve_type = "valve"
 lv_max = 0.0095  # this is specified in tysk2
 cd = 0.7
 
-#eta_c = 0.999
+# eta_c = 0.999
 eta_c = 1.0
 
 throttle = 0.0298 / 2.37
 
-phi_sc = (362/180)*np.pi  # angle at combustion start
-phi_cd = (12/180)*np.pi  # angle related to combustion duration
+phi_sc = (362 / 180) * np.pi  # angle at combustion start
+phi_cd = (12 / 180) * np.pi  # angle related to combustion duration
 
 T_fuel = 300
 p_fuel = 150e5
@@ -88,7 +92,7 @@ wa = 11.0
 wm = 0.6
 
 # this is for single wiebe function
-m_wiebe = 1.0  #0.6
+m_wiebe = 1.0  # 0.6
 
 # double wiebe function
 c1 = 2.0  # shape factor for diffusion burning

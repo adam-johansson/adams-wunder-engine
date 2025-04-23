@@ -86,8 +86,7 @@ if __name__ == "__main__":
     hidden_dim = 2048
     layers = 0
 
-    trained_model = load_ANN(f'./models/{folder}_{hidden_dim}_{layers}.pth')
-
+    trained_model = load_ANN(f"./models/{folder}_{hidden_dim}_{layers}.pth")
 
     # Switch off specific layers/parts of the model that behave
     # differently during training and inference.
@@ -109,11 +108,13 @@ if __name__ == "__main__":
     v_mean = 12
     fuel_t = 400
 
-
-    trained_model_dummy_input_1 = np.array([p_in, t_in, cr, bore, far, p_ratio, v_mean, fuel_t])
-    trained_model_dummy_input_2 = np.array([p_in, t_in, cr, bore, far, p_ratio, v_mean, fuel_t])
-    #trained_model_dummy_input_2 = torch.ones((512, 1), dtype=torch.float64)
-
+    trained_model_dummy_input_1 = np.array(
+        [p_in, t_in, cr, bore, far, p_ratio, v_mean, fuel_t]
+    )
+    trained_model_dummy_input_2 = np.array(
+        [p_in, t_in, cr, bore, far, p_ratio, v_mean, fuel_t]
+    )
+    # trained_model_dummy_input_2 = torch.ones((512, 1), dtype=torch.float64)
 
     # Uncomment the following lines to save for inference on GPU (rather than CPU):
     # device = torch.device('cuda')
@@ -133,9 +134,8 @@ if __name__ == "__main__":
 
     # FPTLIB-TODO
     # Set the name of the file you want to save the torchscript model to:
-    #saved_ts_filename = "models/torchscript/h2_ts_model_new.pt"
+    # saved_ts_filename = "models/torchscript/h2_ts_model_new.pt"
     saved_ts_filename = "models/torchscript/jetA_ts_model.pt"
-
 
     # A filepath may also be provided. To do this, pass the filepath as an argument to
     # this script when it is run from the command line, i.e. `./pt2ts.py path/to/model`.
@@ -161,17 +161,18 @@ if __name__ == "__main__":
     # Load torchscript and run model as a test
     # FPTLIB-TODO
     # Scale inputs as above and, if required, move inputs and mode to GPU
-    #trained_model_dummy_input_1 = 2.0 * trained_model_dummy_input_1
-    #trained_model_dummy_input_2 = 2.0 * trained_model_dummy_input_2
+    # trained_model_dummy_input_1 = 2.0 * trained_model_dummy_input_1
+    # trained_model_dummy_input_2 = 2.0 * trained_model_dummy_input_2
     trained_model_testing_outputs = trained_model.inference(trained_model_dummy_input_1)
 
-
-    #scale input
+    # scale input
     if trained_model.scaler == "minmax":
         x_max = trained_model.x_max
         x_min = trained_model.x_min
 
-        trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_min) / (x_max - x_min)
+        trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_min) / (
+            x_max - x_min
+        )
 
     elif trained_model.scaler == "standard":
         x_mean = trained_model.x_mean
@@ -179,7 +180,9 @@ if __name__ == "__main__":
 
         trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_mean) / x_std
     # convert to tensor
-    trained_model_dummy_input_1_tensor = torch.tensor(trained_model_dummy_input_1, dtype=torch.float32)
+    trained_model_dummy_input_1_tensor = torch.tensor(
+        trained_model_dummy_input_1, dtype=torch.float32
+    )
 
     ts_model = load_torchscript(filename=saved_ts_filename)
     ts_model_outputs = ts_model(trained_model_dummy_input_1_tensor)
@@ -209,14 +212,13 @@ if __name__ == "__main__":
 
     print(f"Output torch script model: {ts_model_outputs}")
 
-
     print(trained_model_testing_outputs - ts_model_outputs)
 
-    #if not isinstance(ts_model_outputs, tuple):
+    # if not isinstance(ts_model_outputs, tuple):
     #    ts_model_outputs = (ts_model_outputs,)
-    #if not isinstance(trained_model_testing_outputs, tuple):
+    # if not isinstance(trained_model_testing_outputs, tuple):
     #    trained_model_testing_outputs = (trained_model_testing_outputs,)
-    #for ts_output, output in zip(ts_model_outputs, trained_model_testing_outputs):
+    # for ts_output, output in zip(ts_model_outputs, trained_model_testing_outputs):
     #    if torch.all(ts_output.eq(output)):
     #        print("Saved TorchScript model working as expected in a basic test.")
     #       print("Users should perform further validation as appropriate.")

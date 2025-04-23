@@ -9,12 +9,11 @@ from torcheval.metrics import R2Score
 import matplotlib.pyplot as plt
 
 
-
 def load_nn():
 
     # import data just to know the scale
-    X = pd.read_csv('../piston_engine/sampled_data/h2/X_cleaned.csv', index_col=0)
-    y = pd.read_csv('../piston_engine/sampled_data/h2/y_cleaned.csv', index_col=0)
+    X = pd.read_csv("../piston_engine/sampled_data/h2/X_cleaned.csv", index_col=0)
+    y = pd.read_csv("../piston_engine/sampled_data/h2/y_cleaned.csv", index_col=0)
 
     # convert to numpy arrays
     X = pd.DataFrame.to_numpy(X)
@@ -31,26 +30,28 @@ def load_nn():
     y_scaled = y_scaler.fit_transform(y)
 
     class NET(nn.Module):
-        '''Regression Model
-        '''
+        """Regression Model"""
 
-        def __init__(self, n_layers: int, input_dim: int, hidden_dim: int, output_dim: int) -> None:
+        def __init__(
+            self, n_layers: int, input_dim: int, hidden_dim: int, output_dim: int
+        ) -> None:
             super(NET, self).__init__()
             self.input_to_hidden = nn.Linear(input_dim, hidden_dim)
-            self.hidden = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)])
+            self.hidden = nn.ModuleList(
+                [nn.Linear(hidden_dim, hidden_dim) for _ in range(n_layers)]
+            )
             self.hidden_to_output = nn.Linear(hidden_dim, output_dim)
             self.ReLu = nn.ReLU()  # activation function
 
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             x = self.input_to_hidden(x)
-            #x = self.ReLu(x)
+            # x = self.ReLu(x)
             for layer in self.hidden:
                 x = layer(x)
                 x = self.ReLu(x)
             x = self.hidden_to_output(x)
 
             return x
-
 
     # Create new model and load states
 

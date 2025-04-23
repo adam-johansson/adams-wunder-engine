@@ -2,7 +2,6 @@ from CCE.src import thermo_outdated
 from scipy.optimize import brentq
 
 
-
 def hx_NASA(pc_i, tc_i, heating_power, m_c, th_i):
 
     # assuming pressure losses
@@ -29,7 +28,6 @@ def hx_NASA(pc_i, tc_i, heating_power, m_c, th_i):
         return hc_o_guess - hc_o
 
     tc_o = brentq(find_tc_o, 200, 6000)
-
 
     # returning total heat rejected and outlet oil temp
     return pc_o, tc_o

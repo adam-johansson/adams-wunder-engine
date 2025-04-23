@@ -1,6 +1,11 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
+from sklearn.preprocessing import (
+    MinMaxScaler,
+    StandardScaler,
+    RobustScaler,
+    QuantileTransformer,
+)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,17 +19,24 @@ from src import clean_folder, checkpoint, resume, save, load, save_inference, lo
 from src import Data, NET_straight
 
 
-
 # import data
 
 folder = "H2"
 
-X = pd.read_csv('./input_data/' + folder + '/x_cleaned.csv', index_col=0)
-y = pd.read_csv('./input_data/' + folder + '/y_cleaned.csv', index_col=0)
+data = pd.read_csv("./input_data/" + folder + "/data.csv", index_col=0)
+# X = pd.read_csv('./input_data/' + folder + '/x_cleaned.csv', index_col=0)
+# y = pd.read_csv('./input_data/' + folder + '/y_cleaned.csv', index_col=0)
+
+data = data[data.eff != 0]
 
 # convert to numpy arrays
-X = pd.DataFrame.to_numpy(X)
-y = pd.DataFrame.to_numpy(y)
+# X = pd.DataFrame.to_numpy(X)
+# y = pd.DataFrame.to_numpy(y)
+data = pd.DataFrame.to_numpy(data)
+
+
+X = data[:, :8]
+y = data[:, 8:]
 
 
 # if we only look at power or not
@@ -36,17 +48,18 @@ if simple:
 
 # Split the data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.8, test_size=0.2, random_state=42)
+    X, y, train_size=0.8, test_size=0.2, random_state=42
+)
 
 
 scaler = "standard"
 if scaler == "standard":
     # normalise the data, fit the normalisation on training data (mean 0 std 1)
-    X_mean = np.mean(X_train,0)
-    X_std = np.std(X_train,0)
+    X_mean = np.mean(X_train, 0)
+    X_std = np.std(X_train, 0)
 
-    y_mean = np.mean(y_train,0)
-    y_std = np.std(y_train,0)
+    y_mean = np.mean(y_train, 0)
+    y_std = np.std(y_train, 0)
 
     # normalise the training data
     X_train = (X_train - X_mean) / X_std
@@ -81,8 +94,6 @@ elif scaler == "minmax":
     y2 = y_max
 
 
-
-
 # Generate the training dataset
 traindata = Data(X_train, y_train)
 
@@ -110,13 +121,10 @@ epoch_threshold = 100
 
 # Load the training data into data loader with the
 # respective batch_size
-trainloader = DataLoader(traindata, batch_size=batch_size,
-                         shuffle=True)
+trainloader = DataLoader(traindata, batch_size=batch_size, shuffle=True)
 
 # Validate model on validation data
-testloader = DataLoader(testdata, batch_size=batch_size,
-                        shuffle=True)
-
+testloader = DataLoader(testdata, batch_size=batch_size, shuffle=True)
 
 
 # number of inputs
@@ -132,7 +140,7 @@ model = NET_straight(layers, input_dim, hidden_dim, output_dim)
 print(model)
 
 # criterion to computes the loss between input and target
-#criterion = nn.L1Loss()
+# criterion = nn.L1Loss()
 criterion = nn.MSELoss()
 
 # optimizer that will be used to update weights and biases
@@ -140,7 +148,9 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
 # learning rate scheduler (100 patience normal)
-scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=50, factor=0.5, min_lr=1e-6)
+scheduler = lr_scheduler.ReduceLROnPlateau(
+    optimizer, "min", patience=50, factor=0.5, min_lr=1e-6
+)
 
 # saving losses for each epoch to visualize
 training_loss = []
@@ -148,7 +158,7 @@ test_loss = []
 
 # delete all checkpoints if new run from epoch 0 is started
 if start_epoch == 0:
-    clean_folder('./checkpoints')
+    clean_folder("./checkpoints")
 
 # use checkpoint number from the file + 1
 if start_epoch > 0:
@@ -159,7 +169,6 @@ if start_epoch > 0:
 # initialize best validation loss
 best_loss = 1
 best_epoch = 0
-
 
 
 # start training
@@ -194,7 +203,7 @@ for epoch in range(start_epoch, epochs):
     # normally use val loss but for overfitting use training loss
 
     # training loss
-    #scheduler.step(running_loss / (i + 1))
+    # scheduler.step(running_loss / (i + 1))
 
     # test loss
     scheduler.step(running_loss_test)
@@ -205,7 +214,9 @@ for epoch in range(start_epoch, epochs):
     if running_loss_test < best_loss:
         best_loss = running_loss_test
         best_epoch = epoch
-        save_inference(model, f'models/{folder}_{hidden_dim}_{layers}.pth', scaler, x1, x2, y1, y2)
+        save_inference(
+            model, f"models/{folder}_{hidden_dim}_{layers}.pth", scaler, x1, x2, y1, y2
+        )
 
     elif epoch - best_epoch > epoch_threshold:
         print("Early stopped training at epoch %d" % epoch)
@@ -215,27 +226,28 @@ for epoch in range(start_epoch, epochs):
 
     # display statistics
     if not ((epoch + 1) % (epochs // 3000)):
-        print(f'Epochs:{epoch + 1:5d} | ' \
-              f'Batches per epoch: {i + 1:3d} | ' \
-              f'Training loss: {running_loss / (i + 1):.10f} | ' \
-              f'Test loss: {running_loss_test:.10f} |' \
-              f'Learning rate: {lr}')
+        print(
+            f"Epochs:{epoch + 1:5d} | "
+            f"Batches per epoch: {i + 1:3d} | "
+            f"Training loss: {running_loss / (i + 1):.10f} | "
+            f"Test loss: {running_loss_test:.10f} |"
+            f"Learning rate: {lr}"
+        )
 
     # save 10 checkpoints
-    #if not ((epoch + 1) % (epochs // 10)):
-        # checkpoint the model parameters
-        #checkpoint(model, optimizer, X_scaler, y_scaler, f"./checkpoints/epoch-{epoch}.pth")
-        # saving best model found so far based on validation loss
-
+    # if not ((epoch + 1) % (epochs // 10)):
+    # checkpoint the model parameters
+    # checkpoint(model, optimizer, X_scaler, y_scaler, f"./checkpoints/epoch-{epoch}.pth")
+    # saving best model found so far based on validation loss
 
     training_loss.append(running_loss / (i + 1))
     test_loss.append(running_loss_test.detach().numpy())
 
 
 # load the best model for validation
-#resume(model, optimizer, f'./models_old/straight_{hidden_dim}_{layers}.pth')
+# resume(model, optimizer, f'./models_old/straight_{hidden_dim}_{layers}.pth')
 
-model = load_ANN(f'models/{folder}_{hidden_dim}_{layers}.pth')
+model = load_ANN(f"models/{folder}_{hidden_dim}_{layers}.pth")
 
 # Validate trained model using the test dataset
 with torch.no_grad():
@@ -244,9 +256,7 @@ with torch.no_grad():
         # calculate output by running through the network
         predictions = model(inputs)
         loss += F.l1_loss(predictions, labels)
-    print(f'L1 Loss on test dataset: {loss / (i + 1):.5f}')
-
-
+    print(f"L1 Loss on test dataset: {loss / (i + 1):.5f}")
 
 
 # dont plot first epochs due to very large initial loss
@@ -255,17 +265,15 @@ skip = 10
 epochss = np.arange(start_epoch, epochs)
 
 fig, ax1 = plt.subplots()
-ax1.plot(epochss[skip:], training_loss[skip:], label='Training loss')
-ax1.plot(epochss[skip:], test_loss[skip:], label='Test loss')
-ax1.set_xlabel(r'Epoch')
-ax1.set_ylabel(r'L1 loss')
-ax1.set_title(fr'Straight. Layers: {layers + 1}, Neurons 1st hidden layer: {hidden_dim}')
-#ax1.set_ylim(0, 0.01)
-#ax1.set_xlim(100, epochs)
+ax1.plot(epochss[skip:], training_loss[skip:], label="Training loss")
+ax1.plot(epochss[skip:], test_loss[skip:], label="Test loss")
+ax1.set_xlabel(r"Epoch")
+ax1.set_ylabel(r"L1 loss")
+ax1.set_title(
+    rf"Straight. Layers: {layers + 1}, Neurons 1st hidden layer: {hidden_dim}"
+)
+# ax1.set_ylim(0, 0.01)
+# ax1.set_xlim(100, epochs)
 plt.legend()
 
 plt.show()
-
-
-
-

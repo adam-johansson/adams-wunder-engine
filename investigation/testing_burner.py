@@ -8,7 +8,7 @@ p35 = 10e5
 T35 = 1000
 T4_req = 1800
 dPcomb = 0.05
-eta_b = 99.99/100
+eta_b = 99.99 / 100
 fuel_type = "H2"
 t_fuel = 450
 
@@ -28,11 +28,13 @@ fuel_flow_piston = m31 * far_before_burner
 m35 = m31 + fuel_flow_piston
 
 
-p4, T4, far_burner = components.burner(p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel)
+p4, T4, far_burner = components.burner(
+    p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel
+)
 
 
 # m31 is pure air. After cooling flow removed but before piston.
-m4 = m35 + far_burner * m31   # flow after burner. air + fuel piston + fuel burner
+m4 = m35 + far_burner * m31  # flow after burner. air + fuel piston + fuel burner
 
 # burner fuel flow
 fuel_flow_burner = far_burner * m31
@@ -61,6 +63,4 @@ P_burner = m4 * h_b_out - m35 * h_b_in
 # fuel energy converted to enthalpy gain
 frac = P_burner / fuel_power
 
-print(f'Fraction of fuel energy to gas: {frac}. Fuel air ratio after burner: {far_tot}')
-
-
+print(f"Fraction of fuel energy to gas: {frac}. Fuel air ratio after burner: {far_tot}")

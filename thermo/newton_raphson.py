@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from numba import jit
+from numba import njit
 
-#@jit(nopython=True, cache=True)
+
+# @jit(nopython=True, cache=True)
 def newton_method(fun, x0, jacobian):
 
     # initial guess
@@ -21,32 +22,29 @@ def newton_method(fun, x0, jacobian):
     errors = np.zeros([10, max_iter])
 
     # get scaling factors
-    #scale = 1 / np.abs(fun(x_n))
+    # scale = 1 / np.abs(fun(x_n))
 
     # fast
     scale = np.atleast_2d([1, 1, 1e-3, 1e-3, 1e-3, 1e-5, 1, 1e2, 1, 1]).T
 
     # slow
-    #scale = np.atleast_2d([1, 1e2, 1e2, 1e-3, 1e-1, 1e-5, 1e1, 1e3, 1, 1e1]).T
+    # scale = np.atleast_2d([1, 1e2, 1e2, 1e-3, 1e-1, 1e-5, 1e1, 1e3, 1, 1e1]).T
     for i in range(max_iter):
         F = fun(x_n)
         F_scaled = F * scale
         J = jacobian(x_n)
         J_scaled = J * scale
 
-        errors[:,i] = F[:,0]
+        errors[:, i] = F[:, 0]
 
-        #print(f"Mean error: {np.mean(np.abs(F))}")
-        #if np.mean(np.abs(F_scaled)) < tol:
+        # print(f"Mean error: {np.mean(np.abs(F))}")
+        # if np.mean(np.abs(F_scaled)) < tol:
         if np.max(np.abs(F_scaled)) < tol:
             print(f"Converged after {i} iterations.")
             break
 
-        dx = - np.linalg.solve(J_scaled, F_scaled)
+        dx = -np.linalg.solve(J_scaled, F_scaled)
         x_n = x_n + dx * alpha
-
-
-
 
     """
     plt.plot(errors[0, : i], label="Eq 1", linewidth=2)

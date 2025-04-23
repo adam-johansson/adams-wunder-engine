@@ -4,10 +4,10 @@ cycle = "4T"
 
 thermo = "NASA"
 
-fuel = 'jetA'
+fuel = "jetA"
 
 cooling = "Hohenberg"
-#cooling = "Woschni"
+# cooling = "Woschni"
 
 opposed = False
 
@@ -22,12 +22,14 @@ d = 0.08026  # diameter
 
 # given
 rpm = 2500
-v_mean = (rpm / 60 ) * 2 * d
+v_mean = (rpm / 60) * 2 * d
 
 # given
 bsr = 0.08026 / 0.08890  # bore stroke ratio
 
-lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
+lms = 1 / (
+    2 * 1.7
+)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions (1.5 bar)
 p_in = 1.0125e5 * 0.85  # inlet pressure
@@ -38,18 +40,18 @@ ch = 1.0  # multiplier to decrease or increase heat transfer
 
 # Heat transfer
 # given
-Twall = 450          # Liner temperature
+Twall = 450  # Liner temperature
 Tpiston = 450
 Thead = 450
 Twalls = [Twall, Tpiston, Thead]
 
 # inlet valve (given)
-phi_open_in = (712.0/180)*np.pi  # 712
-phi_close_in = (942.0/180)*np.pi  # 905
+phi_open_in = (712.0 / 180) * np.pi  # 712
+phi_close_in = (942.0 / 180) * np.pi  # 905
 
 # outlet valve
-phi_open_out = (480/180)*np.pi  # 510
-phi_close_out = (732.0/180)*np.pi  # 725
+phi_open_out = (480 / 180) * np.pi  # 510
+phi_close_out = (732.0 / 180) * np.pi  # 725
 
 
 far_goal = 0.041
@@ -58,12 +60,12 @@ far_goal = 0.041
 # parameters gotten from minimising MSE
 m_wiebe = 2.85
 
-phi_sc = (340.48/180)*np.pi  # angle at combustion start
-phi_cd = (44.6/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #43
+phi_sc = (340.48 / 180) * np.pi  # angle at combustion start
+phi_cd = (
+    44.6 / 180
+) * np.pi  # angle related to combustion duration WORKED WITH SINGLE #43
 T_fuel = 298
 p_fuel = 2500e5
-
-
 
 
 ### RARELY CHANGED PARAMETERS ###
@@ -83,7 +85,6 @@ cd = 0.8
 
 # 99.9 should be used
 eta_c = 0.999
-
 
 
 ### PARAMETERS BELOW ARE OBSOLETE ###

@@ -1,18 +1,17 @@
 import numpy as np
 
 
-
 # article: Effect of water injection and spark timing on the nitric oxide emission and combustion parameters of a hydrogen fuelled spark ignition engine
 
 cycle = "4T"
 
-fuel = 'H2'
+fuel = "H2"
 
 thermo = "NASA"
 
-#cooling = "Hohenberg"
+# cooling = "Hohenberg"
 cooling = "Woschni"
-#cooling = "H2"
+# cooling = "H2"
 
 # premixed or direct_injection or external?
 premixed = True
@@ -25,7 +24,7 @@ cylinders = 1  # for sampling data use 1
 # piston
 d = 0.085  # diameter / bore
 s = 0.09  # stroke
-v_mean = (2500 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+v_mean = (2500 / 60) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 l_con = 0.1395  # rod length
 bsr = d / s  # bore stroke ratio
 rod_stroke_ratio = l_con / s
@@ -38,7 +37,7 @@ T_in = 298  # inlet temperature
 p_ratio = 0.9  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 400          # Wall temperature
+Twall = 400  # Wall temperature
 Tpiston = 400
 Thead = 400
 Twalls = [Twall, Tpiston, Thead]
@@ -47,20 +46,20 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 3.5  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
-#phi_open_in = (716/180)*np.pi  #
-#phi_close_in = (938/180)*np.pi  #
+# phi_open_in = (716/180)*np.pi  #
+# phi_close_in = (938/180)*np.pi  #
 
 # outlet valve
-#phi_open_out = (535/180)*np.pi  #
-#phi_close_out = (717/180)*np.pi  #
+# phi_open_out = (535/180)*np.pi  #
+# phi_close_out = (717/180)*np.pi  #
 
 # inlet valve
-phi_open_in = (718.0/180)*np.pi
-phi_close_in = (931.0/180)*np.pi
+phi_open_in = (718.0 / 180) * np.pi
+phi_close_in = (931.0 / 180) * np.pi
 
 # outlet valve
-phi_open_out = (506.0/180)*np.pi
-phi_close_out = (734.0/180)*np.pi
+phi_open_out = (506.0 / 180) * np.pi
+phi_close_out = (734.0 / 180) * np.pi
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -77,7 +76,7 @@ far_goal = 0.0291755 * 0.9
 
 
 wiebe_type = "Single"
-#wiebe_type = "Double"
+# wiebe_type = "Double"
 # This is for Kaisers wiebe function (double)
 wa = 11.0
 wm = 0.6
@@ -85,9 +84,8 @@ wm = 0.6
 
 # this is for single wiebe function
 m_wiebe = 2.5  # 4
-phi_sc = (359/180)*np.pi  # angle at combustion start  from validation italian
-phi_cd = (23/180)*np.pi  # 19
-
+phi_sc = (359 / 180) * np.pi  # angle at combustion start  from validation italian
+phi_cd = (23 / 180) * np.pi  # 19
 
 
 T_fuel = 300

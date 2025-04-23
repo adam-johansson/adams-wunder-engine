@@ -5,7 +5,7 @@ def seiliger(p1, t1, cr, far, bore, fuel):
 
     # top dead center pressure estimate
     p_tdc = p1 * (cr) ** 1.4 * 0.9
-    t_tdc = t1 * cr ** 0.4
+    t_tdc = t1 * cr**0.4
 
     # isochoric heat addition (assuming constant mass) (neglecting change in specific gas constant)
     cp = 1004
@@ -40,4 +40,3 @@ def seiliger(p1, t1, cr, far, bore, fuel):
     p_max = p_tdc * (t_max / t_tdc) * 0.4 + 0.6 * p_tdc
 
     return p_max
-

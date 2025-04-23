@@ -15,13 +15,13 @@ def fuel_oil_hx(p1, t1, dp, t2, m1):
     th_i = 500
     ph_i = 10e5
     m_h = 6.6
-    cp_h = PropsSI('Cpmass', 'T', th_i, 'P', ph_i, 'INCOMP::PNF2')
+    cp_h = PropsSI("Cpmass", "T", th_i, "P", ph_i, "INCOMP::PNF2")
 
     # cold hydrogen
     tc_i = 20
     pc_i = 200e5
     m_c = 0.080
-    hc_i = PropsSI('Hmass', 'T', tc_i, 'P', pc_i, 'Hydrogen')
+    hc_i = PropsSI("Hmass", "T", tc_i, "P", pc_i, "Hydrogen")
 
     # assuming constant cp for the oil
     C_oil = m_h * cp_h
@@ -30,11 +30,11 @@ def fuel_oil_hx(p1, t1, dp, t2, m1):
     eps = 0.90
 
     # assuming 5% pressure loss
-    #ph_o = ph_i * (1 - dp_h)
+    # ph_o = ph_i * (1 - dp_h)
     pc_o = pc_i * (1 - dp_c)
 
     def find_tc_o(tc_o):
-        hc_o = PropsSI('Hmass', 'T', tc_o, 'P', pc_o, 'Hydrogen')
+        hc_o = PropsSI("Hmass", "T", tc_o, "P", pc_o, "Hydrogen")
 
         cp_c = (hc_o - hc_i) / (tc_o - tc_i)
 
@@ -48,7 +48,7 @@ def fuel_oil_hx(p1, t1, dp, t2, m1):
 
     tc_o = fsolve(find_tc_o, x0=460)[0]
 
-    hc_o = PropsSI('Hmass', 'T', tc_o, 'P', pc_o, 'Hydrogen')
+    hc_o = PropsSI("Hmass", "T", tc_o, "P", pc_o, "Hydrogen")
 
     Cmin = (hc_o - hc_i) / (tc_o - tc_i) * m_c
 

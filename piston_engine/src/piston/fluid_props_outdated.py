@@ -1,10 +1,10 @@
 from piston_engine.src.piston.polynomials_outdated import N2, O2, CO2, H2O, Ar
-#from numba import jit
+
+# from numba import njit
 
 
-#@jit(nopython=True)
-def properties(t, p, equ, fuel_type = False):
-
+# @njit()
+def properties(t, p, equ, fuel_type=False):
     """
     Function that return thermodynamic properties of a mixture based on the
     properties of the individual species. This is for a combustion gas of
@@ -45,18 +45,20 @@ def properties(t, p, equ, fuel_type = False):
         Specific entropy of the mixture. UNSURE ABOUT THIS ONE
 
     """
-    N_air = 1 + 3.7274 + 0.0444  # (specific?) mole of air. if CO2 is added don't forget to add it here
+    N_air = (
+        1 + 3.7274 + 0.0444
+    )  # (specific?) mole of air. if CO2 is added don't forget to add it here
     x_O2_air = 1 / N_air  # molar fraction of O2
     x_N2_air = 3.7274 / N_air  # molar fraction of N2
     x_Ar_air = 0.0444 / N_air  # molar fraction of Ar
     x_CO2_air = 0  # no co2 in air for now
 
-    #print(x_Ar_air, x_N2_air, x_O2_air)
+    # print(x_Ar_air, x_N2_air, x_O2_air)
 
-    #x_N2_air = 0.780840  # molar fraction of N2
-    #x_O2_air = 0.209476  # molar fraction of O2
-    #x_Ar_air = 0.009365  # molar fraction of Ar
-    #x_CO2_air = 0.000319  # molar fraction of CO2
+    # x_N2_air = 0.780840  # molar fraction of N2
+    # x_O2_air = 0.209476  # molar fraction of O2
+    # x_Ar_air = 0.009365  # molar fraction of Ar
+    # x_CO2_air = 0.000319  # molar fraction of CO2
 
     cp_N2, h_N2, s_N2, M_N2 = N2(t, p)
     cp_O2, h_O2, s_O2, M_O2 = O2(t, p)
@@ -78,8 +80,10 @@ def properties(t, p, equ, fuel_type = False):
         M = M_air
 
     else:
-        if fuel_type == 'jetA':
-            N = 5.75 * equ + 17.75 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+        if fuel_type == "jetA":
+            N = 5.75 * equ + 17.75 * (
+                1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air
+            )  # total number of moles in gas
 
             f1 = 17.75 * (x_N2_air / x_O2_air)  # N2
             f2 = 17.75 * (1 - equ)  # O2
@@ -93,7 +97,9 @@ def properties(t, p, equ, fuel_type = False):
             x_H2O = f4 / N
             x_Ar = f5 / N
 
-            M = x_N2 * M_N2 + x_O2 * M_O2 + x_CO2 * M_CO2 + x_H2O * M_H2O + x_Ar * M_Ar  # molar mass of the fluid
+            M = (
+                x_N2 * M_N2 + x_O2 * M_O2 + x_CO2 * M_CO2 + x_H2O * M_H2O + x_Ar * M_Ar
+            )  # molar mass of the fluid
 
             mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
             mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
@@ -101,8 +107,10 @@ def properties(t, p, equ, fuel_type = False):
             mu_H2O = x_H2O * (M_H2O / M)  # mass fraction of H2O in the fluid
             mu_Ar = x_Ar * (M_Ar / M)  # mass fraction of Ar in the fluid
 
-        elif fuel_type == 'H2':
-            N = 0.5 * equ + 0.5 * (1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air)  # total number of moles in gas
+        elif fuel_type == "H2":
+            N = 0.5 * equ + 0.5 * (
+                1 + x_N2_air / x_O2_air + x_Ar_air / x_O2_air
+            )  # total number of moles in gas
 
             f1 = 0.5 * (x_N2_air / x_O2_air)  # N2
             f2 = 0.5 * (1 - equ)  # O2
@@ -114,7 +122,9 @@ def properties(t, p, equ, fuel_type = False):
             x_H2O = f4 / N
             x_Ar = f5 / N
 
-            M = x_N2 * M_N2 + x_O2 * M_O2 + x_H2O * M_H2O + x_Ar * M_Ar  # molar mass of the fluid
+            M = (
+                x_N2 * M_N2 + x_O2 * M_O2 + x_H2O * M_H2O + x_Ar * M_Ar
+            )  # molar mass of the fluid
 
             mu_N2 = x_N2 * (M_N2 / M)  # mass fraction of N2 in the fluid
             mu_O2 = x_O2 * (M_O2 / M)  # mass fraction of O2 in the fluid
@@ -123,15 +133,25 @@ def properties(t, p, equ, fuel_type = False):
             mu_CO2 = 0.0  # no CO2 for H2
 
         else:
-            raise Exception('Fuel type must be specified.')
+            raise Exception("Fuel type must be specified.")
 
-    cp = mu_N2 * cp_N2 + mu_O2 * cp_O2 + mu_CO2 * cp_CO2 + mu_H2O * cp_H2O + mu_Ar * cp_Ar  # heat capacity at constant
+    cp = (
+        mu_N2 * cp_N2
+        + mu_O2 * cp_O2
+        + mu_CO2 * cp_CO2
+        + mu_H2O * cp_H2O
+        + mu_Ar * cp_Ar
+    )  # heat capacity at constant
     # pressure
-    h = mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar  # specific enthalpy
-    s = mu_N2 * s_N2 + mu_O2 * s_O2 + mu_CO2 * s_CO2 + mu_H2O * s_H2O + mu_Ar * s_Ar  # specific entropy COULD BE WRONG
+    h = (
+        mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar
+    )  # specific enthalpy
+    s = (
+        mu_N2 * s_N2 + mu_O2 * s_O2 + mu_CO2 * s_CO2 + mu_H2O * s_H2O + mu_Ar * s_Ar
+    )  # specific entropy COULD BE WRONG
 
-    #u = h - R * t  # inner energy
-    #cv = cp - R  # heat capacity at constant volume
-    #gamma = cp / cv  # heat capacity ratio
+    # u = h - R * t  # inner energy
+    # cv = cp - R  # heat capacity at constant volume
+    # gamma = cp / cv  # heat capacity ratio
 
     return cp, h, s, M

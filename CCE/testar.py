@@ -5,12 +5,12 @@ import pickle
 import numpy as np
 
 # load the surrogate model
-filename = '../piston_engine/surrogate_data/piston_surrogate_h2_noisy.pkl'
+filename = "../piston_engine/surrogate_data/piston_surrogate_h2_noisy.pkl"
 with open(filename, "rb") as f:
     meta_model_noisy = pickle.load(f)
 
 # load the surrogate model
-filename = '../piston_engine/surrogate_data/piston_surrogate_h2.pkl'
+filename = "../piston_engine/surrogate_data/piston_surrogate_h2.pkl"
 with open(filename, "rb") as f:
     meta_model_unnoisy = pickle.load(f)
 
@@ -24,7 +24,7 @@ cr = 5
 p_ratio = 1.3
 
 # fuel type
-fuel_type = 'H2'
+fuel_type = "H2"
 far_s, LHV = thermo_outdated.fuel_props(fuel_type)
 
 core_flow = 5
@@ -36,30 +36,34 @@ def find_match(x, meta_model):
     bore = x[0]  # bore is varied to
     far34 = x[1]  # far is varied to match target output temperature
 
-
     # get the output of the surrogate
     piston_input = np.atleast_2d(np.array([pin, Tin, cr, bore, far34, p_ratio]))
     air_flow = meta_model[2].predict_values(piston_input)[0][0]
-    induced_power = meta_model[5].predict_values(piston_input)[0][0]*1e3
-    p_tdc = meta_model[7].predict_values(piston_input)[0][0]*1e5
+    induced_power = meta_model[5].predict_values(piston_input)[0][0] * 1e3
+    p_tdc = meta_model[7].predict_values(piston_input)[0][0] * 1e5
     T34 = meta_model[0].predict_values(piston_input)[0][0]
 
     # pressurise circumventing flow
     m_circumvent = core_flow - air_flow
     if m_circumvent < 0:
         return np.array([0, 0, 0, 0])
-    pressure_circ, T_circumv, P_circumv = \
-        components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99)
+    pressure_circ, T_circumv, P_circumv = components.compressor(
+        Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99
+    )
 
     # mix circumventing flow
     equ34 = far34 / far_s
     m34 = air_flow * (1 + far34)  # outflow of piston engine (air + fuel)
-    #m35 = m34 + m_circumvent  # flow after mixing
-    T35, equ35 = components.mix(m34, T34, equ34, m_circumvent, T_circumv, equ2=0, fuel_type=fuel_type)
-    #far35 = equ35 * far_s
+    # m35 = m34 + m_circumvent  # flow after mixing
+    T35, equ35 = components.mix(
+        m34, T34, equ34, m_circumvent, T_circumv, equ2=0, fuel_type=fuel_type
+    )
+    # far35 = equ35 * far_s
 
     # power needed to pressurise the fuel
-    fuel_flow = air_flow * far34  # far_given is the same as far in the engine (at least it is supposed to be)
+    fuel_flow = (
+        air_flow * far34
+    )  # far_given is the same as far in the engine (at least it is supposed to be)
     P_fuel_pump = components.fuel_pump(p_tdc, fuel_type, fuel_flow)
 
     # things needed for aux and friction losses
@@ -70,23 +74,26 @@ def find_match(x, meta_model):
     v_mean = 18
     rpm = v_mean / (2 * stroke) * 60
     rps = rpm / 60
-    Vd_tot = stroke * bore ** 2 / 4 * np.pi * cylinders
-    cycle = '4T'
-    if cycle == '4T':
+    Vd_tot = stroke * bore**2 / 4 * np.pi * cylinders
+    cycle = "4T"
+    if cycle == "4T":
         n_r = 2
     else:
         n_r = 1
 
     # auxiliary losses and friction losses. these do not depend on the trapped fuel air ratio
-    fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(bore, rpm, stroke, v_mean, pin, cr, cylinders,
-                                                                   lv_max)
-    friction_loss = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+    fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(
+        bore, rpm, stroke, v_mean, pin, cr, cylinders, lv_max
+    )
+    friction_loss = (
+        fmep_pe_loss * Vd_tot * rps / n_r
+    )  # friction losses for total engine all cylinders
     aux_loss = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
 
     shaft_power = induced_power - aux_loss - friction_loss - P_circumv - P_fuel_pump
 
     residual = np.array([shaft_power, T35, air_flow, T34])
-    #print(residual, bore, far34)
+    # print(residual, bore, far34)
 
     return residual
 
@@ -116,7 +123,6 @@ for bore in bores:
         T34s[i, j] = output[3]
         j += 1
     i += 1
-
 
 
 """
@@ -199,28 +205,28 @@ x, y = np.meshgrid(fars, bores)
 
 # Creating figure
 fig = plt.figure(figsize=(14, 9))
-ax = plt.axes(projection='3d')
+ax = plt.axes(projection="3d")
 
 # Creating plot
 ax.plot_surface(x, y, powers)
 
 # Creating figure
 fig2 = plt.figure(figsize=(14, 9))
-ax2 = plt.axes(projection='3d')
+ax2 = plt.axes(projection="3d")
 
 # Creating plot
 ax2.plot_surface(x, y, TETs)
 
 # Creating figure
 fig3 = plt.figure(figsize=(14, 9))
-ax3 = plt.axes(projection='3d')
+ax3 = plt.axes(projection="3d")
 
 # Creating plot
 ax3.plot_surface(x, y, airflows)
 
 # Creating figure
 fig1337 = plt.figure(figsize=(14, 9))
-ax1337 = plt.axes(projection='3d')
+ax1337 = plt.axes(projection="3d")
 
 # Creating plot
 ax1337.plot_surface(x, y, T34s)
@@ -246,17 +252,17 @@ ax7 = plt.plot(bores2, T342_noisy)
 """
 # Creating figure
 fig8 = plt.figure(figsize=(14, 9))
-ax8 = plt.plot(fars2, airflow3, label='less_trained')
+ax8 = plt.plot(fars2, airflow3, label="less_trained")
 ax8 = plt.plot(fars2, airflow3_noisy)
 plt.legend()
 
 fig9 = plt.figure(figsize=(14, 9))
-ax9 = plt.plot(fars2, TET3, label='less_trained')
+ax9 = plt.plot(fars2, TET3, label="less_trained")
 ax9 = plt.plot(fars2, TET3_noisy)
 plt.legend()
 
 fig10 = plt.figure(figsize=(14, 9))
-ax10 = plt.plot(fars2, power3, label='less_trained')
+ax10 = plt.plot(fars2, power3, label="less_trained")
 ax10 = plt.plot(fars2, power3_noisy)
 plt.legend()
 """
@@ -267,4 +273,3 @@ ax11 = plt.plot(fars2, T343_noisy)
 
 # show plot
 plt.show()
-

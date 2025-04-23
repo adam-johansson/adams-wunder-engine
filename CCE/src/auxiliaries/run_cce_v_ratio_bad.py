@@ -20,7 +20,7 @@ def run_cce_v_ratio(data, flags):
         F_req = data[0]
         print(thrust, fpr)
         return thrust - F_req
-        #return v_ratio - 0.78
+        # return v_ratio - 0.78
 
     def find_fpr_vratio(fpr):
         data_temp = data
@@ -54,18 +54,18 @@ def run_cce_v_ratio(data, flags):
 
     # can make this faster by having a better guess. can calculate fpr beforehand
     x0 = np.array([1.4])
-    #opt_fpr = least_squares(find_fpr, x0[0], bounds=([1.1, 2.0])).x[0]
+    # opt_fpr = least_squares(find_fpr, x0[0], bounds=([1.1, 2.0])).x[0]
     fpr_opt = brentq(find_fpr_vratio, 1.1, 2.0)
-    #opt_fpr = auxiliaries.fmatch(find_fpr, 1.3, 1.8, tol=1e-3)
+    # opt_fpr = auxiliaries.fmatch(find_fpr, 1.3, 1.8, tol=1e-3)
     data[5] = fpr_opt
 
-    #bpr_opt = brentq(find_bpr, 15, 30)
-    #data[2] = bpr_opt
+    # bpr_opt = brentq(find_bpr, 15, 30)
+    # data[2] = bpr_opt
 
     m_opt = brentq(find_m, 100, 300)
     data[29] = m_opt
 
     sfc_final, v_ratio_final, thrust_final = cce_propulsion_system.run_cce(data, flags)
 
-    print(v_ratio_final, thrust_final*1e-3, m_opt, fpr_opt)
+    print(v_ratio_final, thrust_final * 1e-3, m_opt, fpr_opt)
     return sfc_final

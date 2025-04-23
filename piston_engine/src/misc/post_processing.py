@@ -9,14 +9,20 @@ def friction_kaiser(d, s, v_mean, p_in, cr):
     rpm = v_mean / (2 * s) * 60
 
     n_b = 2  # number of bearings: (1 + n_cyl for inline and 1 + 0.5*n_cyl for V)
-    d_b = 0.62 * d  # main bearing diameter [m]. ( this is for 2 connecting rods per crank pin (typical v8))
-    l_b = 0.4 * d_b  # main bearing length [m] ( this is for 2 connecting rods per crank pin (typical v8))
+    d_b = (
+        0.62 * d
+    )  # main bearing diameter [m]. ( this is for 2 connecting rods per crank pin (typical v8))
+    l_b = (
+        0.4 * d_b
+    )  # main bearing length [m] ( this is for 2 connecting rods per crank pin (typical v8))
     n_c = 1  # number of cylinders per crankshaft
     c_b = 0.202e6  # correlation Pa min^0.6 /m
     c_s = 9.36e1  # correlation constant Pa m^2
 
-    fmep_bear_crank = c_b * n_b * (rpm ** 0.6) * d_b ** 3 * l_b / (n_c * d ** 2 * s)  # bearing friction
-    fmeb_seal_crank = c_s * d_b / (n_c * s * d ** 2)  # sealing friction
+    fmep_bear_crank = (
+        c_b * n_b * (rpm**0.6) * d_b**3 * l_b / (n_c * d**2 * s)
+    )  # bearing friction
+    fmeb_seal_crank = c_s * d_b / (n_c * s * d**2)  # sealing friction
 
     fmep_crankshaft = fmeb_seal_crank + fmep_bear_crank  # Total crankshaft losses
 
@@ -33,11 +39,13 @@ def friction_kaiser(d, s, v_mean, p_in, cr):
     n_b_cr = 1  # number of connecting rod bearings (same as number of cylinders?)
 
     fmep_skirt = c_ps * v_mean / d  # skirt losses (says b)
-    fmep_rings = c_pr * (1 + 1000 / rpm) / (d ** 2)  # once again b
+    fmep_rings = c_pr * (1 + 1000 / rpm) / (d**2)  # once again b
     fmep_gas = c_g * (p_in / p_a) * (0.088 * cr + 0.182 * cr ** (1.33 - 2 * K * v_mean))
-    fmep_bear_conrod = c_bc * n_b_cr * rpm * d_b_cr ** 3 * l_b_cr / (n_c * d ** 2 * s)
+    fmep_bear_conrod = c_bc * n_b_cr * rpm * d_b_cr**3 * l_b_cr / (n_c * d**2 * s)
 
-    fmep_piston = fmep_skirt + fmep_rings + fmep_gas + fmep_bear_conrod  # total piston friction losses
+    fmep_piston = (
+        fmep_skirt + fmep_rings + fmep_gas + fmep_bear_conrod
+    )  # total piston friction losses
 
     # Valvetrain losses
     n_c = 2  # number of chamshaft bearings
@@ -72,9 +80,15 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycl
     # Crankshaft losses
     # NOTES: model sensitive to main bearing diameter predictions
     if v_engine:
-        n_b = 1 + 0.5 * n_cyl  # number of bearings: (1 + n_cyl for inline and 1 + 0.5*n_cyl for V)
-        d_b = 0.62 * d  # main bearing diameter [mm]. ( this is for 2 connecting rods per crank pin (typical v8))
-        l_b = 0.4 * d_b  # main bearing length [mm] ( this is for 2 connecting rods per crank pin (typical v8))
+        n_b = (
+            1 + 0.5 * n_cyl
+        )  # number of bearings: (1 + n_cyl for inline and 1 + 0.5*n_cyl for V)
+        d_b = (
+            0.62 * d
+        )  # main bearing diameter [mm]. ( this is for 2 connecting rods per crank pin (typical v8))
+        l_b = (
+            0.4 * d_b
+        )  # main bearing length [mm] ( this is for 2 connecting rods per crank pin (typical v8))
     else:
         # two main bearings for single cylinder engine
         n_b = 2
@@ -87,11 +101,17 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycl
     c_b = 3.03e-4  # correlation kPa-min/rev-mm
     c_t = 1.35e-10  # kPa-mm^2
 
-    fmeb_seal_crank = c_s * d_b / (n_c * s * d ** 2)  # sealing friction
-    fmep_bear_crank = c_b * rpm * d_b ** 3 * l_b * n_b / (d ** 2 * s * n_c)  # main bearing hydrodynamic friction
-    fmep_turbulent_crank = c_t * d_b ** 2 * rpm ** 2 * n_b / n_c  # turbulent dissipation in the oil
+    fmeb_seal_crank = c_s * d_b / (n_c * s * d**2)  # sealing friction
+    fmep_bear_crank = (
+        c_b * rpm * d_b**3 * l_b * n_b / (d**2 * s * n_c)
+    )  # main bearing hydrodynamic friction
+    fmep_turbulent_crank = (
+        c_t * d_b**2 * rpm**2 * n_b / n_c
+    )  # turbulent dissipation in the oil
 
-    fmep_crankshaft = fmeb_seal_crank + fmep_bear_crank + fmep_turbulent_crank  # Total crankshaft losses
+    fmep_crankshaft = (
+        fmeb_seal_crank + fmep_bear_crank + fmep_turbulent_crank
+    )  # Total crankshaft losses
 
     # Piston losses
     p_a = 1e5  # atmospheric pressure
@@ -111,12 +131,17 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycl
     n_b_cr = n_cyl  # number of connecting rod bearings (same as number of cylinders?)
 
     fmep_skirt = c_ps * v_mean / d  # skirt losses
-    fmep_rings = c_pr * (1 + 1000 / rpm) / (d ** 2)  # piston rings without gas loading
-    fmep_gas = c_g * (p_in / p_a) * (
-            0.088 * cr + 0.182 * cr ** (1.33 - K * v_mean))  # increase in piston ring friction from gas pressure
-    fmep_bear_conrod = c_bc * rpm * n_b_cr * (d_b_cr ** 3) * l_b_cr / (n_c * (d ** 2) * s)  # connecting rod
+    fmep_rings = c_pr * (1 + 1000 / rpm) / (d**2)  # piston rings without gas loading
+    fmep_gas = (
+        c_g * (p_in / p_a) * (0.088 * cr + 0.182 * cr ** (1.33 - K * v_mean))
+    )  # increase in piston ring friction from gas pressure
+    fmep_bear_conrod = (
+        c_bc * rpm * n_b_cr * (d_b_cr**3) * l_b_cr / (n_c * (d**2) * s)
+    )  # connecting rod
 
-    fmep_piston = fmep_skirt + fmep_rings + fmep_gas + fmep_bear_conrod  # total piston friction losses
+    fmep_piston = (
+        fmep_skirt + fmep_rings + fmep_gas + fmep_bear_conrod
+    )  # total piston friction losses
 
     # Valvetrain losses  OBS: CHOSE ONE VALVE TRAIN AND MOTIVATE (DOHC direct acting)
 
@@ -125,7 +150,9 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycl
     else:
         camshafts = 1
 
-    n_cb = n_b * camshafts  # number of camshaft bearings ( equal number of main bearings x number of camshafts)
+    n_cb = (
+        n_b * camshafts
+    )  # number of camshaft bearings ( equal number of main bearings x number of camshafts)
     n_v = 4 * n_c  # total number of valves (per cylinder or total?)
 
     c_cb = 2.44e2  # kPa-mm^3-min/rev
@@ -134,40 +161,53 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycl
     c_oh = 0.5
     c_om = 10.7
 
-    fmep_camshaft = c_cb * rpm * n_cb / (n_c * (d ** 2) * s)
+    fmep_camshaft = c_cb * rpm * n_cb / (n_c * (d**2) * s)
     fmep_seal_camshaft = 4.12  # camshaft bearing seals constant friction
-    fmep_camfollower_flat = c_cff * (1 + 1000 / rpm) * n_v / (s * n_c)  # for flat cam follower
+    fmep_camfollower_flat = (
+        c_cff * (1 + 1000 / rpm) * n_v / (s * n_c)
+    )  # for flat cam follower
     fmep_camfollower_roller = c_cfr * rpm * n_v / (s * n_c)  # for roller cam follower.
-    fmep_oscillhydro = c_oh * (lv_max ** 1.5) * (rpm ** 0.5) * n_v / (d * s * n_c)  # oscillation losses
+    fmep_oscillhydro = (
+        c_oh * (lv_max**1.5) * (rpm**0.5) * n_v / (d * s * n_c)
+    )  # oscillation losses
     fmep_oscillmixed = c_om * (1 + 1000 / rpm) * lv_max * n_v / (s * n_c)
 
-    fmep_valvetrain = fmep_camshaft + fmep_seal_camshaft + fmep_camfollower_roller + \
-                      fmep_oscillhydro + fmep_oscillmixed
+    fmep_valvetrain = (
+        fmep_camshaft
+        + fmep_seal_camshaft
+        + fmep_camfollower_roller
+        + fmep_oscillhydro
+        + fmep_oscillmixed
+    )
 
     # Auxiliary component losses (oil pump, water pump, non-charging alternator friction)
     fmep_aux = 6.23 + 5.22e-3 * rpm - 1.79e-7 * rpm**2
 
     fmep = (fmep_crankshaft + fmep_piston + fmep_valvetrain) + fmep_aux
-    fmep_pe_loss = (fmep_crankshaft + fmep_piston + fmep_valvetrain)  # 0.8 Kaiser's factor
-    #fmep = (fmep_crankshaft + fmep_piston) * 1e3  # for two-stroke
+    fmep_pe_loss = (
+        fmep_crankshaft + fmep_piston + fmep_valvetrain
+    )  # 0.8 Kaiser's factor
+    # fmep = (fmep_crankshaft + fmep_piston) * 1e3  # for two-stroke
 
     # multiply by 1000 so that the unit is Pa for output
-    fmep = fmep * 1e3,
+    fmep = (fmep * 1e3,)
     fmep_aux = fmep_aux * 1e3
     fmep_pe_loss = fmep_pe_loss * 1e3
 
     # convert to power
-    if cycle == '4T':
+    if cycle == "4T":
         n_r = 2
     else:
         n_r = 1
 
     rps = rpm / 60
 
-    Vd_tot = (d_meter/2)**2 * np.pi * s_meter * n_cyl
+    Vd_tot = (d_meter / 2) ** 2 * np.pi * s_meter * n_cyl
 
     # convert losses to power
-    friction_loss = fmep_pe_loss * Vd_tot * rps / n_r  # friction losses for total engine all cylinders
+    friction_loss = (
+        fmep_pe_loss * Vd_tot * rps / n_r
+    )  # friction losses for total engine all cylinders
     aux_loss = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
     total_loss = friction_loss + aux_loss
 
@@ -199,8 +239,9 @@ def scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_
 
 
 def validation_error(phi, P, T, m, equ):
-    #from sklearn.metrics import mean_squared_error
+    # from sklearn.metrics import mean_squared_error
     import math
+
     p_order = np.roll(P, np.argwhere((phi - phi[0]) * 180 / np.pi > 100)[0][0])
     T_order = np.roll(T, np.argwhere((phi - phi[0]) * 180 / np.pi > 100)[0][0])
     m_order = np.roll(m, np.argwhere((phi - phi[0]) * 180 / np.pi > 100)[0][0])
@@ -208,6 +249,7 @@ def validation_error(phi, P, T, m, equ):
     phi_order = phi - phi[0]
 
     from piston_engine.src.misc.NASAdata import load_NASA
+
     ca_NASA, p_NASA, T_NASA, m_NASA, phi_NASA, mdotin_NASA, mdotout_NASA = load_NASA()
     p_NASA_order = np.roll(p_NASA, 21)
     T_NASA_order = np.roll(T_NASA, 21)
@@ -215,29 +257,29 @@ def validation_error(phi, P, T, m, equ):
     equ_NASA_order = np.roll(phi_NASA, 21)
     ca_NASA_order = ca_NASA - 105
 
-    mask = np.searchsorted(phi_order, ca_NASA_order*np.pi/180)
+    mask = np.searchsorted(phi_order, ca_NASA_order * np.pi / 180)
     p_filtered = p_order[mask]
     T_filtered = T_order[mask]
     m_filtered = m_order[mask]
     equ_filtered = equ_order[mask]
 
-    plt.scatter(phi_order[mask]*180/np.pi, p_filtered*1e-5)
+    plt.scatter(phi_order[mask] * 180 / np.pi, p_filtered * 1e-5)
     plt.scatter(ca_NASA_order, p_NASA_order)
     plt.show()
 
-    plt.scatter(phi_order[mask]*180/np.pi, T_filtered)
+    plt.scatter(phi_order[mask] * 180 / np.pi, T_filtered)
     plt.scatter(ca_NASA_order, T_NASA_order)
     plt.show()
 
-    plt.scatter(phi_order[mask]*180/np.pi, m_filtered)
+    plt.scatter(phi_order[mask] * 180 / np.pi, m_filtered)
     plt.scatter(ca_NASA_order, m_NASA_order)
     plt.show()
 
-    plt.scatter(phi_order[mask]*180/np.pi, equ_filtered)
+    plt.scatter(phi_order[mask] * 180 / np.pi, equ_filtered)
     plt.scatter(ca_NASA_order, equ_NASA_order)
     plt.show()
 
-    MSE_p = np.square(np.subtract(p_filtered*1e-5, p_NASA_order)).mean()
+    MSE_p = np.square(np.subtract(p_filtered * 1e-5, p_NASA_order)).mean()
     MSE_T = np.square(np.subtract(T_filtered, T_NASA_order)).mean()
     MSE_m = np.square(np.subtract(m_filtered, m_NASA_order)).mean()
     MSE_equ = np.square(np.subtract(equ_filtered, equ_NASA_order)).mean()
@@ -255,8 +297,8 @@ def validation_error(phi, P, T, m, equ):
     print("Root Mean Square Error equivalence:\n")
     print(RMSE_equ)
 
-    RMSE_p_rel = RMSE_p/(p_order.max() - p_order.min())*1e5
-    RMSE_T_rel = RMSE_T/(T_order.max() - T_order.min())
+    RMSE_p_rel = RMSE_p / (p_order.max() - p_order.min()) * 1e5
+    RMSE_T_rel = RMSE_T / (T_order.max() - T_order.min())
     RMSE_m_rel = RMSE_m / (m_order.max() - m_order.min())
     RMSE_equ_rel = RMSE_equ / (equ_order.max() - equ_order.min())
 
@@ -270,4 +312,3 @@ def validation_error(phi, P, T, m, equ):
     print(RMSE_equ_rel)
 
     return
-

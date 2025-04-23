@@ -2,11 +2,11 @@ import numpy as np
 
 cycle = "4T"
 
-fuel = 'H2'
+fuel = "H2"
 
 thermo = "NASA"
 
-#cooling = "Hohenberg"
+# cooling = "Hohenberg"
 cooling = "Woschni"
 
 # premixed or direct_injection or external?
@@ -20,7 +20,7 @@ cylinders = 1  # for sampling data use 1
 # piston
 d = 0.09  # diameter / bore
 s = 0.082  # stroke
-v_mean = (2800 / 60 ) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+v_mean = (2800 / 60) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 l_con = 0.1395  # rod length
 bsr = d / s  # bore stroke ratio
 rod_stroke_ratio = l_con / s
@@ -29,11 +29,11 @@ lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio
 # inlet and outlet conditions
 p_in = 1e5  # inlet pressure
 T_in = 310  # inlet temperature
-#T_in = 1000
+# T_in = 1000
 p_ratio = 1.1  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 500         # Wall temperature
+Twall = 500  # Wall temperature
 Tpiston = 500
 Thead = 500
 Twalls = [Twall, Tpiston, Thead]
@@ -42,12 +42,12 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.8  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
 
 # Inlet valve
-phi_open_in = (716/180)*np.pi  #
-phi_close_in = (938/180)*np.pi  #
+phi_open_in = (716 / 180) * np.pi  #
+phi_close_in = (938 / 180) * np.pi  #
 
 # outlet valve
-phi_open_out = (505/180)*np.pi  #
-phi_close_out = (717/180)*np.pi  #
+phi_open_out = (505 / 180) * np.pi  #
+phi_close_out = (717 / 180) * np.pi  #
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -65,7 +65,7 @@ far_goal = 0.0291755 / 2.0
 
 
 wiebe_type = "Single"
-#wiebe_type = "Double"
+# wiebe_type = "Double"
 # This is for Kaisers wiebe function (double)
 wa = 11.0
 wm = 0.6
@@ -74,8 +74,8 @@ wm = 0.6
 # this is for single wiebe function
 m_wiebe = 2.5
 
-phi_sc = (353/180)*np.pi
-phi_cd = (30/180)*np.pi
+phi_sc = (353 / 180) * np.pi
+phi_cd = (30 / 180) * np.pi
 
 T_fuel = 300
 p_fuel = 50e5
