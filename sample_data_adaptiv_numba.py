@@ -67,7 +67,7 @@ xlimits = np.array(
 )
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 10000  # points per variable
+npoints = 6  # points per variable #6000
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -201,7 +201,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         remove = remove + 1
         # print(f"Number of data points removed: {remove} out of {i} in total")
 
-    if not (i % (ndoe // 800)):
+    if not (i % (ndoe // 10  )):
         mellantid = timer()
         elapsed_time = mellantid - start_simulating
         avg_iteration_time = elapsed_time / i
