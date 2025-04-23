@@ -15,6 +15,7 @@ import thermo
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
 
+import nbkode
 
 dPdphi_temp = 0
 
@@ -426,13 +427,6 @@ def run_piston_engine(indata, flags):
         #if np.mod(phi, 0.1) < 0.01:
         #    print(phi*180/np.pi, T, P*1e-5, dmindphi, dmoutdphi, dmfdphi, equ, m)
 
-
-
-        #print("der", dTdphi, dVdphi, dqdphi, dqfdphi, dmdphi, dPdphi,
-        #        P * dVdphi, dmindphi, dmfdphi, dequdphi, dmoutdphi, h_out_EP * dmoutdphi_EP,
-        #        dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
-        #        dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi)
-
         derivatives = np.array([dTdphi, dVdphi, dqdphi, dqfdphi, dmdphi, dPdphi,
                 P * dVdphi , dmindphi, dmfdphi, dequdphi, dmoutdphi, h_out_EP * dmoutdphi_EP,
                 dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
@@ -448,11 +442,6 @@ def run_piston_engine(indata, flags):
         return derivatives_scaled
 
         #return derivatives
-
-
-    def stop_event(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
-        # Stop after 10 seconds
-        return time.time() - start_time - 5 - phi*1e-1
 
 
     # from initial guess of fuel air ratio
@@ -566,9 +555,7 @@ def run_piston_engine(indata, flags):
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='RK45', y0=x, t_eval=phi,
             #                rtol=5e-11)  # 1e-12 works
             try:
-                start_time = time.time()
 
-                stop_event.terminal = True
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
                                 rtol=1e-8, atol=1e-8)  # 1e-8 and 1e-10 are standard
             except UserWarning as e:

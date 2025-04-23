@@ -17,7 +17,7 @@ from thermo import fuel_props
 # input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
 # input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
-input_file = "4stroke_sampling"
+#input_file = "4stroke_sampling"
 # input_file = "validation_twozone.two_zone_heider"
 # input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
@@ -25,7 +25,7 @@ input_file = "4stroke_sampling"
 # input_file = "validation_twozone.water_hydrogen"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
-#input_file = "4stroke_hydrogen_crashing_case"
+input_file = "4stroke_hydrogen_crashing_case"
 
 input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
