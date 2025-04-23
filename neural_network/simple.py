@@ -105,19 +105,19 @@ batch_size = 32
 epochs = 3000
 
 # number of neurons of hidden layers
-hidden_dim = 32
+hidden_dim = 64
 
 # number of hidden layers - 1
-layers = 1
+layers = 2
 
 lr = 1e-3
-weight_decay = 0.1
+weight_decay = 1e-1
 
 # allows for starting from a checkpoint
 start_epoch = 0
 
 # early stopping threshold
-epoch_threshold = 100
+epoch_threshold = 50
 
 # Load the training data into data loader with the
 # respective batch_size
@@ -136,6 +136,9 @@ output_dim = y_train.shape[1]
 # initiate the regression model
 model = NET_straight(layers, input_dim, hidden_dim, output_dim)
 
+# convert it to double precision
+model = model.double()
+
 
 print(model)
 
@@ -149,7 +152,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_dec
 
 # learning rate scheduler (100 patience normal)
 scheduler = lr_scheduler.ReduceLROnPlateau(
-    optimizer, "min", patience=50, factor=0.5, min_lr=1e-6
+    optimizer, "min", patience=50, factor=0.5, min_lr=1e-4
 )
 
 # saving losses for each epoch to visualize
@@ -248,6 +251,7 @@ for epoch in range(start_epoch, epochs):
 # resume(model, optimizer, f'./models_old/straight_{hidden_dim}_{layers}.pth')
 
 model = load_ANN(f"models/{folder}_{hidden_dim}_{layers}.pth")
+model = model.double()
 
 # Validate trained model using the test dataset
 with torch.no_grad():

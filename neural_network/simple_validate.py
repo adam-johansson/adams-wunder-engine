@@ -24,9 +24,10 @@ from src import load_ANN
 
 folder = "H2"
 # Load the trained model
-hidden_dim = 32
-layers = 1
+hidden_dim = 64
+layers = 2
 model = load_ANN(f"./models/{folder}_{hidden_dim}_{layers}.pth")
+model = model.double()
 print(model)
 
 # import data
@@ -74,7 +75,7 @@ for i in range(X_train.shape[0]):
 
 
 plt.plot(y_test[:, 5], y_test[:, 5])
-plt.scatter(y_test_hat[:, 5], y_test[:, 5], s=4)
+plt.scatter(y_test[:, 5], y_test_hat[:, 5], s=4)
 plt.show()
 
 
@@ -152,14 +153,14 @@ PI = 1.0
 v_mean = 10.5
 T_fuel = 430
 
-tins = np.linspace(550, 600, 1000)
+tins = np.linspace(300, 1000, 1000)
 
 powers1 = []
 for T_in1 in tins:
     temp = model.inference(np.array([p_in, T_in1, cr, bore, far, PI, v_mean, T_fuel]))
     powers1.append(temp[0][5])
 
-fars = np.linspace(0.02923 / 1.5, 0.02923 / 1.1, 1000)
+fars = np.linspace(0.02923 / 3.0, 0.02923 / 1.1, 1000)
 
 powers2 = []
 for far in fars:

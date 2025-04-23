@@ -16,8 +16,8 @@ class Data(Dataset):
         # need to convert float64 to float32 else
         # will get the following error
         # RuntimeError: expected scalar type Double but found Float
-        self.X = torch.from_numpy(X.astype(np.float32))
-        self.y = torch.from_numpy(y.astype(np.float32))
+        self.X = torch.from_numpy(X.astype(np.float64))
+        self.y = torch.from_numpy(y.astype(np.float64))
         self.len = self.X.shape[0]
 
     def __getitem__(self, index: int) -> tuple:
@@ -98,9 +98,9 @@ class InferenceModel(NET_narrowing):
             x = x.reshape(1, -1)
         x = self.x_scaler.transform(x)
         if np.shape(np.atleast_2d(x))[0] == 1:
-            x = torch.tensor(x, dtype=torch.float32).reshape(1, -1)
+            x = torch.tensor(x, dtype=torch.float64).reshape(1, -1)
         else:
-            x = torch.tensor(x, dtype=torch.float32)
+            x = torch.tensor(x, dtype=torch.float64)
         self.eval()
         with torch.no_grad():
             y = self.forward(x)
@@ -147,9 +147,9 @@ class InferenceModelStraight(NET_straight):
         elif self.scaler == "minmax":
             x = (x - self.x_min) / (self.x_max - self.x_min)
         if np.shape(np.atleast_2d(x))[0] == 1:
-            x = torch.tensor(x, dtype=torch.float32).reshape(1, -1)
+            x = torch.tensor(x, dtype=torch.float64).reshape(1, -1)
         else:
-            x = torch.tensor(x, dtype=torch.float32)
+            x = torch.tensor(x, dtype=torch.float64)
         self.eval()
         with torch.no_grad():
             y = self.forward(x)
