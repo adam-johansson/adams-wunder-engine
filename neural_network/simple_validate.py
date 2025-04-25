@@ -24,7 +24,7 @@ from src import load_ANN
 
 folder = "H2"
 # Load the trained model
-hidden_dim = 64
+hidden_dim = 128
 layers = 2
 model = load_ANN(f"./models/{folder}_{hidden_dim}_{layers}.pth")
 model = model.double()
@@ -125,6 +125,17 @@ P = np.vstack((y_test[:, 5], y_test_hat[:, 5])).T
 Q = np.vstack((y_test[:, 6], y_test_hat[:, 6])).T
 ptdc = np.vstack((y_test[:, 7], y_test_hat[:, 7])).T
 
+# colour mapping for the plots
+t2_colour = eff[t2[:, 0].argsort()]
+airflow_colour = eff[airflow[:, 0].argsort()]
+pmax_colour = eff[pmax[:, 0].argsort()]
+tmax_colour = eff[tmax[:, 0].argsort()]
+P_colour = eff[P[:, 0].argsort()]
+Q_colour = eff[Q[:, 0].argsort()]
+ptdc_colour = eff[ptdc[:, 0].argsort()]
+
+
+
 t2 = t2[t2[:, 0].argsort()]
 eff = eff[eff[:, 0].argsort()]
 airflow = airflow[airflow[:, 0].argsort()]
@@ -167,6 +178,9 @@ for far in fars:
     temp = model.inference(np.array([p_in, T_in, cr, bore, far, PI, v_mean, T_fuel]))
     powers2.append(temp[0][5])
 
+powers1 = np.array(powers1)
+powers2 = np.array(powers2)
+
 
 fs = 24
 figsize = (12, 8)
@@ -175,16 +189,18 @@ dotsize = 2
 
 
 fig, ax1 = plt.subplots(figsize=figsize)
-ax1.scatter(
+cax = ax1.scatter(
     t2[:, 0],
     (t2[:, 1] - t2[:, 0]) / t2[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=t2_colour[:, 0],
     s=dotsize,
 )
 ax1.set_xlabel(r"Actual $T2$ [K]", fontsize=fs)
 ax1.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax1.set_title(r"T2 relative error", fontsize=fs)
+cbar = fig.colorbar(cax)
+
 # ax2.set_xlim(660, 810)
 # ax2.set_xticks([690, 720, 750, 780, 810])
 # ax2.set_ylim(0, 55)
@@ -211,11 +227,11 @@ ax2.grid()
 
 
 fig, ax3 = plt.subplots(figsize=figsize)
-ax3.scatter(
+cax3 = ax3.scatter(
     airflow[:, 0],
     (airflow[:, 1] - airflow[:, 0]) / airflow[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=airflow_colour[:, 0],
     s=dotsize,
 )
 ax3.set_xlabel(r"Actual airflow [kg/s]", fontsize=fs)
@@ -223,76 +239,84 @@ ax3.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax3.set_title(r"Airflow relative error", fontsize=fs)
 ax3.tick_params(labelsize=fs)
 plt.legend(loc="best", frameon=True, fontsize=fs)
+cbar3 = fig.colorbar(cax3)
 
 fig, ax4 = plt.subplots(figsize=figsize)
-ax4.scatter(
+cax4 = ax4.scatter(
     pmax[:, 0] * 1e-5,
     (pmax[:, 1] - pmax[:, 0]) / pmax[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=pmax_colour[:, 0],
     s=dotsize,
 )
 ax4.set_xlabel(r"Actual $p_{max}$ [bar]", fontsize=fs)
 ax4.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax4.set_title(r"$p_{max}$ relative error", fontsize=fs)
 ax4.tick_params(labelsize=fs)
+cbar4 = fig.colorbar(cax4)
 plt.legend(loc="best", frameon=True, fontsize=fs)
 
 
 fig, ax5 = plt.subplots(figsize=figsize)
-ax5.scatter(
+cax5 = ax5.scatter(
     tmax[:, 0],
     (tmax[:, 1] - tmax[:, 0]) / tmax[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=tmax_colour[:, 0],
     s=dotsize,
 )
+
 ax5.set_xlabel(r"Actual $T_{max}$ [K]", fontsize=fs)
 ax5.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax5.set_title(r"$T_{max}$ relative error", fontsize=fs)
 ax5.tick_params(labelsize=fs)
+cbar5 = fig.colorbar(cax5)
 plt.legend(loc="best", frameon=True, fontsize=fs)
 
 fig, ax6 = plt.subplots(figsize=figsize)
-ax6.scatter(
+cax6 = ax6.scatter(
     P[:, 0] * 1e-3,
     (P[:, 1] - P[:, 0]) / P[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=P_colour[:, 0],
     s=dotsize,
 )
+
 ax6.set_xlabel(r"Actual $P_i$ [kW]", fontsize=fs)
 ax6.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax6.set_title(r"$P_i$ relative error", fontsize=fs)
 ax6.tick_params(labelsize=fs)
+cbar6 = fig.colorbar(cax6)
 plt.legend(loc="best", frameon=True, fontsize=fs)
 
 fig, ax7 = plt.subplots(figsize=figsize)
-ax7.scatter(
+cax7 = ax7.scatter(
     Q[:, 0] * 1e-3,
     (Q[:, 1] - Q[:, 0]) / Q[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=Q_colour[:, 0],
     s=dotsize,
 )
 ax7.set_xlabel(r"Actual $Q$ [kW]", fontsize=fs)
 ax7.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax7.set_title(r"$Q$ relative error", fontsize=fs)
 ax7.tick_params(labelsize=fs)
+cbar7 = fig.colorbar(cax7)
 plt.legend(loc="best", frameon=True, fontsize=fs)
 
 fig, ax8 = plt.subplots(figsize=figsize)
-ax8.scatter(
+cax8 = ax8.scatter(
     ptdc[:, 0] * 1e-5,
     (ptdc[:, 1] - ptdc[:, 0]) / ptdc[:, 0] * 100,
     label="Prediction",
-    color="r",
+    c=ptdc_colour[:,0],
     s=dotsize,
 )
 ax8.set_xlabel(r"Actual $p_{tdc}$ [bar]", fontsize=fs)
 ax8.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax8.set_title(r"$p_{tdc}$ relative error", fontsize=fs)
 ax8.tick_params(labelsize=fs)
+cbar8 = fig.colorbar(cax8)
 plt.legend(loc="best", frameon=True, fontsize=fs)
 
 
@@ -300,7 +324,7 @@ plt.show()
 
 # plot the real values for power and the predicted one
 fig, ax5 = plt.subplots()
-ax5.plot(tins, powers1)
+ax5.plot(tins, powers1 * 1e-3)
 ax5.set_xlabel(r"T_in [K]")
 ax5.set_ylabel(r"P [kW]")
 ax5.set_title(rf"Layers: {layers + 1}, neurons: {hidden_dim}, Training set")
@@ -309,7 +333,7 @@ ax5.set_title(rf"Layers: {layers + 1}, neurons: {hidden_dim}, Training set")
 
 # plot the real values for power and the predicted one
 fig, ax6 = plt.subplots()
-ax6.plot(fars, powers2)
+ax6.plot(fars, powers2 * 1e-3)
 ax6.set_xlabel(r"far [-]")
 ax6.set_ylabel(r"P [kW]")
 ax6.set_title(rf"Layers: {layers + 1}, neurons: {hidden_dim}, Training set")

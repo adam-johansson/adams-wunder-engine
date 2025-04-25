@@ -105,7 +105,7 @@ batch_size = 32
 epochs = 3000
 
 # number of neurons of hidden layers
-hidden_dim = 64
+hidden_dim = 128
 
 # number of hidden layers - 1
 layers = 2

@@ -15,8 +15,6 @@ import thermo
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
 
-import nbkode
-
 dPdphi_temp = 0
 
 

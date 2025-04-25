@@ -73,7 +73,7 @@ class NET_straight(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_to_hidden(x)
-        x = self.ReLu(x)
+        #x = self.ReLu(x)
         for layer in self.hidden:
             x = layer(x)
             x = self.ReLu(x)

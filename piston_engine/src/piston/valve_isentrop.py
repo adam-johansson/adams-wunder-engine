@@ -67,8 +67,6 @@ def dmvdphi(
         else:
             lv = lv_max * 0.5 * (1 - np.cos(4 * np.pi * (1 - f)))
 
-        if gamma1 < 1.1:
-            print(gamma1, T1, p1, R1, backflow, type)
         PI = max(p2 / p1, (2 / (gamma1 + 1)) ** (gamma1 / (gamma1 - 1)))
         FF = np.sqrt(
             (gamma1 / (gamma1 - 1))
@@ -77,8 +75,10 @@ def dmvdphi(
         dvalve = 0.75 * (np.sqrt(2) - 1) * d
 
         A = n_valve * cd * np.pi * dvalve * lv
+
         if backflow:
             return -A * np.sqrt(2 / (R1 * T1)) * p1 * FF
+            #return 0.0
         else:
             return A * np.sqrt(2 / (R1 * T1)) * p1 * FF
 
