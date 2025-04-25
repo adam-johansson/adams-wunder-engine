@@ -1,12 +1,12 @@
-from CCE.src import thermo_outdated
+from thermo import mixture
 
 
 def stagnation(ps, ts, m):
     """Returns stagnation temperature and pressure, given static temperature, static pressure and mach number"""
     R_uni = 8.3144626  # J mol^-1 K^-1
     # Assuming pure air
-    cp, h, s, Molar = thermo_outdated.properties(ts, ps, equ=0)
-    R = R_uni / Molar
+    _, _, cp, _, _, _, _, M = mixture(ts, ps, equ=0)
+    R = R_uni / M
     cv = cp - R
     gamma = cp / cv
 

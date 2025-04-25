@@ -1,8 +1,6 @@
 from piston_engine.engine import run_piston_engine
-from piston_engine.src.misc import post_processing
 from scipy.optimize import fsolve, least_squares, brentq, minimize
 from CCE.src import components
-from CCE.src import thermo_outdated
 from CCE.src import auxiliaries
 from timeit import default_timer as timer
 

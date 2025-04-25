@@ -1,4 +1,4 @@
-from CCE.src import thermo_outdated
+from thermo import mixture
 from scipy.optimize import brentq
 
 
@@ -10,7 +10,7 @@ def hx_NASA(pc_i, tc_i, heating_power, m_c, th_i):
     p_dummy = 1e5
 
     # cold bypass air
-    cp, hc_i, s, M = thermo_outdated.properties(tc_i, p_dummy, 0)
+    hc_i, _, _, _, _, _, _, _ = mixture(tc_i, p_dummy, 0)
 
     # assuming pressure losses (dont care about oil for now)
     pc_o = pc_i * (1 - dp_c)
@@ -23,7 +23,7 @@ def hx_NASA(pc_i, tc_i, heating_power, m_c, th_i):
         if tc_o < 200:
             return 1e9
         # guessing outlet air enthalpy
-        cp, hc_o_guess, s, M = thermo_outdated.properties(tc_o, p_dummy, 0)
+        hc_o_guess, _, _, _, _, _, _, _ = mixture(tc_o, p_dummy, 0)
 
         return hc_o_guess - hc_o
 

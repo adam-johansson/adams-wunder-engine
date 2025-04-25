@@ -2,9 +2,8 @@ import numpy as np
 
 import pandas as pd
 
-from piston_engine.src.piston.polynomials_outdated import H2, JETA
+from thermo import H2, JETA_L, mixture
 
-from CCE.src.thermo_outdated import properties
 
 
 def power_balance(
@@ -133,18 +132,18 @@ def energy_flow_fuel(
 
     # fuel enthalpy from tank
     if fuel_type == "H2":
-        _, hf_tank, _, _ = H2(t_tank, p=p_dummy)
+        _, hf_tank, _, _, _ = H2(t_tank, p=p_dummy)
     elif fuel_type == "JETA":
-        _, hf_tank = JETA(t_tank)
+        _, hf_tank = JETA_L(t_tank)
 
     # fuel energy incoming per second from the fuel tank (lower heating value + enthalpy)
     P_f_t = m_f * (lhv + hf_tank)
 
     # added enthalpy to fuel from oil-fuel heat exchanger
     if fuel_type == "H2":
-        _, hf, _, _ = H2(t_fuel, p_dummy)
+        _, hf, _, _, _ = H2(t_fuel, p_dummy)
     elif fuel_type == "JETA":
-        _, hf = JETA(t_fuel)
+        _, hf = JETA_L(t_fuel)
 
     P_f_hx = m_f * (hf - hf_tank)
 
@@ -163,10 +162,10 @@ def energy_flow_fuel(
     # piston engine exhaust energy
 
     # enthalpy into the piston
-    _, h_p_in, _, _ = properties(t_p_in, p_dummy, 0)
+    h_p_in, _, _, _, _, _, _, _ = mixture(t_p_in, p_dummy, 0)
 
     # enthalpy out of the piston
-    _, h_p_out, _, _ = properties(t_p_out, p_dummy, equ_p_out, fuel_type)
+    h_p_out, _, _, _, _, _, _, _ = mixture(t_p_out, p_dummy, equ_p_out, fuel_type)
 
     # gas energy increase
     P_p_gas = h_p_out * m_p_out - h_p_in * m_p_in
@@ -181,10 +180,10 @@ def energy_flow_fuel(
     P_f_b = m_f_b * (lhv + hf)
 
     # enthalpy in burner
-    _, h_b_in, _, _ = properties(t_b_in, p_dummy, equ_b_in, fuel_type)
+    h_b_in, _, _, _, _, _, _, _ = mixture(t_b_in, p_dummy, equ_b_in, fuel_type)
 
     # enthalpy out burner
-    _, h_b_out, _, _ = properties(t_b_out, p_dummy, equ_b_out, fuel_type)
+    h_b_out, _, _, _, _, _, _, _ = mixture(t_b_out, p_dummy, equ_b_out, fuel_type)
 
     # increase in gas energy burner
     P_b_gas = h_b_out * m_b_out - h_b_in * m_b_in

@@ -7,8 +7,8 @@ from thermo.thermo_computations import mixture
 def entropy_func(t, p, equ=0, fuel_type=False):
     # R_uni = 8.3144626  # J mol^-1 K^-1
     p_std = 101325  # [Pa] standard pressure
-    h, _, _, _, R, _, s = mixture(
-        t, p, equ
+    _, _, _, _, R, _, s, _ = mixture(
+        t, p, equ, fuel_type
     )  # get thermo_outdated properties for the fluid
     # print(s)
     # s = PropsSI('Smass', 'T', t, 'P', p, 'Air')

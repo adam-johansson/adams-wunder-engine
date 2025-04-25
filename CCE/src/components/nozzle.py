@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.optimize import fsolve, brentq
-from CCE.src import thermo_outdated, compressible
+
+from thermo import mixture, entropy_func
+from CCE.src import compressible
 
 
 def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
@@ -16,16 +18,16 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
         return F, v2_id, v2, error
 
     # entropy function at nozzle inlet
-    psi1 = thermo_outdated.entropy_func(t1, p1, equ=equ, fuel_type=fuel_type)
+    psi1 = entropy_func(t1, p1, equ=equ, fuel_type=fuel_type)
     # enthalpy nozzle inlet
-    cp1, h1, s1, mol1 = thermo_outdated.properties(t1, p1, equ=equ, fuel_type=fuel_type)
+    h1, _, cp1, _, _, _, _, mol1 = mixture(t1, p1, equ=equ, fuel_type=fuel_type)
     # ideal static entropy function
     psi2_s_id = psi1 - np.log(p1 / pa)
 
     def find_t2(t):
         # if t[0] < 200 or t[0] > 6000:
         #    return 1e9
-        return psi2_s_id - thermo_outdated.entropy_func(t, p1)
+        return psi2_s_id - entropy_func(t, p1)
 
     # iteratively solve for t2 static
     # t2_s = fsolve(find_t2, t1)[0]
@@ -37,7 +39,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
         return float("nan"), float("nan"), float("nan"), error
 
     p_dummy = 1e5
-    cp2, h2_s, s2, mol2 = thermo_outdated.properties(
+    h2_s, _, _, _, _, _, _, _ = mixture(
         t2_s, p_dummy, equ=equ, fuel_type=fuel_type
     )
 

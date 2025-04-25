@@ -1,7 +1,7 @@
 from piston_engine.src.misc import post_processing
 from scipy.optimize import fsolve, brentq
 from CCE.src import components
-from CCE.src import thermo_outdated
+from thermo import fuel_props
 from timeit import default_timer as timer
 from piston_engine.engine import run_piston_engine
 from CCE.src.surrogate import nn_output
@@ -29,7 +29,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     # print(pin, Tin)
     # fuel type
     fuel_type = data[32]
-    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
+    far_s, LHV = fuel_props(fuel_type)
 
     if surrogate_status:
         if pin < 2e5 or pin > 30e5 or Tin < 250 or Tin > 900:
@@ -63,7 +63,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             pmax_seiliger = seiliger(pin, Tin, cr, far34, bore, fuel_type)
 
             # if predicted pressure over 600 bar
-            if pmax_seiliger > 600 * 1e5:
+            if pmax_seiliger > 400 * 1e5:
                 return 1e6
 
             # use meta model to get outputs from the piston egnine
@@ -139,19 +139,12 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         rps = rpm / 60
         Vd_tot = stroke * bore**2 / 4 * np.pi * cylinders
         cycle = data[3]
-        if cycle == "4T":
-            n_r = 2
-        else:
-            n_r = 1
 
         # auxiliary losses and friction losses. these do not depend on the trapped fuel air ratio
-        fmep, fmep_aux, fmep_pe_loss = post_processing.friction_patton(
-            bore, rpm, stroke, v_mean, pin, cr, cylinders, lv_max
+        friction_loss, aux_loss, _ = post_processing.friction_patton(
+            bore, rpm, stroke, v_mean, pin, cr, cylinders, lv_max, cycle
         )
-        friction_loss = (
-            fmep_pe_loss * Vd_tot * rps / n_r
-        )  # friction losses for total engine all cylinders
-        aux_loss = fmep_aux * Vd_tot * rps / n_r  # auxiliary losses
+
 
         shaft_power = induced_power - aux_loss - friction_loss - P_circumv - P_fuel_pump
 
@@ -216,9 +209,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         heat_loss_final = output_final[6] * cylinders
         p_tdc_final = output_final[7]
 
-        induced_power_final = induced_power_final * 1e3
-        heat_loss_final = heat_loss_final * 1e3
-        p_tdc_final = p_tdc_final * 1e5
+        induced_power_final = induced_power_final
+        heat_loss_final = heat_loss_final
+        p_tdc_final = p_tdc_final
 
     else:
         flags = ["sweep"]
@@ -295,13 +288,10 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         n_r = 1
 
     # auxiliary losses and friction losses. these do not depend on the trapped fuel air ratio
-    fmep_final, fmep_aux_final, fmep_pe_loss_final = post_processing.friction_patton(
-        bore, rpm, stroke, v_mean, pin, cr, cylinders, lv_max
+    friction_loss_final, aux_loss_final, _ = post_processing.friction_patton(
+        bore, rpm, stroke, v_mean, pin, cr, cylinders, lv_max, cycle
     )
-    friction_loss_final = (
-        fmep_pe_loss_final * Vd_tot * rps / n_r
-    )  # friction losses for total engine all cylinders
-    aux_loss_final = fmep_aux_final * Vd_tot * rps / n_r  # auxiliary losses
+
 
     # power out from engine after fuel pump and aux losses and friction and pressurising circumventing flow
     shaft_power_final = (

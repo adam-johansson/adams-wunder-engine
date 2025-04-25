@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
 
-import thermo_outdated
+from thermo import fuel_props
 
 
 def run_cce(indata, data_piston, flags, meta_model):
@@ -63,7 +63,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     pi_hpc = OPR_c / pi_ipc
 
     # fuel props
-    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
+    far_s, LHV = fuel_props(fuel_type)
 
     # ISA table
     pa, Ta, a = isa(
@@ -193,7 +193,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
 
     # checking max pressure
-    if p_max > 250:
+    if p_max > 250 * 1e5:
         error = True
         minor_error_pressure = True
         # print(f'Maximum pressure reached: {p_max}')
@@ -347,7 +347,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     )  # power required by the hpc divided by mechanical efficiency (from piston engine/HPT)
 
     # Calculating the work potential left after powering ipc and inner fan
-    p_wp, dummy, dummy, T_wp, dummy, m_wp, equ_wp, error = components.turbine(
+    p_wp, _, _, T_wp, _, m_wp, equ_wp, error = components.turbine(
         T4,
         p4,
         m4,
@@ -449,7 +449,7 @@ def run_cce(indata, data_piston, flags, meta_model):
             F,
             m0,
             m21,
-            power_tot * 1e-3,
+            power_tot,
             power_hpc,
             power_lpt,
             p3,

@@ -10,7 +10,7 @@ def work_potential(t1, p1, equ1, p0, fuel_type):
     # I think this function calculates the maximum amount of work that can be extracted when expanding the
     # fluid from p1 to p0
     p_dummy = 1e5
-    h1, _, _, _, _, _, _ = mixture(
+    h1, _, _, _, _, _, _, _ = mixture(
         t1, p_dummy, equ1, fuel_type
     )  # get thermo properties for the fluid
 
@@ -22,7 +22,7 @@ def work_potential(t1, p1, equ1, p0, fuel_type):
 
     t0_isen = brentq(find_t0, 200, 6000)
 
-    h0_isen, _, _, _, _, _, _ = mixture(
+    h0_isen, _, _, _, _, _, _, _ = mixture(
         t0_isen, p_dummy, equ1, fuel_type
     )  # get thermo_outdated properties for the fluid
 

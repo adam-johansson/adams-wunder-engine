@@ -542,9 +542,10 @@ def run_piston_engine(indata, flags):
 
         woschni_args = (Pref, Tref, Vref, Pmotor, Vmotor)
         if cycle == "2T":
+            print(i)
 
             sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
-                            rtol=1e-8, atol=1e-8)  # standard is rtol 1e-7 and atol 1e-10 (no scaling)
+                            rtol=1e-9, atol=1e-9)  # standard is rtol 1e-7 and atol 1e-10 (no scaling)
 
             # Radau/LSODA (if LSODA you dont see mdotin and mdotout)
         elif cycle == "4T":

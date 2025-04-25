@@ -1,4 +1,4 @@
-from CCE.src import thermo_outdated
+from thermo import mixture
 from scipy.optimize import fsolve
 
 
@@ -6,14 +6,14 @@ def mix(m1, t1, equ1, m2, t2, equ2, fuel_type=False):
     p = 1e5
     m3 = m1 + m2  # outlet mass flow is equal sum of inlet mass flows
     equ3 = (m1 * equ1 + m2 * equ2) / m3  # CHECK IF THIS IS REALLY CORRECT
-    cp1, h1, s1, M1 = thermo_outdated.properties(t1, p, equ1, fuel_type=fuel_type)
-    cp2, h2, s2, M2 = thermo_outdated.properties(t2, p, equ2, fuel_type=fuel_type)
+    h1, _, _, _, _, _, _, _ = mixture(t1, p, equ1, fuel_type=fuel_type)
+    h2, _, _, _, _, _, _, _ = mixture(t2, p, equ2, fuel_type=fuel_type)
 
     h3 = (m1 * h1 + m2 * h2) / m3
 
     def find_t3(t):
-        cp3, h3_guess, s3, M3 = thermo_outdated.properties(
-            t[0].astype(float), p, equ3, fuel_type=fuel_type
+        h3_guess, _, _, _, _, _, _, _ = mixture(
+            t[0].astype(float), p, equ3, fuel_type
         )
         return h3 - h3_guess
 

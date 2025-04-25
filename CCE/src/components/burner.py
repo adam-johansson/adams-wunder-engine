@@ -1,5 +1,4 @@
-from CCE.src import thermo_outdated
-from piston_engine.src.piston.polynomials_outdated import H2, JETA
+from thermo import fuel_props, mixture, H2, JETA_L
 
 
 def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
@@ -7,12 +6,12 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     p2 = p1 * (1 - dp)
 
     # stochiometric fuel air ratio
-    far_s, LHV = thermo_outdated.fuel_props(fuel_type)
+    far_s, LHV = fuel_props(fuel_type)
 
     if fuel_type == "H2":
-        cp_f, hf, s_f, M_f = H2(t_fuel, p1)
+        cp_f, hf, s_f, _, M_f = H2(t_fuel, p1)
     elif fuel_type == "jetA":
-        cp_f, hf, s_f, M_f = JETA(t_fuel)
+        cp_f, hf, s_f, _, M_f = JETA_L(t_fuel)
 
     # note that the fuel air ratio that is sought is ratio of added fuel to pure air in the gas
     f0 = 0.01  # initial guess
@@ -20,10 +19,10 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     while not convergence:
         # actual fuel air ratio
         f = f0 / eta
-        cp1, h1, s1, M1 = thermo_outdated.properties(
+        h1, _, _, _, _, _, _, _ = mixture(
             t1, p=p1, equ=equ1, fuel_type=fuel_type
         )
-        cp2, h2, s2, M2 = thermo_outdated.properties(
+        h2, _, _, _, _, _, _, _ = mixture(
             t2, p=p2, equ=f / far_s + equ1, fuel_type=fuel_type
         )
 

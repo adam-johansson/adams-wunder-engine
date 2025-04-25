@@ -67,7 +67,7 @@ xlimits = np.array(
 )
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 6  # points per variable #6000
+npoints = 60  # points per variable #6000
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube

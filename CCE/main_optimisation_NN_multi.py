@@ -110,7 +110,8 @@ data_piston = [
 
 
 # Load the trained model
-meta_model = load_ANN("./meta_models/straight_2048_0.pth")
+meta_model = load_ANN("../neural_network/models/H2_128_2.pth")
+meta_model.double()
 print(meta_model)
 
 if "single" in flags:

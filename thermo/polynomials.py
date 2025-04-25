@@ -14,102 +14,56 @@ R = 8.314510  # J mol^-1 K^-1
 
 @njit()
 def N2(T, p):
-    # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
-    # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
+    T = min(6000.0, max(200.0, T))  # clamp temperature
+    M = 28.0134e-3
+    Rspec = R / M
 
-    if T > float(6000):
-        T = float(6000)
-        # print(f'Temperature over float(6000) K was found')
-    if T < 200:
-        T = float(200)
-        # print(f'Temperature under 200 K was found')
+    # Coefficient arrays
+    a_low = [
+        2.210371497e04, -3.818461820e02, 6.082738360e00,
+        -8.530914410e-03, 1.384646189e-05, -9.625793620e-09, 2.519705809e-12,
+        7.108460860e02, -1.076003744e01,
+    ]
+    a_high = [
+        5.877124060e05, -2.239249073e03, 6.066949220e00,
+        -6.139685500e-04, 1.491806679e-07, -1.923105485e-11, 1.061954386e-15,
+        1.283210415e04, -1.586640027e01,
+    ]
 
-    M = 28.0134e-3  # kg/mol
-    Rspec = R / M  # J kg^-1 K^-1
+    # Choose coefficients without branching
+    use_low = 1.0 if T < 1000.0007 else 0.0  # 1.0 if low, 0.0 if high
+    a = [use_low * al + (1.0 - use_low) * ah for al, ah in zip(a_low, a_high)]
+    a1, a2, a3, a4, a5, a6, a7, b1, b2 = a
 
-    if T < 1000.0007:  # between 200K and 1000K
+    # Precompute powers and logs
+    T2 = T * T
+    T3 = T2 * T
+    T4 = T3 * T
+    invT = 1.0 / T
+    invT2 = invT * invT
+    logT = log(T)
 
-        a1 = 2.210371497e04
-        a2 = -3.818461820e02
-        a3 = 6.082738360e00
-        a4 = -8.530914410e-03
-        a5 = 1.384646189e-05
-        a6 = -9.625793620e-09
-        a7 = 2.519705809e-12
-        b1 = 7.108460860e02
-        b2 = -1.076003744e01
-    else:  # 1000K to float(6000)K
-        a1 = 5.877124060e05
-        a2 = -2.239249073e03
-        a3 = 6.066949220e00
-        a4 = -6.139685500e-04
-        a5 = 1.491806679e-07
-        a6 = -1.923105485e-11
-        a7 = 1.061954386e-15
-        b1 = 1.283210415e04
-        b2 = -1.586640027e01
-    # mass specific constant pressure heat capacity
-    cp = Rspec * (
-        a1 * T ** (-2.0)
-        + a2 * T ** (-1.0)
-        + a3
-        + a4 * T
-        + a5 * T ** 2.0
-        + a6 * T ** 3.0
-        + a7 * T ** 4.0
+    cp = Rspec * (a1 * invT2 + a2 * invT + a3 + a4 * T + a5 * T2 + a6 * T3 + a7 * T4)
+
+    h = Rspec * T * (
+        -a1 * invT2 + a2 * logT * invT + a3 + a4 * T / 2.0 +
+        a5 * T2 / 3.0 + a6 * T3 / 4.0 + a7 * T4 / 5.0 + b1 * invT
     )
-    # mass specific enthalpy
-    h = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0)
-            + a2 * log(T) / T
-            + a3
-            + a4 * T / 2.0
-            + a5 * T ** 2.0 / 3.0
-            + a6 * T ** 3.0 / 4.0
-            + a7 * T ** 4.0 / 5.0
-            + b1 / T
-        )
-    )
-    # standard state entropy, per mass
+
     s = Rspec * (
-        -a1 * T ** (-2.0) / 2
-        - a2 * T ** (-1.0)
-        + a3 * log(T)
-        + a4 * T
-        + a5 * T ** 2.0 / 2
-        + a6 * T ** 3.0 / 3.0
-        + a7 * T ** 4.0 / 4.0
-        + b2
-    )
-    # standard state molar Gibbs free energy, per mass
-    g = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0) / 2
-            + a2 * (log(T) + 1) * T ** (-1.0)
-            + a3 * (1 - log(T))
-            - a4 * T / 2.0
-            - a5 * T ** 2.0 / 6.0
-            - a6 * T ** 3.0 / 12.0
-            - a7 * T ** 4.0 / 20.0
-            + b1 / T
-            - b2
-        )
+        -a1 * invT2 / 2.0 - a2 * invT + a3 * logT +
+        a4 * T + a5 * T2 / 2.0 + a6 * T3 / 3.0 + a7 * T4 / 4.0 + b2
     )
 
-    # standards state pressure is 1 bar
+    g = Rspec * T * (
+        -a1 * invT2 / 2.0 + a2 * (logT + 1.0) * invT +
+        a3 * (1.0 - logT) - a4 * T / 2.0 - a5 * T2 / 6.0 -
+        a6 * T3 / 12.0 - a7 * T4 / 20.0 + b1 * invT - b2
+    )
+
     p_std = 1e5
-
-    # pressure dependence of the entropy
     if p > 0:
-        s = s - Rspec * log(p / p_std)
-
-    # pressure dependence of the Gibbs
-    # g = g + T * Rspec * log(p / p_std)
+        s -= Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -118,12 +72,7 @@ def N2(T, p):
 def O2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
-    if T > float(6000):
-        T = float(6000)
-        # print(f'Temperature over float(6000) K was found')
-    if T < 200:
-        T = float(200)
-        # print(f'Temperature under 200 K was found')
+    T = min(6000.0, max(200.0, T))  # clamp temperature
     M = 31.9988e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
 
@@ -148,68 +97,36 @@ def O2(T, p):
         b1 = -1.689010929e04
         b2 = 1.738716506e01
 
-    # mass specific constant pressure heat capacity
-    cp = Rspec * (
-        a1 * T ** (-2.0)
-        + a2 * T ** (-1.0)
-        + a3
-        + a4 * T
-        + a5 * T ** 2.0
-        + a6 * T ** 3.0
-        + a7 * T ** 4.0
+
+    # Precompute powers and logs
+    T2 = T * T
+    T3 = T2 * T
+    T4 = T3 * T
+    invT = 1.0 / T
+    invT2 = invT * invT
+    logT = log(T)
+
+    cp = Rspec * (a1 * invT2 + a2 * invT + a3 + a4 * T + a5 * T2 + a6 * T3 + a7 * T4)
+
+    h = Rspec * T * (
+            -a1 * invT2 + a2 * logT * invT + a3 + a4 * T / 2.0 +
+            a5 * T2 / 3.0 + a6 * T3 / 4.0 + a7 * T4 / 5.0 + b1 * invT
     )
-    # mass specific enthalpy
-    h = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0)
-            + a2 * log(T) / T
-            + a3
-            + a4 * T / 2.0
-            + a5 * T ** 2.0 / 3.0
-            + a6 * T ** 3.0 / 4.0
-            + a7 * T ** 4.0 / 5.0
-            + b1 / T
-        )
-    )
-    # standard state entropy, per mass
+
     s = Rspec * (
-        -a1 * T ** (-2.0) / 2
-        - a2 * T ** (-1.0)
-        + a3 * log(T)
-        + a4 * T
-        + a5 * T ** 2.0 / 2
-        + a6 * T ** 3.0 / 3.0
-        + a7 * T ** 4.0 / 4.0
-        + b2
-    )
-    # standard state molar Gibbs free energy, per mass
-    g = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0) / 2
-            + a2 * T ** (-1.0) * (log(T) + 1)
-            + a3 * (1 - log(T))
-            - a4 * T / 2.0
-            - a5 * T ** 2.0 / 6.0
-            - a6 * T ** 3.0 / 12.0
-            - a7 * T ** 4.0 / 20.0
-            + b1 / T
-            - b2
-        )
+            -a1 * invT2 / 2.0 - a2 * invT + a3 * logT +
+            a4 * T + a5 * T2 / 2.0 + a6 * T3 / 3.0 + a7 * T4 / 4.0 + b2
     )
 
-    # standards state pressure is 1 bar
+    g = Rspec * T * (
+            -a1 * invT2 / 2.0 + a2 * (logT + 1.0) * invT +
+            a3 * (1.0 - logT) - a4 * T / 2.0 - a5 * T2 / 6.0 -
+            a6 * T3 / 12.0 - a7 * T4 / 20.0 + b1 * invT - b2
+    )
+
     p_std = 1e5
-
-    # pressure dependence of the entropy
     if p > 0:
-        s = s - Rspec * log(p / p_std)
-
-    # pressure dependence of the Gibbs
-    # g = g + T * Rspec * log(p / p_std)
+        s -= Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -220,12 +137,8 @@ def Ar(T, p):
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
     M = 39.948e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
-    if T > float(6000):
-        T = float(6000)
-        # print(f'Temperature over float(6000) K was found')
-    if T < 200:
-        T = float(200)
-        # print(f'Temperature under 200 K was found')
+    T = min(6000.0, max(200.0, T))  # clamp temperature
+
     if T < 1000.0007:  # between 200K and 1000K
         a1 = 0.0
         a2 = 0.0
@@ -247,65 +160,35 @@ def Ar(T, p):
         b1 = -7.449939610e02
         b2 = 4.379180110e00
 
-    # mass specific constant pressure heat capacity
-    cp = Rspec * (
-        a1 * T ** (-2.0)
-        + a2 * T ** (-1.0)
-        + a3
-        + a4 * T
-        + a5 * T ** 2.0
-        + a6 * T ** 3.0
-        + a7 * T ** 4.0
+    # Precompute powers and logs
+    T2 = T * T
+    T3 = T2 * T
+    T4 = T3 * T
+    invT = 1.0 / T
+    invT2 = invT * invT
+    logT = log(T)
+
+    cp = Rspec * (a1 * invT2 + a2 * invT + a3 + a4 * T + a5 * T2 + a6 * T3 + a7 * T4)
+
+    h = Rspec * T * (
+            -a1 * invT2 + a2 * logT * invT + a3 + a4 * T / 2.0 +
+            a5 * T2 / 3.0 + a6 * T3 / 4.0 + a7 * T4 / 5.0 + b1 * invT
     )
-    # mass specific enthalpy
-    h = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0)
-            + a2 * log(T) / T
-            + a3
-            + a4 * T / 2.0
-            + a5 * T ** 2.0 / 3.0
-            + a6 * T ** 3.0 / 4.0
-            + a7 * T ** 4.0 / 5.0
-            + b1 / T
-        )
-    )
-    # standard state entropy, per mass
+
     s = Rspec * (
-        -a1 * T ** (-2.0) / 2
-        - a2 * T ** (-1.0)
-        + a3 * log(T)
-        + a4 * T
-        + a5 * T ** 2.0 / 2
-        + a6 * T ** 3.0 / 3.0
-        + a7 * T ** 4.0 / 4.0
-        + b2
-    )
-    # standard state molar Gibbs free energy, per mass
-    g = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0) / 2
-            + a2 * T ** (-1.0) * (log(T) + 1)
-            + a3 * (1 - log(T))
-            - a4 * T / 2.0
-            - a5 * T ** 2.0 / 6.0
-            - a6 * T ** 3.0 / 12.0
-            - a7 * T ** 4.0 / 20.0
-            + b1 / T
-            - b2
-        )
+            -a1 * invT2 / 2.0 - a2 * invT + a3 * logT +
+            a4 * T + a5 * T2 / 2.0 + a6 * T3 / 3.0 + a7 * T4 / 4.0 + b2
     )
 
-    # standards state pressure is 1 bar
+    g = Rspec * T * (
+            -a1 * invT2 / 2.0 + a2 * (logT + 1.0) * invT +
+            a3 * (1.0 - logT) - a4 * T / 2.0 - a5 * T2 / 6.0 -
+            a6 * T3 / 12.0 - a7 * T4 / 20.0 + b1 * invT - b2
+    )
+
     p_std = 1e5
-
-    # pressure dependence of the entropy
     if p > 0:
-        s = s - Rspec * log(p / p_std)
+        s -= Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -318,12 +201,7 @@ def CO2(T, p):
     # 9365.469 H(295.15) - H(0) J/mol
     M = 44.0095e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
-    if T > float(6000):
-        T = float(6000)
-        # print(f'Temperature over float(6000) K was found')
-    if T < 200:
-        T = float(200)
-        # print(f'Temperature under 200 K was found')
+    T = min(6000.0, max(200.0, T))  # clamp temperature
     if T < 1000.0007:  # between 200K and 1000K
         a1 = 4.943650540e04
         a2 = -6.264116010e02
@@ -345,70 +223,35 @@ def CO2(T, p):
         b1 = -3.908350590e04
         b2 = -2.652669281e01
 
-    # mass specific constant pressure heat capacity
-    cp = Rspec * (
-        a1 * T ** (-2.0)
-        + a2 * T ** (-1.0)
-        + a3
-        + a4 * T
-        + a5 * T ** 2.0
-        + a6 * T ** 3.0
-        + a7 * T ** 4.0
+    # Precompute powers and logs
+    T2 = T * T
+    T3 = T2 * T
+    T4 = T3 * T
+    invT = 1.0 / T
+    invT2 = invT * invT
+    logT = log(T)
+
+    cp = Rspec * (a1 * invT2 + a2 * invT + a3 + a4 * T + a5 * T2 + a6 * T3 + a7 * T4)
+
+    h = Rspec * T * (
+            -a1 * invT2 + a2 * logT * invT + a3 + a4 * T / 2.0 +
+            a5 * T2 / 3.0 + a6 * T3 / 4.0 + a7 * T4 / 5.0 + b1 * invT
     )
-    # mass specific enthalpy
-    h = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0)
-            + a2 * log(T) / T
-            + a3
-            + a4 * T / 2.0
-            + a5 * T ** 2.0 / 3.0
-            + a6 * T ** 3.0 / 4.0
-            + a7 * T ** 4.0 / 5.0
-            + b1 / T
-        )
-    )
-    # standard state entropy, per mass
+
     s = Rspec * (
-        -a1 * T ** (-2.0) / 2
-        - a2 * T ** (-1.0)
-        + a3 * log(T)
-        + a4 * T
-        + a5 * T ** 2.0 / 2
-        + a6 * T ** 3.0 / 3.0
-        + a7 * T ** 4.0 / 4.0
-        + b2
-    )
-    # standard state molar Gibbs free energy, per mass
-    g = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0) / 2
-            + a2 * T ** (-1.0) * (log(T) + 1)
-            + a3 * (1 - log(T))
-            - a4 * T / 2.0
-            - a5 * T ** 2.0 / 6.0
-            - a6 * T ** 3.0 / 12.0
-            - a7 * T ** 4.0 / 20.0
-            + b1 / T
-            - b2
-        )
+            -a1 * invT2 / 2.0 - a2 * invT + a3 * logT +
+            a4 * T + a5 * T2 / 2.0 + a6 * T3 / 3.0 + a7 * T4 / 4.0 + b2
     )
 
-    # enthalpy of formation 298.15 K (J/mol) (convert to /kg by dividing by molar mass)
-    hf = -393510.000 / M
-    hf = 0.0
-    h = h - hf
+    g = Rspec * T * (
+            -a1 * invT2 / 2.0 + a2 * (logT + 1.0) * invT +
+            a3 * (1.0 - logT) - a4 * T / 2.0 - a5 * T2 / 6.0 -
+            a6 * T3 / 12.0 - a7 * T4 / 20.0 + b1 * invT - b2
+    )
 
-    # standards state pressure is 1 bar
     p_std = 1e5
-
-    # pressure dependence of the entropy
     if p > 0:
-        s = s - Rspec * log(p / p_std)
+        s -= Rspec * log(p / p_std)
 
     return cp, h, s, g, M
 
@@ -419,12 +262,7 @@ def H2O(T, p):
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
     M = 18.01528e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
-    if T > float(6000):
-        T = float(6000)
-        # print(f'Temperature over float(6000) K was found')
-    if T < 200:
-        T = float(200)
-        # print(f'Temperature under 200 K was found')
+    T = min(6000.0, max(200.0, T))  # clamp temperature
     if T < 1000.0007:  # between 200K and 1000K
         a1 = -3.947960830e04
         a2 = 5.755731020e02
@@ -446,76 +284,37 @@ def H2O(T, p):
         b1 = -1.384286509e04
         b2 = -7.978148510e00
 
-    # mass specific constant pressure heat capacity
-    cp = Rspec * (
-        a1 * T ** (-2.0)
-        + a2 * T ** (-1.0)
-        + a3
-        + a4 * T
-        + a5 * T ** 2.0
-        + a6 * T ** 3.0
-        + a7 * T ** 4.0
+    # Precompute powers and logs
+    T2 = T * T
+    T3 = T2 * T
+    T4 = T3 * T
+    invT = 1.0 / T
+    invT2 = invT * invT
+    logT = log(T)
+
+    cp = Rspec * (a1 * invT2 + a2 * invT + a3 + a4 * T + a5 * T2 + a6 * T3 + a7 * T4)
+
+    h = Rspec * T * (
+            -a1 * invT2 + a2 * logT * invT + a3 + a4 * T / 2.0 +
+            a5 * T2 / 3.0 + a6 * T3 / 4.0 + a7 * T4 / 5.0 + b1 * invT
     )
-    # mass specific enthalpy
-    h = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0)
-            + a2 * log(T) / T
-            + a3
-            + a4 * T / 2.0
-            + a5 * T ** 2.0 / 3.0
-            + a6 * T ** 3.0 / 4.0
-            + a7 * T ** 4.0 / 5.0
-            + b1 / T
-        )
-    )
-    # standard state entropy, per mass
+
     s = Rspec * (
-        -a1 * T ** (-2.0) / 2
-        - a2 * T ** (-1.0)
-        + a3 * log(T)
-        + a4 * T
-        + a5 * T ** 2.0 / 2
-        + a6 * T ** 3.0 / 3.0
-        + a7 * T ** 4.0 / 4.0
-        + b2
-    )
-    # standard state molar Gibbs free energy, per mass
-    g = (
-        Rspec
-        * T
-        * (
-            -a1 * T ** (-2.0) / 2
-            + a2 * T ** (-1.0) * (log(T) + 1)
-            + a3 * (1 - log(T))
-            - a4 * T / 2.0
-            - a5 * T ** 2.0 / 6.0
-            - a6 * T ** 3.0 / 12.0
-            - a7 * T ** 4.0 / 20.0
-            + b1 / T
-            - b2
-        )
+            -a1 * invT2 / 2.0 - a2 * invT + a3 * logT +
+            a4 * T + a5 * T2 / 2.0 + a6 * T3 / 3.0 + a7 * T4 / 4.0 + b2
     )
 
-    # Enthalpy of formation at 298.15K (J/mol so we divide by M to get J/kg)
-    hf = -241826.000 / M
-    hf = 0
-    h = h - hf  # J kg^-1
+    g = Rspec * T * (
+            -a1 * invT2 / 2.0 + a2 * (logT + 1.0) * invT +
+            a3 * (1.0 - logT) - a4 * T / 2.0 - a5 * T2 / 6.0 -
+            a6 * T3 / 12.0 - a7 * T4 / 20.0 + b1 * invT - b2
+    )
 
-    # standards state pressure is 1 bar
     p_std = 1e5
-
-    # pressure dependence of the entropy
     if p > 0:
-        s = s - Rspec * log(p / p_std)
-
-    # pressure dependence of the Gibbs
-    # g = g + T * Rspec * log(p / p_std)
+        s -= Rspec * log(p / p_std)
 
     return cp, h, s, g, M
-
 
 @njit()
 def JETA_L(T):
@@ -686,12 +485,7 @@ def JETA_G(T, p):
 def H2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
-    if T > float(6000):
-        T = float(6000)
-        # print(f'Temperature over float(6000) K was found')
-    if T < 200:
-        T = float(200)
-        # print(f'Temperature under 200 K was found')
+    T = min(6000.0, max(200.0, T))  # clamp temperature
     M = 2.0158800e-3  # kg/mol
     Rspec = R / M  # J kg^-1 K^-1
 

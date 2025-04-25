@@ -1,6 +1,4 @@
 from CCE.src.components import hx, mix
-from CCE.src import thermo_outdated
-
 
 def bypass(p1, t1, dp, m1, heat_power):
     # just to fit

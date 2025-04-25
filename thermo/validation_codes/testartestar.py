@@ -1,11 +1,8 @@
 import numpy as np
 
-x = np.array(([1, 2, 3, 6], [8, 9, 10, 11]))
+T = 700
 
-print(x)
+k = float(T < 1000.0007)
 
-b = np.array([5, 9])
+print(k)
 
-print(b)
-
-print(x * b[:, np.newaxis])
