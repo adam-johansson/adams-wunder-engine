@@ -5,16 +5,13 @@ from thermo.thermo_computations import mixture
 
 
 def entropy_func(t, p, equ=0, fuel_type=False):
-    # R_uni = 8.3144626  # J mol^-1 K^-1
-    p_std = 101325  # [Pa] standard pressure
+
     _, _, _, _, R, _, s, _ = mixture(
         t, p, equ, fuel_type
-    )  # get thermo_outdated properties for the fluid
-    # print(s)
-    # s = PropsSI('Smass', 'T', t, 'P', p, 'Air')
-    # print(s)
-    # M = PropsSI('molarmass', 'T', t, 'P', p, 'Air')
+    )
 
-    Psi = (s / R) - np.log(p / p_std)
+
+    # the entropy is already corrected for pressure in the polynomials functions
+    Psi = (s / R) #- np.log(p / p_std)
 
     return Psi
