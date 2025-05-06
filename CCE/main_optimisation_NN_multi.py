@@ -7,9 +7,8 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-#input_file = "MCR_H2_opt"
-input_file = "MCR_H2_conventional"
-input_dir = "input"
+input_file = "EOR_H2_conventional"
+input_dir = "input.conventional_h2"
 path = input_dir + "." + input_file
 
 input_file_pist = "4stroke_hydrogen"
@@ -63,6 +62,8 @@ if "conventional" in flags:
         d.t_fuel,
         d.t_tank,
         d.power_offtake,
+        d.dp_rec,
+        d.dT_rec,
     ]
 
     (

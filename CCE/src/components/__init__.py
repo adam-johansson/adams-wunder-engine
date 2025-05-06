@@ -1,4 +1,4 @@
-from .compressor import compressor
+from .compressor import compressor, compressor_isentropic
 from .hx import hx
 from .inlet import inlet
 from .nozzle import nozzle

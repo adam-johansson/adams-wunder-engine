@@ -40,6 +40,8 @@ def run_turbofan(indata, flags):
         t_fuel,
         t_tank,
         offtake,
+        dp_rec,
+        dT_rec,
     ] = indata
 
     # calculate mass flow
@@ -76,13 +78,13 @@ def run_turbofan(indata, flags):
     m12 = m2 * bpr / (1 + bpr)
 
     # Outer fan
-    p12, T12, P_outer_fan = components.compressor(T2, p2, m12, eta_fan, fpr_outer)
+    p12, T12, P_outer_fan = components.compressor_isentropic(T2, p2, m12, eta_fan, fpr_outer)
 
     # Core stream
     m22 = m2 / (1 + bpr)
 
     # Inner fan
-    p22, T22, P_inner_fan = components.compressor(T2, p2, m22, eta_fan, fpr_inner)
+    p22, T22, P_inner_fan = components.compressor_isentropic(T2, p2, m22, eta_fan, fpr_inner)
 
     # LPC
     p24, T24, P_lpc = components.compressor(T22, p22, m22, eta_p_ipc, pi_ipc)
@@ -166,8 +168,8 @@ def run_turbofan(indata, flags):
     m7 = (1 - recuperation_split) * m5
     #T7, p7 = components.hx_NASA(
     #        p13, T13, heating_bypass, m15, oil_temp_1)
-    T7 = T6 - 112
-    p7 = p6 * 0.94
+    T7 = T6 - dT_rec
+    p7 = p6 * (1 - dp_rec)
     equ7 = equ6
 
     # Recuperated nozzle
