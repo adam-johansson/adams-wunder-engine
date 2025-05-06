@@ -3,7 +3,7 @@ from piston_engine.src.piston.polynomials_outdated import N2, O2, CO2, H2O, Ar
 # from numba import njit
 
 
-# @njit()
+# ### @njit()
 def properties(t, p, equ, fuel_type=False):
     """
     Function that return thermodynamic properties of a mixture based on the

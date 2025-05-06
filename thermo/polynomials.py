@@ -12,7 +12,7 @@ R = 8.314510  # J mol^-1 K^-1
 # Inside the polynomials, the units are kJ/mol
 
 
-@njit()
+### @njit()
 def N2(T, p):
     T = min(6000.0, max(200.0, T))  # clamp temperature
     M = 28.0134e-3
@@ -68,7 +68,7 @@ def N2(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def O2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -131,7 +131,7 @@ def O2(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def Ar(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -193,7 +193,7 @@ def Ar(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def CO2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -256,7 +256,7 @@ def CO2(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def H2O(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -316,7 +316,7 @@ def H2O(T, p):
 
     return cp, h, s, g, M
 
-@njit()
+### @njit()
 def JETA_L(T):
     # LIQUID JET A
 
@@ -378,7 +378,7 @@ def JETA_L(T):
     return cp, h, s, M
 
 
-@njit()
+### @njit()
 def JETA_G(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -481,7 +481,7 @@ def JETA_G(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def H2(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -576,7 +576,7 @@ def H2(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def CO(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -679,7 +679,7 @@ def CO(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def H(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -782,7 +782,7 @@ def H(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def N(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -885,7 +885,7 @@ def N(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def NO(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -988,7 +988,7 @@ def NO(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def O(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford
@@ -1091,7 +1091,7 @@ def O(T, p):
     return cp, h, s, g, M
 
 
-@njit()
+### @njit()
 def OH(T, p):
     # This is NASA 9 polynomial from NASA Glenn Coefficients for Calculating
     # Thermodynamic Properties of Individual Species 2002 Bonnie, McBride and Sanford

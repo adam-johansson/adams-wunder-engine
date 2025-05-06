@@ -3,17 +3,15 @@ from .intersection import interpolated_intercept
 from .plot import myplot1d, myplot2d, myplot1d_marker
 from .output import (
     print_output,
-    csv_output,
-    plot_stations,
+    csv_output_cce,
+    plot_stations_cce,
     print_efficiencies,
     optimisation_csv,
+    plot_stations_rec_h2_geared,
+    csv_output_rec_h2_geared
 )
 from .postprocess import energy_flow_fuel, power_balance
-#from .piston_match import match_piston_engine, match_piston_engine_cr, match_piston_new
-from .calc_efficiencies import calc_efficiencies
+from .calc_efficiencies import calc_efficiencies_cce, calc_efficiencies_recuperated_h2_geared
 from .fpr_opt import fpr_opt
-#from .match_tet_power import match_tet_power
-#from .match_tet_power_v2 import match_tet_power_v2
-#from .match_power import match_power
-#from .match_power_v2 import match_power_v2
 from .match_power_NN import match_power_nn
+from .calc_entropy_array import entropy_array

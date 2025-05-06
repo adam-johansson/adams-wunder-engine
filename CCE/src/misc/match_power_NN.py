@@ -32,7 +32,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     far_s, LHV = fuel_props(fuel_type)
 
     if surrogate_status:
-        if pin < 2e5 or pin > 30e5 or Tin < 250 or Tin > 900:
+        if pin < 2e5 or pin > 30e5 or Tin < 250 or Tin > 1000:
             print("input to surrogate outside limits")
             error = True
             return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0, 0, 0, 0, 0
@@ -74,12 +74,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             air_flow = output[2] * cylinders
             # p_max = output[3]
             # T_max = output[4]
-            induced_power = output[5] * cylinders
+            indicated_power = output[5] * cylinders
             # heat_loss = output[6] * cylinders
             p_tdc = output[7]
-
-            induced_power = induced_power * 1e3
-            p_tdc = p_tdc * 1e5
 
         else:
             flags = ["sweep"]
@@ -93,7 +90,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
                 T_max,
                 far,
                 equ_trapped,
-                induced_power,
+                indicated_power,
                 friction_loss,
                 aux_loss,
                 heat_loss,
@@ -146,7 +143,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         )
 
 
-        shaft_power = induced_power - aux_loss - friction_loss - P_circumv - P_fuel_pump
+        shaft_power = indicated_power - aux_loss - friction_loss - P_circumv - P_fuel_pump
 
         residual = np.array([shaft_power - power_req])
         if not surrogate_status:
@@ -155,7 +152,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             )
 
         # print(f'match_power_nn residual: {residual}, piston_input: {piston_input}')
-        # print(f'match_power_nn residual: {residual}, far: {x[0]}')
+        #print(f'match_power_nn residual: {residual}, far: {x[0]}')
 
         return residual
 
@@ -205,11 +202,11 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         air_flow_final = output_final[2] * cylinders
         p_max_final = output_final[3]
         T_max_final = output_final[4]
-        induced_power_final = output_final[5] * cylinders
+        indicated_power_final = output_final[5] * cylinders
         heat_loss_final = output_final[6] * cylinders
         p_tdc_final = output_final[7]
 
-        induced_power_final = induced_power_final
+        indicated_power_final = indicated_power_final
         heat_loss_final = heat_loss_final
         p_tdc_final = p_tdc_final
 
@@ -225,7 +222,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             T_max_final,
             far,
             equ_trapped,
-            induced_power_final,
+            indicated_power_final,
             friction_loss,
             aux_loss,
             heat_loss_final,
@@ -295,7 +292,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
     # power out from engine after fuel pump and aux losses and friction and pressurising circumventing flow
     shaft_power_final = (
-        induced_power_final
+        indicated_power_final
         - aux_loss_final
         - friction_loss_final
         - P_circumv_final
@@ -320,7 +317,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         p_max_final,
         T_max_final,
         far34_final,
-        induced_power_final,
+        indicated_power_final,
         friction_loss_final,
         aux_loss_final,
         heat_loss_final,

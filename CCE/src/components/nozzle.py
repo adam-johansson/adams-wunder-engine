@@ -19,20 +19,21 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
 
     # entropy function at nozzle inlet
     psi1 = entropy_func(t1, p1, equ=equ, fuel_type=fuel_type)
+
     # enthalpy nozzle inlet
-    h1, _, cp1, _, _, _, _, mol1 = mixture(t1, p1, equ=equ, fuel_type=fuel_type)
+    h1, _, cp1, cv1, R1, gamma1, s1, mol1 = mixture(t1, p1, equ=equ, fuel_type=fuel_type)
+
     # ideal static entropy function
     psi2_s_id = psi1 - np.log(p1 / pa)
 
-    def find_t2(t):
+    def find_t2_s(t):
         # if t[0] < 200 or t[0] > 6000:
         #    return 1e9
-        return psi2_s_id - entropy_func(t, p1)
+        return psi2_s_id - entropy_func(t, p1, equ=equ, fuel_type=fuel_type)
 
-    # iteratively solve for t2 static
-    # t2_s = fsolve(find_t2, t1)[0]
+
     try:
-        t2_s = brentq(find_t2, 200, 1500)
+        t2_s = brentq(find_t2_s, 200, 1500)
     except ValueError:
         print("Problem with nozzle.")
         error = True
@@ -47,10 +48,6 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
     v2_id = np.sqrt(2 * (h1 - h2_s))
 
     # critical ambient pressure
-    R_uni = 8.3144626  # J mol^-1 K^-1
-    R = R_uni / mol1
-    cv1 = cp1 - R
-    gamma1 = cp1 / cv1
     pc = p1 * (1 - ((gamma1 - 1) / (gamma1 + 1))) ** (gamma1 / (gamma1 - 1))
 
     if pc < pa:
@@ -73,7 +70,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
         p2s = p1 / ((t1 / t21s) ** (gamma1 / (gamma1 - 1)))
 
         # nozzle exit area
-        rho2 = p2s / (R * t21s)
+        rho2 = p2s / (R1 * t21s)
         A2 = m / (rho2 * v2 * cd)
 
         # thrust

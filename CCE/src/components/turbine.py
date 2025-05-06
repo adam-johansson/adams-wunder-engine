@@ -3,7 +3,7 @@ from scipy.optimize import brentq
 
 # from timeit import default_timer as timer
 
-from thermo import mixture, entropy_func
+from thermo import mixture, entropy_func, fuel_props
 
 
 # add fuel type in the input later
@@ -21,6 +21,7 @@ def turbine(
     q_ngv=9999,
 ):
 
+    far_s, _ = fuel_props(fuel_type)
     p_dummy = 1e5
     error = False
     h1_main, _, _, _, _, _, _, _ = mixture(
@@ -36,7 +37,6 @@ def turbine(
             raise Exception("Cooling is turned on but no cooling properties are given.")
 
         # assumes pure air for cooling
-        # TODO: NOTE THAT PRESSURE IS ONLY USED HERE TO GET ENTROPY. COULD add p cool
         h1_cool, _, _, _, _, _, _, _ = mixture(
             t_cool, p1_main, equ=0
         )  # cooling air props
@@ -44,7 +44,11 @@ def turbine(
         h1 = (
             m1_main * h1_main + q_ngv * m1_cool * h1_cool
         ) / m1  # enthalpy after mixing before rotor
-        equ1 = equ1_main * m1_main / m1  # mass average (think this is correct)
+
+
+        far1_main = equ1_main * far_s
+        far1 = far1_main * m1_main / (m1_main + m1_cool * q_ngv * (1 + far1_main))
+        equ1 = far1 / far_s
 
         def find_t1(t):
             h1_guess, _, _, _, _, _, _, _ = mixture(
@@ -52,10 +56,8 @@ def turbine(
             )
             return h1 - h1_guess
 
-        # start = timer()
-        # t1 = fsolve(find_t1, x0=t1_main)[0]
         try:
-            t1 = brentq(find_t1, 200, 1500)
+            t1 = brentq(find_t1, 200, 2500)
         except ValueError:
             # print('trubbel')
             error = True
@@ -73,8 +75,11 @@ def turbine(
     h2 = (
         h1 - (power_req / m1) / eta
     )  # specific enthalpy after expansion (for pressure calculation)
+
     h2_real = h1 - (power_req / m1)  # specific enthalpy after expansion (real)
+
     equ2 = equ1  # no cooling air is inserted at the rotor. only before or after
+    m2 = m1
 
     def find_t2(t):
         h2_guess, _, _, _, _, _, _, _ = mixture(
@@ -90,7 +95,7 @@ def turbine(
 
     # t2 = fsolve(find_t2, x0=t1_main)[0]  # temperature after rotor (for calculating pressure drop)
     try:
-        t2 = brentq(find_t2, 200, 1500)
+        t2 = brentq(find_t2, 200, 2500)
     except ValueError:
         error = True
         # print('trubbel')
@@ -105,9 +110,8 @@ def turbine(
             error,
         )
 
-    # t2_real = fsolve(find_t2_real, x0=t1_main)[0]  # temperature after rotor (real)
     try:
-        t2_real = brentq(find_t2_real, 200, 1500)
+        t2_real = brentq(find_t2_real, 200, 2500)
     except ValueError:
         # print('trubbel')
         error = True
@@ -139,7 +143,10 @@ def turbine(
         # assumes pure air for cooling
         m3 = m1 + (1 - q_ngv) * m1_cool
         h3 = (m1 * h2_real + (1 - q_ngv) * m1_cool * h1_cool) / m3
-        equ3 = equ1 * m1 / m3  # mass average (think this is correct)
+
+        far2 = equ2 * far_s
+        far3 = far2 * m2 / (m2 + m1_cool * (1 - q_ngv) * (1 + far2))
+        equ3 = far3 / far_s
 
         def find_t3(t):
             h3_guess, _, _, _, _, _, _, _ = mixture(
@@ -164,6 +171,7 @@ def turbine(
                 error,
             )
 
-    # end = timer()
-    # print(f'time turbine: {end - start}')
-    return p2, t1, t2_real, t3, m1, m3, equ3, error
+    if cooling:
+        return p2, t1, t2_real, t3, m1, m3, equ1, equ3, error
+    else:
+        return p2, t3, m3, equ3, error

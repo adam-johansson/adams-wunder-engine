@@ -21,7 +21,7 @@ from src import Data, NET_straight
 
 # import data
 
-folder = "H2"
+folder = "jetA"
 
 data = pd.read_csv("./input_data/" + folder + "/data.csv", index_col=0)
 # X = pd.read_csv('./input_data/' + folder + '/x_cleaned.csv', index_col=0)

@@ -40,6 +40,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             T_out_piston,
             TET,
             far_piston,
+            T35,
         ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
         end = timer()
         # print(f'one run cce: {end - start}')
@@ -83,6 +84,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
                 0,
                 0,
                 0,
+                0,
             )
 
         # end = timer()
@@ -90,8 +92,8 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
 
     except ValueError as e:
         error = True
-        # print(e)
-        return 999, 0, 0, 1, error, 0, 0, 0, 0, 0, 0, 0
+        print(e)
+        return 999, 0, 0, 1, error, 0, 0, 0, 0, 0, 0, 0, 0
 
     # opt_fpr = minimize(find_fpr, x0, bounds=limits, method='Nelder-Mead', options={'disp': True, 'fatol': 1e-0})
     # opt_fpr = minimize_scalar(find_fpr, x0, bounds=limits)
@@ -111,12 +113,13 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         T_out_piston,
         TET,
         far_piston,
+        T35,
     ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
 
     if np.abs(thrust_final / m0 - Fs_goal) > 0.1:
         # if thrust didnt match raise error
         error = True
-        # print('andra error funkar')
+        print('andra error funkar')
         cost = sfc_final + np.abs(thrust_final / m0 - Fs_goal)
         return (
             cost,
@@ -131,6 +134,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             T_out_piston,
             TET,
             far_piston,
+            T35
         )
 
     return (
@@ -146,4 +150,5 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         T_out_piston,
         TET,
         far_piston,
+        T35,
     )

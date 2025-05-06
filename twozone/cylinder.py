@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from numba import njit
 
 
-@njit()
+### @njit()
 def dxdphi(t, x):
     # solve a system of ODEs for pressure, temperature, volume
     # assign ode to vector element

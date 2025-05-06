@@ -14,7 +14,7 @@ from thermo import fuel_props
 # input_file = "4stroke_kaiser"
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
-# input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
+input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
 #input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
@@ -25,7 +25,7 @@ from thermo import fuel_props
 # input_file = "validation_twozone.water_hydrogen"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
-input_file = "4stroke_hydrogen_crashing_case"
+#input_file = "4stroke_hydrogen_crashing_case"
 
 input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
@@ -57,6 +57,7 @@ d = importlib.import_module(path)
 # flags = ['fit_water_paper', 'single']
 # flags = ['single', 'plot_twozone']
 flags = ["single"]
+#flags = ["load"]
 # flags = ["single", "fit_newcastle"]
 # flags = ["sweep_chalmers_h2"]
 
@@ -186,15 +187,15 @@ elif "optimise" in flags:
     # optimisation_combustion(d=d)
 
 elif "load" in flags:
-    from src.misc.plot_output import plot_validation
-    from src.misc.post_processing import validation_error
+    from piston_engine.src.misc.plot_output import plot_validation
+    from piston_engine.src.misc.post_processing import validation_error
     from numpy import genfromtxt
 
-    P = genfromtxt("simulation_data/P.csv", delimiter=",")
-    T = genfromtxt("simulation_data/T.csv", delimiter=",")
-    m = genfromtxt("simulation_data/m.csv", delimiter=",")
-    equ = genfromtxt("simulation_data/equ.csv", delimiter=",")
-    phi = genfromtxt("simulation_data/phi.csv", delimiter=",")
+    P = genfromtxt("piston_engine/simulation_data/P.csv", delimiter=",")
+    T = genfromtxt("piston_engine/simulation_data/T.csv", delimiter=",")
+    m = genfromtxt("piston_engine/simulation_data/m.csv", delimiter=",")
+    equ = genfromtxt("piston_engine/simulation_data/equ.csv", delimiter=",")
+    phi = genfromtxt("piston_engine/simulation_data/phi.csv", delimiter=",")
     plot_validation(phi, P, T, m, equ)
     validation_error(phi, P, T, m, equ)
 

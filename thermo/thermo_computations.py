@@ -4,7 +4,7 @@ from thermo.polynomials import N2, O2, CO2, H2O, Ar, JETA_G, H2
 from numba import njit
 
 
-@njit()
+### @njit()
 def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
     """
     Function that return thermodynamic properties of a mixture based on the
@@ -315,6 +315,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
         h = (
             mu_N2 * h_N2 + mu_O2 * h_O2 + mu_CO2 * h_CO2 + mu_H2O * h_H2O + mu_Ar * h_Ar
         )  # specific enthalpy
+
         s = (
             mu_N2 * s_N2 + mu_O2 * s_O2 + mu_CO2 * s_CO2 + mu_H2O * s_H2O + mu_Ar * s_Ar
         )  # specific entropy
@@ -327,7 +328,7 @@ def mixture(t, p, equ=0, fuel_type=False, pure_fuel=False, fuel_equ_ratio=0.0):
     return h, u, cp, cv, R, gamma, s, M
 
 
-@njit()
+### @njit()
 def equivalence_derivative(equ, t, p, fuel_type, pure_fuel, fuel_equ_ratio):
     """
     Function that returns the partial derivative of specific gas constant R
@@ -720,7 +721,7 @@ def equivalence_derivative(equ, t, p, fuel_type, pure_fuel, fuel_equ_ratio):
     return dellRdellequ, delludellequ
 
 
-@njit()
+### @njit()
 def molar_fractions(equ, fuel_type, pure_fuel=False, fuel_equ_ratio=0.0):
     """
     Function that return thermodynamic properties of a mixture based on the
@@ -877,7 +878,7 @@ def molar_fractions(equ, fuel_type, pure_fuel=False, fuel_equ_ratio=0.0):
     return x_N2, x_O2, x_CO2, x_H2O, x_Ar, x_fuel
 
 
-@njit()
+### @njit()
 def mass_fractions(equ, fuel_type, pure_fuel, fuel_equ_ratio):
     """
     Function that return thermodynamic properties of a mixture based on the

@@ -1,5 +1,5 @@
 from thermo import fuel_props, mixture, H2, JETA_L
-
+from scipy.optimize import fsolve, brentq
 
 def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     # pressure loss
@@ -14,26 +14,22 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
         cp_f, hf, s_f, _, M_f = JETA_L(t_fuel)
 
     # note that the fuel air ratio that is sought is ratio of added fuel to pure air in the gas
-    f0 = 0.01  # initial guess
-    convergence = False
-    while not convergence:
-        # actual fuel air ratio
-        f = f0 / eta
-        h1, _, _, _, _, _, _, _ = mixture(
-            t1, p=p1, equ=equ1, fuel_type=fuel_type
-        )
-        h2, _, _, _, _, _, _, _ = mixture(
-            t2, p=p2, equ=f / far_s + equ1, fuel_type=fuel_type
-        )
 
-        # theoretical fuel air ratio
-        f_theo = ((h2 - h1) / (LHV + hf - h2)) * (1 + equ1 * far_s)
-        # iterate until convergence
-        if abs(f_theo - f0) < 1e-9:
-            break
-        f0 = f_theo
+    h1, u, cp, cv, R, gamma, s, M = mixture(t1, p1, equ=equ1, fuel_type=fuel_type)
+
+    # fuel air ratio of fuel already (burned) in the gas from previous burner
+    far0 = equ1 * far_s
+
+    def find_far(far):
+        h2, u, cp, cv, R, gamma, s, M = mixture(t2, p2, equ=far/far_s, fuel_type=fuel_type)
+
+        residual = h2 * (1 + far0 + far) - h1 * (1 + far0) - far * hf
+        return residual
+
+
+    f = brentq(find_far, 0.0, far_s)
 
     # taking into account combustion losses
-    f = f0 / eta
+    f_real = f / eta
 
-    return p2, t2, f
+    return p2, t2, f_real

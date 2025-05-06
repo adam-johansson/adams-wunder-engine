@@ -55,7 +55,7 @@ def print_output(
     print(f"Max pressure in piston engine: {p_max * 1e-5} [bar]")
     print(f"Max temperature in piston engine: {T_max} [K]")
     print(f"Trapped FAR piston: {equ_trapped * far_s} [-]")
-    print(f"Trapped air-fuel-equivalence ratio: {1/equ_trapped} [-]")
+    #print(f"Trapped air-fuel-equivalence ratio: {1/equ_trapped} [-]")
     print(f"Indicated power from piston engine: {induced_power * 1e-6} [MW]")
     print(f"Fuel flow piston engine: {fuel_flow_piston * 1000} [g/s]")
     print(f"Fuel flow burner: {fuel_flow_burner * 1000} [g/s]")
@@ -68,32 +68,84 @@ def print_output(
     return
 
 
-def csv_output(p, t, m):
+def csv_output_cce(p, t, m, far, s):
     """
     saves pressures, temperatures and mass flows for all stations as csv file.
     """
-    headers = ("station", "m [kg/s]", "T [K]", "p [kPa]")
+    headers = ("station", "m [kg/s]", "T [K]", "p [kPa]", "FAR []", "s [kJ /(kg * K) ]")
+    if CCE:
+        stations = (
+            "2",
+            "13",
+            "14",
+            "15",
+            "21",
+            "25",
+            "3",
+            "31",
+            "32",
+            "34",
+            "35",
+            "4",
+            "41",
+            "43",
+            "5",
+            "6",
+        )
+    else:
+        stations = (
+            "2",
+            "13",
+            "14",
+            "15",
+            "21",
+            "25",
+            "3",
+            "31",
+            "4",
+            "41",
+            "42",
+            "45",
+            "46",
+            "47",
+            "5",
+            "6",
+        )
+    stations = np.atleast_2d(stations).T
+    data = np.concatenate(
+        (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T, np.atleast_2d(far).T, np.atleast_2d(s).T), axis=1
+    )
+    data = np.vstack([headers, data])
+    np.savetxt("simulation_data/stations.csv", data, delimiter=",", fmt="%s")
+
+    return
+
+def csv_output_rec_h2_geared(p, t, m, far, s):
+    """
+    saves pressures, temperatures and mass flows for all stations as csv file.
+    """
+    headers = ("station", "m [kg/s]", "T [K]", "p [bar]", "FAR []", "s [kJ /(kg * K) ]")
+
     stations = (
+        "a",
+        "0",
         "2",
-        "13",
-        "14",
-        "15",
-        "21",
+        "22",
         "25",
         "3",
         "31",
-        "32",
-        "34",
-        "35",
         "4",
         "41",
-        "43",
+        "42",
+        "45",
         "5",
         "6",
+        "12",
+        "7",
     )
     stations = np.atleast_2d(stations).T
     data = np.concatenate(
-        (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T), axis=1
+        (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T, np.atleast_2d(far).T, np.atleast_2d(s).T), axis=1
     )
     data = np.vstack([headers, data])
     np.savetxt("simulation_data/stations.csv", data, delimiter=",", fmt="%s")
@@ -101,10 +153,11 @@ def csv_output(p, t, m):
     return
 
 
-def plot_stations(p_array, t_array):
+def plot_stations_cce(p_array, t_array):
     # plotting the different stations
 
     stations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
     labels = [
         "2",
         "13",
@@ -129,6 +182,55 @@ def plot_stations(p_array, t_array):
     color = "tab:red"
     ax1.set_xlabel("station")
     ax1.set_ylabel("pressure [kPa]", color=color)
+    ax1.plot(stations, p_array, color=color, marker="o")
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color = "tab:blue"
+    ax2.set_ylabel(
+        "Temperature [K]", color=color
+    )  # we already handled the x-label with ax1
+    ax2.plot(stations, t_array, color=color, marker="o")
+    ax2.tick_params(axis="y", labelcolor=color)
+    ax1.grid(True)
+
+    plt.xticks(stations, labels)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.margins(0.2)
+    plt.show()
+
+    return
+
+def plot_stations_rec_h2_geared(p_array, t_array):
+    # plotting the different stations
+
+    stations = np.linspace(0,15,15)
+
+    labels = [
+        "a",
+        "0",
+        "2",
+        "22",
+        "25",
+        "3",
+        "31",
+        "4",
+        "41",
+        "42",
+        "45",
+        "5",
+        "6",
+        "12",
+        "7",
+    ]
+
+    fig, ax1 = plt.subplots()
+
+    color = "tab:red"
+    ax1.set_xlabel("station")
+    ax1.set_ylabel("pressure [bar]", color=color)
     ax1.plot(stations, p_array, color=color, marker="o")
     ax1.tick_params(axis="y", labelcolor=color)
 

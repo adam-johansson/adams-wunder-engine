@@ -79,7 +79,7 @@ cd = 0.8
 eta_c = 1.0
 
 # 2.3 matcher total heat för 11 cd och m = 1.1
-throttle = 0.02918 * 0.8
+far_goal = 0.02918 * 0.8
 
 phi_sc = (361.0 / 180) * np.pi  # angle at combustion start 361
 phi_cd = (35 / 180) * np.pi  # angle related to combustion duration
@@ -104,3 +104,5 @@ c5 = 2.0  # shape factor for premixed burning function
 it = 500
 
 mf_tot = 1.5e-4
+
+premixed = False

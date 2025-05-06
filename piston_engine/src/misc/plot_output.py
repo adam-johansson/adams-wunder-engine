@@ -391,7 +391,7 @@ def plot_validation(phi, P, T, m, equ):
     plt.legend(loc="best", frameon=True, fontsize=fs)
     ax1.grid()
     plt.savefig(
-        "simulation_data/figures/m_validation.pdf", dpi=res, bbox_inches="tight"
+        "piston_engine/simulation_data/figures/m_validation.pdf", dpi=res, bbox_inches="tight"
     )
 
     fig, ax2 = plt.subplots(figsize=figsize)
@@ -413,7 +413,7 @@ def plot_validation(phi, P, T, m, equ):
     plt.legend(loc="best", frameon=True, fontsize=fs)
     ax2.grid()
     plt.savefig(
-        "simulation_data/figures/equ_validation.pdf", dpi=res, bbox_inches="tight"
+        "piston_engine/simulation_data/figures/equ_validation.pdf", dpi=res, bbox_inches="tight"
     )
 
     fig, ax3 = plt.subplots(figsize=figsize)
@@ -435,7 +435,7 @@ def plot_validation(phi, P, T, m, equ):
     plt.legend(loc="best", frameon=True, fontsize=fs)
     ax3.grid()
     plt.savefig(
-        "simulation_data/figures/T_validation.pdf", dpi=res, bbox_inches="tight"
+        "piston_engine/simulation_data/figures/T_validation.pdf", dpi=res, bbox_inches="tight"
     )
 
     fig, ax4 = plt.subplots(figsize=figsize)
@@ -459,7 +459,7 @@ def plot_validation(phi, P, T, m, equ):
     plt.legend(loc="best", frameon=True, fontsize=fs)
     ax4.grid()
     plt.savefig(
-        "simulation_data/figures/p_validation.pdf", dpi=res, bbox_inches="tight"
+        "piston_engine/simulation_data/figures/p_validation.pdf", dpi=res, bbox_inches="tight"
     )
     plt.show()
 

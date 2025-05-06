@@ -9,19 +9,19 @@ fuel = "H2"
 
 # add decided specific thrust here 80 m/s. motivated by Anders and Carlos. mass wont be variable anymore
 Fn = 4384 * 4.44822  # [N] #Net thrust requirement (lb_f * conversion to Newton)
-m0 = 200.0  # intake mass flow [kg/s]  RIGHT NOW ITERATIVELY SOLVED FOR BASED ON Fn
+m0 = 200.0  # intake mass flow [kg/s]
 Fs_req = 80  # specific thrust [m/s]
 
-bpr = 26.24  # bypass ratio
+bpr = 30  # bypass ratio
 
-fpr_outer = 1.3  # Outer fan pressure ratio 1.3087
+fpr_outer = 1.28  # Outer fan pressure ratio 1.3087
 
 # piston stuff
-cr = 6.12  # piston engine geometric compression ratio
-pi_pe = 1.48  # Piston engine pressure ratio
+cr = 10  # piston engine geometric compression ratio
+pi_pe = 1.2  # Piston engine pressure ratio
 bore = 0.14  # piston bore
 
-OPR = 15.1  # overall pressure ratio (excluding pressure losses for now)
+OPR = 18  # overall pressure ratio (excluding pressure losses for now)
 PR = 0.14  # pressure split, with regard to the LPC
 
 T4 = 1200  # [K] Turbine entry temperature
@@ -54,6 +54,7 @@ bpr_c = 0.00  # cooling from fraction of core flow
 
 surrogate = True
 second_burner = True
+CCE = True
 
 # fuel temperature upon injection in piston engine and burner
 t_fuel = 450

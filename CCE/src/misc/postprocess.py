@@ -154,26 +154,36 @@ def energy_flow_fuel(
     P_f_p = m_f_p * (lhv + hf)
 
     # piston engine indicated power and its fraction of fuel energy
-    fraction_indicated = P_indicated / P_f_p
+    if P_f_p > 0:
+        fraction_indicated = P_indicated / P_f_p
 
-    # piston engine wall heat losses
-    fraction_wall = piston_heatloss / P_f_p
+        # piston engine wall heat losses
+        fraction_wall = piston_heatloss / P_f_p
 
-    # piston engine exhaust energy
+        # piston engine exhaust energy
 
-    # enthalpy into the piston
-    h_p_in, _, _, _, _, _, _, _ = mixture(t_p_in, p_dummy, 0)
+        # enthalpy into the piston
+        h_p_in, _, _, _, _, _, _, _ = mixture(t_p_in, p_dummy, 0)
 
-    # enthalpy out of the piston
-    h_p_out, _, _, _, _, _, _, _ = mixture(t_p_out, p_dummy, equ_p_out, fuel_type)
+        # enthalpy out of the piston
+        h_p_out, _, _, _, _, _, _, _ = mixture(t_p_out, p_dummy, equ_p_out, fuel_type)
 
-    # gas energy increase
-    P_p_gas = h_p_out * m_p_out - h_p_in * m_p_in
-    fraction_gas = P_p_gas / P_f_p
+        # gas energy increase
+        P_p_gas = h_p_out * m_p_out - h_p_in * m_p_in
+        fraction_gas = P_p_gas / P_f_p
 
-    # exhaust gas energy from piston
-    P_p_gas2 = P_f_p - P_indicated - piston_heatloss
-    fraction_2 = P_p_gas2 / P_f_p
+        # exhaust gas energy from piston
+        P_p_gas2 = P_f_p - P_indicated - piston_heatloss
+        fraction_2 = P_p_gas2 / P_f_p
+
+    else:
+        fraction_indicated = 0.0
+        fraction_wall = 0.0
+        fraction_gas = 0.0
+        fraction_2 = 0.0
+        P_p_gas2 = 0.0
+        P_p_gas = 0.0
+
 
     # BURNER
     # burner fuel energy
@@ -255,7 +265,7 @@ def energy_flow_fuel(
     )
     perc_piston = (
         np.array(
-            [P_f_p / P_f_p, fraction_indicated, fraction_wall, fraction_2, fraction_gas]
+            [1.0, fraction_indicated, fraction_wall, fraction_2, fraction_gas]
         )
         * 100
     )
