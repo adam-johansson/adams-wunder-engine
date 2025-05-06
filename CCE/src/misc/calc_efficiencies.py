@@ -94,14 +94,13 @@ def calc_efficiencies_recuperated_h2_geared(
     # Thrust power
     P_thrust = F * v_0
 
-    # Core power
-    # pa or p0 as ambient? Should be pa I think
+    # Work potential of core after it has powered "itself", meaning inner fan, lpc and hpc are powered.
     WP_core = thermo.work_potential(
         T_wp, p_wp, equ_wp, pa, fuel_type
     )
 
-    # use flow before or after adding fuel? cooling?
-    P_core = m_hot * (
+    # Core power
+    P_core = (m_hot + m_rec) * (
         WP_core - 0.5 * v_0**2
     )
 

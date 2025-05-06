@@ -321,8 +321,4 @@ def run_turbofan(indata, flags):
 
         misc.csv_output_rec_h2_geared(p_array, T_array, m_array, far_array, s_array)
 
-        print(v75, p7*1e-5, T7)
-        print(v18, p12*1e-5, T12)
-        print(v8, p6*1e-5, T6)
-
     return sfc, vel_ratio, F, m0

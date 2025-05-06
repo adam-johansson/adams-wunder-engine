@@ -11,7 +11,7 @@ m = 207.948
 cfg = 0.995
 cd = 0.99
 fuel_type = "H2"
-"""
+
 
 p1 = 37863.19
 t1 = 638.492
@@ -21,8 +21,16 @@ m = 5.951
 cfg = 0.977
 cd = 0.9564
 fuel_type = "H2"
+"""
+p1 = 35961.95
+t1 = 529.97
+pa = 26200.5
+equ = 0.0066 / far_s
+m = 5.951
+cfg = 0.977
+cd = 0.9564
+fuel_type = "H2"
 
-print(equ)
 
 F, v2_id, v2, error = nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type)
 

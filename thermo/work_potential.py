@@ -7,14 +7,19 @@ import numpy as np
 
 def work_potential(t1, p1, equ1, p0, fuel_type):
 
-    # I think this function calculates the maximum amount of work that can be extracted when expanding the
-    # fluid from p1 to p0
-    p_dummy = 1e5
-    h1, _, _, _, _, _, _, _ = mixture(
-        t1, p_dummy, equ1, fuel_type
-    )  # get thermo properties for the fluid
+    ##The work potential WP is the extractable specific work
+    #when expanding a fluid from a given state with temperature 𝑇1 and pressure 𝑝1 to ambient
+    #conditions 𝑝0.
 
+    # specific enthalpy of the fluid at the given state
+    h1, _, _, _, _, _, _, _ = mixture(
+        t1, p1, equ1, fuel_type
+    )
+
+    # entropy function at given state
     psi1 = entropy_func(t1, p1, equ1, fuel_type)
+
+    # entropy function after isentropic expansion to ambient state
     psi0_isen = psi1 - np.log(p1 / p0)
 
     def find_t0(t):
@@ -23,7 +28,7 @@ def work_potential(t1, p1, equ1, p0, fuel_type):
     t0_isen = brentq(find_t0, 200, 6000)
 
     h0_isen, _, _, _, _, _, _, _ = mixture(
-        t0_isen, p_dummy, equ1, fuel_type
+        t0_isen, p0, equ1, fuel_type
     )  # get thermo_outdated properties for the fluid
 
     wp = h1 - h0_isen
