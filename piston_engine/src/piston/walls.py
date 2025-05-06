@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit()
+### @njit()
 def dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2):
 
     # Woschni heat transfer model
@@ -73,7 +73,7 @@ def dqdphi_NASA(T, Twalls, Awalls, type2, dtdphi, D, mu, rho, V):
     return dqdphi * dtdphi
 
 
-@njit()
+### ### @njit()
 def dqdphi_hohenberg(T, P, V, Twalls, Awalls, v_mean, dtdphi):
     # Hohenberg heat loss model
     Pbar = P * 1e-5
@@ -144,7 +144,7 @@ def dqdphi_h2_shudo(
     return dqdphi
 
 
-@njit()
+### @njit()
 def dqdphi_woschni_h2(
     T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2
 ):
@@ -174,12 +174,14 @@ def dqdphi_woschni_h2(
             # compression phase
             c2 = 0
             Pmotor_bar = P
+            Pmotor = P
 
     elif type1 == "Charge changing":
         # 6.18 original formulation
         c1 = 6.18
         c2 = 0
         Pmotor_bar = P
+        Pmotor = P
     else:
         print("Unknown type, error in dqdphi")
         return 0.0, 0.0
@@ -188,7 +190,7 @@ def dqdphi_woschni_h2(
     # alpha = 0
     for i, j in zip(Twalls, Awalls):
 
-        C = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (Pbar - Pmotor_bar)
+        C = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (P - Pmotor)
         alpha = 0.012991 * d ** (-0.2) * P**0.8 * C**0.8 * T ** (-0.53)
         dqdphi += alpha * j * (T - i) * dtdphi
     return dqdphi, alpha
