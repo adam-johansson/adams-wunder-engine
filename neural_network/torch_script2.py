@@ -86,12 +86,15 @@ if __name__ == "__main__":
     hidden_dim = 2048
     layers = 0
 
-    trained_model = load_ANN(f"./models/{folder}_{hidden_dim}_{layers}.pth")
+    trained_model = load_ANN("../neural_network/models/H2_128_2.pth")
+    trained_model.double()
+
+    #trained_model = load_ANN(f"./models/{folder}_{hidden_dim}_{layers}.pth")
 
     # Switch off specific layers/parts of the model that behave
     # differently during training and inference.
     # This may have been done by the user already, so just make sure here.
-    trained_model.eval()
+    #trained_model.eval()
 
     # =====================================================
     # Prepare dummy input and check model runs
@@ -134,8 +137,8 @@ if __name__ == "__main__":
 
     # FPTLIB-TODO
     # Set the name of the file you want to save the torchscript model to:
-    # saved_ts_filename = "models/torchscript/h2_ts_model_new.pt"
-    saved_ts_filename = "models/torchscript/jetA_ts_model.pt"
+    saved_ts_filename = "models/torchscript/h2_ts_model.pt"
+    #saved_ts_filename = "models/torchscript/jetA_ts_model.pt"
 
     # A filepath may also be provided. To do this, pass the filepath as an argument to
     # this script when it is run from the command line, i.e. `./pt2ts.py path/to/model`.
@@ -181,10 +184,12 @@ if __name__ == "__main__":
         trained_model_dummy_input_1 = (trained_model_dummy_input_1 - x_mean) / x_std
     # convert to tensor
     trained_model_dummy_input_1_tensor = torch.tensor(
-        trained_model_dummy_input_1, dtype=torch.float32
+        trained_model_dummy_input_1, dtype=torch.float64
     )
 
     ts_model = load_torchscript(filename=saved_ts_filename)
+    ts_model.double()
+
     ts_model_outputs = ts_model(trained_model_dummy_input_1_tensor)
 
     # scale output

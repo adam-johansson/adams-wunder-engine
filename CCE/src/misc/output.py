@@ -152,6 +152,37 @@ def csv_output_rec_h2_geared(p, t, m, far, s):
 
     return
 
+def csv_output_jetA_geared(p, t, m, far, s):
+    """
+    saves pressures, temperatures and mass flows for all stations as csv file.
+    """
+    headers = ("station", "m [kg/s]", "T [K]", "p [bar]", "FAR []", "s [kJ /(kg * K) ]")
+
+    stations = (
+        "a",
+        "0",
+        "2",
+        "22",
+        "25",
+        "3",
+        "31",
+        "4",
+        "41",
+        "42",
+        "45",
+        "5",
+        "6",
+        "12",
+    )
+    stations = np.atleast_2d(stations).T
+    data = np.concatenate(
+        (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T, np.atleast_2d(far).T, np.atleast_2d(s).T), axis=1
+    )
+    data = np.vstack([headers, data])
+    np.savetxt("simulation_data/stations.csv", data, delimiter=",", fmt="%s")
+
+    return
+
 
 def plot_stations_cce(p_array, t_array):
     # plotting the different stations
@@ -224,6 +255,54 @@ def plot_stations_rec_h2_geared(p_array, t_array):
         "6",
         "12",
         "7",
+    ]
+
+    fig, ax1 = plt.subplots()
+
+    color = "tab:red"
+    ax1.set_xlabel("station")
+    ax1.set_ylabel("pressure [bar]", color=color)
+    ax1.plot(stations, p_array, color=color, marker="o")
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color = "tab:blue"
+    ax2.set_ylabel(
+        "Temperature [K]", color=color
+    )  # we already handled the x-label with ax1
+    ax2.plot(stations, t_array, color=color, marker="o")
+    ax2.tick_params(axis="y", labelcolor=color)
+    ax1.grid(True)
+
+    plt.xticks(stations, labels)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.margins(0.2)
+    plt.show()
+
+    return
+
+def plot_stations_jetA_geared(p_array, t_array):
+    # plotting the different stations
+
+    stations = np.linspace(0,14,14)
+
+    labels = [
+        "a",
+        "0",
+        "2",
+        "22",
+        "25",
+        "3",
+        "31",
+        "4",
+        "41",
+        "42",
+        "45",
+        "5",
+        "6",
+        "12",
     ]
 
     fig, ax1 = plt.subplots()

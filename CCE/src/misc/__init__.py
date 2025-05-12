@@ -8,10 +8,12 @@ from .output import (
     print_efficiencies,
     optimisation_csv,
     plot_stations_rec_h2_geared,
-    csv_output_rec_h2_geared
+    csv_output_rec_h2_geared,
+    plot_stations_jetA_geared,
+    csv_output_jetA_geared
 )
 from .postprocess import energy_flow_fuel, power_balance
-from .calc_efficiencies import calc_efficiencies_cce, calc_efficiencies_recuperated_h2_geared
+from .calc_efficiencies import calc_efficiencies_cce, calc_efficiencies_recuperated_h2_geared, calc_efficiencies_jetA_geared
 from .fpr_opt import fpr_opt
 from .match_power_NN import match_power_nn
 from .calc_entropy_array import entropy_array

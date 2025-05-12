@@ -155,10 +155,9 @@ def run_turbofan(indata, flags):
         cooling=False,
     )
 
-    # Flow is split into recuperator and straight to nozzle
-    # Hot nozzle (no recuperation)
-    recuperation_split = 0.5
-    m6 = recuperation_split * m5
+
+    # Hot nozzle
+    m6 = m5
     p6 = p5
     T6 = T5
 
@@ -166,19 +165,6 @@ def run_turbofan(indata, flags):
     equ6 = equ5
     F8, v8_id, v8, error = components.nozzle(
         p6, T6, pa, equ6, m6, cfg_core, cd_nozzle, fuel_type
-    )
-
-    # fuel heat recuperator
-    m7 = (1 - recuperation_split) * m5
-    #T7, p7 = components.hx_NASA(
-    #        p13, T13, heating_bypass, m15, oil_temp_1)
-    T7 = T6 - dT_rec
-    p7 = p6 * (1 - dp_rec)
-    equ7 = equ6
-
-    # Recuperated nozzle
-    F75, v75_id, v75, error = components.nozzle(
-        p7, T7, pa, equ7, m7, cfg_core, cd_nozzle, fuel_type
     )
 
     # Bypass stream
@@ -192,11 +178,10 @@ def run_turbofan(indata, flags):
     v_0 = a * Mach  # air speed
 
     # Net thrust
-    F = F8 + F18 + F75 - v_0 * m2
+    F = F8 + F18 - v_0 * m2
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
-    vhot_avg = (v8_id + v75_id)/2
-    vel_ratio = v18_id / vhot_avg
+    vel_ratio = v18_id / v8_id
 
     # Calculating the work potential left after powering LPC and inner fan
     p_wp, T_wp, m_wp, equ_wp, error = components.turbine(
@@ -211,15 +196,13 @@ def run_turbofan(indata, flags):
     )
 
     # Efficiencies
-    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs = misc.calc_efficiencies_recuperated_h2_geared(
+    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs = misc.calc_efficiencies_jetA_geared(
         F,
         fuel_flow_burner,
         m12,
         v18_id,
         m6,
         v8_id,
-        m7,
-        v75_id,
         m0,
         v_0,
         p_wp,
@@ -249,7 +232,6 @@ def run_turbofan(indata, flags):
                         p5,
                         p6,
                         p12,
-                        p7,
                     ]
                 )
                 * 1e-5
@@ -271,7 +253,6 @@ def run_turbofan(indata, flags):
                     T5,
                     T6,
                     T12,
-                    T7,
                 ]
             )
         )
@@ -292,7 +273,6 @@ def run_turbofan(indata, flags):
                     m5,
                     m6,
                     m12,
-                    m7,
                 ]
             )
         )
@@ -314,7 +294,6 @@ def run_turbofan(indata, flags):
                     far_s * equ5,
                     far_s * equ6,
                     0.0,
-                    far_s * equ7,
                 ]
             )
         )
@@ -323,8 +302,8 @@ def run_turbofan(indata, flags):
 
         misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, Fs)
 
-        misc.plot_stations_rec_h2_geared(p_array, T_array)
+        misc.plot_stations_jetA_geared(p_array, T_array)
 
-        misc.csv_output_rec_h2_geared(p_array, T_array, m_array, far_array, s_array)
+        misc.csv_output_jetA_geared(p_array, T_array, m_array, far_array, s_array)
 
     return sfc, vel_ratio, F, m0

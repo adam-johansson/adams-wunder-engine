@@ -1,4 +1,4 @@
-from CCE.src import cce_propulsion_system, geared_turbofan_h2_recuperated
+from CCE.src import cce_propulsion_system, geared_turbofan_h2_recuperated, geared_turbofan_jetA
 from CCE.src import auxiliaries
 import importlib
 from neural_network.src import load_ANN
@@ -7,8 +7,8 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "EOR_H2_conventional"
-input_dir = "input.conventional_h2"
+input_file = "TOC_jetA_conventional"
+input_dir = "input.conventional_jetA"
 path = input_dir + "." + input_file
 
 input_file_pist = "4stroke_hydrogen"
@@ -66,9 +66,14 @@ if "conventional" in flags:
         d.dT_rec,
     ]
 
-    (
-        sfc, vel_ratio, F, m0
-    ) = geared_turbofan_h2_recuperated.run_turbofan(data, flags)
+    if d.fuel == "H2":
+        (
+            sfc, vel_ratio, F, m0
+        ) = geared_turbofan_h2_recuperated.run_turbofan(data, flags)
+    else:
+        (
+            sfc, vel_ratio, F, m0
+        ) = geared_turbofan_jetA.run_turbofan(data, flags)
 
     print(f"mass flow: {m0} [kg/s]")
     print(f"SFC: {sfc*1e6} [mg/Ns]")

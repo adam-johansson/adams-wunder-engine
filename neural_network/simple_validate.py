@@ -22,7 +22,7 @@ from src import load_ANN
 
 ## NN-PP: Neural Network Post Processing
 
-folder = "jetA"
+folder = "H2"
 # Load the trained model
 hidden_dim = 128
 layers = 2
