@@ -24,40 +24,32 @@ def global_optimisation(data, data_piston, flags, meta_model):
 
     def global_sfc(x):
 
+        pi_pe = 1.0
+
         # print(f'bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, pi_pe: {x[3]}, cr: {x[4]}, bore: {x[5]}')
         bpr = x[0]  # bypass ratio
         opr = x[1]
         split = x[2]  # pressure ratio hpc
-        pi_pe = x[3]  # piston engine pressure increase or drop
-        cr = x[4]
-        bore = x[5]
+        cr = x[3]
+        bore = x[4]
+        #t4_req = x[]
+        #pi_pe = x[5]  # piston engine pressure increase or drop
+
 
         data[2] = bpr
         # data[3] = T35
-        data[31] = opr
-        data[32] = split
-        data[27] = pi_pe
-        data[30] = cr
-        data[33] = bore
+        data[27] = opr
+        data[28] = split
+        #data[27] = pi_pe
+        data[26] = cr
+        data[29] = bore
         # maybe diameter? or match core flow?
 
         # print('ny iter')
 
         # sfc, v_ratio, F, m0, error = cce_propulsion_system.run_cce(data, flags)
-        (
-            sfc,
-            v_ratio,
-            F,
-            m0,
-            error,
-            fpr,
-            p_max,
-            T_max,
-            T_in_piston,
-            T_out_piston,
-            TET,
-            far_piston,
-        ) = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
+        sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35\
+           = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
         # if error:
         #    #print('Not working power plant.')
         #    return 1e6
@@ -69,11 +61,15 @@ def global_optimisation(data, data_piston, flags, meta_model):
             cost = sfc * 1e6 + (T_out_piston - 1350) * 1e2
         else:
             cost = sfc * 1e6
-        if cost < 5.0:
+
+        if cost < 15.0:
+            #print(
+            #    f"bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, pi_pe: {x[3]}, cr: {x[4]}, fpr: {fpr}, bore: {x[5]}"
+            #)
             print(
-                f"bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, pi_pe: {x[3]}, cr: {x[4]}, fpr: {fpr}, bore: {x[5]}"
+                f"bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, cr: {x[3]}, fpr: {fpr}, bore: {x[4]}"
             )
-            print(sfc, F)
+            print(sfc*1e6, thrust)
             misc.optimisation_csv(
                 sfc * 1e6,
                 opr,
@@ -92,16 +88,17 @@ def global_optimisation(data, data_piston, flags, meta_model):
             )
         return cost
 
-    bpr_lim = [10, 45]
+    bpr_lim = [10, 40]
     # tet_lim = [1000, 1400]
     opr_lim = [10, 30]
     split_lim = [0.1, 0.9]
     pi_pe_lim = [0.9, 1.5]
     cr_lim = [6, 12]
     bore_lim = [0.1, 0.2]
-    bounds = (bpr_lim, opr_lim, split_lim, pi_pe_lim, cr_lim, bore_lim)
+    #bounds = (bpr_lim, opr_lim, split_lim, cr_lim, bore_lim, pi_pe_lim)
+    bounds = (bpr_lim, opr_lim, split_lim, cr_lim, bore_lim)
 
-    x0 = np.array([16.55, 19.985, 0.55, 1.21, 4.87, 0.098])
+    #x0 = np.array([16.55, 19.985, 0.55, 1.21, 4.87, 0.098])
 
     opt = differential_evolution(global_sfc, bounds=bounds)
     # opt = minimize(global_sfc, x0, bounds=bounds)
@@ -111,6 +108,6 @@ def global_optimisation(data, data_piston, flags, meta_model):
     print(f"Optimal split: {opt.x[2]}")
     print(f"Optimal PR PE: {opt.x[3]}")
     print(f"Optimal compression ratio: {opt.x[4]}")
-    print(f"Optimal bore: {opt.x[5]}")
+    #print(f"Optimal bore: {opt.x[5]}")
 
     return

@@ -199,7 +199,10 @@ def energy_flow_fuel(
     P_b_gas = h_b_out * m_b_out - h_b_in * m_b_in
 
     # fraction of fuel going to gas energy (hopefully 99.99%)
-    fraction_gas_burner = P_b_gas / P_f_b
+    if P_f_b > 0:
+        fraction_gas_burner = P_b_gas / P_f_b
+    else:
+        fraction_gas_burner = 0.0
 
     # mass balance piston
     m_balance_p = m_p_out - m_p_in - m_f_p
@@ -269,8 +272,10 @@ def energy_flow_fuel(
         )
         * 100
     )
+
     power_burner = np.array([P_f_b, P_b_gas]) * 1e-3
-    perc_burner = np.array([P_f_b / P_f_b, fraction_gas_burner]) * 100
+
+    perc_burner = np.array([1.0, fraction_gas_burner]) * 100
 
     data = pd.DataFrame(
         {

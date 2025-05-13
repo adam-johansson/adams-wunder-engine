@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "TOC_jetA"
+input_file = "TOC_jetA_optim"
 input_dir = "input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -19,10 +19,10 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-#flags = ["single", "print_output", "cce"]  # normal case
-flags = ['single', "cce"]
+flags = ["single", "print_output", "cce"]  # normal case
+#flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
-#flags = ['optim']
+#flags = ['optim', "cce"]
 
 
 if "conventional" in flags:
@@ -161,7 +161,7 @@ elif "cce" in flags:
 
     if "single" in flags:
         start = timer()
-        """
+
         (
             sfc,
             v_ratio,
@@ -176,11 +176,11 @@ elif "cce" in flags:
             far_piston,
             T35,
         ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
-        """
 
+        """
         sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35\
            = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
-
+        """
         if error:
             print("error in cce_propulsion_system")
             exit()
