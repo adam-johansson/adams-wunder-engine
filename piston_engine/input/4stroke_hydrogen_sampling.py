@@ -32,7 +32,7 @@ lms = 1 / (
 p_in = 1e5  # inlet pressure
 T_in = 300  # inlet temperature
 # T_in = 1000
-p_ratio = 0.9  # pressure ratio after and before engine
+p_ratio = 1.0  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500  # Wall temperature

@@ -33,7 +33,8 @@ d = importlib.import_module(path)
 flags = ["sweep"]
 # just to be able to get 1 output instead of 4
 
-ndim = 8  # number of input variables
+# 8 with pratio and 7 without
+ndim = 7  # number of input variables
 n_out = 9  # Number of outputs from the piston model
 
 
@@ -62,12 +63,16 @@ elif fuel == "jetA":
 
 # could add wall temperatures
 
+#xlimits = np.array(
+#    [p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim]
+#)
+
 xlimits = np.array(
-    [p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim]
+    [p_lim, T_lim, cr_lim, d_lim, far_lim, v_mean_lim, fuel_t_lim]
 )
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 60  # points per variable #6000
+npoints = 6000  # points per variable #6000 takes 20h (gives 18000 nonzero points)
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -96,7 +101,8 @@ start_simulating = timer()
 i = 0
 remove = 0
 
-for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
+for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
+#for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
     i += 1
 
     # TODO: Add variable combustion duration and shape ...
@@ -115,7 +121,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         data = [
             p,
             T,
-            p_ratio,
+            d.p_ratio,
             d.cycle,
             d.thermo,
             d.cooling,
@@ -153,7 +159,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         ]
 
         # run the simulation
-        print(p * 1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
+        #print(p * 1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
         (
             T_out,
             work_piston,
@@ -201,7 +207,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         remove = remove + 1
         # print(f"Number of data points removed: {remove} out of {i} in total")
 
-    if not (i % (ndoe // 10  )):
+    if not (i % (ndoe // 1000  )):
         mellantid = timer()
         elapsed_time = mellantid - start_simulating
         avg_iteration_time = elapsed_time / i
@@ -218,9 +224,15 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
 
 # Saving the arrays in sampled_data folder
 # Labels
+
+#headers_input = np.array(
+#    ["p_in", "T_in", "cr", "bore", "far", "PI", "v_mean", "T_fuel"]
+#)
+
 headers_input = np.array(
-    ["p_in", "T_in", "cr", "bore", "far", "PI", "v_mean", "T_fuel"]
+    ["p_in", "T_in", "cr", "bore", "far", "v_mean", "T_fuel"]
 )
+
 headers_output = np.array(
     ["T_out", "eff", "air_flow", "p_max", "T_max", "power", "heat_loss", "p_tdc", "nox"]
 )
@@ -231,8 +243,8 @@ y_data = pd.DataFrame(y, columns=headers_output)
 combined_data = pd.concat([x_data, y_data], axis=1)
 
 # Writing data to file
-x_data.to_csv("piston_engine/sampled_data/" + fuel + "/x.csv")
-y_data.to_csv("piston_engine/sampled_data/" + fuel + "/y.csv")
+#x_data.to_csv("piston_engine/sampled_data/" + fuel + "/x.csv")
+#y_data.to_csv("piston_engine/sampled_data/" + fuel + "/y.csv")
 combined_data.to_csv("piston_engine/sampled_data/" + fuel + "/data.csv")
 end_sampling = timer()
 print(f"Total time for sampling data: {end_sampling - start_sampling} [s]")
