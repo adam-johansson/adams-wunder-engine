@@ -23,13 +23,14 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
     def find_far(far):
         h2, u, cp, cv, R, gamma, s, M = mixture(t2, p2, equ=far/far_s, fuel_type=fuel_type)
 
-        residual = h2 * (1 + far0 + far) - h1 * (1 + far0) - far * hf
+        residual = h2 * (1 + far) - h1 * (1 + far0) - hf * (far - far0)
         return residual
-
 
     f = brentq(find_far, 0.0, far_s)
 
-    # taking into account combustion losses
-    f_real = f / eta
+    # taking into account combustion losses (only on added fuel)
+    f_added = f - far0
+    f_added_real = f_added / eta
+    f_real = far0 + f_added_real
 
     return p2, t2, f_real

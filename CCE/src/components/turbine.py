@@ -45,7 +45,6 @@ def turbine(
             m1_main * h1_main + q_ngv * m1_cool * h1_cool
         ) / m1  # enthalpy after mixing before rotor
 
-
         far1_main = equ1_main * far_s
         far1 = far1_main * m1_main / (m1_main + m1_cool * q_ngv * (1 + far1_main))
         equ1 = far1 / far_s

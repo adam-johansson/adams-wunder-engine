@@ -54,7 +54,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             return sfc
         # cost = np.abs(thrust / m0 - Fs_goal)
         cost = thrust / m0 - Fs_goal
-        # print(cost, fpr)
+        print(f"Residual between specific thrust and goal thrust: {cost}. Outer FPR: {fpr}")
         return cost
 
     try:
@@ -95,10 +95,10 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         print(e)
         return 999, 0, 0, 1, error, 0, 0, 0, 0, 0, 0, 0, 0
 
-    # opt_fpr = minimize(find_fpr, x0, bounds=limits, method='Nelder-Mead', options={'disp': True, 'fatol': 1e-0})
-    # opt_fpr = minimize_scalar(find_fpr, x0, bounds=limits)
-    # opt_fpr = differential_evolution(find_fpr, bounds=limits)
 
+    # FINAL RUN
+    flags.append("print_output")
+    print(f"Matching outer FPR is: {opt_fpr[0]}")
     data[4] = opt_fpr[0]
 
     (

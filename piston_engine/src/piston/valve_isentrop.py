@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-### @njit()
+@njit()
 def dmvdphi(
     phi,
     phi_open,

@@ -517,7 +517,6 @@ def run_piston_engine(indata, flags):
     start = timer()
 
     for i in range(it):
-        #print(i)
         # Iterate the engine simulation until convergence criterion is met
         if i > 0:
             x = [T[-1][-1], V[-1][-1], 0, 0.0, m[-1][-1], P[-1][-1], 0.0, 0.0, 0.0,
@@ -910,7 +909,7 @@ def run_piston_engine(indata, flags):
 
 
         end = timer()
-        print(f'Runtime of NOx calculations: {end - start} [s]')
+        #print(f'Runtime of NOx calculations: {end - start} [s]')
 
     elif cycle == "2T":
         EI_nox = 999

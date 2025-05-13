@@ -133,8 +133,8 @@ def energy_flow_fuel(
     # fuel enthalpy from tank
     if fuel_type == "H2":
         _, hf_tank, _, _, _ = H2(t_tank, p=p_dummy)
-    elif fuel_type == "JETA":
-        _, hf_tank = JETA_L(t_tank)
+    elif fuel_type == "jetA":
+        _, hf_tank, _, _ = JETA_L(t_tank)
 
     # fuel energy incoming per second from the fuel tank (lower heating value + enthalpy)
     P_f_t = m_f * (lhv + hf_tank)
@@ -142,8 +142,8 @@ def energy_flow_fuel(
     # added enthalpy to fuel from oil-fuel heat exchanger
     if fuel_type == "H2":
         _, hf, _, _, _ = H2(t_fuel, p_dummy)
-    elif fuel_type == "JETA":
-        _, hf = JETA_L(t_fuel)
+    elif fuel_type == "jetA":
+        _, hf,_, _ = JETA_L(t_fuel)
 
     P_f_hx = m_f * (hf - hf_tank)
 

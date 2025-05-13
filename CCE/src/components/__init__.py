@@ -4,7 +4,6 @@ from .inlet import inlet
 from .nozzle import nozzle
 from .nozzle_old import nozzle_old
 from .burner import burner
-from .burner_old import burner_old
 from .turbine import turbine
 from .manifold import mix
 from .compressor_simple import compressor_simple

@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-### @njit()
+@njit()
 def dmvdphi(
     h_abs, h_open, n_valve, cd, width_port, p, T, gamma, R, p3, T3, gamma3, R3, type
 ):

@@ -7,7 +7,6 @@ thermo = "NASA"
 fuel = "jetA"
 
 cooling = "Hohenberg"
-cooling = "Woschni"
 
 opposed = False
 # cr = 9.6  # geometric compression ratio (Kaiser used 9.6 ToC and 6.4 TO and 18 in Cruise)
@@ -59,7 +58,7 @@ cd = 0.8
 
 eta_c = 0.999
 
-throttle = 0.03
+far_goal = 0.03
 
 wiebe_type = "Double"
 
@@ -81,3 +80,4 @@ p_fuel = 2500e5
 it = 20
 
 mf_tot = 1.5e-4  # this is only for validation
+premixed = False

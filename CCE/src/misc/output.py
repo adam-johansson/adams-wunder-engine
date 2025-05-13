@@ -12,6 +12,7 @@ def print_output(
     m2,
     power_tot,
     power_hpc,
+    offtake,
     power_lpt,
     p3,
     T3,
@@ -51,6 +52,7 @@ def print_output(
     print(f"Core flow: {m2} [kg/s]")
     print(f"Power from piston engine: {power_tot * 1e-3} [kW]")
     print(f"Power required by the HPC: {power_hpc * 1e-3} [kW]")
+    print(f"Power offtake on HP spool: {offtake* 1e-3} [kW]")
     print(f"Power required by the fan: {power_lpt * 1e-3} [kW]")
     print(f"Max pressure in piston engine: {p_max * 1e-5} [bar]")
     print(f"Max temperature in piston engine: {T_max} [K]")
@@ -73,44 +75,25 @@ def csv_output_cce(p, t, m, far, s):
     saves pressures, temperatures and mass flows for all stations as csv file.
     """
     headers = ("station", "m [kg/s]", "T [K]", "p [kPa]", "FAR []", "s [kJ /(kg * K) ]")
-    if CCE:
-        stations = (
-            "2",
-            "13",
-            "14",
-            "15",
-            "21",
-            "25",
-            "3",
-            "31",
-            "32",
-            "34",
-            "35",
-            "4",
-            "41",
-            "43",
-            "5",
-            "6",
-        )
-    else:
-        stations = (
-            "2",
-            "13",
-            "14",
-            "15",
-            "21",
-            "25",
-            "3",
-            "31",
-            "4",
-            "41",
-            "42",
-            "45",
-            "46",
-            "47",
-            "5",
-            "6",
-        )
+    stations = (
+        "2",
+        "13",
+        "14",
+        "15",
+        "21",
+        "25",
+        "3",
+        "31",
+        "32",
+        "34",
+        "35",
+        "4",
+        "41",
+        "43",
+        "5",
+        "6",
+    )
+
     stations = np.atleast_2d(stations).T
     data = np.concatenate(
         (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T, np.atleast_2d(far).T, np.atleast_2d(s).T), axis=1

@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-### @njit()
+@njit()
 def dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2):
 
     # Woschni heat transfer model
@@ -73,7 +73,7 @@ def dqdphi_NASA(T, Twalls, Awalls, type2, dtdphi, D, mu, rho, V):
     return dqdphi * dtdphi
 
 
-### ### @njit()
+### @njit()
 def dqdphi_hohenberg(T, P, V, Twalls, Awalls, v_mean, dtdphi):
     # Hohenberg heat loss model
     Pbar = P * 1e-5
@@ -144,7 +144,7 @@ def dqdphi_h2_shudo(
     return dqdphi
 
 
-### @njit()
+@njit()
 def dqdphi_woschni_h2(
     T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2
 ):

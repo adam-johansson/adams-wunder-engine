@@ -19,12 +19,9 @@ def run_cce(indata, data_piston, flags, meta_model):
         dp_in,
         dp_bypass,
         Mach,
-        eta_inner_fan,
-        eta_outer_fan,
-        pi_hpc,
+        eta_fan,
+        eta_p_lpc,
         eta_p_hpc,
-        pi_ipc,
-        eta_p_ipc,
         eta_b,
         dPcomb,
         eta_s,
@@ -39,7 +36,6 @@ def run_cce(indata, data_piston, flags, meta_model):
         fuel_type,
         pi_pe,
         surrogate,
-        m0,
         cr,
         OPR,
         PR,
@@ -47,7 +43,6 @@ def run_cce(indata, data_piston, flags, meta_model):
         second_burner,
         t_fuel,
         t_tank,
-        CCE,
         offtake,
     ] = indata
 
@@ -91,19 +86,17 @@ def run_cce(indata, data_piston, flags, meta_model):
 
 
     # Inner fan
-    p21, T21, P21 = components.compressor(T2, p2, m21, eta_inner_fan, fpr_inner)
+    p21, T21, P_inner_fan = components.compressor_isentropic(T2, p2, m21, eta_fan, fpr_inner)
 
     # Outer fan
-    p13, T13, P13 = components.compressor(T2, p2, m13, eta_outer_fan, fpr_outer)
+    p13, T13, P_outer_fan = components.compressor_isentropic(T2, p2, m13, eta_fan, fpr_outer)
 
     # Compressor intake loss
-    if CCE:
-        p22 = 0.99 * p21
-    else:
-        p22 = p21
+    p22 = 0.99 * p21
 
-    # IPC
-    p25, T25, P25 = components.compressor(T21, p22, m21, eta_p_ipc, pi_ipc)
+
+    # LPC
+    p25, T25, P_lpc = components.compressor(T21, p22, m21, eta_p_lpc, pi_ipc)
     m25 = m21
 
     # Inter compressor loss
@@ -111,7 +104,7 @@ def run_cce(indata, data_piston, flags, meta_model):
 
 
     # HPC
-    p3, T3, P3 = components.compressor(T25, p26, m25, eta_p_hpc, pi_hpc)
+    p3, T3, P_hpc = components.compressor(T25, p26, m25, eta_p_hpc, pi_hpc)
     m3 = m25
 
     # Remove cooling flow
@@ -120,13 +113,12 @@ def run_cce(indata, data_piston, flags, meta_model):
     p31 = p3  # pressure of main flow
     T31 = T3  # temperature of main flow after removal of cooling flow
 
-    if CCE:
-        if second_burner:
-            p4 = p31 * 0.99 * pi_pe * 0.99 * (1 - dPcomb)
-        else:
-            p4 = p31 * 0.99 * pi_pe * 0.99
+
+    if second_burner:
+        p4 = p31 * 0.99 * pi_pe * 0.99 * (1 - dPcomb)
     else:
-        p4 = p31 * (1 - dPcomb)
+        p4 = p31 * 0.99 * pi_pe * 0.99
+
 
     # Compress cooling flow
     if p4 > p3:
@@ -139,228 +131,156 @@ def run_cce(indata, data_piston, flags, meta_model):
         T_cool = T3
         p_cool = p3
 
-    if CCE:
 
-        # Piston intake duct pressure loss
-        p32 = 0.99 * p31
-        T32 = T31
-
-        # Piston engine
-        data_piston[0] = p32
-        data_piston[1] = T32
-        data_piston[2] = pi_pe
-        data_piston[7] = cr
-        data_piston[8] = bore
-        data_piston[25] = t_fuel
-
-        # Number of V12 engines
-        nr_engines = 2
-
-        power_req = P3 / eta_g + P_cooling + offtake
-        # Piston engine powers the HPC + Cooling+ gearbox for hpc ( no shaft efficiency now) (circumv flow is within
-        # the piston model)
-        power_req_single = power_req / nr_engines
-        # flow_req_single = m32 / nr_engines  # flow in each piston engine
-
-        (
-            T34,
-            T35,
-            p34,
-            p35,
-            m34_single,
-            m35_single,
-            far34,
-            far35,
-            power_piston,
-            air_flow,
-            p_max,
-            T_max,
-            far_piston,
-            induced_power,
-            friction_loss,
-            aux_loss,
-            heat_loss,
-            P_fuel_pump,
-            bore_match,
-            error,
-            P_circumv,
-        ) = misc.match_power_nn(
-            data_piston,
-            meta_model,
-            power_req_single,
-            core_flow=m31 / nr_engines,
-            surrogate_status=surrogate,
-        )
-
-        # if engine was not able to match power requirements or negative air flow, return error
-        if error:
-            return 999, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
-
-        power_tot = nr_engines * power_piston  # break power on the piston engine shaft
-        air_flow_tot = nr_engines * air_flow
-        m34 = m34_single * nr_engines
-        m35 = m35_single * nr_engines
-        P_circumv_tot = P_circumv * nr_engines
-
-        m_circumv = m31 - air_flow_tot
-
-        # checking if flow is matching
-        if m_circumv < 0:
-            minor_error_mass = True
-            error = True
-            # print('Larger flow in piston engine than core')
-            cost = 999 - m_circumv * 100
-            return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0, 0
-
-        # checking max pressure
-        if p_max > 250 * 1e5:
-            error = True
-            minor_error_pressure = True
-            # print(f'Maximum pressure reached: {p_max}')
-            cost = 999 + (p_max - 250) * 100
-            return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0, 0
-
-        bpr_piston = (
-            m_circumv / m31
-        )  # fraction of air led around engine (based on m31, after cooling flow is removed)
-        # mass flow going into the piston engines
-        m32 = m31 - m_circumv
-
-        nr_of_cylinders_per_engine = data_piston[31]
-        V_d = bore_match * bore_match**2 / 4 * np.pi
-        V_d_tot = V_d * nr_of_cylinders_per_engine * nr_engines  # total displacement
-
-        # get total power from both V12 engines
-        fuel_flow_piston = air_flow_tot * far_piston
-        induced_power_tot = nr_engines * induced_power
-        friction_loss_tot = friction_loss * nr_engines
-        aux_loss_tot = aux_loss * nr_engines
-        heat_loss_tot = heat_loss * nr_engines
-        P_fuel_pump_tot = P_fuel_pump * nr_engines
-
-        equ35 = far35 / far_s
-        if second_burner:
-            # Second burner
-            p4, T4, far_burner = components.burner(
-                p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel
-            )
-            # m31 is pure air. After cooling flow removed but before piston.
-            m4 = (
-                m31 + fuel_flow_piston + far_burner * m31
-            )  # flow after burner. air + fuel piston + fuel burner
-
-            # burner fuel flow
-            fuel_flow_burner = far_burner * m31
-
-            # fuel air ratio after burner and piston engine
-            far_tot = far_burner + far35
-            equ4 = far_tot / far_s
-
-        else:
-            # skipping second burner
-            p4 = p35
-            T4 = T35
-            m4 = m35
-            fuel_flow_burner = 0
-            far_burner = 0
-            far4 = far35
-            far_tot = far35
-
-            equ4 = far4 / far_s
-
-
-        # number into LPT
-
-        p45 = p4
-        T45 = T4
-        m45 = m4
-        far45 = far4
-        equ45 = equ4
-
-    # NO PISTON ENGINE. Conventional design
-    else:
-        p35 = p31
-        T35 = T31
-        equ35 = 0.0
-        fuel_flow_piston = 0.0
-        far35 = 0.0
-        heat_loss_tot = 0.0
-        friction_loss_tot = 0.0
-
-        p32 = p31
-        p34 = p31
-        T32 = T31
-        T34 = T31
-
-        air_flow_tot = 0.0
-        far_piston = 0.0
-
-        m32 = m31
-        m34 = m31
-        m35 = m31
-
-        power_tot = 0.0
-        V_d_tot = 0.0
-        p_max = p35
-        T_max = T4_req
-        far34 = 0.0
-        induced_power_tot = 0.0
-
-        aux_loss_tot = 0.0
-        bpr_piston = 0.0
-        P_fuel_pump_tot = 0.0
-        P_circumv_tot = 0.0
-        m_circumv = 0.0
+    # Piston intake duct pressure loss
+    p32 = 0.99 * p31
+    T32 = T31
 
 
 
-        # Burner
-        p4, T4, far_burner = components.burner(
+
+    # Piston engine
+    data_piston[0] = p32
+    data_piston[1] = T32
+    data_piston[2] = pi_pe
+    data_piston[7] = cr
+    data_piston[8] = bore
+    lv_max = 0.1 * bore
+    data_piston[16] = lv_max
+    data_piston[25] = t_fuel
+
+    # Number of V12 engines
+    nr_engines = 2
+
+    power_req = P_hpc / eta_g + P_cooling + offtake
+    # Piston engine powers the HPC + Cooling+ gearbox for hpc ( no shaft efficiency now) (circumv flow is within
+    # the piston model)
+    power_req_single = power_req / nr_engines
+    # flow_req_single = m32 / nr_engines  # flow in each piston engine
+
+    (
+        T34,
+        T35,
+        p34,
+        p35,
+        m34_single,
+        m35_single,
+        far34,
+        far35,
+        power_piston,
+        air_flow,
+        p_max,
+        T_max,
+        far_piston,
+        induced_power,
+        friction_loss,
+        aux_loss,
+        heat_loss,
+        P_fuel_pump,
+        bore_match,
+        error,
+        P_circumv,
+    ) = misc.match_power_nn(
+        data_piston,
+        meta_model,
+        power_req_single,
+        core_flow=m31 / nr_engines,
+        surrogate_status=surrogate,
+    )
+
+    # if engine was not able to match power requirements or negative air flow, return error
+    if error:
+        return 999, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
+
+    power_tot = nr_engines * power_piston  # break power on the piston engine shaft
+    air_flow_tot = nr_engines * air_flow
+    m34 = m34_single * nr_engines
+    m35 = m35_single * nr_engines
+    P_circumv_tot = P_circumv * nr_engines
+
+    m_circumv = m31 - air_flow_tot
+
+    # checking if flow is matching
+    if m_circumv < 0:
+        minor_error_mass = True
+        error = True
+        # print('Larger flow in piston engine than core')
+        cost = 999 - m_circumv * 100
+        return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0, 0
+
+    # checking max pressure
+    if p_max > 250 * 1e5:
+        error = True
+        minor_error_pressure = True
+        print(f'Maximum pressure reached: {p_max*1e-5} bar')
+        cost = 999 + (p_max - 250) * 100
+        return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0, 0
+
+    bpr_piston = (
+        m_circumv / m31
+    )  # fraction of air led around engine (based on m31, after cooling flow is removed)
+    # mass flow going into the piston engines
+    m32 = m31 - m_circumv
+
+    nr_of_cylinders_per_engine = data_piston[31]
+    V_d = bore_match * bore_match**2 / 4 * np.pi
+    V_d_tot = V_d * nr_of_cylinders_per_engine * nr_engines  # total displacement
+
+    # get total power from both V12 engines
+    fuel_flow_piston = air_flow_tot * far_piston
+    induced_power_tot = nr_engines * induced_power
+    friction_loss_tot = friction_loss * nr_engines
+    aux_loss_tot = aux_loss * nr_engines
+    heat_loss_tot = heat_loss * nr_engines
+    P_fuel_pump_tot = P_fuel_pump * nr_engines
+
+    equ35 = far35 / far_s
+    if second_burner:
+        # Second burner
+        p4, T4, far_4 = components.burner(
             p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel
         )
 
+        # fuel air ratio of added fuel
+        far_burner = far_4 - far35
+
         # m31 is pure air. After cooling flow removed but before piston.
         m4 = (
-                m31 + far_burner * m31
+            m31 + fuel_flow_piston + far_burner * m31
         )  # flow after burner. air + fuel piston + fuel burner
 
         # burner fuel flow
         fuel_flow_burner = far_burner * m31
 
         # fuel air ratio after burner and piston engine
-        far_tot = far_burner
-        equ4 = far_tot / far_s
+        equ4 = far_4 / far_s
+
+    else:
+        # skipping second burner
+        p4 = p35
+        T4 = T35
+        m4 = m35
+        fuel_flow_burner = 0
+        far_burner = 0
+        far4 = far35
+
+        equ4 = far4 / far_s
 
 
-        # HPT for the case without a piston engine
-        power_hpt = P3 / eta_g + P_cooling + offtake
-        p45, T41, T42, T45, m41, m45, equ41, equ45, error = components.turbine(
-            T4,
-            p4,
-            m4,
-            equ4,
-            power_hpt,
-            0.90,
-            fuel_type,
-            cooling=True,
-            t_cool=T_cool,
-            m1_cool=m_cool,
-            q_ngv=q_ngv,
-        )
 
 
     # Low pressure turbine, powering fan and IPC
     # IPC + inner and outer fan (with gearbox efficiency) + everything shaft efficiency
-    power_lpt = (P25 + (P21 + P13) / eta_g) / eta_s
+    power_lpt = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
     p5, T46, T47, T5, m46, m5, equ46, equ5, error = components.turbine(
-        T45,
-        p45,
-        m45,
-        equ45,
+        T4,
+        p4,
+        m4,
+        equ4,
         power_lpt,
         eta_s_lpt,
         fuel_type,
-        cooling=False,
+        cooling=True,
         t_cool=T_cool,
         m1_cool=m_cool,
         q_ngv=q_ngv,
@@ -370,22 +290,11 @@ def run_cce(indata, data_piston, flags, meta_model):
         # print('Prob too high power demand on LPT')
         return 999, 0, 0, m0, error, 0, 0, 0, 0, 0, 0
 
+# Turbine exhaust duct pressure loss
+    p6 = p5 * 0.99
+    T6 = T5
+    m6 = m5
 
-    p46 = p45  # after NGV
-    m47 = m46  # after rotor
-    p5 = p5  # after stator
-
-    # Turbine exhaust duct pressure loss
-    if CCE:
-        p6 = p5 * 0.99
-        T6 = T5
-        m6 = m5
-    else:
-        # HERE WE HAVE AN fuel heat recuperator
-
-        p6 = p5 * (1 - 0.03)
-        T6 = T5 - 112
-        m6 = m5
 
     # Hot nozzle
     equ6 = equ5
@@ -406,10 +315,8 @@ def run_cce(indata, data_piston, flags, meta_model):
 
     # Bypass stream
     # Split stream into cooling air and not cooling air
-    if CCE:
-        bypass_cooling = 0.9
-    else:
-        bypass_cooling = 1.0
+    bypass_cooling = 0.9
+
     m14 = bypass_cooling * m13  # mass flow not going through heat exchanger
     p14 = (1 - dp_bypass) * p13
     T14 = T13  # adiabatic bypass
@@ -438,13 +345,11 @@ def run_cce(indata, data_piston, flags, meta_model):
     # amount of heat needed to be cooled to the bypass
 
     # dp_hx = 5.7 / 100  # pressure loss over hx
-    if CCE:
-        p15, T15 = components.hx_NASA(
-            p13, T13, heating_bypass, m15, oil_temp_1
-        )  # going through air-oil hx
-    else:
-        p15 = p13
-        T15 = T13
+
+    p15, T15 = components.hx_NASA(
+        p13, T13, heating_bypass, m15, oil_temp_1
+    )  # going through air-oil hx
+
 
     # Cooling flow nozzle
     F17, v17_id, v17, error = components.nozzle(
@@ -467,26 +372,26 @@ def run_cce(indata, data_piston, flags, meta_model):
     vel_ratio = v18_id / v8_id
 
     power_hpc = (
-        P3 / eta_s
+        P_hpc / eta_g
     )  # power required by the hpc divided by mechanical efficiency (from piston engine/HPT)
 
-    # Calculating the work potential left after powering ipc and inner fan
+    # Calculating the work potential left after powering lpc and inner fan
     p_wp, _, _, T_wp, _, m_wp, _, equ_wp, error = components.turbine(
-        T45,
-        p45,
-        m45,
-        equ45,
-        (P25 + P21 / eta_g) / eta_s,
+        T4,
+        p4,
+        m4,
+        equ4,
+        (P_lpc + P_inner_fan / eta_g) / eta_s,
         eta_s_lpt,
         fuel_type,
-        cooling=False,
+        cooling=True,
         t_cool=T_cool,
         m1_cool=m_cool,
         q_ngv=q_ngv,
     )
 
     # Efficiencies
-    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs = misc.calc_efficiencies(
+    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs = misc.calc_efficiencies_cce(
         F,
         mdot_fuel,
         m14,
@@ -508,159 +413,90 @@ def run_cce(indata, data_piston, flags, meta_model):
     if "print_output" in flags:
 
         # Creating array for output
-        if CCE:
-            p_array = (
-                np.array(
-                    [
-                        p2,
-                        p13,
-                        p14,
-                        p15,
-                        p21,
-                        p25,
-                        p3,
-                        p31,
-                        p32,
-                        p34,
-                        p35,
-                        p4,
-                        p45,
-                        p46,
-                        p5,
-                        p6,
-                    ]
-                )
-                * 1e-3
+        p_array = (
+            np.array(
+                [
+                    p2,
+                    p13,
+                    p14,
+                    p15,
+                    p21,
+                    p25,
+                    p3,
+                    p31,
+                    p32,
+                    p34,
+                    p35,
+                    p4,
+                    p4,
+                    p5,
+                    p5,
+                    p6,
+                ]
             )
-            T_array = (
-                T2,
-                T13,
-                T14,
-                T15,
-                T21,
-                T25,
-                T3,
-                T31,
-                T32,
-                T34,
-                T35,
-                T4,
-                T45,
-                T46,
-                T5,
-                T6,
-            )
-            m_array = (
-                m2,
-                m13,
-                m14,
-                m15,
-                m21,
-                m25,
-                m3,
-                m31,
-                m32,
-                m34,
-                m35,
-                m4,
-                m45,
-                m46,
-                m5,
-                m6,
-            )
-        else:
-            p_array = (
-                    np.array(
-                        [
-                            p2,
-                            p13,
-                            p14,
-                            p15,
-                            p21,
-                            p25,
-                            p3,
-                            p31,
-                            p4,
-                            p4,
-                            p45,
-                            p45,
-                            p46,
-                            p5,
-                            p5,
-                            p6,
-                        ]
-                    )
-                    * 1e-3
-            )
-            T_array = (
-                np.array(
-                    [
-                        T2,
-                        T13,
-                        T14,
-                        T15,
-                        T21,
-                        T25,
-                        T3,
-                        T31,
-                        T4,
-                        T41,
-                        T42,
-                        T45,
-                        T46,
-                        T47,
-                        T5,
-                        T6,
-                    ]
-                )
-            )
-            m_array = (
-                np.array(
-                    [
-                        m2,
-                        m13,
-                        m14,
-                        m15,
-                        m21,
-                        m25,
-                        m3,
-                        m31,
-                        m4,
-                        m41,
-                        m41,
-                        m45,
-                        m46,
-                        m46,
-                        m5,
-                        m6,
-                    ]
-                )
-            )
+            * 1e-3
+        )
+        T_array = (
+            T2,
+            T13,
+            T14,
+            T15,
+            T21,
+            T25,
+            T3,
+            T31,
+            T32,
+            T34,
+            T35,
+            T4,
+            T4,
+            T46,
+            T5,
+            T6,
+        )
+        m_array = (
+            m2,
+            m13,
+            m14,
+            m15,
+            m21,
+            m25,
+            m3,
+            m31,
+            m32,
+            m34,
+            m35,
+            m4,
+            m4,
+            m46,
+            m5,
+            m6,
+        )
 
-            far_array = (
-                np.array(
-                    [
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        far_burner,
-                        equ41*far_s,
-                        equ41*far_s,
-                        equ45*far_s,
-                        equ46*far_s,
-                        equ46*far_s,
-                        equ5*far_s,
-                        equ6*far_s,
-                    ]
-                )
+        far_array = (
+            np.array(
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    far34,
+                    far35,
+                    equ4 * far_s,
+                    equ46 * far_s,
+                    equ46 * far_s,
+                    equ5 * far_s,
+                    equ5 * far_s,
+                    equ6 * far_s,
+                ]
             )
+        )
 
-            s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
+        s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
 
         misc.print_output(
             air_flow_tot,
@@ -670,6 +506,7 @@ def run_cce(indata, data_piston, flags, meta_model):
             m21,
             power_tot,
             power_hpc,
+            offtake,
             power_lpt,
             p3,
             T3,
@@ -692,9 +529,9 @@ def run_cce(indata, data_piston, flags, meta_model):
 
         misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, Fs)
 
-        misc.plot_stations(p_array, T_array, CCE)
+        misc.plot_stations_cce(p_array, T_array)
 
-        misc.csv_output(p_array, T_array, m_array, far_array, s_array, CCE)
+        misc.csv_output_cce(p_array, T_array, m_array, far_array, s_array)
         piston_gearbox = (
             induced_power_tot
             - P_fuel_pump_tot
@@ -711,12 +548,12 @@ def run_cce(indata, data_piston, flags, meta_model):
             P_circumv_tot,
             P_cooling,
             piston_gearbox,
-            P3,
+            P_hpc,
             power_lpt,
             power_lpt * (1 - eta_s),
-            P25,
-            (P21 + P13) * (1 - eta_g) / eta_g,
-            P21 + P13,
+            P_lpc,
+            (P_inner_fan + P_outer_fan) * (1 - eta_g) / eta_g,
+            P_inner_fan + P_outer_fan,
             heat_loss_tot,
             heating_h2,
             heating_bypass,

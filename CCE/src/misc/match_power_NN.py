@@ -23,6 +23,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     v_mean = data[10]
     T_fuel = data[25]
 
+
     # needed to convert surrogate data (single cylinder)
     cylinders = data[31]
 
@@ -33,6 +34,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
 
     if surrogate_status:
         if pin < 2e5 or pin > 30e5 or Tin < 250 or Tin > 1000:
+            # LÄGG TILL SEILIGER MAX TRYCK
             print("input to surrogate outside limits")
             error = True
             return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0, 0, 0, 0, 0
@@ -41,14 +43,13 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         # change fuel air ratio and bore to match power and turbine inlet temperature
 
         far34 = x[0]  # far is varied to match target power
-        # print(far34)
-        # THESE LIMITS ARE FOR H2
-        if far34 < 0.02923 / 3.0:
-            residual = 1e8 + np.abs(far34 - 0.02923 / 3.0) * 1e8
+
+        if far34 < far_s / 3.0:
+            residual = 1e8 + np.abs(far34 - far_s / 3.0) * 1e8
             return residual
 
-        elif far34 > 0.02923 / 1.1:
-            residual = 1e8 + np.abs(far34 - 0.02923 / 1.1) * 1e8
+        elif far34 > far_s / 1.2:
+            residual = 1e8 + np.abs(far34 - far_s / 1.1) * 1e8
             return residual
 
         if surrogate_status:
@@ -82,19 +83,25 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             flags = ["sweep"]
             data[30] = x[0]  # fuel air ratio
             (
-                T34,
-                power_piston,
-                eta_th,
+                _,
+                _,
+                _,
                 air_flow,
-                p_max,
-                T_max,
-                far,
-                equ_trapped,
+                _,
+                _,
+                _,
+                _,
                 indicated_power,
-                friction_loss,
-                aux_loss,
-                heat_loss,
+                _,
+                _,
+                _,
                 p_tdc,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
             ) = run_piston_engine(data, flags)
 
         # pressurise circumventing flow
@@ -151,14 +158,11 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
                 f"(Not Neural Network) Residual between power: {residual[0]:.16f}, fuel air ratio: {far34:.16f}"
             )
 
-        # print(f'match_power_nn residual: {residual}, piston_input: {piston_input}')
-        #print(f'match_power_nn residual: {residual}, far: {x[0]}')
-
         return residual
 
     try:
         start = timer()
-        x0 = np.array([0.029 / 1.3])  # p_ratio, far
+        x0 = np.array([far_s / 2.0])  # p_ratio, far
         x_match, infodict, ier, mesg = fsolve(find_match, x0, full_output=True)
         # print(infodict)
         # print(ier)
@@ -215,18 +219,24 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         data[30] = far34_final  # fuel air ratio
         (
             T34_final,
-            power_piston,
-            eta_th,
+            _,
+            _,
             air_flow_final,
             p_max_final,
             T_max_final,
-            far,
-            equ_trapped,
+            _,
+            _,
             indicated_power_final,
-            friction_loss,
-            aux_loss,
+            _,
+            _,
             heat_loss_final,
             p_tdc_final,
+            _,
+            no,
+            _,
+            EI_nox,
+            _,
+            nox_spec,
         ) = run_piston_engine(data, flags)
 
     # power needed to compress circumventing air

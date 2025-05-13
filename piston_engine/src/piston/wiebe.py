@@ -19,7 +19,7 @@ def dqfdt_kaiser(Qf, t, t_soc, t_eoc, wa, wm):
     return 0.0
 
 
-### @njit()
+@njit()
 def dqfdt_single(phi, m, phi_sc, phi_cd, Qf):
     # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
 
@@ -60,7 +60,7 @@ def dqfdt_single_vector(phi, m, phi_sc, phi_cd, Qf):
     return dqfdphi
 
 
-### @njit()
+@njit()
 def dmfdphi_single_mass(phi, m, phi_sc, phi_cd, mf_tot):
     # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
 
@@ -73,7 +73,7 @@ def dmfdphi_single_mass(phi, m, phi_sc, phi_cd, mf_tot):
     return 0.0
 
 
-# ### @njit()
+# @njit()
 def dmfdphi_single_mass_vector(phi, m, phi_sc, phi_cd, mf_tot):
     # This is the real Wiebe without premixed. Look at Watson paper or Grundlagen or NASA 2T
 

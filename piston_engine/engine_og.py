@@ -61,7 +61,7 @@ from numba import njit
 dPdphi_temp = 0
 
 
-# ### @njit()
+# @njit()
 def run_piston_engine(indata, flags):
     [
         p_in,
@@ -215,7 +215,7 @@ def run_piston_engine(indata, flags):
         far_tot = far_goal
         Qf = LHV * mf_tot  # hmmm eta_c or not
 
-    ### @njit()
+    @njit()
     def dxdphi(phi, x, Pref, Tref, Vref, Pmotor, Vmotor):
         # solve a system of ODEs for pressure, temperature, volume
         # assign ode to vector element
