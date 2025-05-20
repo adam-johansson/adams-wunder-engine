@@ -50,7 +50,6 @@ def run_cce(indata, data_piston, flags, meta_model):
     minor_error_mass = False
     minor_error_pressure = False
 
-    # number of output variables from function
     outputs = 13
 
     # calculate mass flow
@@ -145,6 +144,7 @@ def run_cce(indata, data_piston, flags, meta_model):
 
 
 
+
     # Piston engine
     data_piston[0] = p32
     data_piston[1] = T32
@@ -199,11 +199,7 @@ def run_cce(indata, data_piston, flags, meta_model):
 
     # if engine was not able to match power requirements or negative air flow, return error
     if error:
-        cost = 999
-        listofzeros = [0] * outputs
-        listofzeros[0] = cost
-        listofzeros[-1] = error
-        return listofzeros
+        return 999, 0, 0, 0, error, 0, 0, 0, 0, 0, 0
 
     # get total power from both V12 engines
     # power_tot is power after friction, aux, fuel_pump and circumventing compressor
@@ -222,8 +218,6 @@ def run_cce(indata, data_piston, flags, meta_model):
 
     m_circumv = m31 - air_flow_tot
 
-
-
     # checking if flow is matching
     if m_circumv < 0:
         minor_error_mass = True
@@ -236,13 +230,13 @@ def run_cce(indata, data_piston, flags, meta_model):
         listofzeros[0] = cost
         return listofzeros
 
+
     # checking max pressure
     if p_max > 250 * 1e5:
         error = True
         minor_error_pressure = True
-        #print(f'Maximum pressure reached: {p_max*1e-5} bar')
-        cost = 999 + (p_max - 250 * 1e5) * 100
-        #return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0, 0
+        print(f'Maximum pressure reached: {p_max*1e-5} bar')
+        cost = 999 + (p_max - 250*1e5) * 100
         listofzeros = [0] * outputs
         listofzeros[-1] = error
         listofzeros[0] = cost
@@ -332,7 +326,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     )
 
     if error:
-        #print(f'Prob too low pressure and temperature in hot nozzle. p, T: {p6, T6}')
+        print(f'Prob too low pressure and temperature in hot nozzle. p, T: {p6, T6}')
         cost = 999 + (pa - p6)
         listofzeros = [0] * outputs
         listofzeros[-1] = error
@@ -340,13 +334,10 @@ def run_cce(indata, data_piston, flags, meta_model):
         return listofzeros
 
     # Heating the fuel
-    if fuel_type == "H2":
-        heating_fuel, oil_temp_1 = components.fuel_oil_hx(
-            300e5, t_tank, 0.08, t_fuel, fuel_flow_piston + fuel_flow_burner
-        )
-    else:
-        heating_fuel = 0.0
-        oil_temp_1 = 400
+
+    heating_fuel, oil_temp_1 = components.fuel_oil_hx(
+        300e5, t_tank, 0.08, t_fuel, fuel_flow_piston + fuel_flow_burner)
+
 
 
     # Bypass stream
@@ -362,7 +353,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         p14, T14, pa, equ=0, m=m14, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
     if error:
-        #print('Prob too low pressure and temperature in cold nozzle')
+        print('Prob too low pressure and temperature in cold nozzle')
         cost = 999 + (pa - p14)
         listofzeros = [0] * outputs
         listofzeros[-1] = error
@@ -396,7 +387,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     )
 
     if error:
-        #print('Prob too low pressure and temperature in cooling nozzle')
+        print('Prob too low pressure and temperature in cooling nozzle')
         cost = 999 + (pa - p15)
         listofzeros = [0] * outputs
         listofzeros[-1] = error
@@ -411,7 +402,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     mdot_fuel = fuel_flow_piston + fuel_flow_burner
 
     # NOx emission index
-    EI_nox = m_nox_tot / (mdot_fuel) * 1e3
+    EI_nox = m_nox / (mdot_fuel) * 1e3
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v18_id / v8_id

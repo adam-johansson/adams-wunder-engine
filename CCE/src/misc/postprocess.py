@@ -2,7 +2,7 @@ import numpy as np
 
 import pandas as pd
 
-from thermo import H2, JETA_L, mixture
+from thermo import H2, JETA_L, mixture, work_potential
 
 
 
@@ -14,6 +14,7 @@ def power_balance(
     pe_cirumv,
     turbine_cooling,
     hpc_gear,
+    offtake,
     hpc,
     power_lpt,
     lp_spool,
@@ -36,6 +37,7 @@ def power_balance(
         "PE circumv compressor",
         "CA compressor",
         "gearbox",
+        "offtake",
         "HPC",
         "sum HP",
         "LPT",
@@ -60,6 +62,7 @@ def power_balance(
         - pe_cirumv
         - turbine_cooling
         - hpc_gear
+        - offtake
         - hpc
     )
     sum_LP = power_lpt - lp_spool - ipc - fan_gear - fan
@@ -75,6 +78,7 @@ def power_balance(
                 -pe_cirumv,
                 -turbine_cooling,
                 -hpc_gear,
+                -offtake,
                 -hpc,
                 sum_HP,
                 power_lpt,
@@ -111,6 +115,8 @@ def energy_flow_fuel(
     piston_heatloss,
     t_p_in,
     t_p_out,
+    p_p_in,
+    p_p_out,
     m_p_in,
     m_p_out,
     equ_p_out,
@@ -120,6 +126,7 @@ def energy_flow_fuel(
     t_b_out,
     equ_b_out,
     m_b_out,
+    pa,
 ):
     """
     keeping track of the fuel energy
@@ -168,8 +175,10 @@ def energy_flow_fuel(
         # enthalpy out of the piston
         h_p_out, _, _, _, _, _, _, _ = mixture(t_p_out, p_dummy, equ_p_out, fuel_type)
 
-        # gas energy increase
-        P_p_gas = h_p_out * m_p_out - h_p_in * m_p_in
+        # work potential increase
+        wp_in = work_potential(t_p_in, p_p_in,0.0, pa, fuel_type)
+        wp_out = work_potential(t_p_out, p_p_out, equ_p_out, pa, fuel_type)
+        P_p_gas = wp_out * m_p_out - wp_in * m_p_in
         fraction_gas = P_p_gas / P_f_p
 
         # exhaust gas energy from piston

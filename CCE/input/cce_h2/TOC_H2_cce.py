@@ -5,30 +5,32 @@ M = 0.70  # Flight Mach number
 dTisa = 10  # [K] deviation from ISA
 
 # either H2 or jetA
-fuel = "jetA"
+fuel = "H2"
 
 Fn = 23000  # [N] #Net thrust requirement
 
-Fs_req = 80.0  # specific thrust [m/s]
+Fs_req = 101.7  # specific thrust [m/s]
 
 # power offtake from HPT
 power_offtake = 110*1e3
 
-bpr = 23.38  # bypass ratio
+bpr = 15.8  # bypass ratio
 
-fpr_outer = 1.265  # Outer fan pressure ratio 1.3087
+fpr_outer = 1.4  # Outer fan pressure ratio 1.3
 
-OPR = 19.97  # overall pressure ratio (including losses)
-PR = 0.178  # pressure split, with regard to the LPC
+OPR = 20  # overall pressure ratio (including losses)
+PR = 0.2  # pressure split, with regard to the LPC
 
-T4 = 1070  # [K] Turbine entry temperature
+T4 = 1000  # [K] Turbine entry temperature
 
 dp_intake = 0.2 / 100  # intake pressure loss
 dp_bypass = 0.0 / 100  # bypass duct pressure loss
+dp_rec = 6.0 / 100  # recuperator pressure loss
+dT_rec = 134
 
 
 eta_fan = 91.7 / 100  # inner fan polytropic efficiency
-eta_p_lpc = 88.2 / 100  # polytropic
+eta_p_lpc = 88.1 / 100  # polytropic
 eta_p_hpc = 90.0 / 100  # polytropic
 
 eta_b = 99.9 / 100  # combustor efficiency (burner)
@@ -46,19 +48,18 @@ cd_nozzle = 99.0 / 100  # nozzle discharge coefficient
 
 # cooling  TODO: decide cooling based on heat limits on the turbine
 q_ngv = 0.5  # fraction of cooling from cooling first stator
-bpr_c = 0.10  # cooling from fraction of core flow
+bpr_c = 0.1  # cooling from fraction of core flow
 
 second_burner = False
 
 # piston engine stuff
 pi_pe = 1.0
-cr = 8.39
+cr = 10
 bore = 0.14
 
-surrogate = True
-
+surrogate = False
 
 # fuel temperature upon injection in piston engine and burner
-t_fuel = 300
+t_fuel = 450
 # fuel tank temperature
-t_tank = 300
+t_tank = 22

@@ -22,6 +22,19 @@ def global_optimisation(data, data_piston, flags, meta_model):
     if os.path.exists(file) and os.path.isfile(file):
         os.remove(file)
 
+    fuel_type = data[27]
+
+    if fuel_type == "jetA":
+        cost_lim = 24
+    elif fuel_type == "H2":
+        cost_lim = 8
+    else:
+        cost_lim = 999
+
+    # lists for sfc and nox
+    SFC_s = []
+    EI_NOX_s = []
+
     def global_sfc(x):
 
         pi_pe = 1.0
@@ -48,7 +61,7 @@ def global_optimisation(data, data_piston, flags, meta_model):
         # print('ny iter')
 
         # sfc, v_ratio, F, m0, error = cce_propulsion_system.run_cce(data, flags)
-        sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35\
+        sfc, v_ratio, thrust, m0, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35, EI_nox, error,\
            = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
         # if error:
         #    #print('Not working power plant.')
@@ -62,30 +75,38 @@ def global_optimisation(data, data_piston, flags, meta_model):
         else:
             cost = sfc * 1e6
 
-        if cost < 15.0:
+        if cost < cost_lim:
             #print(
             #    f"bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, pi_pe: {x[3]}, cr: {x[4]}, fpr: {fpr}, bore: {x[5]}"
             #)
             print(
                 f"bpr: {x[0]}, opr: {x[1]}, split: {x[2]}, cr: {x[3]}, fpr: {fpr}, bore: {x[4]}"
             )
-            print(sfc*1e6, thrust)
-            misc.optimisation_csv(
-                sfc * 1e6,
-                opr,
-                split,
-                pi_pe,
-                cr,
-                bore,
-                fpr,
-                bpr,
-                p_max,
-                T_max,
-                T_in_piston,
-                T_out_piston,
-                TET,
-                far_piston,
+            print(sfc*1e6, thrust, EI_nox)
+
+            SFC_s.append(sfc*1e6)
+            EI_NOX_s.append(EI_nox)
+
+            data_output = np.array(
+                [
+                    sfc*1e6,
+                    EI_nox,
+                    opr,
+                    split,
+                    pi_pe,
+                    cr,
+                    bore,
+                    fpr,
+                    bpr,
+                    p_max,
+                    T_max,
+                    T_in_piston,
+                    T_out_piston,
+                    TET,
+                    far_piston,
+                ]
             )
+            misc.optimisation_csv(data_output)
         return cost
 
     bpr_lim = [10, 40]
@@ -106,8 +127,11 @@ def global_optimisation(data, data_piston, flags, meta_model):
     print(f"Optimal BPR: {opt.x[0]}")
     print(f"Optimal OPR: {opt.x[1]}")
     print(f"Optimal split: {opt.x[2]}")
-    print(f"Optimal PR PE: {opt.x[3]}")
-    print(f"Optimal compression ratio: {opt.x[4]}")
+    print(f"Optimal compression ratio: {opt.x[3]}")
+    print(f"Optimal bore: {opt.x[4]}")
     #print(f"Optimal bore: {opt.x[5]}")
+
+    plt.scatter(EI_NOX_s, SFC_s)
+    plt.show()
 
     return

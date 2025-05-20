@@ -4,10 +4,6 @@ from CCE.src import cce_propulsion_system
 from timeit import default_timer as timer
 
 from scipy.optimize import (
-    minimize,
-    minimize_scalar,
-    brentq,
-    differential_evolution,
     fsolve,
 )
 
@@ -19,6 +15,8 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
     Fs_goal = data[5]  # specific thrust
     x0 = np.array([1.2])
     limits = [(1.15, 1.7)]
+
+    outputs = 14
 
     check = []
 
@@ -33,7 +31,6 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             v_ratio,
             thrust,
             m0,
-            error,
             p_max,
             T_max,
             T_in_piston,
@@ -41,6 +38,8 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             TET,
             far_piston,
             T35,
+            EI_nox,
+            error,
         ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
         end = timer()
         # print(f'one run cce: {end - start}')
@@ -49,7 +48,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             # print('Not working power plant.')
             check.append(sfc)
             if len(check) > 4:
-                # print(f'Error funkar: {check}')
+                #print(f'Error funkar: {check}')
                 raise ValueError
             return sfc
         # cost = np.abs(thrust / m0 - Fs_goal)
@@ -60,7 +59,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
     try:
         # start = timer()
         # fsolve is slightly faster but doesn't converge as well
-        # opt_fpr = minimize(find_fpr, x0, bounds=limits, method='Nelder-Mead', options={'disp': False, 'fatol': 1e-5})
+
         opt_fpr, infodict, ier, mesg = fsolve(
             find_fpr, x0, full_output=True, epsfcn=1e-9
         )
@@ -69,31 +68,27 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             # print(f'Fsolve worked. {sol}, {opt_fpr[0]}')
 
         elif ier != 1:
-            # print(ier, mesg)
-            cost = 15e-6 + np.abs(infodict["fvec"]) * 1e-5
-            return (
-                cost,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-            )
+            #print(ier, mesg)
+            error = True
+            #cost = 15e-6 + np.abs(infodict["fvec"]) * 1e3
+            cost = 999
+            listofzeros = [0] * outputs
+            listofzeros[-1] = error
+            listofzeros[0] = cost
+            return listofzeros
 
         # end = timer()
         # print(f'Time: {end-start}')
 
     except ValueError as e:
         error = True
-        print(e)
-        return 999, 0, 0, 1, error, 0, 0, 0, 0, 0, 0, 0, 0
+        #print(e)
+        cost = 999
+        listofzeros = [0] * outputs
+        listofzeros[-1] = error
+        listofzeros[0] = cost
+        return listofzeros
+
 
 
     # FINAL RUN
@@ -106,7 +101,6 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         v_ratio_final,
         thrust_final,
         m0,
-        error,
         p_max,
         T_max,
         T_in_piston,
@@ -114,19 +108,22 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         TET,
         far_piston,
         T35,
+        EI_nox,
+        error,
     ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
 
-    if np.abs(thrust_final / m0 - Fs_goal) > 0.1:
+
+    if np.abs(thrust_final / m0 - Fs_goal) > 1e-3:
         # if thrust didnt match raise error
         error = True
-        print('andra error funkar')
-        cost = sfc_final + np.abs(thrust_final / m0 - Fs_goal)
+        #print('andra error funkar')
+        cost = sfc_final + np.abs(thrust_final / m0 - Fs_goal) * 1e3
+        cost = 999
         return (
             cost,
             0,
             thrust_final,
             m0,
-            error,
             opt_fpr[0],
             p_max,
             T_max,
@@ -134,7 +131,9 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             T_out_piston,
             TET,
             far_piston,
-            T35
+            T35,
+            EI_nox,
+            error,
         )
 
     return (
@@ -142,7 +141,6 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         v_ratio_final,
         thrust_final,
         m0,
-        error,
         opt_fpr[0],
         p_max,
         T_max,
@@ -151,4 +149,6 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         TET,
         far_piston,
         T35,
+        EI_nox,
+        error,
     )

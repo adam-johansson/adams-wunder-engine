@@ -10,9 +10,10 @@ from piston_engine.src.misc.seiliger import seiliger
 import numpy as np
 
 
-def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
+def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_loss_in, p_loss_out):
 
     error = False
+    outputs = 22
 
     # input to surrogate
     pin = data[0]
@@ -37,8 +38,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             # LÄGG TILL SEILIGER MAX TRYCK
             print("input to surrogate outside limits")
             error = True
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0, 0, 0, 0, 0
-
+            listofzeros = [0] * outputs
+            listofzeros[-1] = error
+            return listofzeros
     def find_match(x):
         # change fuel air ratio and bore to match power and turbine inlet temperature
 
@@ -110,14 +112,14 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             return 1e6
 
         # dont need compress negative pressure ratio
-        if p_ratio < 1:
+        if p_ratio <= 1:
             p_ratio_circ = 1
             # pressure_circ, T_circumv, P_circumv = \
             #    components.compressor(Tin, pin / 0.99, m_circumvent, 0.85, p_ratio_circ * 0.99 * 0.99)
             pressure_circ, T_circumv, P_circumv = 0.0, Tin, 0.0
         else:
             pressure_circ, T_circumv, P_circumv = components.compressor(
-                Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * 0.99 * 0.99
+                Tin, pin / 0.99, m_circumvent, 0.85, p_ratio * (1 - p_loss_out)
             )
 
         # mix circumventing flow
@@ -170,18 +172,22 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         if ier == 1:
             sol = infodict["fvec"]
             # print(f'Fsolve worked. {sol}, {x_match[0]}')
-        elif ier == 0:
-            cost = 5e-6 + np.abs(infodict["fvec"]) * 1e-5
+        else:
+            # THIS IS IF POWER IS NOT MATCHED
             # print('fsolve failed in match_power_NN')
             error = True
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0, 0, 0, 0, 0
+            listofzeros = [0] * outputs
+            listofzeros[-1] = error
+            return listofzeros
+
         end = timer()
         # print(f'find matching power: {end - start}, {x_match}')
     except ValueError as e:
         print("problem with matching power")
         print(e)
-        error = True
-        return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0
+        listofzeros = [0] * outputs
+        listofzeros[-1] = error
+        return listofzeros
 
     # This last simulation run could probably be done without, just taking the values from find_match
     # input to surrogate
@@ -209,6 +215,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         indicated_power_final = output_final[5] * cylinders
         heat_loss_final = output_final[6] * cylinders
         p_tdc_final = output_final[7]
+        nox_ppm = output_final[8]
 
         indicated_power_final = indicated_power_final
         heat_loss_final = heat_loss_final
@@ -232,7 +239,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
             heat_loss_final,
             p_tdc_final,
             _,
-            no,
+            nox_ppm,
             _,
             EI_nox,
             _,
@@ -244,17 +251,19 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     if m_circumvent_final < 0:
         error = True
         # print(f'Flow through piston engine is smaller than core flow with {m_circumvent_final} [kg/s].')
-        return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, error, 0
+        listofzeros = [0] * outputs
+        listofzeros[-1] = error
+        return listofzeros
 
     # negative pressure ratio dont need to compress
-    if p_ratio_final < 1:
+    if p_ratio_final <= 1:
         p_ratio_circ_final = 1
         # p_circ_final, T_circ_final, P_circumv_final = \
         #    components.compressor(Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_circ_final * 0.99 * 0.99)
         p_circ_final, T_circ_final, P_circumv_final = 0, Tin, 0
     else:
         p_circ_final, T_circ_final, P_circumv_final = components.compressor(
-            Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_final * 0.99 * 0.99
+            Tin, pin / 0.99, m_circumvent_final, 0.85, p_ratio_final * (1 - p_loss_out)
         )
 
     # mix circumventing flow
@@ -272,7 +281,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     )
     far35 = equ35 * far_s
 
-    p34 = pin * 0.99 * p_ratio_final * 0.99
+    p34 = pin * p_ratio_final * (1-p_loss_out)
     p35 = p34
 
     # power needed to pressurise the fuel
@@ -313,6 +322,9 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
     # print(p_ratio_final)
     # print(f'Power matching N: {shaft_power_final - power_req}')
 
+    # calculate mass of NOx (ppm is based on m34) (and convert to fraction from ppm)
+    m_nox = nox_ppm * m34 * 1e-6
+
     return (
         T34_final,
         T35_final,
@@ -333,6 +345,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status):
         heat_loss_final,
         P_fuel_pump_final,
         bore,
-        error,
         P_circumv_final,
+        m_nox,
+        error,
     )

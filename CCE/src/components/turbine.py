@@ -106,6 +106,7 @@ def turbine(
             float("nan"),
             float("nan"),
             float("nan"),
+            float("nan"),
             error,
         )
 
@@ -115,6 +116,7 @@ def turbine(
         # print('trubbel')
         error = True
         return (
+            float("nan"),
             float("nan"),
             float("nan"),
             float("nan"),
@@ -153,9 +155,8 @@ def turbine(
             )
             return h3 - h3_guess
 
-        # t3 = fsolve(find_t3, x0=t1_main)[0]
         try:
-            t3 = brentq(find_t3, 200, 1500)
+            t3 = brentq(find_t3, 200, 2500)
         except ValueError:
             # print('trubbel')
             error = True

@@ -1,4 +1,4 @@
-from CCE.src import cce_propulsion_system, geared_turbofan_h2_recuperated, geared_turbofan_jetA
+from CCE.src import cce_propulsion_system, geared_turbofan_h2_recuperated, geared_turbofan_jetA, cce_propulsion_system_h2
 from CCE.src import auxiliaries
 import importlib
 from neural_network.src import load_ANN
@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "TOC_jetA_optim"
+input_file = "TOC_jetA_testar"
 input_dir = "input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -19,10 +19,10 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-flags = ["single", "print_output", "cce"]  # normal case
+#flags = ["single", "print_output", "cce"]  # normal case
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
-#flags = ['optim', "cce"]
+flags = ['optim', "cce"]
 
 
 if "conventional" in flags:
@@ -154,41 +154,65 @@ elif "cce" in flags:
         d_p.premixed,
     ]
 
-    # Load the trained model
-    meta_model = load_ANN("../neural_network/models/jetA_128_2.pth")
-    meta_model.double()
-    print(meta_model)
 
     if "single" in flags:
         start = timer()
 
-        (
-            sfc,
-            v_ratio,
-            thrust,
-            m0,
-            error,
-            p_max,
-            T_max,
-            T_in_piston,
-            T_out_piston,
-            TET,
-            far_piston,
-            T35,
-        ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+        if d.fuel == "jetA":
 
-        """
-        sfc, v_ratio, thrust, m0, error, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35\
-           = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
-        """
-        if error:
-            print("error in cce_propulsion_system")
-            exit()
+            # Load the trained model
+            meta_model = load_ANN("../neural_network/models/jetA_128_2.pth")
+            meta_model.double()
+            print(meta_model)
+
+
+            (
+                sfc,
+                v_ratio,
+                thrust,
+                m0,
+                p_max,
+                T_max,
+                T_in_piston,
+                T_out_piston,
+                TET,
+                far_piston,
+                T35,
+                EI_nox,
+                error,
+            ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+
+            """
+            sfc, v_ratio, thrust, m0, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35, EI_nox, error\
+               = auxiliaries.run_cce_fpr(data, data_piston, flags, meta_model)
+            """
+        elif d.fuel == "H2":
+
+            # Load the trained model
+            meta_model = load_ANN("../neural_network/models/H2_128_2.pth")
+            meta_model.double()
+            print(meta_model)
+
+            (
+                sfc,
+                v_ratio,
+                thrust,
+                m0,
+                error,
+                p_max,
+                T_max,
+                T_in_piston,
+                T_out_piston,
+                TET,
+                far_piston,
+                T35,
+            ) = cce_propulsion_system_h2.run_cce(data, data_piston, flags, meta_model)
+
 
         end = timer()
         print(sfc * 1e6)
         print(far_piston)
-        print(thrust / m0)
+        #print(thrust / m0)
         print(m0)
         print(v_ratio)
         # print(fpr)
@@ -197,6 +221,7 @@ elif "cce" in flags:
         print(f"T out of piston: {T_out_piston}")
         print(f"T after mixing: {T35}")
         print(f"T in piston: {T_in_piston}")
+        #print(f"FPR : {fpr}")
     elif "sweep" in flags:
         #parameter = "bpr"
         # parameter = 'fpr'
@@ -208,6 +233,21 @@ elif "cce" in flags:
         # parameter = 'v_ratio'
         auxiliaries.sweep(data, data_piston, meta_model, parameter)
     elif "optim" in flags:
-        auxiliaries.global_optimisation(data, data_piston, flags, meta_model)
+        if d.fuel == "jetA":
+
+            # Load the trained model
+            meta_model = load_ANN("../neural_network/models/jetA_128_2.pth")
+
+        elif d.fuel == "H2":
+
+            # Load the trained model
+            meta_model = load_ANN("../neural_network/models/H2_128_2.pth")
+
+        meta_model.double()
+        print(meta_model)
+
+
+        #auxiliaries.global_optimisation(data, data_piston, flags, meta_model)
+        auxiliaries.nsga_optimisation(data, data_piston, flags, meta_model)
     else:
         print("No known flags")

@@ -22,7 +22,7 @@ from src import load_ANN
 
 ## NN-PP: Neural Network Post Processing
 
-folder = "jetA"
+folder = "H2"
 # Load the trained model
 hidden_dim = 128
 layers = 2
@@ -99,7 +99,8 @@ print(
     f"MRE pmax: {MRE_test[3]*100:.2f} % \n"
     f"MRE T_max: {MRE_test[4]*100:.2f} % \n"
     f"MRE P: {MRE_test[5]*100:.2f} % \n"
-    f"MRE Q : {MRE_test[6]*10:.2f} % \n"
+    f"MRE Q : {MRE_test[6]*100:.2f} % \n"
+    f"MRE NOx : {MRE_test[8]*100:.2f} % \n"
     f"MRE p_tdc: {MRE_test[7]*100:.2f} %"
 )
 
@@ -111,7 +112,8 @@ print(
     f"MRE pmax: {MRE_train[3]*100:.2f} % \n"
     f"MRE T_max: {MRE_train[4]*100:.2f} % \n"
     f"MRE P: {MRE_train[5]*100:.2f} % \n"
-    f"MRE Q : {MRE_train[6]*10:.2f} % \n"
+    f"MRE Q : {MRE_train[6]*100:.2f} % \n"
+    f"MRE NOx : {MRE_train[8]*100:.2f} % \n"
     f"MRE p_tdc: {MRE_train[7]*100:.2f} %"
 )
 
@@ -124,6 +126,7 @@ tmax = np.vstack((y_test[:, 4], y_test_hat[:, 4])).T
 P = np.vstack((y_test[:, 5], y_test_hat[:, 5])).T
 Q = np.vstack((y_test[:, 6], y_test_hat[:, 6])).T
 ptdc = np.vstack((y_test[:, 7], y_test_hat[:, 7])).T
+nox = np.vstack((y_test[:, 8], y_test_hat[:, 8])).T
 
 # colour mapping for the plots
 t2_colour = eff[t2[:, 0].argsort()]
@@ -133,6 +136,7 @@ tmax_colour = eff[tmax[:, 0].argsort()]
 P_colour = eff[P[:, 0].argsort()]
 Q_colour = eff[Q[:, 0].argsort()]
 ptdc_colour = eff[ptdc[:, 0].argsort()]
+nox_colour = eff[nox[:, 0].argsort()]
 
 
 
@@ -144,6 +148,7 @@ tmax = tmax[tmax[:, 0].argsort()]
 P = P[P[:, 0].argsort()]
 Q = Q[Q[:, 0].argsort()]
 ptdc = ptdc[ptdc[:, 0].argsort()]
+nox = nox[nox[:, 0].argsort()]
 
 
 # look at data points that perform poorly
@@ -317,6 +322,21 @@ ax8.set_ylabel(r"Relative error [%]", fontsize=fs)
 ax8.set_title(r"$p_{tdc}$ relative error", fontsize=fs)
 ax8.tick_params(labelsize=fs)
 cbar8 = fig.colorbar(cax8)
+plt.legend(loc="best", frameon=True, fontsize=fs)
+
+fig, ax9 = plt.subplots(figsize=figsize)
+cax9 = ax9.scatter(
+    nox[:, 0],
+    (nox[:, 1] - nox[:, 0]) / nox[:, 0] * 100,
+    label="Prediction",
+    c=nox_colour[:,0],
+    s=dotsize,
+)
+ax9.set_xlabel(r"Actual NOx [ppm]", fontsize=fs)
+ax9.set_ylabel(r"Relative error [%]", fontsize=fs)
+ax9.set_title(r"NOx relative error", fontsize=fs)
+ax9.tick_params(labelsize=fs)
+cbar9 = fig.colorbar(cax9)
 plt.legend(loc="best", frameon=True, fontsize=fs)
 
 

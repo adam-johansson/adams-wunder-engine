@@ -31,6 +31,7 @@ def print_output(
     aux_loss,
     heat_loss,
     bpr_piston,
+    m_nox,
 ):
 
     print(f"Airflow piston: {airflow_piston} [kg/s]")
@@ -66,6 +67,10 @@ def print_output(
     print(f"Aux losses: {aux_loss * 1e-6} [MW]")
     print(f"Heat losses: {heat_loss * 1e-6} [MW]")
     print(f"BPR around piston: {bpr_piston} [-]")
+
+    # calculate emission index
+    EI_nox = m_nox / (fuel_flow_piston + fuel_flow_burner) * 1e3
+    print(f"Emission index NOx: {EI_nox} [g/kg]")
 
     return
 
@@ -315,28 +320,14 @@ def plot_stations_jetA_geared(p_array, t_array):
     return
 
 
-def optimisation_csv(
-    sfc,
-    opr,
-    split,
-    pi_pe,
-    cr,
-    bore,
-    fpr,
-    bpr,
-    p_max,
-    T_max,
-    T_in_piston,
-    T_out_piston,
-    TET,
-    far_piston,
-):
+def optimisation_csv(data):
     """
     saves output for each successful optimisation evaluation.
     """
 
     headers = (
         "TSFC [mg/Ns]",
+        "EI NOx [g/kg]",
         "OPR [-]",
         "Pressure split (LPC / HPC) [-]",
         "Pressure raise piston [-]",
@@ -350,25 +341,6 @@ def optimisation_csv(
         "T_out_cyl [K]",
         "TET [K]",
         "FAR piston [-]",
-    )
-
-    data = np.array(
-        [
-            sfc,
-            opr,
-            split,
-            pi_pe,
-            cr,
-            bore,
-            fpr,
-            bpr,
-            p_max,
-            T_max,
-            T_in_piston,
-            T_out_piston,
-            TET,
-            far_piston,
-        ]
     )
 
     data = pd.DataFrame(data, headers)
