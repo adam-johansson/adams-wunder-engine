@@ -9,6 +9,8 @@ fuel = "jetA"
 # cooling = "Hohenberg"
 cooling = "Woschni"
 
+premixed = False
+
 opposed = False
 cr = 15.5
 
@@ -86,7 +88,7 @@ phi_cd = (
 T_fuel = 500
 p_fuel = 2500e5
 
-it = 100
+it = 300
 
 mf_tot = 1.5e-4
 

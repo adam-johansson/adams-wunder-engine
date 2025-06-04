@@ -877,8 +877,9 @@ def plot_twozone_validation(phi, t1, t2, t, p, evo, sc):
 
     fig, ax2 = plt.subplots()
     ax2.plot(phi * 180 / np.pi, t, label="Single zone", color="k", lw=1)
-    ax2.plot(phi_hp * 180 / np.pi, t1, label="T zone 1", color="g")
-    ax2.plot(phi_hp * 180 / np.pi, t2, label="T zone 2", color="b")
+    ax2.plot(phi_hp * 180 / np.pi, t1, label="T zone 2", color="g")
+    ax2.plot(phi_hp * 180 / np.pi, t2, label="T zone 1", color="b")
+
 
     ax2.plot(
         T0_heider[:, 0],
@@ -905,14 +906,15 @@ def plot_twozone_validation(phi, t1, t2, t, p, evo, sc):
         marker="o",
     )
 
-    ax2.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax2.set_ylabel(r"Temperature $T$ [K]]")
+    ax2.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]")
     ax2.legend(loc="best", fontsize="small", frameon=False)
     ax2.grid()
     ax2.set_xlim(300, evo * 180 / np.pi)
     ax2.set_ylim(500, 3500)
     ax2.set_xticks([300, 360, 420, 480])
     ax2.set_yticks([1000, 2000, 3000])
-    ax2.tick_params(labelsize=fs)
+    #ax2.tick_params(labelsize=fs)
 
     # ax3.scatter(ca_NASA_order, T_NASA_order, marker="X", label='NASA-CR-185155', color="r", s=512)
 
@@ -965,6 +967,8 @@ def plot_no_validation(no, phi):
 
     lns1 = ax1.plot(phi * 180 / np.pi, no, color="red", label="NO concentration")
     lns2 = ax2.plot(phi * 180 / np.pi, dnodca, color="blue", label="dNOdphi")
+
+
     lns3 = ax1.plot(
         no_heider[:, 0], no_heider[:, 1], color="red", label="NO validation", marker="x"
     )
@@ -976,7 +980,8 @@ def plot_no_validation(no, phi):
         marker="x",
     )
 
-    # ax1.set_xlim(1500, 3000)
+
+    ax1.set_xlim(355, 400)
 
     # set which axis to which side
     ax1.yaxis.tick_left()
@@ -986,8 +991,8 @@ def plot_no_validation(no, phi):
     lns = lns1 + lns2 + lns3 + lns4
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc="upper right")
-    ax1.set_title("NO production")
-    ax1.set_ylabel(" NO concentration [ppm] (mass based)")
+    #ax1.set_title("NO production")
+    ax1.set_ylabel(" NO concentration [ppm]") #mass based
     ax2.set_ylabel("NO production [ppm/ $^{\circ}$]")
     ax1.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]")
     # ax1.legend(loc='upper right', fontsize='small', frameon=False)
@@ -1110,6 +1115,7 @@ def plot_nox_diesel_validation(phi, t1, t2, t, p, evo, sc, mf, no):
     ax4.legend(loc="best", fontsize="small", frameon=False)
     ax4.grid()
 
+    #plt.show()
     return
 
 
@@ -1228,7 +1234,7 @@ def plot_nox_diesel_validation_late(phi, t1, t2, t, p, evo, sc, mf, no):
     ax4.legend(loc="best", fontsize="small", frameon=False)
     ax4.grid()
 
-    # plt.show()
+    #plt.show()
 
     return
 
@@ -1584,5 +1590,186 @@ def val_hcci(phi, p):
     ax1.set_ylabel(r"Pressure $p$ [bar]", fontsize=fs)
 
     plt.show()
+
+    return
+
+
+def val_chalmers(phi, p, T, Q, V, equ, premixed):
+
+    import os
+
+    from thermo import mixture
+
+    dirname = os.path.dirname(__file__)
+
+    filename_p = os.path.join(
+        dirname, "../../validation/chalmers_h2/case2/p_val.txt"
+    )
+
+    filename_T = os.path.join(
+        dirname, "../../validation/chalmers_h2/case2/T_val.txt"
+    )
+
+    filename_hrr = os.path.join(
+        dirname, "../../validation/chalmers_h2/case2/hrr_val.txt"
+    )
+
+    p_exp = np.loadtxt(filename_p, delimiter=",")
+    T_exp = np.loadtxt(filename_T, delimiter=",")
+    hrr_exp = np.loadtxt(filename_hrr, delimiter=",")
+
+    # convert to degrees from radian
+    p_sim = np.array([phi * 180 / np.pi, p])
+    T_sim = np.array([phi * 180 / np.pi, T])
+    Q_sim = np.array([phi * 180 / np.pi, Q])
+    V_sim = np.array([phi * 180 / np.pi, V])
+    equ_sim = np.array([phi * 180 / np.pi, equ])
+
+
+    # apparent rate of heat release calculations from here
+    # change in pressure
+    dp = np.zeros(np.shape(p_sim))
+    dp[0, :] = p_sim[0, :]
+    dp[1, :] = np.gradient(p_sim[1, :], p_sim[0, :])
+
+    # change in volume
+    dV = np.zeros(np.shape(V_sim))
+    dV[0, :] = V_sim[0, :]
+    dV[1, :] = np.gradient(V_sim[1, :], V_sim[0, :])
+
+    # heat capacity ratio
+    # copy just to get the correct size of array
+    gamma = np.zeros(np.shape(V_sim))
+    gamma[0,:] = V_sim[0,:]
+
+    for i in range(np.shape(gamma)[1]):
+        t = T_sim[1, i]
+        p_temp = p_sim[1, i]
+        equ_temp = equ_sim[1, i]
+        _, _, _, _, _, gamma_temp, _, _ = mixture(t, p_temp, equivalence_ratio=0, fuel_type="H2",
+                                                  include_fuel_in_reactants=premixed, fuel_air_equ_ratio=equ_temp)
+        gamma[1, i] = gamma_temp
+
+
+    # change in gamma
+    dgamma = np.zeros(np.shape(gamma))
+    dgamma[0, :] = gamma[0, :]
+    dgamma[1, :] = np.gradient(gamma[1, :], gamma[0, :])
+
+    # apparent rate of heat release (AHRR)
+    ahrr = np.zeros(np.shape(gamma))
+    ahrr[0, :] = gamma[0, :]
+    ahrr[1, :] = ((V_sim[1,:] * dp[1,:] + gamma[1,:] * p_sim[1,:] * dV[1,:]) / (gamma[1,:] - 1) -
+            p_sim[1,:] * V_sim[1,:] / (gamma[1,:] - 1)**2 * dgamma[1,:])
+
+
+    # Find the index where time is greater than or equal to the threshold
+    index_threshold = np.where(p_sim[0] >= 720)[0][0]
+
+    # adjust angles to go from 0 to 720
+    p_sim[0, index_threshold:] = p_sim[0, index_threshold:] - 720
+    T_sim[0, index_threshold:] = T_sim[0, index_threshold:] - 720
+    Q_sim[0, index_threshold:] = Q_sim[0, index_threshold:] - 720
+    V_sim[0, index_threshold:] = V_sim[0, index_threshold:] - 720
+    equ_sim[0, index_threshold:] = equ_sim[0, index_threshold:] - 720
+    ahrr[0, index_threshold:] = ahrr[0, index_threshold:] - 720
+
+    # make the added heat 0 before heat is added (data points that were in the end before rearanging)
+    Q_sim[1, index_threshold:] = 0.0
+
+    # Rearrange the data so all values for time after the threshold are placed first
+    p_sim = np.concatenate(
+        (p_sim[:, index_threshold:], p_sim[:, :index_threshold]), axis=1
+    )
+
+    T_sim = np.concatenate(
+        (T_sim[:, index_threshold:], T_sim[:, :index_threshold]), axis=1
+    )
+
+    Q_sim = np.concatenate(
+        (Q_sim[:, index_threshold:], Q_sim[:, :index_threshold]), axis=1
+    )
+
+    V_sim = np.concatenate(
+        (V_sim[:, index_threshold:], V_sim[:, :index_threshold]), axis=1
+    )
+
+    equ_sim = np.concatenate(
+        (equ_sim[:, index_threshold:], equ_sim[:, :index_threshold]), axis=1
+    )
+
+    ahrr = np.concatenate(
+        (ahrr[:, index_threshold:], ahrr[:, :index_threshold]), axis=1
+    )
+
+    # adjust angles to go from -360 to 360
+    p_sim[0, :] = p_sim[0, :] - 360
+    T_sim[0, :] = T_sim[0, :] - 360
+    Q_sim[0, :] = Q_sim[0, :] - 360
+    V_sim[0, :] = V_sim[0, :] - 360
+    equ_sim[0, :] = equ_sim[0, :] - 360
+    ahrr[0, :] = ahrr[0, :] - 360
+
+
+    # real rate of heat release
+    hrr_sim = np.zeros(np.shape(Q_sim))
+    hrr_sim[0, :] = Q_sim[0, :]
+    hrr_sim[1, :] = np.gradient(Q_sim[1, :], Q_sim[0, :])
+
+
+
+
+    # fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    # fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+    ax1.plot(p_sim[0, :], p_sim[1, :] * 1e-5, label="simulation", color="r", lw=1)
+    ax1.plot(p_exp[:, 1], p_exp[:, 0], label="experiment", color="b", lw=1)
+    ax1.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax1.legend(loc="best", fontsize="small", frameon=False)
+    ax1.grid()
+    # ax1.set_xlim(260, 510)
+    # ax1.set_ylim(-50, 100)
+    # ax1.set_xticks([300, 360, 420, 480])
+    # ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+    ax1.set_ylabel(r"Pressure $p$ [bar]", fontsize=fs)
+
+    fig, ax2 = plt.subplots()
+    ax2.plot(T_sim[0, :], T_sim[1, :], label="simulation", color="r", lw=1)
+    ax2.plot(T_exp[:, 1], T_exp[:, 0], label="experiment", color="b", lw=1)
+    ax2.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax2.legend(loc="best", fontsize="small", frameon=False)
+    ax2.grid()
+    ax2.tick_params(labelsize=fs)
+    ax2.set_ylabel(r"Temperature $T$ [K]", fontsize=fs)
+
+    fig, ax3 = plt.subplots()
+    ax3.plot(hrr_sim[0, :], hrr_sim[1, :], label="simulation", color="r", lw=1)
+    ax3.plot(hrr_exp[:, 1], hrr_exp[:, 0], label="experiment", color="b", lw=1)
+    ax3.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax3.legend(loc="best", fontsize="small", frameon=False)
+    ax3.grid()
+    ax3.tick_params(labelsize=fs)
+    ax3.set_ylabel(r"HRR", fontsize=fs)
+    ax3.set_xlim(-142, 145)
+
+    fig, ax4 = plt.subplots()
+    ax4.plot(ahrr[0, :], ahrr[1, :], label="simulation", color="r", lw=1)
+    ax4.plot(hrr_exp[:, 1], hrr_exp[:, 0], label="experiment", color="b", lw=1)
+    ax4.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax4.legend(loc="best", fontsize="small", frameon=False)
+    ax4.grid()
+    ax4.tick_params(labelsize=fs)
+    ax4.set_ylabel(r"AHRR", fontsize=fs)
+    #ax4.set_xlim(-142, 145)
+
+    plt.show()
+
+    print(f"Validation: eta: 42.5%, power: 13.7kW, IMEP: 11.5 bar, NOX: {261} ppm, T_out: 799 K ")
+    print(f"Validation fuel flow: {0.27} g/s")
 
     return

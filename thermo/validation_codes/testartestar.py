@@ -1,19 +1,31 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from thermo import mixture
+from thermo import mixture, fuel_props
+from thermo.thermo_computations_old import mixture_old
 
 
-equs = np.linspace(0,1,100)
+far_s, _ = fuel_props("H2")
 
 t = 800
-p = 1e5
+p = 5e5
 
-hs = []
-for equ in equs:
-    h, u, cp, cv, R, gamma, s, M = mixture(t, p, equ, "jetA")
-    hs.append(h)
+equ = 1 / 1.9
 
 
-plt.plot(equs, hs)
-plt.show()
+h, u, cp, cv, R, gamma, s, M = mixture(t, p, equ, "H2", include_fuel_in_reactants=True, fuel_air_equ_ratio=1/1.9)
+
+print(h)
+
+h, u, cp, cv, R, gamma, s, M = mixture_old(t, p, equ, "H2", pure_fuel=True, fuel_equ_ratio=1/1.9)
+
+print(h)
+
+
+h, u, cp, cv, R, gamma, s, M = mixture(t, p, equ, "H2")
+
+print(h)
+
+h, u, cp, cv, R, gamma, s, M = mixture_old(t, p, equ, "H2")
+
+print(h)

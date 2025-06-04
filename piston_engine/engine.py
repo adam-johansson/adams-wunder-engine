@@ -12,14 +12,14 @@ from piston_engine.src.misc.entropy import entropy_calc
 
 import thermo
 
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, brentq
 from scipy.integrate import solve_ivp
 
 dPdphi_temp = 0
 
 
 def run_piston_engine(indata, flags):
-    [p_in, T_in, p_ratio, cycle, thermo_unused, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
+    [p_in, T_in, p_ratio, cycle, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
      valve_timings, n_valve, lv_max, cd, eta_c, mf_tot, wa, wm, m_wiebe,
      phi_sc, phi_cd, T_fuel, p_fuel, it, wiebe_type, valve_type, far_goal, cylinders, fuel_type,
      c1, c4, c5, premixed] = indata
@@ -53,7 +53,7 @@ def run_piston_engine(indata, flags):
     far_s, LHV = thermo.fuel_props(fuel_type)
 
     # assuming pure air in intake for direct injection and a fuel-air mixture for external mixture formation
-    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equ=0, fuel_type=fuel_type, pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
+    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equivalence_ratio=0, fuel_type=fuel_type, include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
 
     rho_in = p_in / (R_in * T_in)
 
@@ -172,17 +172,17 @@ def run_piston_engine(indata, flags):
 
         # Gas properties inside the cylinder
         h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type,
-                                                            pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
+                                                            include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
 
         # Intake port values
         h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type,
-                                                                                 pure_fuel=premixed,
-                                                                                 fuel_equ_ratio=far_goal/far_s)
+                                                                                 include_fuel_in_reactants=premixed,
+                                                                                 fuel_air_equ_ratio=far_goal/far_s)
 
         # Exhaust port values
         h_EP, u_EP, cp_EP, cv_EP, R_EP, gamma_EP, entropy_EP, _ = thermo.mixture(T_EP, p_out, equ_EP, fuel_type,
-                                                                                 pure_fuel=premixed,
-                                                                                 fuel_equ_ratio=far_goal/far_s)
+                                                                                 include_fuel_in_reactants=premixed,
+                                                                                 fuel_air_equ_ratio=far_goal/far_s)
 
         # Phi derivative of the volume (without Taylor expansion)
         # Opposed piston
@@ -241,39 +241,31 @@ def run_piston_engine(indata, flags):
 
             if cycle == "4T":
                 if phi_close_in - cycle_phi < np.mod(phi, cycle_phi) < phi_open_out:
-                    #print(phi_close_in * 180 / np.pi , phi * 180 / np.pi , phi_open_out * 180 / np.pi )
-                    if fuel_type == "jetA":
-                        dqdphi, alpha = walls.dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
-                                                     "HP-process", firing)
-                    else:
-                        # for hydrogen
-                        #if firing:
-                        #    print(P*1e-5, phi*180 / np.pi)
-                        dqdphi, alpha = walls.dqdphi_woschni_h2(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
-                                                     "HP-process", firing)
+                    hp_phase = True
                 else:
-                    if fuel_type == "jetA":
-                        dqdphi, alpha = walls.dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
-                                                     "Charge changing", firing)
-                    else:
-                        # for hydrogen
-                        dqdphi, alpha = walls.dqdphi_woschni_h2(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
-                                                     "Charge changing", firing)
-
+                    hp_phase = False
             elif cycle == "2T":
                 if phi_close_out < phi < phi_open_out:
-                    dqdphi, alpha = walls.dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
-                                                 "HP-process", firing)
+                    hp_phase = True
                 else:
-                    dqdphi, alpha = walls.dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
-                                                 "Charge changing", firing)
+                    hp_phase = False
             else:
                 raise Exception(f'Unknown cycle. The cycle was {cycle}.')
 
+            if fuel_type == "jetA":
+                dqdphi, alpha = walls.dqdphi_woschni(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
+                                             hp_phase, firing)
+            else:
+                # for hydrogen
+                dqdphi, alpha = walls.dqdphi_woschni_h2(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi,
+                                             hp_phase, firing)
+
+
+
         elif cooling == "Hohenberg":
             dqdphi = walls.dqdphi_hohenberg(T, P, V, Twalls, Awalls, v_mean, dtdphi)
-        elif cooling == "H2":
-            dqdphi = walls.dqdphi_h2(T, P, Twalls, Awalls, d, v_mean, ref, dqfdphi, dtdphi)
+        elif cooling == "Michl":
+            dqdphi = walls.dqdphi_michl(d, T, P, R, V, Twalls, Awalls, v_mean, dtdphi)
         else:
             raise Exception(f'Unknown cooling model. The cooling model was {cooling}.')
 
@@ -359,7 +351,8 @@ def run_piston_engine(indata, flags):
             thermo.equivalence_derivative(equ_EP, T_EP, p_out, fuel_type, premixed, far_goal/far_s)
 
         # Change of equivalence ratio in the exhaust port
-        dequdphi_EP = dmoutdphi * (1 + equ_EP * far_s) * (equ_in_EP - equ_EP) / (1 + equ_in_EP * far_s)
+        #dequdphi_EP = dmoutdphi * (1 + equ_EP * far_s) * (equ_in_EP - equ_EP) / (1 + equ_in_EP * far_s)
+        dequdphi_EP = dmoutdphi * (1 + equ_EP * far_s) * (equ_in_EP - equ_EP) / (m_EP * (1 + equ_in_EP * far_s))
 
         # Change of gas constant in exhaust port
         dRdphi_EP = dellRdellequ_EP * dequdphi_EP
@@ -569,17 +562,6 @@ def run_piston_engine(indata, flags):
         results = scaled_results * inv_scaler[:, np.newaxis]
 
         if i > 0:
-            """
-            mdiff.append((np.abs(results[4][-1] - m[-1][-1])))
-            pdiff.append(np.abs(results[5][-1] - P[-1][-1]))
-            Tdiff.append(np.abs(results[0][-1] - T[-1][-1]))
-            equdiff.append(np.abs(results[9][-1] - equ[-1][-1]))
-            mEP_diff.append(np.abs(results[15][-1] - m_EP[-1][-1]))
-            mIP_diff.append(np.abs(results[12][-1] - m_IP[-1][-1]))
-            T_EP_diff.append(np.abs(results[16][-1] - T_EP[-1][-1]))
-            T_IP_diff.append(np.abs(results[13][-1] - T_IP[-1][-1]))
-            """
-
             mdiff.append((results[4][-1] - m[-1][-1]))
             pdiff.append(results[5][-1] - P[-1][-1])
             Tdiff.append(results[0][-1] - T[-1][-1])
@@ -627,7 +609,6 @@ def run_piston_engine(indata, flags):
             mf_tot_old = mf_tot
 
 
-            # TODO: maybe account for some fuel passing through the engine
             if premixed:
 
                 if cycle == "2T":
@@ -641,7 +622,12 @@ def run_piston_engine(indata, flags):
                                           / (1 + far_s * equ_inlet_closing)
 
                 _, _, _, _, _, mass_fraction_fuel = thermo.mass_fractions(equ_inlet_closing, fuel_type, premixed, far_goal/far_s)
+
+                # decide how much fuel to inject into next cycle based on how much fuel is in the cylinder when valves close
                 mf_tot = m[-1][-1] * mass_fraction_fuel
+
+
+
                 #print(mf_tot, equ_inlet_closing, mass_fraction_fuel, far_goal, premixed, fuel_type)
                 #print(f"fuel mass trapped: {mf_tot*1e6} mg")
                 # the mass of fuel being sucked into the cylinder
@@ -661,6 +647,7 @@ def run_piston_engine(indata, flags):
 
             # ensure convergence in added fuel
             mf_diff.append(np.abs(mf_tot - mf_tot_old))
+
             #Qf is very important. This is the one actually deciding amount of added heat.
             # 99.9% of Qf will be added to the fluid.
             Qf = LHV * mf_tot  # hmmm eta_c or not
@@ -672,20 +659,19 @@ def run_piston_engine(indata, flags):
             # avg far
             far_avg = mf_tot / m_in_IP[-1][-1]
             def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_avg / far_s, fuel_type,
-                                                        pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
+                h, _, _, _, _, _, _, _ = thermo.mixture(t, p_out, far_avg / far_s, fuel_type,
+                                                        include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
                 return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
         else:
             #using far_goal for t_out calculations should be good since that is the average far in exhaust
             def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t[0], p_out, far_goal / far_s, fuel_type,
-                                                        pure_fuel=premixed, fuel_equ_ratio=far_goal/far_s)
+                h, _, _, _, _, _, _, _ = thermo.mixture(t, p_out, far_goal / far_s, fuel_type, include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
                 return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
 
         try:
-            T_out.append(fsolve(find_tout, T[-1][-1])[0])
+            T_out.append(brentq(find_tout, 200, 6000))
         except RuntimeWarning as e:
             print(e)
             return np.zeros(nr_output)
@@ -695,18 +681,18 @@ def run_piston_engine(indata, flags):
 
         # Checking if simulation has converged (minimum 5 iterations and lest three diffs should be smaller than limits)
         if i > 4:
-            #print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1], mIP_diff[-1], mEP_diff[-1])
+            # print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1], mIP_diff[-1], mEP_diff[-1])
 
             # These values can be motivated at a later stage
             if 'validation' in flags:
-                p_lim = 1e-1
-                m_lim = 1e-1
-                T_lim = 1e-1
-                T_out_lim = 1e-1
-                equ_lim = 1e-1
-                mf_lim = 1e-3
-                mEP_lim = 1e-3
-                mIP_lim = 1e-3
+                p_lim = 1e-2
+                m_lim = 1e-2
+                T_lim = 1e-2
+                T_out_lim = 1e-2
+                equ_lim = 1e-2
+                mf_lim = 1e-4
+                mEP_lim = 1e-4
+                mIP_lim = 1e-4
 
             else:
 
@@ -721,27 +707,78 @@ def run_piston_engine(indata, flags):
                 mIP_lim = 1e-6
 
             convergence = True
-            for j in range(1,3):
-                if np.abs(pdiff[-j]) > p_lim or np.abs(mdiff[-j]) > m_lim or np.abs(Tdiff[-j]) > T_lim \
-                        or np.abs(T_out_diff[-j]) > T_out_lim or np.abs(mf_diff[-j]) > mf_lim or np.abs(equdiff[-j]) > equ_lim \
-                        or np.abs(mEP_diff[-j]) > mEP_lim or np.abs(mIP_diff[-j]) > mIP_lim:
+            non_converged_params = []
+
+            # Check each parameter and track which ones don't converge
+            for j in range(1, 3):
+                if np.abs(pdiff[-j]) > p_lim:
                     convergence = False
+                    if f'pdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'pdiff[-{j}]', np.abs(pdiff[-j]), p_lim))
+
+                if np.abs(mdiff[-j]) > m_lim:
+                    convergence = False
+                    if f'mdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'mdiff[-{j}]', np.abs(mdiff[-j]), m_lim))
+
+                if np.abs(Tdiff[-j]) > T_lim:
+                    convergence = False
+                    if f'Tdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'Tdiff[-{j}]', np.abs(Tdiff[-j]), T_lim))
+
+                if np.abs(T_out_diff[-j]) > T_out_lim:
+                    convergence = False
+                    if f'T_out_diff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'T_out_diff[-{j}]', np.abs(T_out_diff[-j]), T_out_lim))
+
+                if np.abs(mf_diff[-j]) > mf_lim:
+                    convergence = False
+                    if f'mf_diff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'mf_diff[-{j}]', np.abs(mf_diff[-j]), mf_lim))
+
+                if np.abs(equdiff[-j]) > equ_lim:
+                    convergence = False
+                    if f'equdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'equdiff[-{j}]', np.abs(equdiff[-j]), equ_lim))
+
+                if np.abs(mEP_diff[-j]) > mEP_lim:
+                    convergence = False
+                    if f'mEP_diff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'mEP_diff[-{j}]', np.abs(mEP_diff[-j]), mEP_lim))
+
+                if np.abs(mIP_diff[-j]) > mIP_lim:
+                    convergence = False
+                    if f'mIP_diff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'mIP_diff[-{j}]', np.abs(mIP_diff[-j]), mIP_lim))
 
             if convergence:
                 end = timer()
                 print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
-                #print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1])
+                # print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1])
                 break
 
 
         if i + 1 == it:
             if "sweep" in flags:
-                print(f'Simulation never converged. p_in, T_in, cr, far_goal, rpm, bore, p_ratio: {p_in * 1e-5, T_in, cr, far_goal, rpm, d, p_ratio}')
+                print(
+                    f'Simulation never converged. p_in, T_in, cr, far_goal, rpm, bore, p_ratio: {p_in * 1e-5, T_in, cr, far_goal, rpm, d, p_ratio}')
+                # Show final non-converged parameters for debugging
+                if non_converged_params:
+                    print('Final non-converged parameters:')
+                    for param_name, current_val, limit in non_converged_params:
+                        print(
+                            f'  {param_name}: {current_val:.2e} (limit: {limit:.2e}, ratio: {current_val / limit:.2f})')
                 # Return zeros so that the data can be cleaned from simulations that never converged
                 return np.zeros(nr_output)
             else:
                 end = timer()
                 print(f'Simulation never converged. Reached {i + 1} iterations. Runtime of script: {end - start} [s]')
+                # Show final non-converged parameters for debugging
+                if non_converged_params:
+                    print('Final non-converged parameters:')
+                    for param_name, current_val, limit in non_converged_params:
+                        print(
+                            f'  {param_name}: {current_val:.2e} (limit: {limit:.2e}, ratio: {current_val / limit:.2f})')
                 break
 
 
@@ -883,8 +920,8 @@ def run_piston_engine(indata, flags):
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
 
-        # Greek: 0.84. Heider: 0.91, Scania: 1.0
-        factor = 0.91
+        # Greek: 0.87. Heider: 0.91, Scania: 1.0
+        factor = 0.9
 
         start = timer()
         # get temperature and mass from reaction zone
@@ -988,7 +1025,11 @@ def run_piston_engine(indata, flags):
             # validate NOx model with data from scania engine (KTH msc thesis)
             from piston_engine.src.misc.plot_output import val_newcastle
 
-            val_newcastle(phi, P[-1])
+        elif 'validate_chalmers' in flags:
+            # validate NOx model with data from scania engine (KTH msc thesis)
+            from piston_engine.src.misc.plot_output import val_chalmers
+
+            val_chalmers(phi, P[-1], T[-1], Q_in[-1], V[-1], equ[-1], premixed)
 
         else:
             # no validation
@@ -1042,7 +1083,7 @@ def run_piston_engine(indata, flags):
         if 'output_all' in flags and not validation:
             from piston_engine.src.misc.output import output_thermo, output_power, output_efficiencies
             output_thermo(phi, P, T, T_out[-1], air_flow, m_in_IP, fuel_flow, mf)
-            output_power(power, imep, friction_power, fmep, break_power, bmep, heat_loss_single, equ_avg)
+            output_power(power, imep, friction_loss_power, fmep, break_power_engine, bmep, heat_loss_single, equ_avg)
             output_efficiencies(eta_th, hl)
 
         if 'output_power' in flags and not validation:
@@ -1051,6 +1092,12 @@ def run_piston_engine(indata, flags):
                          equ_avg)
 
 
+    # far_avg is defined as mass flow of fuel burned/ air flow
+    print(f"Mass flowing in intake: {m_in_IP[-1][-1]}")
+    print(f"Mass of air in intake: {m_in_IP[-1][-1] / ( 1 + far_goal)}")
+    print(f"Mass of fuel in intake: {m_in_IP[-1][-1] * far_goal/ (1 + far_goal) }")
+
+    #print(f"Lambda of fuel flow: {far_s / far_goal}")
 
     return (T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
         power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,

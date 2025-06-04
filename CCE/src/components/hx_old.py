@@ -2,32 +2,40 @@ from thermo import mixture
 from scipy.optimize import brentq
 
 
-def hx_NASA(pc_i, tc_i, heating_power, m_c, th_i):
+def hx_NASA(pc_i, tc_i, heating_power, th_i):
 
-    # assuming pressure losses
+    # input:
+    # pressure cold in
+    # temp cold in
+    # temp hot side in
+
+    # assuming pressure losses on cold side
     dp_c = 0.057
 
-    p_dummy = 1e5
-
     # cold bypass air
-    hc_i, _, _, _, _, _, _, _ = mixture(tc_i, p_dummy, 0)
+    hc_i, _, _, _, _, _, _, _ = mixture(tc_i, pc_i, 0)
 
     # assuming pressure losses (dont care about oil for now)
     pc_o = pc_i * (1 - dp_c)
 
+    # we assume that the air will be heated to 90% of the oil temperature
+    tc_o = tc_i + (th_i-tc_i) * 0.9
+
+    hc_o, _, _, _, _, _, _, _ = mixture(tc_o, pc_o, 0)
+
     # we know the amount of heat that has to be dispensed into the bypass air
-    hc_o = hc_i + heating_power / m_c
+    # calculate mass flow of cooling air
+    m_c = heating_power / (hc_o - hc_i)
 
-    # finding output temperature of air
-    def find_tc_o(tc_o):
-        if tc_o < 200:
-            return 1e9
-        # guessing outlet air enthalpy
-        hc_o_guess, _, _, _, _, _, _, _ = mixture(tc_o, p_dummy, 0)
+    # calculate needed oil mass flow
+    # assume oil reaches 90% of delta T
+    th_o = th_i - (th_i - tc_i) * 0.9
 
-        return hc_o_guess - hc_o
+    # from engineering toolbox "engine oil"
+    cp_oil = 2000  # J / kg * K
 
-    tc_o = brentq(find_tc_o, 200, 6000)
+    # oil mass flow
+    m_oil = heating_power / ((th_i - th_o) * cp_oil)
 
-    # returning total heat rejected and outlet oil temp
-    return pc_o, tc_o
+    # return air outlet pressure and temperature and massflow
+    return pc_o, tc_o, m_c, m_oil

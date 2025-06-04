@@ -19,28 +19,27 @@ cylinders = 1  # for sampling data use 1
 
 # piston
 d = 0.09  # diameter / bore
-s = 0.082  # stroke
-v_mean = (2000 / 60) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
+s = 74.67 * 1e-3  # stroke (not wat says in the paper but it is what you get from the displacement)
+v_mean = (3000 / 60) * 2 * s  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
 l_con = 0.1395  # rod length
 bsr = d / s  # bore stroke ratio
 rod_stroke_ratio = l_con / s
 lms = 1 / (2 * rod_stroke_ratio)  # connecting rod ratio
 
 # inlet and outlet conditions
-p_in = 1.07e5  # inlet pressure
-p_in = 1.15e5
-T_in = 273.15 + 28  # inlet temperature
-# T_in = 1000
-p_ratio = 1.05/1.07  # pressure ratio after and before engine
+p_in = 1.85e5  # inlet pressure
+T_in = 273.15 + 32  # inlet temperature 32 celsius
+
+p_ratio = 1.86 / 1.85  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 450  # Wall temperature
-Tpiston = 450
-Thead = 450
+Twall = 400  # Wall temperature
+Tpiston = 400
+Thead = 400
 Twalls = [Twall, Tpiston, Thead]
 
 
-ch = 1.8  # multiplier to decrease/increase heat transfer (THIS WAS 1.8 before)
+ch = 1.4  # multiplier to decrease/increase heat transfer
 
 # Inlet valve
 phi_open_in = (716 / 180) * np.pi  #
@@ -56,13 +55,16 @@ valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
 n_valve = 2
 valve_type = "valve"
 
-lv_max = 0.1 * d
-cd = 0.8
+#valve lift
+lv_max = 0.009
+cd = 0.6
 
 eta_c = 0.999
 
+from thermo import fuel_props
+far_s, _ = fuel_props(fuel)
 # given for the standard cases
-far_goal = 0.029175559382366996 / 1.5
+far_goal = far_s / 1.8
 
 
 wiebe_type = "Single"
@@ -73,10 +75,10 @@ wm = 0.6
 
 
 # this is for single wiebe function
-m_wiebe = 3.5
+m_wiebe = 2.3
 
-phi_sc = (356 / 180) * np.pi
-phi_cd = (20 / 180) * np.pi
+phi_sc = (349 / 180) * np.pi
+phi_cd = (40 / 180) * np.pi
 
 T_fuel = 300
 p_fuel = 50e5

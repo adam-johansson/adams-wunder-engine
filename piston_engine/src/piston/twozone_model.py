@@ -1,233 +1,253 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 from scipy import integrate
 from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cantera
+
+# Constants
+DEFAULT_LAMBDA_0_DIESEL = 1.00
+DEFAULT_LAMBDA_0_H2 = 1.01
+DEFAULT_C_FACTOR = 0.15  # for 4 valves and central injection
+DEFAULT_POLYTROPE_AVERAGING_DEGREES = 10
 
 
 def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, premixed):
     """
-    Divides the cylinder volume into two zones, for more accurate NOx calculations.
+    Divides the cylinder volume into two zones for more accurate NOx calculations.
 
-    Zone 1: reaction zone, burned zone (this is after the flame front)
-    Zone 2: unburned zone, outside the flame front.
+    Zone 1: Reaction zone, burned zone (after the flame front)
+    Zone 2: Unburned zone, outside the flame front
 
-    :param phi:
-    :param P:
-    :param T:
-    :param V:
-    :param m:
-    :param qf:
-    :param evo:
-    :param sc:
-    :param lhv:
-    :param far_s:
-    :param equ:
-    :param fuel_type:
-    :return:
+    Parameters
+    ----------
+    phi : array_like
+        Crank angle [rad]
+    P : array_like
+        Cylinder pressure [Pa]
+    T : array_like
+        Cylinder temperature [K]
+    V : array_like
+        Cylinder volume [m³]
+    m : array_like
+        Total cylinder mass [kg]
+    mf : array_like
+        Fuel injection rate [kg/s or kg/rad]
+    evo : float
+        Exhaust valve opening angle [rad]
+    sc : float
+        Start of combustion angle [rad]
+    lhv : float
+        Lower heating value of fuel [J/kg]
+    far_s : float
+        Stoichiometric fuel-air ratio [-]
+    equ : array_like
+        Equivalence ratio [-]
+    fuel_type : str
+        Fuel type ("jetA" or "H2")
+    factor : float
+        Temperature adjustment factor [-]
+    premixed : bool
+        Whether the combustion is premixed
+
+    Returns
+    -------
+    tuple
+        (T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc)
+
+    Notes
+    -----
+    Model assumes both zones have the same pressure: p1 = p2 = p
     """
 
-    # model assumes both zones have same pressure
-    # p1 = p2 = p
+    # Validate inputs
+    if len(phi) != len(P) or len(phi) != len(T) or len(phi) != len(V):
+        raise ValueError("Input arrays must have the same length")
 
-    # high pressure crank angles
-    phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+    if sc >= evo:
+        raise ValueError("Start of combustion must be before exhaust valve opening")
 
-    # high pressure pressure curve
-    P_hp = np.array(P[np.argwhere((phi > sc) & (phi < evo))])
+    # Extract high pressure region (between start of combustion and exhaust valve opening)
+    hp_mask = (phi > sc) & (phi < evo)
 
-    # high pressure temperature (only between start of combustion and exhaust valve opening)
-    T_hp = np.array(T[np.argwhere((phi > sc) & (phi < evo))])
+    if not np.any(hp_mask):
+        raise ValueError("No data points found between start of combustion and exhaust valve opening")
 
-    # high pressure volume(only between start of combustion and exhaust valve opening)
-    V_hp = np.array(V[np.argwhere((phi > sc) & (phi < evo))])
+    phi_hp = phi[hp_mask]
+    P_hp = P[hp_mask]
+    T_hp = T[hp_mask]
+    V_hp = V[hp_mask]
+    mf_hp = mf[hp_mask]
+    m_hp = m[hp_mask]
+    equ_hp = equ[hp_mask]
 
-    # high pressure fuel injection (only between start of combustion and exhaust valve opening)
-    mf_hp = np.array(mf[np.argwhere((phi > sc) & (phi < evo))])
+    # Calculate derived quantities
+    qf_hp = mf_hp * lhv  # Heat addition rate
 
-    # high pressure heat addition (only between start of combustion and exhaust valve opening)
-    qf_hp = mf_hp * lhv
+    # Calculate cumulative fuel mass using Simpson's rule
+    m_fuel = integrate.cumulative_simpson(mf_hp, x=phi_hp, axis=0, initial=0.0)
 
-    # high pressure cylinder mass (only between start of combustion and exhaust valve opening)
-    m_hp = np.array(m[np.argwhere((phi > sc) & (phi < evo))])
+    # Global air-fuel equivalence ratio (when all fuel is injected)
+    lambda_gl = 1.0 / equ_hp[-1]  # This is now a scalar
 
-    # high pressure equivalence ratio (only between start of combustion and exhaust valve opening)
-    equ_hp = np.array(equ[np.argwhere((phi > sc) & (phi < evo))])
+    # Determine lambda_0 (air-fuel ratio in reaction zone)
+    lambda_0 = _determine_lambda_0(premixed, fuel_type, lambda_gl)
 
-    # calculate fuel mass
-    m_fuel = integrate.cumulative_simpson(
-        mf_hp, x=phi_hp, axis=0, initial=0.0
-    )  # + fuel_burned from last cycle
-
-    # lambda_0 is the air-fuel-ratio in the reaction zone, assumed to be constant.
-    # for small to medium sized diesel engines with intake swirl lambda_0 = 1.0
-
-    # global air-fuel equivalence ratio (when all fuel is injected)
-    lambda_gl = 1 / equ_hp[-1]
-
-    # NOTE THAT FOR spark ignition (premixed) then we use lambda_0 = lambda_global
-
-    # if fuel_type == "H2":
-    #    premixed = True
-
-    if premixed:
-        # maybe add factor here
-        lambda_0 = lambda_gl[0]
-    else:
-        lambda_0 = 1.00
-
-    # Kaiser used a factor here. Could be used to fit model to experimental data
-    # he used 0.9 when validating. look at his thesis
-    # 0.735 for Rakolpoulous, design point. 0.75 works best for all three points
-    # 0.875 for Heider
-    # 0.84 more nox than 0.85???
-    # factor = 0.81
-
-    # L_min is minmal air requirement (kg of air per kg of fuel)
-    # this is the stochiometric air requirements + taken the residual exhaust gases into account
-
-    # far_sc is the fuel air ratio (of burned gases) in the cylinder before fuel injection
-    equ_sc = equ[np.argwhere(phi < sc)][-1][0]
+    # Calculate minimum air requirement
+    equ_sc = _get_equivalence_ratio_at_start_of_combustion(phi, equ, sc)
     far_sc = equ_sc * far_s
 
-    # air amount (not pure air)
-    # this means that if the fuel air ratio is not 0 at start of combustion, we get a higher stoichiometric air
-    # ratio (more air is needed to completely combust the fuel)
-    L_min = 1 / (far_s - far_sc)
+    # Validate to prevent division by zero
+    if abs(far_s - far_sc) < 1e-12:
+        raise ValueError("Stoichiometric and initial fuel-air ratios are too close")
 
-    # mass in zone 1 (reaction zone, burned zone, kärt barn har många namn)
-    # the mass is the fuel mass + air needed for combusting the fuel with air/fuel ratio lambda_0
-    m1 = (lambda_0 * L_min + 1) * m_fuel
+    L_min = 1.0 / (far_s - far_sc)
 
-    # mass in zone 2 (unburned gas)
-    m2 = m_hp - m1
+    # Calculate zone masses
+    m1 = (lambda_0 * L_min + 1) * m_fuel  # Mass in reaction zone
+    m2 = m_hp - m1  # Mass in unburned zone
 
-    # gas constants in burned zone 1 and unburned zone 2
-    # pressure and temperature doesnt effect R
-    t_dummy = 1000
-    p_dummy = 1e5
-    _, _, _, _, R1, _, _, _ = mixture(
-        t_dummy, p_dummy, equ=1 / lambda_0, fuel_type=fuel_type
-    )
+    # Calculate gas constants for both zones
+    R1, R2 = _calculate_gas_constants(lambda_0, equ_sc, fuel_type, premixed)
 
-    if premixed:
-        # air fuel mixture
-        _, _, _, _, R2, _, _, _ = mixture(
-            t_dummy,
-            p_dummy,
-            equ=equ_sc,
-            fuel_type=fuel_type,
-            pure_fuel=premixed,
-            fuel_equ_ratio=1 / lambda_0,
-        )
-    else:
-        # pure air gas
-        _, _, _, _, R2, _, _, _ = mixture(
-            t_dummy, p_dummy, equ=equ_sc, fuel_type=fuel_type
-        )
-
-    # motoring pressure (polytropic compression from start of combustion)
-    # polytropic exponent (how to calculate this??? based on last 10 degrees crank angle before combustion)
-
-    # Pressure at start of combustion
-    Psc = P[np.argwhere(phi > sc)[0]][0]
-    # Volume at start of combustion
-    Vsc = V[np.argwhere(phi > sc)[0]][0]
-
-    # determine the polytrope exponent for the last 10 or so CA before start of combustion
-    # number of degrees to avg
-    ca_avg = 10
-
-    # get pressure and volume for those angles
-    P_poly = np.array(P[np.argwhere((phi > sc - ca_avg * np.pi / 180) & (phi < sc))])
-    V_poly = np.array(V[np.argwhere((phi > sc - ca_avg * np.pi / 180) & (phi < sc))])
-
-    # polytrope exponent
-    # take first and last values to calculate the exponent
-    # n = (np.log(P_poly[-1]) - np.log(P_poly[0]) ) / (np.log(V_poly[0]) - np.log(V_poly[-1]))
-
-    # calculate exponent between each steps and take average
-    n_poly = np.mean(
-        (np.log(P_poly[1:-1]) - np.log(P_poly[0:-2]))
-        / (np.log(V_poly[0:-2]) - np.log(V_poly[1:-1]))
-    )
-
-    # Pmotor is the theoretical motoring pressure if the engine were to run without fuel. between start of combution
-    # to exhaust valve opening
+    # Calculate motoring pressure and related quantities
+    Psc, Vsc = _get_start_of_combustion_conditions(phi, P, V, sc)
+    n_poly = _calculate_polytrope_exponent(phi, P, V, sc, DEFAULT_POLYTROPE_AVERAGING_DEGREES)
     Pmotor = Psc * (Vsc / V_hp) ** n_poly
-
-    # difference cylinder pressure and motoring pressure
     Pdiff = P_hp - Pmotor
 
-    # the integrand from the Heider 1996 paper
+    # Calculate B function using pressure difference
     integrand = Pdiff * m1
-
-    # denominator is constant
     denominator = integrate.simpson(integrand, x=phi_hp, axis=0)
 
-    # nominator is function of angle
-    nominator = integrate.cumulative_simpson(integrand, x=phi_hp, axis=0, initial=0.0)
+    if abs(denominator) < 1e-12:
+        raise ValueError("Denominator in B function calculation is too small")
 
-    # B funktion
+    nominator = integrate.cumulative_simpson(integrand, x=phi_hp, axis=0, initial=0.0)
     B = 1 - nominator / denominator
 
-    # A function
-    # temperature at start of combustion
-    t_soc = T[np.argwhere(phi > sc)[0]][0]
+    # Calculate A and Astar functions
+    t_soc = T[phi > sc][0]  # Temperature at start of combustion
+    p_soc = P[phi > sc][0]  # Pressure at start of combustion
 
-    # pressure at start of combustion
-    p_soc = P[np.argwhere(phi > sc)[0]][0]
+    # Calculate adiabatic flame temperature
+    t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, 1.0 / lambda_0, premixed=premixed)
 
-    # adiabatic flame temperature
-
-    # use my own flame temp function (switch to cantera later when I implement it for NOx maybe) (gave 3000K flame temp)
-    # t_flame = flame_temp_inhouse(t_soc, equ_sc, 1/lambda_0, fuel_type)
-    # t_flame = flame_temp_cantera(t_soc, p_soc, equ_sc, equ_combustion=1/lambda_0, fuel_type=fuel_type)
-
-    # this is the cea program
-    t_flame = flame_temp_cea(
-        t_soc, equ_sc, fuel_type, Psc, 1 / lambda_0, premixed=premixed
-    )
-    # print(t_flame)
-
-    # for validation we want A = 1595 K
     A = (t_flame - t_soc) * factor
+    Astar = _calculate_astar(A, lambda_gl, lambda_0, premixed, DEFAULT_C_FACTOR)
 
-    # adjust according to Heider
-    # C = 0.15 for 4 valves and central injection
-    C = 0.15
+    # Solve for zone temperatures and volumes
+    T1, T2, V1, V2 = _calculate_zone_properties(P_hp, V_hp, m1, m2, R1, R2, Astar, B)
 
-    if premixed:
-        # constant Astar for premixed
-        Astar = A
-    else:
-        # test with and without this when we get some numbers for nox
-        if lambda_gl[0] > 1.2:
-            Astar = A * (1.2 + (lambda_gl[0] - 1.2) ** C) / (2.2 * lambda_0)
-        else:
-            Astar = A * 1.2 / (2.2 * lambda_0)
+    # Validate volume conservation
+    volume_error = np.abs(V_hp - (V1 + V2))
+    max_relative_error = np.max(volume_error / V_hp)
 
-    # Astar = A
-    # print(f"Twozone factor Astar: {Astar}")
-    # print(f"Twozone factor A: {A}")
-
-    # solve for temperature in zone 1, T1
-    T1 = (P_hp * V_hp + m2 * R2 * Astar * B) / (m1 * R1 + m2 * R2)
-
-    # zone 2 temperature
-    T2 = T1 - Astar * B
-
-    # zone 1 volume
-    V1 = m1 * R1 * T1 / P_hp
-
-    # zone 2 volume
-    V2 = m2 * R2 * T2 / P_hp
-
-    # check that the two zones' volumes add upp to total volume
-    diff = V_hp - (V1 + V2)
-
-    # print(lambda_gl, Astar, A, lambda_0)
-    # print(f"Air-fuel trapped: {lambda_gl[0]}")
-    # print(f"A: {Astar}")
+    if max_relative_error > 0.01:  # 1% tolerance
+        print(f"Warning: Volume conservation error exceeds 1%. Max relative error: {max_relative_error:.3f}")
 
     return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
+
+
+def _determine_lambda_0(premixed, fuel_type, lambda_gl):
+    """Determine the air-fuel ratio in the reaction zone."""
+    if premixed:
+        return lambda_gl
+    elif fuel_type == "H2":
+        return DEFAULT_LAMBDA_0_H2
+    else:
+        return DEFAULT_LAMBDA_0_DIESEL
+
+
+def _get_equivalence_ratio_at_start_of_combustion(phi, equ, sc):
+    """Get equivalence ratio at start of combustion."""
+    pre_combustion_mask = phi < sc
+    if not np.any(pre_combustion_mask):
+        raise ValueError("No data points found before start of combustion")
+    return equ[pre_combustion_mask][-1]
+
+
+def _calculate_gas_constants(lambda_0, equ_sc, fuel_type, premixed):
+    """Calculate gas constants for both zones."""
+    # Dummy conditions for gas constant calculation (R doesn't depend on T, P)
+    t_dummy, p_dummy = 1000.0, 1e5
+
+    # Zone 1: Burned gas at stoichiometric conditions
+    _, _, _, _, R1, _, _, _ = mixture(
+        t_dummy, p_dummy, equivalence_ratio=1.0 / lambda_0, fuel_type=fuel_type
+    )
+
+    # Zone 2: Unburned gas
+    if premixed:
+        _, _, _, _, R2, _, _, _ = mixture(
+            t_dummy, p_dummy,
+            equivalence_ratio=equ_sc,
+            fuel_type=fuel_type,
+            include_fuel_in_reactants=True,
+            fuel_air_equ_ratio=1.0 / lambda_0
+        )
+    else:
+        _, _, _, _, R2, _, _, _ = mixture(
+            t_dummy, p_dummy, equivalence_ratio=equ_sc, fuel_type=fuel_type
+        )
+
+    return R1, R2
+
+
+def _get_start_of_combustion_conditions(phi, P, V, sc):
+    """Get pressure and volume at start of combustion."""
+    soc_mask = phi > sc
+    if not np.any(soc_mask):
+        raise ValueError("No data points found after start of combustion")
+
+    Psc = P[soc_mask][0]
+    Vsc = V[soc_mask][0]
+    return Psc, Vsc
+
+
+def _calculate_polytrope_exponent(phi, P, V, sc, ca_avg_degrees):
+    """Calculate polytrope exponent from data before start of combustion."""
+    ca_avg_rad = ca_avg_degrees * np.pi / 180
+    poly_mask = (phi > sc - ca_avg_rad) & (phi < sc)
+
+    if np.sum(poly_mask) < 2:
+        raise ValueError("Insufficient data points for polytrope exponent calculation")
+
+    P_poly = P[poly_mask]
+    V_poly = V[poly_mask]
+
+    # Calculate exponent between consecutive points and take average
+    log_P_ratios = np.log(P_poly[1:]) - np.log(P_poly[:-1])
+    log_V_ratios = np.log(V_poly[:-1]) - np.log(V_poly[1:])
+
+    # Avoid division by very small numbers
+    valid_ratios = np.abs(log_V_ratios) > 1e-12
+    if not np.any(valid_ratios):
+        raise ValueError("Volume ratios too small for polytrope calculation")
+
+    n_values = log_P_ratios[valid_ratios] / log_V_ratios[valid_ratios]
+    return np.mean(n_values)
+
+
+def _calculate_astar(A, lambda_gl, lambda_0, premixed, C):
+    """Calculate the Astar parameter according to Heider's model."""
+    if premixed:
+        return A
+    else:
+        if lambda_gl > 1.2:
+            return A * (1.2 + (lambda_gl - 1.2) ** C) / (2.2 * lambda_0)
+        else:
+            return A * 1.2 / (2.2 * lambda_0)
+
+
+def _calculate_zone_properties(P_hp, V_hp, m1, m2, R1, R2, Astar, B):
+    """Calculate temperatures and volumes for both zones."""
+    # Zone 1 temperature
+    T1 = (P_hp * V_hp + m2 * R2 * Astar * B) / (m1 * R1 + m2 * R2)
+
+    # Zone 2 temperature
+    T2 = T1 - Astar * B
+
+    # Zone volumes
+    V1 = m1 * R1 * T1 / P_hp
+    V2 = m2 * R2 * T2 / P_hp
+
+    return T1, T2, V1, V2

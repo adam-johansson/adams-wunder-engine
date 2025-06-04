@@ -104,11 +104,11 @@ def nsga_optimisation(data, data_piston, flags, meta_model):
 
     problem = MyEngineProblem()
 
-    algorithm = NSGA2(pop_size=100)
+    algorithm = NSGA2(pop_size=300)
 
     res = minimize(problem,
                    algorithm,
-                   ('n_gen', 20),
+                   ('n_gen', 300),
                    seed=1,
                    verbose=True)
 
@@ -167,7 +167,7 @@ def nsga_optimisation(data, data_piston, flags, meta_model):
     plt.figure(figsize=(8, 6))
     sc = plt.scatter(F[:, 0], F[:, 1], c=color_by, cmap='viridis', edgecolors='k')
     plt.colorbar(sc, label='Compression split (-)')
-    plt.xlabel("SFC [kg/Nh]")
+    plt.xlabel("SFC [mg/Ns]")
     plt.ylabel("EI_NOx [g/kg_fuel]")
     plt.title("Pareto Front Colored by Compression Split (-)")
     plt.grid(True)

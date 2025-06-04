@@ -2,8 +2,222 @@ import numpy as np
 from numba import njit
 
 
+
 @njit()
-def dqdphi(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2):
+def dqdphi_woschni(
+    T: float,
+    p: float,
+    V: float,
+    gamma: float,
+    Twalls: list,
+    Awalls: list,
+    v_mean: float,
+    d: float,
+    V_d: float,
+    ref: list,
+    dtdphi: float,
+    hp_phase: bool,
+    firing: bool,
+) -> tuple:
+    """
+    Computes heat loss dQ/dphi using the Woschni model adapted for hydrogen combustion.
+
+    Parameters:
+        T        : in-cylinder gas temperature [K]
+        p        : in-cylinder pressure [Pa]
+        V        : instantaneous volume [m^3]
+        gamma    : specific heat ratio
+        Twalls   : list of wall temperatures [K]
+        Awalls   : list of corresponding wall surface areas [m^2]
+        v_mean   : mean piston speed [m/s]
+        d        : cylinder bore [m]
+        V_d      : displaced volume [m^3]
+        ref      : reference values [Pref, Tref, Vref, Psc, Vsc]
+        dtdphi   : derivative dt/dphi [s/rad]
+        type1    : process type, "HP-process" or "Charge changing"
+        type2    : combustion phase indicator (True if burning)
+
+    Returns:
+        dqdphi : total heat loss rate [W/rad]
+        alpha  : representative heat transfer coefficient [W/m²·K]
+    """
+    # Woschni heat transfer model (for H2 just dont forget 1.4 ch factor)
+    Pref = ref[0]
+    Tref = ref[1]
+    Vref = ref[2]
+    Psc = ref[3]
+    Vsc = ref[4]
+
+    p_bar = p * 1e-5
+
+    # intake swirl (range 0 to 3 according to textbook. I use middle value)
+    swirl = 1.5
+
+    # during high pressure phase (valves closed)
+    if hp_phase:
+        c1 = 2.28 + 0.308 * swirl
+
+        if firing:
+            # combustion. that is not during compression
+            c2 = 3.24*1e-3
+            Pmotor = Psc * (Vsc / V) ** gamma
+
+        else:
+            # compression phase
+            c2 = 0
+            Pmotor = p
+
+    # charge changing phase (valves open)
+    else:
+        c1 = 6.18 + 0.417 * swirl
+        c2 = 0
+        Pmotor = p
+
+    dqdphi = 0
+
+    # estimation of gas velocity
+    w_gas = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (p - Pmotor)
+
+    # heat transfer coefficient
+    alpha = 127.93 * d ** (-0.2) * p_bar ** 0.8 * w_gas ** 0.8 * T ** (-0.53)
+
+    for i, j in zip(Twalls, Awalls):
+        dqdphi += alpha * j * (T - i) * dtdphi
+    return dqdphi, alpha
+
+@njit()
+def dqdphi_woschni_h2(
+    T: float,
+    p: float,
+    V: float,
+    gamma: float,
+    Twalls: list,
+    Awalls: list,
+    v_mean: float,
+    d: float,
+    V_d: float,
+    ref: list,
+    dtdphi: float,
+    hp_phase: bool,
+    firing: bool,
+) -> tuple:
+    """
+    Computes heat loss dQ/dphi using the Woschni model adapted for hydrogen combustion.
+
+    Parameters:
+        T        : in-cylinder gas temperature [K]
+        p        : in-cylinder pressure [Pa]
+        V        : instantaneous volume [m^3]
+        gamma    : specific heat ratio
+        Twalls   : list of wall temperatures [K]
+        Awalls   : list of corresponding wall surface areas [m^2]
+        v_mean   : mean piston speed [m/s]
+        d        : cylinder bore [m]
+        V_d      : displaced volume [m^3]
+        ref      : reference values [Pref, Tref, Vref, Psc, Vsc]
+        dtdphi   : derivative dt/dphi [s/rad]
+        type1    : process type, "HP-process" or "Charge changing"
+        type2    : combustion phase indicator (True if burning)
+
+    Returns:
+        dqdphi : total heat loss rate [W/rad]
+        alpha  : representative heat transfer coefficient [W/m²·K]
+    """
+    # Woschni heat transfer model (for H2 just dont forget 1.4 ch factor)
+    Pref = ref[0]
+    Tref = ref[1]
+    Vref = ref[2]
+    Psc = ref[3]
+    Vsc = ref[4]
+
+    p_bar = p * 1e-5
+
+    # intake swirl (range 0 to 3 according to textbook. I use middle value)
+    swirl = 1.5
+
+    # during high pressure phase (valves closed)
+    if hp_phase:
+        c1 = 2.28 + 0.308 * swirl
+
+        if firing:
+            # combustion. that is not during compression
+            c2 = 3.24*1e-3
+            Pmotor = Psc * (Vsc / V) ** gamma
+
+        else:
+            # compression phase
+            c2 = 0
+            Pmotor = p
+
+    # charge changing phase (valves open)
+    else:
+        c1 = 6.18 + 0.417 * swirl
+        c2 = 0
+        Pmotor = p
+
+    dqdphi = 0
+
+    # estimation of gas velocity
+    w_gas = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (p - Pmotor)
+
+    # double gas velocity because hydrogen is more turbulent
+    w_gas = w_gas * 1
+
+    # heat transfer coefficient
+    alpha = 127.93 * d ** (-0.2) * p_bar ** 0.8 * w_gas ** 0.8 * T ** (-0.53)
+
+    for i, j in zip(Twalls, Awalls):
+        dqdphi += alpha * j * (T - i) * dtdphi
+    return dqdphi, alpha
+
+
+@njit()
+def dqdphi_hohenberg(T, P, V, Twalls, Awalls, v_mean, dtdphi):
+
+    # Hohenberg heat loss model (this is the orignal fomrulation from his paper OG paper)
+    Pbar = P * 1e-5
+    alpha = 130.0 * V ** (-0.06) * Pbar ** (0.8) * T ** (-0.4) * (v_mean + 1.4) ** 0.8
+    dqdphi = 0
+    for i, j in zip(Twalls, Awalls):
+        dqdphi += alpha * j * (T - i) * dtdphi
+    return dqdphi
+
+@njit()
+def dqdphi_michl(D, T, p, R_spec, V, Twalls, Awalls, dtdphi):
+
+    # Michl heat loss model from the paper "Derivation and validation of a heat transfer model in a hydrogen combustion engine"
+    # THIS IS FOR HYDROGEN
+
+    # Characteristic length
+    # D is bore
+    L_c = D ** -0.23
+
+    # density
+    rho = p / (T * R_spec)
+
+    # thermal conductivity
+    kappa_air = 2.86 * 1e-4 * T**0.785
+    kappa_h2 = 2.32 * 1e-3 * T**0.760
+    kappa_burned = 7.36 * 1e-5 ** T**1.031
+
+    # dynamic viscosity
+    eta_air = 4.39 * 1e-7 * T**0.662
+    eta_h2 = 2.27 * 1e-7 * T**0.646
+    eta_burned = 1.80 * 1e-7 * T**0.779
+
+    # Fluid property term
+    Omega = kappa * (rho / eta)**0.77
+
+    dqdphi = 0
+    for i, j in zip(Twalls, Awalls):
+        alpha = C * L_c * Omega * v_c * Xi
+        dqdphi += alpha * j * (T - i) * dtdphi
+    return dqdphi
+
+
+
+@njit()
+def dqdphi_moreadvanced(T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2):
 
     # Woschni heat transfer model
     Pref = ref[0]
@@ -73,42 +287,6 @@ def dqdphi_NASA(T, Twalls, Awalls, type2, dtdphi, D, mu, rho, V):
     return dqdphi * dtdphi
 
 
-### @njit()
-def dqdphi_hohenberg(T, P, V, Twalls, Awalls, v_mean, dtdphi):
-    # Hohenberg heat loss model
-    Pbar = P * 1e-5
-    alpha = 130.0 * V ** (-0.06) * Pbar ** (0.8) * T ** (-0.4) * (v_mean + 1.4) ** 0.8
-    dqdphi = 0
-    for i, j in zip(Twalls, Awalls):
-        dqdphi += alpha * j * (T - i) * dtdphi
-    return dqdphi
-
-
-def dqdphi_h2(t, p, twalls, awalls, bore, v_mean, ref, dqfdphi, dtdphi):
-    # not good model. not right
-    Pref = ref[0]  # pressure at inlet closing
-    Tref = ref[1]  # temperature at inlet closing
-    Vref = ref[2]  # volume at inlet closing
-
-    pbar = p * 1e-5  # convert to bar
-
-    c1 = 0.08
-    c2 = 1.6e-6
-
-    dqfdt = dqfdphi / dtdphi
-    alpha = (
-        c1
-        * bore ** (-0.2)
-        * t ** (-0.53)
-        * p**0.8
-        * (v_mean + c2 * (Tref / (Pref * Vref)) * dqfdt) ** 0.8
-    )
-
-    dqdphi = 0
-    for i, j in zip(twalls, awalls):
-        dqdphi += alpha * j * (t - i) * dtdphi
-    return dqdphi
-
 
 def dqdphi_h2_shudo(
     t, p, V, twalls, awalls, bore, v_mean, ref, dpdphi, dVdphi, gamma, dtdphi
@@ -142,55 +320,3 @@ def dqdphi_h2_shudo(
     for i, j in zip(twalls, awalls):
         dqdphi += alpha * j * (t - i) * dtdphi
     return dqdphi
-
-
-@njit()
-def dqdphi_woschni_h2(
-    T, P, V, gamma, Twalls, Awalls, v_mean, d, V_d, ref, dtdphi, type1, type2
-):
-    # Woschni heat transfer model for H2 (the normal one. just dont forget 1.4 ch factor)
-    Pref = ref[0]
-    Tref = ref[1]
-    Vref = ref[2]
-    Psc = ref[3]
-    Vsc = ref[4]
-
-    Pbar = P * 1e-5
-
-    if type1 == "HP-process":
-        # 2.28 original formulation
-        c1 = 2.28
-
-        if type2:
-            # combustion. that is not during compression
-            # 3.24 * 1e-3 original formulation
-            # 1.7 * 1e-2 from paper
-            # c1 = 10, c2 = 1.7 e-2, for ch = 1 to fit curve. gives 40% heat loss
-            c2 = 3.24 * 1e-3
-            Pmotor = Psc * (Vsc / V) ** gamma
-            Pmotor_bar = Pmotor * 1e-5
-
-        else:
-            # compression phase
-            c2 = 0
-            Pmotor_bar = P
-            Pmotor = P
-
-    elif type1 == "Charge changing":
-        # 6.18 original formulation
-        c1 = 6.18
-        c2 = 0
-        Pmotor_bar = P
-        Pmotor = P
-    else:
-        print("Unknown type, error in dqdphi")
-        return 0.0, 0.0
-
-    dqdphi = 0
-    # alpha = 0
-    for i, j in zip(Twalls, Awalls):
-
-        C = c1 * v_mean + c2 * V_d * (Tref / (Pref * Vref)) * (P - Pmotor)
-        alpha = 0.012991 * d ** (-0.2) * P**0.8 * C**0.8 * T ** (-0.53)
-        dqdphi += alpha * j * (T - i) * dtdphi
-    return dqdphi, alpha

@@ -7,19 +7,19 @@ from piston_engine.engine import run_piston_engine
 
 def sweep_no_diesel_greek_validation(d, flags):
 
-    num = 5
+    num = 3
     # validate against the Rakolpoulos paper
     # the three different load cases (-20 degrees injection timing)
 
     # design point far 0.0425
-    far_dp = 0.0432
-    fuel_air_ratios = np.linspace(0.029, far_dp, num)
+    far_dp = 0.03975
+    fuel_air_ratios = np.linspace(0.0267, far_dp, num)
     # cds = np.linspace(35, 41.72, num) * np.pi / 180
     # m_wiebes = np.linspace(2.20,2.21,num)
 
     phi_sc = (352.0 / 180) * np.pi  # angle at combustion start
     phi_cd = (40.0 / 180) * np.pi
-    m_wiebe = 1.0
+    m_wiebe = 1.1
 
     nitrogen_oxides_early = []
     EI_early = []
@@ -69,9 +69,10 @@ def sweep_no_diesel_greek_validation(d, flags):
             d.c1,
             d.c4,
             d.c5,
+            d.premixed,
         ]
 
-        if far_goal > 0.04:
+        if far_goal > 0.039:
             flags.append("validate_nox_diesel_early")
 
         (
@@ -92,6 +93,8 @@ def sweep_no_diesel_greek_validation(d, flags):
             no,
             imep,
             EI_nox,
+            volume_eff,
+            nox_spec,
         ) = run_piston_engine(data, flags)
 
         # print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
@@ -109,14 +112,14 @@ def sweep_no_diesel_greek_validation(d, flags):
     EI_late = []
 
     # the three different load cases (-15 degrees injection timing)
-    far_dp = 0.043
-    fuel_air_ratios = np.linspace(0.029, far_dp, num)
+    far_dp = 0.0401
+    fuel_air_ratios = np.linspace(0.0267, far_dp, num)
     # matches Woschni
     # fuel_air_ratios = np.array([0.031, 0.038, 0.0465])
 
-    phi_sc = (357.0 / 180) * np.pi  # angle at combustion start
+    phi_sc = (355.0 / 180) * np.pi  # angle at combustion start
     phi_cd = (40.0 / 180) * np.pi
-    m_wiebe = 1.0
+    m_wiebe = 1.5
 
     # m_wiebes = np.linspace(2.28, 2.28, num)
     # cds = np.linspace(35,39.96, num) * np.pi/180
@@ -163,6 +166,7 @@ def sweep_no_diesel_greek_validation(d, flags):
             d.c1,
             d.c4,
             d.c5,
+            d.premixed,
         ]
 
         if far_goal > 0.04:
@@ -186,6 +190,8 @@ def sweep_no_diesel_greek_validation(d, flags):
             no,
             imep,
             EI_nox,
+            volume_eff,
+            nox_spec,
         ) = run_piston_engine(data, flags)
 
         # print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
@@ -236,6 +242,7 @@ def sweep_no_diesel_greek_validation(d, flags):
     ax5.set_xlabel(r"Indicated mean effective pressure (IMEP) [$bar$]", fontsize=fs)
     ax5.set_ylabel(r"NO concentration (ppm)", fontsize=fs)
     ax5.legend(loc="best", fontsize="small", frameon=False)
+    ax5.grid()
 
     fig, ax6 = plt.subplots()
     ax6.plot(IMEPs_early, peak_pressures_early, marker="o", label="Simulation")

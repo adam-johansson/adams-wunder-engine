@@ -351,9 +351,25 @@ def run_cce(indata, data_piston, flags, meta_model):
 
     # Bypass stream
     # Split stream into cooling air and not cooling air
-    bypass_cooling = 0.9
+    # total amount of heat produced by piston engine
+    cooling_req = (
+        heat_loss_tot + friction_loss_tot
+    )
 
-    m14 = bypass_cooling * m13  # mass flow not going through heat exchanger
+    # total amount of heat needed to be rejected (some heat used to heat fuel)
+    heating_bypass = (
+        cooling_req - heating_fuel
+    )
+
+
+    # Oil to air heat exchanger in the bypass
+    p15, T15, m15, m_oil = components.hx_NASA(
+        p13, T13, heating_bypass, oil_temp_1
+    )
+
+    print(f"Mass flow of engine oil: {m_oil} kg/s")
+
+    m14 = m13 - m15  # mass flow not going through heat exchanger
     p14 = (1 - dp_bypass) * p13
     T14 = T13  # adiabatic bypass
 
@@ -368,27 +384,6 @@ def run_cce(indata, data_piston, flags, meta_model):
         listofzeros[-1] = error
         listofzeros[0] = cost
         return listofzeros
-
-    # Cooling bypass flow
-    m15 = (1 - bypass_cooling) * m13
-    # mass flow through heat exchanger
-
-    cooling_req = (
-        heat_loss_tot + friction_loss_tot
-    )
-
-    # total amount of heat produced by piston engine
-    heating_bypass = (
-        cooling_req - heating_fuel
-    )
-    # amount of heat needed to be cooled to the bypass
-
-    # dp_hx = 5.7 / 100  # pressure loss over hx
-
-    p15, T15 = components.hx_NASA(
-        p13, T13, heating_bypass, m15, oil_temp_1
-    )  # going through air-oil hx
-
 
     # Cooling flow nozzle
     F17, v17_id, v17, error = components.nozzle(

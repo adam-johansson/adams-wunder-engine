@@ -7,14 +7,14 @@ from scipy.optimize import minimize, differential_evolution, basinhopping
 
 # ----------------------------------Fluid inputs----------------------------------
 
-t1_oil = 475  # oil temperature after oil-h2 hex
+t1_oil = 400  # oil temperature after oil-h2 hex
 p1_oil = 10e5  # almost no pressure loss in oil-h2 hex
-m_oil = 6.6
+m_oil = 10  # for 5 MW of engine power assuming we need 2 g/s of oil per kW of piston power (from Saschas thesis)
 h1_oil = PropsSI("Hmass", "T", t1_oil, "P", p1_oil, "INCOMP::PNF2")
 
-t1_air = 265
-p1_air = 47e3  # 0.47 bar
-m_air = 20  # this is the flow from the bypass air that goes through the hx
+t1_air = 285
+p1_air = 50e3  # 0.5 bar
+m_air = 80  # this is the flow from the bypass air that goes through the hx
 h1_air = PropsSI("Hmass", "T", t1_air, "P", p1_air, "Air")
 
 
@@ -43,8 +43,8 @@ def find_optimum(x):
     HEX1.wt = 0.0005
     HEX1.FinAR = 0.01 / (HEX1.wt**0.5)
     HEX1.Lx = np.array([0.7])
-    HEX1.Ly = np.array([1.0])
-    HEX1.Lz = np.array([1.3])
+    HEX1.Ly = np.array([0.5])
+    HEX1.Lz = np.array([5.14])
 
     HEX1.correlation = "KL"
 
@@ -74,7 +74,8 @@ def find_optimum(x):
         p2_oil = f1.p0[-1]
         dp_oil = p1_oil - p2_oil
 
-        cost = dp_air + np.abs(HEX1.Q - Q_goal)
+        #cost = dp_air + np.abs(HEX1.Q - Q_goal)
+        cost = np.abs(HEX1.Q - Q_goal)
         cost = cost[0]
         print(f"sigma: {x[0]}, alpha: {x[1]}, chi: {x[2]}")
         print(
@@ -95,7 +96,7 @@ chi_limits = (0.06, 0.3)
 
 limits = [sigma_limits, alpha_limits, chi_limits]
 
-Q_goal = 1600e3  # heat from piston engine minus heat ejected to fuel
+Q_goal = 2e6  # heat from piston engine minus heat ejected to fuel
 
 x0 = np.array([1.0, 1.0, 0.07])
 
@@ -107,5 +108,5 @@ x0 = np.array([1.0, 1.0, 0.07])
 # TNC doenst find best minimum
 # L-BFGS-B doesnt find best minimum
 
-# sol = minimize(find_optimum, x0, bounds=limits, method='Nelder-Mead')
-opt = differential_evolution(find_optimum, bounds=limits)
+sol = minimize(find_optimum, x0, bounds=limits, method='Nelder-Mead')
+#opt = differential_evolution(find_optimum, bounds=limits)

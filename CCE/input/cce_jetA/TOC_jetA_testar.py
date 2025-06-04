@@ -14,12 +14,13 @@ Fs_req = 105.9  # specific thrust [m/s]
 # power offtake from HPT
 power_offtake = 110*1e3
 
-bpr = 16.2 # bypass ratio
+bpr = 15.53706947 # bypass ratio
 
-fpr_outer = 1.37  # Outer fan pressure ratio
 
-OPR = 24.77  # overall pressure ratio (including losses)
-PR = 0.303  # pressure split, with regard to the LPC
+fpr_outer = 1.415  # Outer fan pressure ratio
+
+OPR = 18.28420968  # overall pressure ratio (including losses)
+PR = 0.119170711  # pressure split, with regard to the LPC
 
 T4 = 1070  # [K] Turbine entry temperature
 
@@ -52,8 +53,8 @@ second_burner = False
 
 # piston engine stuff
 pi_pe = 1.0
-cr = 10.24
-bore = 0.182
+cr = 11.56427606
+bore = 0.158857974
 
 surrogate = True
 

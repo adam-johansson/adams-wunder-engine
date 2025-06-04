@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "TOC_jetA_testar"
+input_file = "TOC_jetA"
 input_dir = "input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -19,10 +19,10 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-#flags = ["single", "print_output", "cce"]  # normal case
+flags = ["single", "print_output", "cce"]  # normal case
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
-flags = ['optim', "cce"]
+#flags = ['optim', "cce"]
 
 
 if "conventional" in flags:

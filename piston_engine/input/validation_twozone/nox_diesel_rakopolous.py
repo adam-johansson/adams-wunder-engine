@@ -6,10 +6,12 @@ thermo = "NASA"
 
 fuel = "jetA"
 
+# used Hohenberg before
 cooling = "Hohenberg"
-# cooling = "Woschni"
+#cooling = "Woschni"
 
 opposed = False
+premixed = False
 
 # given in the paper
 cr = 19.81
@@ -31,10 +33,10 @@ lms = 1 / (
     2 * 1.7
 )  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
-# inlet and outlet conditions (1.5 bar)
-p_in = 1.0125e5 * 0.85  # inlet pressure
+# inlet and outlet conditions
+p_in = 1.0125e5 * 0.9  # inlet pressure  #0.85
 T_in = 298  # inlet temperature
-p_ratio = 1.0  # pressure ratio after and before engine
+p_ratio = 1.1  # pressure ratio after and before engine
 
 ch = 1.0  # multiplier to decrease or increase heat transfer
 
@@ -54,16 +56,15 @@ phi_open_out = (480 / 180) * np.pi  # 510
 phi_close_out = (732.0 / 180) * np.pi  # 725
 
 
-far_goal = 0.041
+far_goal = 0.0401
 
 # this is for single wiebe function
 # parameters gotten from minimising MSE
-m_wiebe = 2.85
+phi_sc = (355.5 / 180) * np.pi  # angle at combustion start
+phi_cd = (40.0 / 180) * np.pi
+m_wiebe = 1.3
 
-phi_sc = (340.48 / 180) * np.pi  # angle at combustion start
-phi_cd = (
-    44.6 / 180
-) * np.pi  # angle related to combustion duration WORKED WITH SINGLE #43
+
 T_fuel = 298
 p_fuel = 2500e5
 

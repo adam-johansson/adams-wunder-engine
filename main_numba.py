@@ -11,17 +11,17 @@ from thermo import fuel_props
 
 # input_file = "4T_HP"
 # input_file = "4stroke"
-input_file = "4stroke_kaiser"
+#input_file = "4stroke_kaiser"
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
 #input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
-# input_file = "validation_twozone.two_zone_heider"
-# input_file = "validation_twozone.nox_diesel_rakopolous"
+input_file = "validation_twozone.two_zone_heider"
+#input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
-# input_file = "validation_twozone.chalmers_hydrogen"
+#input_file = "validation_chalmers.case2"
 # input_file = "validation_twozone.water_hydrogen"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
@@ -41,14 +41,15 @@ d = importlib.import_module(path)
 
 #flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials']  # NASA validation case
 # flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
-# flags = ['plot_twozone', 'output', 'output_all', 'single', 'save']  # normal case
+#flags = ['plot_essentials', 'output', 'output_all', 'single', 'save']  # normal case
 # flags = ['single', 'output_all', 'save']  # normal case no plots
 # flags = ['single', 'output_all']  # normal case no plots
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
 # flags = ['load']
-# flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-# flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
+flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
+#flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
+#flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
 # flags = ['sweep_wiebe']
 # flags = ['sweep_water_paper']
@@ -56,17 +57,18 @@ d = importlib.import_module(path)
 # flags = ['sweep_hcci']
 # flags = ['fit_water_paper', 'single']
 # flags = ['single', 'plot_twozone']
-flags = ["single"]
+#flags = ["single"]
 #flags = ["load"]
 # flags = ["single", "fit_newcastle"]
 # flags = ["sweep_chalmers_h2"]
+#flags = ["single", "validate_chalmers", 'plot_convergence']
+#flags = ["single", "plot_essentials", "validate_twozone"]
 
 data = [
     d.p_in,
     d.T_in,
     d.p_ratio,
     d.cycle,
-    d.thermo,
     d.cooling,
     d.opposed,
     d.cr,
@@ -137,20 +139,21 @@ if "single" in flags:
     # print(d.throttle - far)
     # print(p_tdc*1e-5)
     # 0.01124952812
-    # print(f'Induced power: {induced_power * 1e-3} [kW]')
+    #print(f'Indicated power: {indicated_power * 1e-3} [kW]')
     # print(f'PE losses: {friction_loss * 1e-6} [MW]')
     # print(f'Aux losses: {aux_loss * 1e-6} [MW]')
     # print(f'Heat losses: {heat_loss * 1e-6} [MW]')
     # print(f'Pressure at TDC: {p_tdc*1e-5}')
 
-    afr_stoch, lhv = fuel_props(d.fuel)
-    # print(f"FAR TRAPPED: {equ_trapped * afr_stoch} ")  # for H2
-    # print(f'Far: {far}')
+    far_stoch, lhv = fuel_props(d.fuel)
+    #print(f"Lambda trapped: {1 / equ_trapped} ")  # for H2
+    print(f'Lambda: {far_stoch/far}')
     # print(f'airflow: {air_flow}')
+    print(f"Fuel flow: {air_flow * far * 1e3} g/s")
     # print(f'mass flow out: {air_flow * (1 + far)}')
     # print(p_max)
-    # print(T4)
-    # print(eta_th)
+    print(f"Outlet temperature: {T4}")
+    print(f"Thermal efficiency: {eta_th}")
     # print(T_max)
     print(
         f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}, EI_no: {EI_nox}, power: {indicated_power*1e-3} kW"
