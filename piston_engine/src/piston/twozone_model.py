@@ -58,21 +58,11 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     Model assumes both zones have the same pressure: p1 = p2 = p
     """
 
-    # Validate inputs
-    if len(phi) != len(P) or len(phi) != len(T) or len(phi) != len(V):
-        raise ValueError("Input arrays must have the same length")
-
-    if sc >= evo:
-        raise ValueError("Start of combustion must be before exhaust valve opening")
-
     # Extract high pressure region (between start of combustion and exhaust valve opening)
     hp_mask = (phi > sc) & (phi < evo)
 
-    if not np.any(hp_mask):
-        raise ValueError("No data points found between start of combustion and exhaust valve opening")
-
     phi_hp = phi[hp_mask]
-    P_hp = P[hp_mask]
+    p_hp = P[hp_mask]
     T_hp = T[hp_mask]
     V_hp = V[hp_mask]
     mf_hp = mf[hp_mask]
@@ -109,13 +99,13 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     R1, R2 = _calculate_gas_constants(lambda_0, equ_sc, fuel_type, premixed)
 
     # Calculate motoring pressure and related quantities
-    Psc, Vsc = _get_start_of_combustion_conditions(phi, P, V, sc)
+    p_sc, V_sc, T_sc = _get_start_of_combustion_conditions(phi, P, V, T, sc)
     n_poly = _calculate_polytrope_exponent(phi, P, V, sc, DEFAULT_POLYTROPE_AVERAGING_DEGREES)
-    Pmotor = Psc * (Vsc / V_hp) ** n_poly
-    Pdiff = P_hp - Pmotor
+    p_motor = p_sc * (V_sc / V_hp) ** n_poly
+    p_diff = p_hp - p_motor
 
     # Calculate B function using pressure difference
-    integrand = Pdiff * m1
+    integrand = p_diff * m1
     denominator = integrate.simpson(integrand, x=phi_hp, axis=0)
 
     if abs(denominator) < 1e-12:
@@ -124,18 +114,14 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     nominator = integrate.cumulative_simpson(integrand, x=phi_hp, axis=0, initial=0.0)
     B = 1 - nominator / denominator
 
-    # Calculate A and Astar functions
-    t_soc = T[phi > sc][0]  # Temperature at start of combustion
-    p_soc = P[phi > sc][0]  # Pressure at start of combustion
-
     # Calculate adiabatic flame temperature
-    t_flame = flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, 1.0 / lambda_0, premixed=premixed)
+    t_flame = flame_temp_cea(T_sc, equ_sc, fuel_type, p_sc, 1.0 / lambda_0, premixed=premixed)
 
-    A = (t_flame - t_soc) * factor
+    A = (t_flame - T_sc) * factor
     Astar = _calculate_astar(A, lambda_gl, lambda_0, premixed, DEFAULT_C_FACTOR)
 
     # Solve for zone temperatures and volumes
-    T1, T2, V1, V2 = _calculate_zone_properties(P_hp, V_hp, m1, m2, R1, R2, Astar, B)
+    T1, T2, V1, V2 = _calculate_zone_properties(p_hp, V_hp, m1, m2, R1, R2, Astar, B)
 
     # Validate volume conservation
     volume_error = np.abs(V_hp - (V1 + V2))
@@ -144,7 +130,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     if max_relative_error > 0.01:  # 1% tolerance
         print(f"Warning: Volume conservation error exceeds 1%. Max relative error: {max_relative_error:.3f}")
 
-    return T1, m1, P_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
+    return T1, m1, p_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
 
 
 def _determine_lambda_0(premixed, fuel_type, lambda_gl):
@@ -192,15 +178,16 @@ def _calculate_gas_constants(lambda_0, equ_sc, fuel_type, premixed):
     return R1, R2
 
 
-def _get_start_of_combustion_conditions(phi, P, V, sc):
+def _get_start_of_combustion_conditions(phi, P, V, T, sc):
     """Get pressure and volume at start of combustion."""
     soc_mask = phi > sc
     if not np.any(soc_mask):
         raise ValueError("No data points found after start of combustion")
 
-    Psc = P[soc_mask][0]
-    Vsc = V[soc_mask][0]
-    return Psc, Vsc
+    p_sc = P[soc_mask][0]
+    V_sc = V[soc_mask][0]
+    T_sc = T[soc_mask][0]
+    return p_sc, V_sc, T_sc
 
 
 def _calculate_polytrope_exponent(phi, P, V, sc, ca_avg_degrees):

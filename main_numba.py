@@ -18,10 +18,10 @@ from thermo import fuel_props
 #input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
-input_file = "validation_twozone.two_zone_heider"
+#input_file = "validation_twozone.two_zone_heider"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
-#input_file = "validation_chalmers.case2"
+input_file = "validation_chalmers.case2"
 # input_file = "validation_twozone.water_hydrogen"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
@@ -47,7 +47,7 @@ d = importlib.import_module(path)
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
 # flags = ['load']
-flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
+#flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
@@ -62,7 +62,8 @@ flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # valida
 # flags = ["single", "fit_newcastle"]
 # flags = ["sweep_chalmers_h2"]
 #flags = ["single", "validate_chalmers", 'plot_convergence']
-#flags = ["single", "plot_essentials", "validate_twozone"]
+flags = ["single", "validate_chalmers"]
+#flags = ["single", "validate_twozone"]
 
 data = [
     d.p_in,

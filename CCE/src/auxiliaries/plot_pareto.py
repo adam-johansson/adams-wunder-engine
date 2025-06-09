@@ -14,7 +14,7 @@ X = np.array([df["bpr"], df["opr"], df["split"], df["cr"], df["bore"]]).T
 X[:, 4] = X[:, 4] * 1000
 
 # Choose which variable to color by (e.g., bpr is column 0)
-color_by = X[:, 4]  # split
+color_by = X[:, 2]  # split
 
 fs = 20
 

@@ -55,7 +55,7 @@ def flame_temp_inhouse(t_soc, equ_sc, equ_combustion, fuel_type):
     return t_flame
 
 
-def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion, premixed=False):
+def flame_temp_cea(t_soc, equ_sc, fuel_type, p_sc, equ_combustion, premixed=False):
 
     # could add fuel temp here
     if premixed:
@@ -63,21 +63,10 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion, premixed=False
     else:
         fueltemp = 298
 
-    # air composition before combustion
-    if premixed:
-        x_N2, x_O2, x_CO2, x_H2O, x_Ar, x_fuel = molar_fractions(
-            equ_sc, fuel_type, premixed, equ_combustion
-        )
-        if fuel_type == "H2":
-            x_H2 = x_fuel
-        else:
-            x_jetA = x_fuel
-    else:
-        x_N2, x_O2, x_CO2, x_H2O, x_Ar, _ = molar_fractions(equ_sc, fuel_type)
-        x_jetA = x_O2 * 17.75 * equ_combustion
-        x_H2 = x_O2 * 2.0 * equ_combustion
-
-    # print(x_N2, x_O2, x_CO2, x_H2O, x_Ar, x_fuel)
+    # air composition before combustion (we use the composition from premixed)
+    x_N2, x_O2, x_CO2, x_H2O, x_Ar, x_fuel = molar_fractions(
+        equ_sc, fuel_type, include_fuel_in_reactants=True, fuel_air_ratio=equ_combustion
+    )
 
     # air = cea.Oxidizer("Air", temp=t_soc)
     o2 = cea.Oxidizer("O2", temp=t_soc, mols=x_O2)
@@ -89,21 +78,20 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, Psc, equ_combustion, premixed=False
 
     if fuel_type == "jetA":
         if premixed:
-            jetA = cea.Fuel("Jet-A(g)", temp=fueltemp, mols=x_jetA)
+            jetA = cea.Fuel("Jet-A(g)", temp=fueltemp, mols=x_fuel)
         else:
-            jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_jetA)
+            jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_fuel)
         fuel = jetA
     elif fuel_type == "H2":
-        h2 = cea.Fuel("H2", temp=fueltemp, mols=x_H2)
+        h2 = cea.Fuel("H2", temp=fueltemp, mols=x_fuel)
         fuel = h2
 
     # print(x_H2O)
 
     # HP problem is like a burner
     # massf means output is in mass fraction
-
     burning = cea.HPProblem(
-        pressure=Psc * 1e-5,
+        pressure=p_sc * 1e-5,
         pressure_units="bar",
         materials=[n2, o2, h2o, co2, fuel],
         massf=True,

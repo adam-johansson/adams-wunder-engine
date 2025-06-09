@@ -58,12 +58,7 @@ def mixture(t, p, equivalence_ratio=0.0, fuel_type="jetA", include_fuel_in_react
     Key constraint: When include_fuel_in_reactants=True, equivalence_ratio must be ≤ fuel_air_equ_ratio
     """
 
-    # Validate input constraints
-    if include_fuel_in_reactants and equivalence_ratio > fuel_air_equ_ratio:
-        raise ValueError(
-            f"equivalence_ratio ({equivalence_ratio}) cannot exceed fuel_air_equ_ratio ({fuel_air_equ_ratio}) when fuel is pre-mixed")
-
-    # Get molar masses and properties at actual conditions
+        # Get molar masses and properties at actual conditions
     cp_N2, h_N2, _, _, M_N2 = N2(t, p)
     cp_O2, h_O2, _, _, M_O2 = O2(t, p)
     cp_Ar, h_Ar, _, _, M_Ar = Ar(t, p)
@@ -158,13 +153,8 @@ def mixture(t, p, equivalence_ratio=0.0, fuel_type="jetA", include_fuel_in_react
             # Maximum fuel that can burn is also limited by available fuel
             max_fuel_by_availability = n_fuel_initial
 
-            # The actual amount that can burn based on equivalence_ratio
-            # equivalence_ratio is relative to stoichiometric, so we need to consider
-            # how much fuel would burn at stoichiometric conditions with available O2
-            fuel_at_stoich_with_available_O2 = max_fuel_by_O2
-
             # Amount we want to burn based on equivalence_ratio
-            fuel_target = fuel_at_stoich_with_available_O2 * equivalence_ratio
+            fuel_target = max_fuel_by_O2 * equivalence_ratio
 
             # Actual fuel burned is limited by what's available
             n_fuel_burned = min(fuel_target, max_fuel_by_availability, max_fuel_by_O2)
@@ -316,6 +306,7 @@ def equivalence_derivative(equ, t, p, fuel_type, pure_fuel, fuel_equ_ratio):
         to the equivalence ratio.
     """
 
+
     Runiv = 8.3144626  # J mol^-1 K^-1
 
     # Air composition (per mole of O2)
@@ -381,13 +372,13 @@ def _calculate_derivatives_with_fuel_premix(equ, t, nu_O2_stoich, nu_CO2_prod, n
                                             h_N2, h_O2, h_Ar, h_H2O, h_CO2, h_fuel, Runiv):
     """Calculate derivatives when fuel is premixed with air."""
 
-    # Total moles and its derivative
+    # Total moles and its derivative (moles of fuel are also consumed)
     if nu_O2_stoich == 17.75:  # jetA
-        delta_moles_per_fuel = nu_CO2_prod + nu_H2O_prod - nu_O2_stoich  # 12 + 11.5 - 17.75 = 5.75
+        delta_moles_per_fuel = nu_CO2_prod + nu_H2O_prod - nu_O2_stoich - 1  # 12 + 11.5 - 17.75 - 1 = 4.75
         Ntot = delta_moles_per_fuel * equ + nu_O2_stoich * n_air_per_O2 + fuel_equ_ratio
         dNtotdequ = delta_moles_per_fuel  # 5.75 for jetA
     else:  # H2
-        delta_moles_per_fuel = nu_H2O_prod - nu_O2_stoich  # 1 - 0.5 = 0.5
+        delta_moles_per_fuel = nu_H2O_prod - nu_O2_stoich - 1  # 1 - 0.5 - 1 = -0.5
         Ntot = delta_moles_per_fuel * equ + nu_O2_stoich * n_air_per_O2 + fuel_equ_ratio
         dNtotdequ = delta_moles_per_fuel  # 0.5 for H2
 
@@ -646,16 +637,15 @@ def molar_fractions(equivalence_ratio, fuel_type, include_fuel_in_reactants=Fals
             # The equivalence ratio determines what fraction of the available fuel burns
             max_fuel_that_can_burn = n_O2_initial / nu_O2_stoich
 
+            # equivalence ratio cant be larger than 1
             if equivalence_ratio <= 1.0:
                 # Lean/stoichiometric: limited by fuel availability or equivalence ratio
-                if n_fuel_initial <= max_fuel_that_can_burn * equivalence_ratio:
-                    # All initial fuel participates in combustion scaled by equiv ratio
-                    n_fuel_burned = n_fuel_initial * equivalence_ratio
-                else:
-                    # Limited by equivalence ratio
-                    n_fuel_burned = max_fuel_that_can_burn * equivalence_ratio
+
+                n_fuel_burned = min(n_fuel_initial, max_fuel_that_can_burn * equivalence_ratio)
+                #print(n_fuel_burned)
             else:
                 # Rich: limited by available O2
+                print(f"Warning, equivalence ratio larger than 1")
                 n_fuel_burned = min(n_fuel_initial, max_fuel_that_can_burn)
         else:
             # Pure air initially - fuel is added based on equivalence ratio
@@ -834,17 +824,18 @@ def mass_fractions(equivalence_ratio, fuel_type, include_fuel_in_reactants=False
             # Fuel is already in the mixture
             # The equivalence ratio determines what fraction of the available fuel burns
             max_fuel_that_can_burn = n_O2_initial / nu_O2_stoich
+            #print(max_fuel_that_can_burn)
 
+
+            # equivalence ratio cant be larger than 1
             if equivalence_ratio <= 1.0:
                 # Lean/stoichiometric: limited by fuel availability or equivalence ratio
-                if n_fuel_initial <= max_fuel_that_can_burn * equivalence_ratio:
-                    # All initial fuel participates in combustion scaled by equiv ratio
-                    n_fuel_burned = n_fuel_initial * equivalence_ratio
-                else:
-                    # Limited by equivalence ratio
-                    n_fuel_burned = max_fuel_that_can_burn * equivalence_ratio
+
+                n_fuel_burned = min(n_fuel_initial, max_fuel_that_can_burn * equivalence_ratio)
+                #print(n_fuel_burned)
             else:
                 # Rich: limited by available O2
+                print(f"Warning, equivalence ratio larger than 1")
                 n_fuel_burned = min(n_fuel_initial, max_fuel_that_can_burn)
         else:
             # Pure air initially - fuel is added based on equivalence ratio
@@ -866,8 +857,10 @@ def mass_fractions(equivalence_ratio, fuel_type, include_fuel_in_reactants=False
         # Unburned fuel
         if include_fuel_in_reactants:
             n_fuel_final = max(0.0, n_fuel_initial - n_fuel_burned)
+            #print(n_fuel_final, n_fuel_initial, n_fuel_burned, equivalence_ratio, fuel_air_ratio)
         else:
             # In rich conditions, there might be unburned fuel
+            print(f"OBS fuel for not premixed is not yet validated.")
             if equivalence_ratio > 1.0:
                 n_fuel_total_added = n_O2_initial / nu_O2_stoich * equivalence_ratio
                 n_fuel_final = max(0.0, n_fuel_total_added - n_fuel_burned)

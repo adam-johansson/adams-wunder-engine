@@ -123,12 +123,19 @@ def run_piston_engine(indata, flags):
             m_air_theo = V1[0] * rho_in
 
         if premixed:
-            mf_tot = far_goal * m_air_theo / (1 + far_goal)
+            # Get fuel mass fraction from thermodynamic properties
+            _, _, _, _, _, mass_fraction_fuel = thermo.mass_fractions(
+                0.0, fuel_type, premixed, far_goal / far_s
+            )
+
+            # Calculate fuel mass needed for next cycle based on trapped mixture
+            mf_tot = m0 * mass_fraction_fuel
         else:
             mf_tot = far_goal * m_air_theo
         # far_tot is used for init
         far_tot = far_goal
         Qf = LHV * mf_tot  #hmmm eta_c or not
+        #print(mf_tot)
 
         #print(f"Equ in intake: {far_goal / far_s}")
 
@@ -164,15 +171,22 @@ def run_piston_engine(indata, flags):
         # mdotin = 20
         # mdotout = 21
         #mout_EP = x[22]
-        #Q_app = x[23]  # apparent heat release
-        #H_inIP = x[24]
-        #H_fuel_in = x[25]
+        #H_inIP = x[23]
+        #H_fuel_in = x[24]
 
-        #print("Var normal", T, V, m, P, equ, m_IP, T_IP, equ_IP, m_EP, T_EP, equ_EP )
+        if premixed and equ > far_goal / far_s:
+            equ = far_goal / far_s
+
+        if premixed and equ_IP > far_goal / far_s:
+            equ_IP = far_goal / far_s
+
+        if premixed and equ_EP > far_goal / far_s:
+            equ_EP = far_goal / far_s
 
         # Gas properties inside the cylinder
         h, u, cp, cv, R, gamma, entropy, _ = thermo.mixture(T, P, equ, fuel_type,
-                                                            include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
+                                                            include_fuel_in_reactants=premixed,
+                                                            fuel_air_equ_ratio=far_goal/far_s)
 
         # Intake port values
         h_IP, u_IP, cp_IP, cv_IP, R_IP, gamma_IP, entropy_IP, _ = thermo.mixture(T_IP, p_in, equ_IP, fuel_type,
@@ -222,15 +236,11 @@ def run_piston_engine(indata, flags):
         else:
             raise Exception(f'Unknown Wiebe function. The Wiebe function was {wiebe_type}.')
 
+
         # Heat loss
         ref = (Pref, Tref, Vref, Pmotor, Vmotor)
         Awall = (V / Apiston) * (d * np.pi)  # Wall area in contact with the fluid
 
-        # removed opposed piston functionality for now
-        #if opposed:
-        #    Awalls = [Awall, Apiston, Apiston]
-        #else:
-        #    Awalls = [Awall, Apiston, Ahead]
         Awalls = np.array([Awall, Apiston, Ahead])
 
         if cooling == "Woschni":
@@ -411,24 +421,14 @@ def run_piston_engine(indata, flags):
         # Entropy (Gibbs equation)
         dsdphi = dudphi / T + dVdphi * ( P / T)
 
-        # Apparent rate of heat release
-        dQ_appdphi = (1 / (1.4 - 1)) * V * dPdphi + (1 / (1.4 - 1)) * P * dVdphi
-        #dQ_appdphi = (1 / (gamma - 1)) * V * dPdphi + (1 / (gamma - 1)) * P * dVdphi
-
-        #if np.mod(phi, 0.1) < 0.01:
-        #    print(phi*180/np.pi, T, P*1e-5, dmindphi, dmoutdphi, dmfdphi, equ, m)
-
         derivatives = np.array([dTdphi, dVdphi, dqdphi, dqfdphi, dmdphi, dPdphi,
                 P * dVdphi , dmindphi, dmfdphi, dequdphi, dmoutdphi, h_out_EP * dmoutdphi_EP,
                 dmdphi_IP, dTdphi_IP, dequdphi_IP, dmdphi_EP, dTdphi_EP, dequdphi_EP,
-                dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, dQ_appdphi, h_in_IP * dmindphi_IP, h_fuel * dmfdphi])
+                dmindphi_IP, dsdphi, 0.0, 0.0, dmoutdphi_EP, h_in_IP * dmindphi_IP, h_fuel * dmfdphi])
 
 
         # scale the derivatives
         derivatives_scaled = derivatives * scaler
-
-        #print("var scaled", x)
-        #print("der scaled", derivatives_scaled)
 
         return derivatives_scaled
 
@@ -437,10 +437,11 @@ def run_piston_engine(indata, flags):
 
     # from initial guess of fuel air ratio
     equ_EP0 = far_tot / far_s
+    equ0 = equ_IP0 = 0.0
 
     # Init simulation
-    x = np.array([T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m0, T_in, 0.0, m0, T_in, equ_EP0, 0.0,
-         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # initial state value (0.1 m0 in IP and 1e-5 m0 in EP)
+    x = np.array([T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, equ0, 0.0, 0.0, m0, T_in, equ_IP0, m0, T_in, equ_EP0, 0.0,
+         0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # initial state value (0.1 m0 in IP and 1e-5 m0 in EP)
 
     scale_ODE = True
     if scale_ODE == True:
@@ -448,13 +449,13 @@ def run_piston_engine(indata, flags):
 
         # Scaling factors for the variables to keep them of the same order of magnitude
         scaler = np.array([1e-3, 1e3, 1e-3, 1e-3, 1e2, 1e-5, 1e-3, 1e2, 1e3, 1e1, 1e2, 1e-3, 1e2,
-                           1e-2, 1e1, 1e2, 1e-2, 1e1, 1e2, 1e-3, 1e-2, 1e-2, 1e2, 1e-3, 1e-3, 1e-3])
+                           1e-2, 1e1, 1e2, 1e-2, 1e1, 1e2, 1e-3, 1e-2, 1e-2, 1e2, 1e-3, 1e-3])
 
         # Scaling factors for the variables to keep them of the same order of magnitude
         inv_scaler = 1 / scaler
 
     else:
-        scaler = np.ones((26))
+        scaler = np.ones((25))
         inv_scaler = scaler
 
     # Scaled variables init
@@ -484,7 +485,6 @@ def run_piston_engine(indata, flags):
     mdotout = []
     m_out_EP = []
     T_out = []
-    Q_apparent = []
     energy_in = []
     fuel_enthalpy_in = []
 
@@ -514,7 +514,7 @@ def run_piston_engine(indata, flags):
         if i > 0:
             x = [T[-1][-1], V[-1][-1], 0, 0.0, m[-1][-1], P[-1][-1], 0.0, 0.0, 0.0,
                  equ[-1][-1], 0.0, 0.0, m_IP[-1][-1], T_IP[-1][-1], equ_IP[-1][-1],
-                 m_EP[-1][-1], T_EP[-1][-1], equ_EP[-1][-1], 0, S[-1][-1], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                 m_EP[-1][-1], T_EP[-1][-1], equ_EP[-1][-1], 0, S[-1][-1], 0.0, 0.0, 0.0, 0.0, 0.0]
 
             x_scaled = x * scaler
             if cycle == "2T":
@@ -546,7 +546,6 @@ def run_piston_engine(indata, flags):
             #sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='RK45', y0=x, t_eval=phi,
             #                rtol=5e-11)  # 1e-12 works
             try:
-
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
                                 rtol=1e-8, atol=1e-8)  # 1e-8 and 1e-10 are standard
             except UserWarning as e:
@@ -594,66 +593,53 @@ def run_piston_engine(indata, flags):
         mdotin.append(results[20])
         mdotout.append(results[21])
         m_out_EP.append(results[22])
-        Q_apparent.append(results[23])
-        energy_in.append(results[24])
-        fuel_enthalpy_in.append(results[25])
+        energy_in.append(results[23])
+        fuel_enthalpy_in.append(results[24])
 
-        #if "sweep" not in flags:
-        #    print(f"iter {i + 1} of {it}")
 
         equ_avg = (mf[-1][-1] / m_in_IP[-1][-1]) / far_s
 
-        # this way to calculate far works quite well
+        # Simple way to calculate fuel-air ratio - works quite well
         if 'fuel_mass' not in flags:
 
             mf_tot_old = mf_tot
 
-
             if premixed:
 
                 if cycle == "2T":
-                    m_air_inlet_closing = m[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]] \
-                                          / (1 + far_s * equ[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]])
-                    equ_inlet_closing = equ[-1][np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]]
+                    # Find inlet closing conditions - extract the complex indexing once
+                    closing_idx = np.argwhere(phi >= phi_close_in - cycle_phi)[0][0]
+
+                    total_mass_at_closing = m[-1][closing_idx]
+                    equ_inlet_closing = equ[-1][closing_idx]
+
                 elif cycle == "4T":
                     equ_inlet_closing = equ[-1][-1]
-
-                    m_mixture_inlet_closing = m[-1][-1] \
-                                          / (1 + far_s * equ_inlet_closing)
-
-                _, _, _, _, _, mass_fraction_fuel = thermo.mass_fractions(equ_inlet_closing, fuel_type, premixed, far_goal/far_s)
-
-                # decide how much fuel to inject into next cycle based on how much fuel is in the cylinder when valves close
-                mf_tot = m[-1][-1] * mass_fraction_fuel
+                    total_mass_at_closing = m[-1][-1]
 
 
+                # Get fuel mass fraction from thermodynamic properties
+                _, _, _, _, _, mass_fraction_fuel = thermo.mass_fractions(
+                    equ_inlet_closing, fuel_type, premixed, far_goal / far_s
+                )
 
-                #print(mf_tot, equ_inlet_closing, mass_fraction_fuel, far_goal, premixed, fuel_type)
-                #print(f"fuel mass trapped: {mf_tot*1e6} mg")
-                # the mass of fuel being sucked into the cylinder
-                #mf_tot = far_goal * m_in_IP[-1][-1] / (1 + far_goal)
-
-                #print(f"old express: {far_goal * m_in_IP[-1][-1] / (1 + far_goal) * 1e6} mg")
-
-                # this is to specify the trapped far
-                #mf_tot = ((far_goal - equ_inlet_closing * far_s) * m_air_inlet_closing
-                #          / (1 + (far_goal - equ_inlet_closing * far_s) ))
+                # Calculate fuel mass needed for next cycle based on trapped mixture
+                mf_tot = total_mass_at_closing * mass_fraction_fuel
 
             else:
-                # we now care about actual fuel flow and far in exhausts out of the engine
+                # Non-premixed: fuel flow based on actual exhaust fuel-air ratio
                 mf_tot = m_in_IP[-1][-1] * far_goal
 
-            #print(f"Inflow into IP: {m_in_IP[-1][-1]*1000} [g/cycle] ")
-
-            # ensure convergence in added fuel
+            # Track convergence of fuel mass iteration
             mf_diff.append(np.abs(mf_tot - mf_tot_old))
 
-            #Qf is very important. This is the one actually deciding amount of added heat.
-            # 99.9% of Qf will be added to the fluid.
-            Qf = LHV * mf_tot  # hmmm eta_c or not
-        else:
-            mf_diff.append(0.0)
+            # Calculate total heat addition
+            Qf = LHV * mf_tot
 
+
+        else:
+            # Fuel mass externally specified - no iteration needed
+            mf_diff.append(0.0)
 
         if "fuel_mass" in flags:
             # avg far
@@ -932,7 +918,7 @@ def run_piston_engine(indata, flags):
                                                                                                     equ[-1], fuel_type,
                                                                                                     factor, premixed)
 
-        # start = timer()
+
         no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
@@ -946,7 +932,7 @@ def run_piston_engine(indata, flags):
 
 
         end = timer()
-        #print(f'Runtime of NOx calculations: {end - start} [s]')
+        print(f'Runtime of NOx calculations: {end - start} [s]')
 
     elif cycle == "2T":
         EI_nox = 999
@@ -967,7 +953,6 @@ def run_piston_engine(indata, flags):
             np.savetxt("piston_engine/simulation_data/m.csv", m[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/equ.csv", equ[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/rohr.csv", Q_in[-1], delimiter=",")
-            np.savetxt("piston_engine/simulation_data/Qapparent.csv", Q_apparent[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/phi.csv", phi, delimiter=",")
 
         if "plot_validation" in flags:
@@ -1092,12 +1077,6 @@ def run_piston_engine(indata, flags):
                          equ_avg)
 
 
-    # far_avg is defined as mass flow of fuel burned/ air flow
-    print(f"Mass flowing in intake: {m_in_IP[-1][-1]}")
-    print(f"Mass of air in intake: {m_in_IP[-1][-1] / ( 1 + far_goal)}")
-    print(f"Mass of fuel in intake: {m_in_IP[-1][-1] * far_goal/ (1 + far_goal) }")
-
-    #print(f"Lambda of fuel flow: {far_s / far_goal}")
 
     return (T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
         power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,
