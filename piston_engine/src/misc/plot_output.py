@@ -1603,15 +1603,15 @@ def val_chalmers(phi, p, T, Q, V, equ, premixed):
     dirname = os.path.dirname(__file__)
 
     filename_p = os.path.join(
-        dirname, "../../validation/chalmers_h2/case2/p_val.txt"
+        dirname, "../../validation/chalmers_h2/case3/p_val.txt"
     )
 
     filename_T = os.path.join(
-        dirname, "../../validation/chalmers_h2/case2/T_val.txt"
+        dirname, "../../validation/chalmers_h2/case3/T_val.txt"
     )
 
     filename_hrr = os.path.join(
-        dirname, "../../validation/chalmers_h2/case2/hrr_val.txt"
+        dirname, "../../validation/chalmers_h2/case3/hrr_val.txt"
     )
 
     p_exp = np.loadtxt(filename_p, delimiter=",")
@@ -1769,7 +1769,12 @@ def val_chalmers(phi, p, T, Q, V, equ, premixed):
 
     plt.show()
 
-    print(f"Validation: eta: 42.5%, power: 13.7kW, IMEP: 11.5 bar, NOX: {261} ppm, T_out: 799 K ")
-    print(f"Validation fuel flow: {0.27} g/s")
+    # case 2
+    #print(f"Validation: eta: 42.5%, power: 13.7kW, IMEP: 11.5 bar, NOX: {261} ppm, T_out: 799 K ")
+    #print(f"Validation fuel flow: {0.27} g/s")
+
+    #case 3
+    print(f"Validation: eta: 40.1%, power: 6.7kW, IMEP: 8.5 bar, NOX: {3617} ppm, T_out: 798 K ")
+    print(f"Validation fuel flow: {0.14} g/s")
 
     return

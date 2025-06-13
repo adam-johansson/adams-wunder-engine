@@ -10,10 +10,11 @@ from thermo import (
     mixture,
     molar_fractions,
     equilibrium_OHC,
-    polynomials,
     euler_cantera,
     molar_fractions_combustion,
 )
+
+from thermo.polynomials import N2, O2, O, OH, N, NO, H
 
 from piston_engine.src.piston.nox_integration import improved_nox_integration
 
@@ -30,7 +31,6 @@ SPECIES_THRESHOLD = 1e-20
 
 def nox_calculations(
         temperatures,
-        masses,
         pressures,
         volumes,
         fuel_type,
@@ -91,12 +91,8 @@ def nox_calculations(
         - m_NO_final: Final NOx mass [kg]
     """
 
-    # Input validation
-    _validate_inputs(temperatures, masses, pressures, volumes, phi, fuel_type, lambda_z1, rpm)
-
     # Convert arrays to consistent 1D format
     temperatures = np.asarray(temperatures).flatten()
-    masses = np.asarray(masses).flatten()
     pressures = np.asarray(pressures).flatten()
     volumes = np.asarray(volumes).flatten()
     phi = np.asarray(phi).flatten()
@@ -120,7 +116,7 @@ def nox_calculations(
     def dNOdt_fun(t, var):
         return _nox_ode_function(
             t, var, times, temperatures, pressures, volumes, dVdt_s,
-            gas, fuel_type, equ, initial_fractions
+            gas, fuel_type, initial_fractions
         )
 
     """
@@ -154,7 +150,6 @@ def nox_calculations(
 
     # Process results
     NO_mol = sol.y[0]
-    dNOdt_mol = np.gradient(NO_mol, times)
 
     # Calculate concentrations and emission index
     results = _process_nox_results(
@@ -162,31 +157,6 @@ def nox_calculations(
     )
 
     return results
-
-
-def _validate_inputs(temperatures, masses, pressures, volumes, phi, fuel_type, lambda_z1, rpm):
-    """Validate input parameters."""
-    arrays = [temperatures, masses, pressures, volumes, phi]
-    array_names = ['temperatures', 'masses', 'pressures', 'volumes', 'phi']
-
-    # Check array lengths
-    lengths = [len(np.asarray(arr).flatten()) for arr in arrays]
-    if not all(length == lengths[0] for length in lengths):
-        raise ValueError("All input arrays must have the same length")
-
-    if lengths[0] < 2:
-        raise ValueError("Input arrays must have at least 2 elements")
-
-    # Check fuel type
-    if fuel_type not in ["jetA", "H2"]:
-        raise ValueError(f"Unknown fuel type: {fuel_type}. Must be 'jetA' or 'H2'")
-
-    # Check physical parameters
-    if lambda_z1 <= 0:
-        raise ValueError("lambda_z1 must be positive")
-
-    if rpm <= 0:
-        raise ValueError("RPM must be positive")
 
 
 def _setup_cantera_gas(fuel_type):
@@ -219,7 +189,7 @@ def _calculate_time_vector(phi, rpm):
 
 
 def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
-                      gas, fuel_type, equ, initial_fractions):
+                      gas, fuel_type, initial_fractions):
     """ODE function for NOx formation rate."""
 
     # Find closest time index
@@ -237,21 +207,21 @@ def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
     c_NO = var[0] / V if V > 0 else 0.0
 
     # Calculate current gas composition
-    concentrations = _calculate_gas_concentrations(
+    c_O, c_N2, c_O2, c_OH, c_H = _calculate_gas_concentrations(
         gas, fuel_type, T, p, c_NO, initial_fractions
     )
 
     # Calculate reaction rate constants
-    k_forward, k_reverse = _calculate_rate_constants(T, fuel_type, equ)
+    k1_f, k2_f, k3_f, k1_r, k2_r, k3_r = _calculate_rate_constants(T)
 
     # Calculate N concentration (quasi-steady state)
     c_N = _calculate_nitrogen_concentration(
-        concentrations, k_forward, k_reverse, c_NO, V, dVdt
+        c_O, c_N2, c_O2, c_OH, c_H, c_NO, k1_f, k2_f, k3_f, k1_r, k2_r, k3_r, V, dVdt
     )
 
     # Calculate NOx formation rate
     dNOdt = _calculate_nox_formation_rate(
-        concentrations, k_forward, k_reverse, c_N, c_NO, V, dVdt
+        c_O, c_N2, c_N, c_NO, k1_f, k1_r, V, dVdt
     )
 
     return dNOdt
@@ -293,12 +263,31 @@ def _calculate_gas_concentrations(gas, fuel_type, T, p, c_NO, initial_fractions)
     # Extract equilibrium concentrations
     fractions = gas.mole_fraction_dict(threshold=SPECIES_THRESHOLD)
 
-    concentrations = {}
-    for species in ['O', 'H', 'O2', 'OH', 'N2']:
-        xi = fractions.get(species, 0.0)
-        concentrations[f'c_{species}'] = (xi * p) / (R_UNIV_J * T) if T > 0 else 0.0
+    try:
+        xi_O = fractions["O"]
+    except:
+        xi_O = 0.0
+    try:
+        xi_H = fractions["H"]
+    except:
+        xi_H = 0.0
+    try:
+        xi_O2 = fractions["O2"]
+    except:
+        xi_O2 = 0.0
+    try:
+        xi_OH = fractions["OH"]
+    except:
+        xi_OH = 0.0
 
-    return concentrations
+    # extract concentrations needed for Zeldovich mechanism
+    c_H = (xi_H * p) / (R_UNIV_J * T)
+    c_O2 = (xi_O2 * p) / (R_UNIV_J * T)
+    c_O = (xi_O * p) / (R_UNIV_J * T)
+    c_OH = (xi_OH * p) / (R_UNIV_J * T)
+    c_N2 = (xi_N2 * p) / (R_UNIV_J * T)
+
+    return c_O, c_N2, c_O2, c_OH, c_H
 
 
 def _get_fallback_concentrations(T, p):
@@ -313,57 +302,55 @@ def _get_fallback_concentrations(T, p):
     }
 
 
-def _calculate_rate_constants(T, fuel_type, equ):
+@njit()
+def _calculate_rate_constants(T):
     """Calculate forward and reverse reaction rate constants."""
 
     # Get thermodynamic data for equilibrium constants
-    gibbs_data = {}
-    for species in ['N2', 'O', 'NO', 'N', 'O2', 'OH', 'H']:
-        _, _, _, g, M = getattr(polynomials, species)(T, P_STD)
-        gibbs_data[species] = g * M  # Convert to molar basis
+    _, _, _, g_N2, M_N2 = N2(T, P_STD)
+    _, _, _, g_O, M_O = O(T, P_STD)
+    _, _, _, g_NO, M_NO = NO(T, P_STD)
+    _, _, _, g_N, M_N = N(T, P_STD)
+    _, _, _, g_O2, M_O2 = O2(T, P_STD)
+    _, _, _, g_OH, M_OH = OH(T, P_STD)
+    _, _, _, g_H, M_H = H(T, P_STD)
+
+    g_N2 = g_N2 * M_N2  # Convert to molar basis
+    g_O = g_O * M_O  # Convert to molar basis
+    g_NO = g_NO * M_NO  # Convert to molar basis
+    g_N = g_N * M_N  # Convert to molar basis
+    g_O2 = g_O2 * M_O2  # Convert to molar basis
+    g_OH = g_OH * M_OH  # Convert to molar basis
+    g_H = g_H * M_H  # Convert to molar basis
 
     # Calculate equilibrium constants
-    Delta_g_R_1 = gibbs_data['NO'] + gibbs_data['N'] - gibbs_data['N2'] - gibbs_data['O']
-    Delta_g_R_2 = gibbs_data['NO'] + gibbs_data['O'] - gibbs_data['N'] - gibbs_data['O2']
-    Delta_g_R_3 = gibbs_data['NO'] + gibbs_data['H'] - gibbs_data['N'] - gibbs_data['OH']
+    Delta_g_R_1 = g_NO + g_N - g_N2 - g_O
+    Delta_g_R_2 = g_NO + g_O - g_N - g_O2
+    Delta_g_R_3 = g_NO + g_H - g_N - g_OH
 
     Kc_1 = math.exp(-Delta_g_R_1 / (R_UNIV_J * T))
     Kc_2 = math.exp(-Delta_g_R_2 / (R_UNIV_J * T))
     Kc_3 = math.exp(-Delta_g_R_3 / (R_UNIV_J * T))
 
     # GRI-Mech 3.0 rate constants
-    if fuel_type in ("H2", "jetA"):
-        # Forward rate constants (convert from cm³ to m³)
-        # Note: GRI-Mech reaction (1) is defined as N+NO<=>N2+O, so we use reverse coefficients
-        k1_r = 2.70e13 * math.exp(-355.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
-        k2_f = 9.0e9 * T * math.exp(-6500.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
-        k3_f = 3.36e13 * math.exp(-385.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
 
-        # Calculate other rate constants using equilibrium relationships
-        k1_f = k1_r * Kc_1
-        k2_r = k2_f / Kc_2
-        k3_r = k3_f / Kc_3
+    # Forward rate constants (convert from cm³ to m³)
+    # Note: GRI-Mech reaction (1) is defined as N+NO<=>N2+O, so we use reverse coefficients
+    k1_r = 2.70e13 * math.exp(-355.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
+    k2_f = 9.0e9 * T * math.exp(-6500.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
+    k3_f = 3.36e13 * math.exp(-385.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
 
-    else:
-        raise ValueError(f"Rate constants not available for fuel type: {fuel_type}")
+    # Calculate other rate constants using equilibrium relationships
+    k1_f = k1_r * Kc_1
+    k2_r = k2_f / Kc_2
+    k3_r = k3_f / Kc_3
 
-    k_forward = {'k1_f': k1_f, 'k2_f': k2_f, 'k3_f': k3_f}
-    k_reverse = {'k1_r': k1_r, 'k2_r': k2_r, 'k3_r': k3_r}
-
-    return k_forward, k_reverse
+    return k1_f, k2_f, k3_f, k1_r, k2_r, k3_r
 
 
-def _calculate_nitrogen_concentration(concentrations, k_forward, k_reverse, c_NO, V, dVdt):
+@njit()
+def _calculate_nitrogen_concentration(c_O, c_N2, c_O2, c_OH, c_H, c_NO, k1_f, k2_f, k3_f, k1_r, k2_r, k3_r, V, dVdt):
     """Calculate N atom concentration using quasi-steady state assumption."""
-
-    c_O = concentrations['c_O']
-    c_N2 = concentrations['c_N2']
-    c_O2 = concentrations['c_O2']
-    c_OH = concentrations['c_OH']
-    c_H = concentrations['c_H']
-
-    k1_f, k2_f, k3_f = k_forward['k1_f'], k_forward['k2_f'], k_forward['k3_f']
-    k1_r, k2_r, k3_r = k_reverse['k1_r'], k_reverse['k2_r'], k_reverse['k3_r']
 
     # Quasi-steady state: dc_N/dt = 0
     numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
@@ -380,14 +367,9 @@ def _calculate_nitrogen_concentration(concentrations, k_forward, k_reverse, c_NO
     return numerator / denominator
 
 
-def _calculate_nox_formation_rate(concentrations, k_forward, k_reverse, c_N, c_NO, V, dVdt):
+@njit()
+def _calculate_nox_formation_rate(c_O, c_N2, c_N, c_NO, k1_f, k1_r, V, dVdt):
     """Calculate the net NOx formation rate."""
-
-    c_O = concentrations['c_O']
-    c_N2 = concentrations['c_N2']
-
-    k1_f = k_forward['k1_f']
-    k1_r = k_reverse['k1_r']
 
     # Net rate from extended Zeldovich mechanism (primarily reaction 1)
     dc_NOdt_chem = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
@@ -399,20 +381,24 @@ def _calculate_nox_formation_rate(concentrations, k_forward, k_reverse, c_N, c_N
         # Convert concentration rate to molar rate
         dNOdt = dc_NOdt * V + c_NO * dVdt
     else:
-        dNOdt = dc_NOdt_chem * V if V >= 0 else 0.0
+        if V >= 0:
+            dNOdt = dc_NOdt_chem * V
+        else:
+            dNOdt = 0.0
 
     return dNOdt
 
 
+@njit()
 def _process_nox_results(NO_mol, times, m_tot, mf_tot, equ_global, m_global, fuel_type):
     """Process NOx calculation results and calculate concentrations."""
 
     # Calculate gradient
-    dNOdt_mol = np.gradient(NO_mol, times)
+    dNOdt_mol = numba_gradient_uniform(NO_mol, times)
 
     # Get NO molar mass
     t_dummy, p_dummy = 1000.0, 1e5
-    _, _, _, _, M_NO = polynomials.NO(t_dummy, p_dummy)
+    _, _, _, _, M_NO = NO(t_dummy, p_dummy)
 
     # Convert to mass
     m_NO = NO_mol * M_NO
@@ -429,3 +415,39 @@ def _process_nox_results(NO_mol, times, m_tot, mf_tot, equ_global, m_global, fue
     EI_nox = (m_NO[-1] / mf_tot) * G_PER_KG_FACTOR
 
     return (no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO[-1])
+
+
+@njit
+def numba_gradient_uniform(y, x):
+    """
+    Simple Numba-compatible gradient for uniform spacing.
+
+    Parameters
+    ----------
+    y : array_like
+        Input array for which gradient is calculated
+    x : array_like
+        Sample points (assumes uniform spacing)
+
+    Returns
+    -------
+    gradient : ndarray
+        Gradient of y with respect to x
+    """
+    n = len(y)
+    gradient = np.zeros_like(y)
+
+    # Calculate uniform spacing
+    dx = x[1] - x[0]
+
+    # Forward difference at start
+    gradient[0] = (y[1] - y[0]) / dx
+
+    # Central difference in middle
+    for i in range(1, n - 1):
+        gradient[i] = (y[i + 1] - y[i - 1]) / (2.0 * dx)
+
+    # Backward difference at end
+    gradient[n - 1] = (y[n - 1] - y[n - 2]) / dx
+
+    return gradient

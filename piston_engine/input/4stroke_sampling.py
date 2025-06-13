@@ -2,8 +2,6 @@ import numpy as np
 
 cycle = "4T"
 
-thermo = "NASA"
-
 fuel = 'jetA'
 
 cooling = "Hohenberg"
@@ -76,16 +74,12 @@ wm = 1.40  # funkar
 
 
 # this if for single wiebe function
+# VALUES FROM NASAS TWOSTROKE PAPER
 m_wiebe = 1.0
 
 phi_sc = (345/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #345
 phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
 
-#phi_sc = (345/180)*np.pi  # angle at combustion start
-#phi_cd = (50/180)*np.pi  # angle related to combustion duration
-
-#phi_sc = (362/180)*np.pi  # angle at combustion start
-#phi_cd = (40/180)*np.pi  # angle related to combustion duration
 
 T_fuel = 500
 p_fuel = 2500e5

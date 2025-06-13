@@ -38,7 +38,7 @@ def turbine(
 
         # assumes pure air for cooling
         h1_cool, _, _, _, _, _, _, _ = mixture(
-            t_cool, p1_main, equ=0
+            t_cool, p1_main
         )  # cooling air props
         m1 = m1_main + q_ngv * m1_cool  # mass flow after mixing of stator cooling
         h1 = (

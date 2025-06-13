@@ -19,47 +19,47 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-flags = ["single", "print_output", "cce"]  # normal case
+#flags = ["single", "print_output", "cce"]  # normal case
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
-#flags = ['optim', "cce"]
+flags = ['optim', "cce"]
 
 
 if "conventional" in flags:
-    data = [
-        d.Fn,
-        d.dTisa,
-        d.bpr,
-        d.T4,
-        d.fpr_outer,
-        d.Fs_req,
-        d.dp_intake,
-        d.dp_bypass,
-        d.M,
-        d.eta_fan,
-        d.eta_p_hpc,
-        d.eta_p_lpc,
-        d.eta_b,
-        d.dPcomb,
-        d.eta_s,
-        d.eta_g,
-        d.q_ngv,
-        d.bpr_c,
-        d.eta_hpt,
-        d.eta_lpt,
-        d.cfg_core,
-        d.cfg_bypass,
-        d.cd_nozzle,
-        d.alt,
-        d.fuel,
-        d.OPR,
-        d.PR,
-        d.t_fuel,
-        d.t_tank,
-        d.power_offtake,
-        d.dp_rec,
-        d.dT_rec,
-    ]
+    data_dict = {
+        "Fn": d.Fn,
+        "dTisa": d.dTisa,
+        "bpr": d.bpr,
+        "T4": d.T4,
+        "fpr_outer": d.fpr_outer,
+        "Fs_req": d.Fs_req,
+        "dp_intake": d.dp_intake,
+        "dp_bypass": d.dp_bypass,
+        "M": d.M,
+        "eta_fan": d.eta_fan,
+        "eta_p_hpc": d.eta_p_hpc,
+        "eta_p_lpc": d.eta_p_lpc,
+        "eta_b": d.eta_b,
+        "dPcomb": d.dPcomb,
+        "eta_s": d.eta_s,
+        "eta_g": d.eta_g,
+        "q_ngv": d.q_ngv,
+        "bpr_c": d.bpr_c,
+        "eta_hpt": d.eta_hpt,
+        "eta_lpt": d.eta_lpt,
+        "cfg_core": d.cfg_core,
+        "cfg_bypass": d.cfg_bypass,
+        "cd_nozzle": d.cd_nozzle,
+        "alt": d.alt,
+        "fuel": d.fuel,
+        "OPR": d.OPR,
+        "PR": d.PR,
+        "t_fuel": d.t_fuel,
+        "t_tank": d.t_tank,
+        "power_offtake": d.power_offtake,
+        "dp_rec": d.dp_rec,
+        "dT_rec": d.dT_rec,
+    }
 
     if d.fuel == "H2":
         (
@@ -77,82 +77,78 @@ if "conventional" in flags:
 
 elif "cce" in flags:
 
-    data = [
-        d.Fn,
-        d.dTisa,
-        d.bpr,
-        d.T4,
-        d.fpr_outer,
-        d.Fs_req,
-        d.dp_intake,
-        d.dp_bypass,
-        d.M,
-        d.eta_fan,
-        d.eta_p_lpc,
-        d.eta_p_hpc,
-        d.eta_b,
-        d.dPcomb,
-        d.eta_s,
-        d.eta_g,
-        d.q_ngv,
-        d.bpr_c,
-        d.eta_lpt,
-        d.cfg_core,
-        d.cfg_bypass,
-        d.cd_nozzle,
-        d.alt,
-        d.fuel,
-        d.pi_pe,
-        d.surrogate,
-        d.cr,
-        d.OPR,
-        d.PR,
-        d.bore,
-        d.second_burner,
-        d.t_fuel,
-        d.t_tank,
-        d.power_offtake,
-    ]
+    cce_input = {
+        "Fn": d.Fn,
+        "dTisa": d.dTisa,
+        "bpr": d.bpr,
+        "T4": d.T4,
+        "fpr_outer": d.fpr_outer,
+        "Fs_req": d.Fs_req,
+        "dp_intake": d.dp_intake,
+        "dp_bypass": d.dp_bypass,
+        "M": d.M,
+        "eta_fan": d.eta_fan,
+        "eta_p_hpc": d.eta_p_hpc,
+        "eta_p_lpc": d.eta_p_lpc,
+        "eta_b": d.eta_b,
+        "dPcomb": d.dPcomb,
+        "eta_s": d.eta_s,
+        "eta_g": d.eta_g,
+        "q_ngv": d.q_ngv,
+        "bpr_c": d.bpr_c,
+        "eta_lpt": d.eta_lpt,
+        "cfg_core": d.cfg_core,
+        "cfg_bypass": d.cfg_bypass,
+        "cd_nozzle": d.cd_nozzle,
+        "alt": d.alt,
+        "fuel": d.fuel,
+        "OPR": d.OPR,
+        "PR": d.PR,
+        "t_fuel": d.t_fuel,
+        "t_tank": d.t_tank,
+        "power_offtake": d.power_offtake,
+        "surrogate": d.surrogate,
+        "second_burner": d.second_burner,
+    }
 
-    data_piston = [
-        d_p.p_in,
-        d_p.T_in,
-        d_p.p_ratio,
-        d_p.cycle,
-        d_p.thermo,
-        d_p.cooling,
-        d_p.opposed,
-        d_p.cr,
-        d_p.d,
-        d_p.bsr,
-        d_p.v_mean,
-        d_p.lms,
-        d_p.Twalls,
-        d_p.ch,
-        d_p.valve_timings,
-        d_p.n_valve,
-        d_p.lv_max,
-        d_p.cd,
-        d_p.eta_c,
-        d_p.mf_tot,
-        d_p.wa,
-        d_p.wm,
-        d_p.m_wiebe,
-        d_p.phi_sc,
-        d_p.phi_cd,
-        d_p.T_fuel,
-        d_p.p_fuel,
-        d_p.it,
-        d_p.wiebe_type,
-        d_p.valve_type,
-        d_p.far_goal,
-        d_p.cylinders,
-        d_p.fuel,
-        d_p.c1,
-        d_p.c4,
-        d_p.c5,
-        d_p.premixed,
-    ]
+    piston_input = {
+        'p_in': d_p.p_in,
+        'T_in': d_p.T_in,
+        'p_ratio': d_p.p_ratio,
+        'cycle': d_p.cycle,
+        'cooling': d_p.cooling,
+        'opposed': d_p.opposed,
+        'cr': d_p.cr,
+        'bore': d_p.d,
+        'bsr': d_p.bsr,
+        'v_mean': d_p.v_mean,
+        'lms': d_p.lms,
+        'Twalls': d_p.Twalls,
+        'ch': d_p.ch,
+        'valve_timings': d_p.valve_timings,
+        'n_valve': d_p.n_valve,
+        'lv_max': d_p.lv_max,
+        'cd': d_p.cd,
+        'eta_c': d_p.eta_c,
+        'mf_tot': d_p.mf_tot,
+        'wa': d_p.wa,
+        'wm': d_p.wm,
+        'm_wiebe': d_p.m_wiebe,
+        'phi_sc': d_p.phi_sc,
+        'phi_cd': d_p.phi_cd,
+        'T_fuel': d_p.T_fuel,
+        'p_fuel': d_p.p_fuel,
+        'it': d_p.it,
+        'wiebe_type': d_p.wiebe_type,
+        'valve_type': d_p.valve_type,
+        'far_goal': d_p.far_goal,
+        'cylinders': d_p.cylinders,
+        'fuel': d_p.fuel,
+        'c1': d_p.c1,
+        'c4': d_p.c4,
+        'c5': d_p.c5,
+        'premixed': d_p.premixed,
+    }
 
 
     if "single" in flags:
@@ -180,7 +176,7 @@ elif "cce" in flags:
                 T35,
                 EI_nox,
                 error,
-            ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+            ) = cce_propulsion_system.run_cce(cce_input, piston_input, flags, meta_model)
 
             """
             sfc, v_ratio, thrust, m0, fpr, p_max, T_max, T_in_piston, T_out_piston, TET, far_piston, T35, EI_nox, error\
@@ -206,7 +202,7 @@ elif "cce" in flags:
                 TET,
                 far_piston,
                 T35,
-            ) = cce_propulsion_system_h2.run_cce(data, data_piston, flags, meta_model)
+            ) = cce_propulsion_system_h2.run_cce(cce_input, piston_input, flags, meta_model)
 
 
         end = timer()
@@ -248,6 +244,6 @@ elif "cce" in flags:
 
 
         #auxiliaries.global_optimisation(data, data_piston, flags, meta_model)
-        auxiliaries.nsga_optimisation(data, data_piston, flags, meta_model)
+        auxiliaries.nsga_optimisation(cce_input, piston_input, flags, meta_model)
     else:
         print("No known flags")

@@ -4,11 +4,11 @@ from timeit import default_timer as timer
 import time
 import sys
 
-from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera
+from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera, nox_model_cantera_fast
 
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
-
+from numba import njit
 
 import thermo
 
@@ -18,11 +18,43 @@ from scipy.integrate import solve_ivp
 dPdphi_temp = 0
 
 
-def run_piston_engine(indata, flags):
-    [p_in, T_in, p_ratio, cycle, cooling, opposed, cr, d, bsr, v_mean, lms, Twalls, ch,
-     valve_timings, n_valve, lv_max, cd, eta_c, mf_tot, wa, wm, m_wiebe,
-     phi_sc, phi_cd, T_fuel, p_fuel, it, wiebe_type, valve_type, far_goal, cylinders, fuel_type,
-     c1, c4, c5, premixed] = indata
+def run_piston_engine(input, flags):
+    p_in = input['p_in']
+    T_in = input['T_in']
+    p_ratio = input['p_ratio']
+    cycle = input['cycle']
+    cooling = input['cooling']
+    opposed = input['opposed']
+    cr = input['cr']
+    d = input['bore']
+    bsr = input['bsr']
+    v_mean = input['v_mean']
+    lms = input['lms']
+    Twalls = input['Twalls']
+    ch = input['ch']
+    valve_timings = input['valve_timings']
+    n_valve = input['n_valve']
+    lv_max = input['lv_max']
+    cd = input['cd']
+    eta_c = input['eta_c']
+    mf_tot = input['mf_tot']
+    wa = input['wa']
+    wm = input['wm']
+    m_wiebe = input['m_wiebe']
+    phi_sc = input['phi_sc']
+    phi_cd = input['phi_cd']
+    T_fuel = input['T_fuel']
+    p_fuel = input['p_fuel']
+    it = input['it']
+    wiebe_type = input['wiebe_type']
+    valve_type = input['valve_type']
+    far_goal = input['far_goal']
+    cylinders = input['cylinders']
+    fuel_type = input['fuel']  # Note: you had 'fuel_type' in your unpacking but 'fuel' in the dict
+    c1 = input['c1']
+    c4 = input['c4']
+    c5 = input['c5']
+    premixed = input['premixed']
 
     # outlet pressure
     p_out = p_ratio * p_in
@@ -917,11 +949,20 @@ def run_piston_engine(indata, flags):
                                                                                                     LHV, far_s,
                                                                                                     equ[-1], fuel_type,
                                                                                                     factor, premixed)
+        end = timer()
+        print(f'Runtime of twozone calculations: {end - start} [s]')
 
-
-        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+        start = timer()
+        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+        #no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera_fast.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+        #                                                             rpm,
+        #                                                             m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+        end = timer()
+        print(f'Runtime of NOx calculations: {end - start} [s]')
 
 
 
@@ -930,9 +971,6 @@ def run_piston_engine(indata, flags):
         # convert from J to kwH and from kg to g
         nox_spec = (m_NO / W[-1][-1]) * (3600 * 1e3) * 1e3
 
-
-        end = timer()
-        print(f'Runtime of NOx calculations: {end - start} [s]')
 
     elif cycle == "2T":
         EI_nox = 999
@@ -1011,7 +1049,6 @@ def run_piston_engine(indata, flags):
             from piston_engine.src.misc.plot_output import val_newcastle
 
         elif 'validate_chalmers' in flags:
-            # validate NOx model with data from scania engine (KTH msc thesis)
             from piston_engine.src.misc.plot_output import val_chalmers
 
             val_chalmers(phi, P[-1], T[-1], Q_in[-1], V[-1], equ[-1], premixed)

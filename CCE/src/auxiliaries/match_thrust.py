@@ -10,9 +10,9 @@ from scipy.optimize import (
 # THIS IS THE MOST UP TO DATE VERSION
 
 
-def run_cce_fpr(data, data_piston, flags, meta_model):
+def run_cce_fpr(input, data_piston, flags, meta_model):
 
-    Fs_goal = data[5]  # specific thrust
+    Fs_goal = input["Fs_req"]  # specific thrust
     x0 = np.array([1.2])
     limits = [(1.15, 1.7)]
 
@@ -23,7 +23,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
     def find_fpr(fpr):
         if fpr > 2.0 or fpr < 1.0:
             return 1e6
-        data[4] = fpr[0]  # fpr
+        input["fpr_outer"] = fpr[0]  # fpr
         # print(fpr[0])
         start = timer()
         (
@@ -40,7 +40,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
             T35,
             EI_nox,
             error,
-        ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+        ) = cce_propulsion_system.run_cce(input, data_piston, flags, meta_model)
         end = timer()
         # print(f'one run cce: {end - start}')
         if error:
@@ -94,7 +94,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
     # FINAL RUN
     #flags.append("print_output")
     #print(f"Matching outer FPR is: {opt_fpr[0]}")
-    data[4] = opt_fpr[0]
+    input["fpr_outer"] = opt_fpr[0]
 
     (
         sfc_final,
@@ -110,7 +110,7 @@ def run_cce_fpr(data, data_piston, flags, meta_model):
         T35,
         EI_nox,
         error,
-    ) = cce_propulsion_system.run_cce(data, data_piston, flags, meta_model)
+    ) = cce_propulsion_system.run_cce(input, data_piston, flags, meta_model)
 
 
     if np.abs(thrust_final / m0 - Fs_goal) > 1e-3:

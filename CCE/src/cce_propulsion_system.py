@@ -8,43 +8,42 @@ from CCE.src.gas_props.air_properties import isa
 from thermo import fuel_props
 
 
-def run_cce(indata, data_piston, flags, meta_model):
-    [
-        Fn,
-        disa,
-        bpr,
-        T4_req,
-        fpr_outer,
-        Fs_req,
-        dp_in,
-        dp_bypass,
-        Mach,
-        eta_fan,
-        eta_p_lpc,
-        eta_p_hpc,
-        eta_b,
-        dPcomb,
-        eta_s,
-        eta_g,
-        q_ngv,
-        bpr_c,
-        eta_s_lpt,
-        cfg_core,
-        cfg_bypass,
-        cd_nozzle,
-        alt,
-        fuel_type,
-        pi_pe,
-        surrogate,
-        cr,
-        OPR,
-        PR,
-        bore,
-        second_burner,
-        t_fuel,
-        t_tank,
-        offtake,
-    ] = indata
+def run_cce(input, input_piston, flags, meta_model):
+
+    Fn = input['Fn']
+    dTisa = input['dTisa']
+    bpr = input['bpr']
+    T4_req = input['T4']
+    fpr_outer = input['fpr_outer']
+    Fs_req = input['Fs_req']
+    dp_intake = input['dp_intake']
+    dp_bypass = input['dp_bypass']
+    Mach = input['M']
+    eta_fan = input['eta_fan']
+    eta_p_lpc = input['eta_p_lpc']
+    eta_p_hpc = input['eta_p_hpc']
+    eta_b = input['eta_b']
+    dPcomb = input['dPcomb']
+    eta_s = input['eta_s']
+    eta_g = input['eta_g']
+    q_ngv = input['q_ngv']
+    bpr_c = input['bpr_c']
+    eta_s_lpt = input['eta_lpt']
+    cfg_core = input['cfg_core']
+    cfg_bypass = input['cfg_bypass']
+    cd_nozzle = input['cd_nozzle']
+    alt = input['alt']
+    fuel_type = input['fuel']
+    pi_pe = input['pi_pe']
+    surrogate = input['surrogate']
+    cr = input['cr']
+    OPR = input['OPR']
+    PR = input['PR']
+    bore = input['bore']
+    second_burner = input['second_burner']
+    t_fuel = input['t_fuel']
+    t_tank = input['t_tank']
+    power_offtake = input['power_offtake']
 
     error = False
     minor_error_mass = False
@@ -68,7 +67,7 @@ def run_cce(indata, data_piston, flags, meta_model):
 
     # ISA table
     pa, Ta, a = isa(
-        alt, disa, False
+        alt, dTisa, False
     )  # static pressure, static temperature and speed of sound
 
     # calculate optimum fpr from Gouya paper (Unsure if this works for me)
@@ -78,7 +77,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     p0, T0 = compressible.stagnation(pa, Ta, Mach)
 
     # Inlet
-    p2, T2 = components.inlet(p0, T0, dp_in)
+    p2, T2 = components.inlet(p0, T0, dp_intake)
     m2 = m0
 
     # Split core and bypass mass flow
@@ -146,19 +145,19 @@ def run_cce(indata, data_piston, flags, meta_model):
 
 
     # Piston engine
-    data_piston[0] = p32
-    data_piston[1] = T32
-    data_piston[2] = pi_pe
-    data_piston[7] = cr
-    data_piston[8] = bore
+    input_piston["p_in"] = p32
+    input_piston["T_in"] = T32
+    input_piston["p_ratio"] = pi_pe
+    input_piston["cr"] = cr
+    input_piston["bore"] = bore
     lv_max = 0.1 * bore
-    data_piston[16] = lv_max
-    data_piston[25] = t_fuel
+    input_piston["lv_max"] = lv_max
+    input_piston["T_fuel"] = t_fuel
 
     # Number of V12 engines
     nr_engines = 2
 
-    power_req = P_hpc / eta_g + P_cooling + offtake
+    power_req = P_hpc / eta_g + P_cooling + power_offtake
     # Piston engine powers the HPC + Cooling+ gearbox for hpc ( no shaft efficiency now) (circumv flow is within
     # the piston model)
     power_req_single = power_req / nr_engines
@@ -188,7 +187,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         m_nox,
         error,
     ) = misc.match_power_nn(
-        data_piston,
+        input_piston,
         meta_model,
         power_req_single,
         core_flow=m31 / nr_engines,
@@ -236,7 +235,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         listofzeros[0] = cost
         return listofzeros
 
-    # checking max pressure
+    """    # checking max pressure
     if p_max > 250 * 1e5:
         error = True
         minor_error_pressure = True
@@ -246,7 +245,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         listofzeros = [0] * outputs
         listofzeros[-1] = error
         listofzeros[0] = cost
-        return listofzeros
+        return listofzeros"""
 
     bpr_piston = (
         m_circumv / m31
@@ -254,7 +253,7 @@ def run_cce(indata, data_piston, flags, meta_model):
     # mass flow going into the piston engines
     m32 = m31 - m_circumv
 
-    nr_of_cylinders_per_engine = data_piston[31]
+    nr_of_cylinders_per_engine = input_piston["cylinders"]
     V_d = bore_match * bore_match**2 / 4 * np.pi
     V_d_tot = V_d * nr_of_cylinders_per_engine * nr_engines  # total displacement
 
@@ -367,7 +366,7 @@ def run_cce(indata, data_piston, flags, meta_model):
         p13, T13, heating_bypass, oil_temp_1
     )
 
-    print(f"Mass flow of engine oil: {m_oil} kg/s")
+    #print(f"Mass flow of engine oil: {m_oil} kg/s")
 
     m14 = m13 - m15  # mass flow not going through heat exchanger
     p14 = (1 - dp_bypass) * p13
@@ -546,7 +545,7 @@ def run_cce(indata, data_piston, flags, meta_model):
             m21,
             power_tot,
             power_hpc,
-            offtake,
+            power_offtake,
             power_lpt,
             p3,
             T3,
@@ -582,7 +581,7 @@ def run_cce(indata, data_piston, flags, meta_model):
             - friction_loss_tot
             - aux_loss_tot
             - P_cooling
-            - offtake
+            - power_offtake
         ) * (1 - eta_g)
         misc.power_balance(
             induced_power_tot,
@@ -592,7 +591,7 @@ def run_cce(indata, data_piston, flags, meta_model):
             P_circumv_tot,
             P_cooling,
             piston_gearbox,
-            offtake,
+            power_offtake,
             P_hpc,
             power_lpt,
             power_lpt * (1 - eta_s),

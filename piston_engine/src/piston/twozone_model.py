@@ -1,7 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import integrate
 from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cantera
+from numba import njit
 
 # Constants
 DEFAULT_LAMBDA_0_DIESEL = 1.00

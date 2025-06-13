@@ -22,7 +22,7 @@ from src import load_ANN
 
 ## NN-PP: Neural Network Post Processing
 
-folder = "H2"
+folder = "jetA"
 # Load the trained model
 hidden_dim = 128
 layers = 2
@@ -179,12 +179,16 @@ for T_in1 in tins:
 fars = np.linspace(0.02923 / 3.0, 0.02923 / 1.1, 1000)
 
 powers2 = []
+noxs = []
+
 for far in fars:
     temp = model.inference(np.array([p_in, T_in, cr, bore, far, PI, v_mean, T_fuel]))
     powers2.append(temp[0][5])
+    noxs.append(temp[0][8])
 
 powers1 = np.array(powers1)
 powers2 = np.array(powers2)
+noxs = np.array(noxs)
 
 
 fs = 24
@@ -357,6 +361,16 @@ ax6.plot(fars, powers2 * 1e-3)
 ax6.set_xlabel(r"far [-]")
 ax6.set_ylabel(r"P [kW]")
 ax6.set_title(rf"Layers: {layers + 1}, neurons: {hidden_dim}, Training set")
+# ax2.set_ylim(-10, 10)
+# ax1.set_xlim(100, epochs)
+
+
+# plot the real values for power and the predicted one
+fig, ax7 = plt.subplots()
+ax7.plot(fars, noxs)
+ax7.set_xlabel(r"far [-]")
+ax7.set_ylabel(r"NOX [ppm]")
+ax7.set_title(rf"Layers: {layers + 1}, neurons: {hidden_dim}, Training set")
 # ax2.set_ylim(-10, 10)
 # ax1.set_xlim(100, epochs)
 

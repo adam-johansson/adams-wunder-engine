@@ -21,7 +21,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
     psi1 = entropy_func(t1, p1, equ=equ, fuel_type=fuel_type)
 
     # enthalpy nozzle inlet
-    h1, _, cp1, cv1, R1, gamma1, s1, mol1 = mixture(t1, p1, equ=equ, fuel_type=fuel_type)
+    h1, _, cp1, cv1, R1, gamma1, s1, mol1 = mixture(t1, p1, equivalence_ratio=equ, fuel_type=fuel_type)
 
     # ideal static entropy function
     psi2_s_id = psi1 - np.log(p1 / pa)
@@ -41,7 +41,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
 
     p_dummy = 1e5
     h2_s, _, _, _, _, _, _, _ = mixture(
-        t2_s, p_dummy, equ=equ, fuel_type=fuel_type
+        t2_s, p_dummy, equivalence_ratio=equ, fuel_type=fuel_type
     )
 
     # ideal exit velocity is difference between total inlet enthalpy and exit static enthalpy

@@ -18,10 +18,10 @@ from thermo import fuel_props
 #input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
-#input_file = "validation_twozone.two_zone_heider"
+input_file = "validation_twozone.two_zone_heider"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
-input_file = "validation_chalmers.case2"
+#input_file = "validation_chalmers.case3"
 # input_file = "validation_twozone.water_hydrogen"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
@@ -47,7 +47,7 @@ d = importlib.import_module(path)
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
 # flags = ['load']
-#flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
+flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
@@ -62,47 +62,47 @@ d = importlib.import_module(path)
 # flags = ["single", "fit_newcastle"]
 # flags = ["sweep_chalmers_h2"]
 #flags = ["single", "validate_chalmers", 'plot_convergence']
-flags = ["single", "validate_chalmers"]
+#flags = ["single", "validate_chalmers"]
 #flags = ["single", "validate_twozone"]
 
-data = [
-    d.p_in,
-    d.T_in,
-    d.p_ratio,
-    d.cycle,
-    d.cooling,
-    d.opposed,
-    d.cr,
-    d.d,
-    d.bsr,
-    d.v_mean,
-    d.lms,
-    d.Twalls,
-    d.ch,
-    d.valve_timings,
-    d.n_valve,
-    d.lv_max,
-    d.cd,
-    d.eta_c,
-    d.mf_tot,
-    d.wa,
-    d.wm,
-    d.m_wiebe,
-    d.phi_sc,
-    d.phi_cd,
-    d.T_fuel,
-    d.p_fuel,
-    d.it,
-    d.wiebe_type,
-    d.valve_type,
-    d.far_goal,
-    d.cylinders,
-    d.fuel,
-    d.c1,
-    d.c4,
-    d.c5,
-    d.premixed,
-]
+piston_input = {
+    'p_in': d.p_in,
+    'T_in': d.T_in,
+    'p_ratio': d.p_ratio,
+    'cycle': d.cycle,
+    'cooling': d.cooling,
+    'opposed': d.opposed,
+    'cr': d.cr,
+    'bore': d.d,
+    'bsr': d.bsr,
+    'v_mean': d.v_mean,
+    'lms': d.lms,
+    'Twalls': d.Twalls,
+    'ch': d.ch,
+    'valve_timings': d.valve_timings,
+    'n_valve': d.n_valve,
+    'lv_max': d.lv_max,
+    'cd': d.cd,
+    'eta_c': d.eta_c,
+    'mf_tot': d.mf_tot,
+    'wa': d.wa,
+    'wm': d.wm,
+    'm_wiebe': d.m_wiebe,
+    'phi_sc': d.phi_sc,
+    'phi_cd': d.phi_cd,
+    'T_fuel': d.T_fuel,
+    'p_fuel': d.p_fuel,
+    'it': d.it,
+    'wiebe_type': d.wiebe_type,
+    'valve_type': d.valve_type,
+    'far_goal': d.far_goal,
+    'cylinders': d.cylinders,
+    'fuel': d.fuel,
+    'c1': d.c1,
+    'c4': d.c4,
+    'c5': d.c5,
+    'premixed': d.premixed,
+}
 
 
 if "single" in flags:
@@ -128,7 +128,7 @@ if "single" in flags:
         EI_nox,
         volume_eff,
         nox_spec,
-    ) = run_piston_engine(data, flags)
+    ) = run_piston_engine(piston_input, flags)
     end = timer()
     print(f"Time: {end - start}")
 

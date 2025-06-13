@@ -10,27 +10,27 @@ from piston_engine.src.misc.seiliger import seiliger
 import numpy as np
 
 
-def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_loss_in, p_loss_out):
+def match_power_nn(input, meta_model, power_req, core_flow, surrogate_status, p_loss_in, p_loss_out):
 
     error = False
     outputs = 22
 
     # input to surrogate
-    pin = data[0]
-    Tin = data[1]
-    bore = data[8]
-    cr = data[7]
-    p_ratio = data[2]
-    v_mean = data[10]
-    T_fuel = data[25]
+    pin = input["p_in"]
+    Tin = input["T_in"]
+    bore = input["bore"]
+    cr = input["cr"]
+    p_ratio = input["p_ratio"]
+    v_mean = input["v_mean"]
+    T_fuel = input["T_fuel"]
 
 
     # needed to convert surrogate data (single cylinder)
-    cylinders = data[31]
+    cylinders = input["cylinders"]
 
     # print(pin, Tin)
     # fuel type
-    fuel_type = data[32]
+    fuel_type = input["fuel"]
     far_s, LHV = fuel_props(fuel_type)
 
     if surrogate_status:
@@ -83,7 +83,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
 
         else:
             flags = ["sweep"]
-            data[30] = x[0]  # fuel air ratio
+            input["far_goal"] = x[0]  # fuel air ratio
             (
                 _,
                 _,
@@ -104,7 +104,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
                 _,
                 _,
                 _,
-            ) = run_piston_engine(data, flags)
+            ) = run_piston_engine(input, flags)
 
         # pressurise circumventing flow
         m_circumvent = core_flow - air_flow
@@ -136,7 +136,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
         P_fuel_pump = components.fuel_pump(p_tdc, fuel_type, fuel_flow)
 
         # things needed for aux and friction losses
-        bsr = data[9]
+        bsr = input["bsr"]
         stroke = bore / bsr
         lv_max = bore * 0.1
         # cylinders = data[31]
@@ -144,7 +144,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
         rpm = v_mean / (2 * stroke) * 60
         rps = rpm / 60
         Vd_tot = stroke * bore**2 / 4 * np.pi * cylinders
-        cycle = data[3]
+        cycle = input["cycle"]
 
         # auxiliary losses and friction losses. these do not depend on the trapped fuel air ratio
         friction_loss, aux_loss, _ = post_processing.friction_patton(
@@ -223,7 +223,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
 
     else:
         flags = ["sweep"]
-        data[30] = far34_final  # fuel air ratio
+        input["far_goal"] = far34_final  # fuel air ratio
         (
             T34_final,
             _,
@@ -244,7 +244,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
             EI_nox,
             _,
             nox_spec,
-        ) = run_piston_engine(data, flags)
+        ) = run_piston_engine(input, flags)
 
     # power needed to compress circumventing air
     m_circumvent_final = core_flow - air_flow_final
@@ -289,7 +289,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
     P_fuel_pump_final = components.fuel_pump(p_tdc_final, fuel_type, fuel_flow_final)
 
     # things needed for aux and friction losses
-    bsr = data[9]
+    bsr = input["bsr"]
     stroke = bore / bsr
     lv_max = bore * 0.1
     # cylinders = data[31]
@@ -297,7 +297,7 @@ def match_power_nn(data, meta_model, power_req, core_flow, surrogate_status, p_l
     rpm = v_mean / (2 * stroke) * 60
     rps = rpm / 60
     Vd_tot = stroke * bore**2 / 4 * np.pi * cylinders
-    cycle = data[3]
+    cycle = input["cycle"]
     if cycle == "4T":
         n_r = 2
     else:
