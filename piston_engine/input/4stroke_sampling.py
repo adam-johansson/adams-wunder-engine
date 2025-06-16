@@ -84,7 +84,7 @@ phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SING
 T_fuel = 500
 p_fuel = 2500e5
 
-it = 100
+it = 300
 
 mf_tot = 1.5e-4
 

@@ -771,7 +771,7 @@ def run_piston_engine(input, flags):
 
             if convergence:
                 end = timer()
-                print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
+                # print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
                 # print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1])
                 break
 
@@ -950,7 +950,7 @@ def run_piston_engine(input, flags):
                                                                                                     equ[-1], fuel_type,
                                                                                                     factor, premixed)
         end = timer()
-        print(f'Runtime of twozone calculations: {end - start} [s]')
+        #print(f'Runtime of twozone calculations: {end - start} [s]')
 
         start = timer()
         no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
@@ -958,7 +958,7 @@ def run_piston_engine(input, flags):
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
         end = timer()
-        print(f'Runtime of NOx calculations: {end - start} [s]')
+        #print(f'Runtime of NOx calculations: {end - start} [s]')
 
 
 

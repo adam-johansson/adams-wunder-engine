@@ -17,7 +17,7 @@ from numba import njit
 from thermo import fuel_props
 
 # Setting up the piston engine
-input_file = "4stroke_hydrogen_sampling"
+input_file = "4stroke_sampling"
 
 if input_file == "4stroke_hydrogen_sampling":
     fuel = "H2"
@@ -34,16 +34,16 @@ flags = ["sweep"]
 # just to be able to get 1 output instead of 4
 
 # 8 with pratio and 7 without
-ndim = 7  # number of input variables
+ndim = 8  # number of input variables
 n_out = 9  # Number of outputs from the piston model
 
 
 start_sampling = timer()
 
 # limits for the sampling
-p_lim = [2e5, 35e5]  # limits for input pressure
+p_lim = [1e5, 35e5]  # limits for input pressure
 T_lim = [250, 1000]  # limits for input temperature
-cr_lim = [6, 12]  # limits for geometric compression ratio
+cr_lim = [4, 16]  # limits for geometric compression ratio
 d_lim = [0.10, 0.20]  # limits for bore (piston diameter)
 p_ratio_lim = [0.9, 1.5]
 v_mean_lim = [8, 15]
@@ -52,27 +52,27 @@ v_mean_lim = [8, 15]
 far_s, _ = fuel_props(fuel)
 if fuel == "H2":
     # THIS THROTTLE LIM IS FOR HYDROGEN
-    far_lim = [far_s / 3.0, far_s / 1.2]  # (0.02923 / 5, 0.02923 / 1.5)
+    far_lim = [far_s / 3.0, far_s / 1.0]  # (0.02923 / 5, 0.02923 / 1.5)
     fuel_t_lim = [300, 500]
 
 elif fuel == "jetA":
     # THIS IS FOR JETA
-    far_lim = [far_s / 3.0, far_s / 1.2]
+    far_lim = [far_s / 3.0, far_s / 1.0]
     fuel_t_lim = [220, 550]
 
 
 # could add wall temperatures
 
-#xlimits = np.array(
-#    [p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim]
-#)
-
 xlimits = np.array(
-    [p_lim, T_lim, cr_lim, d_lim, far_lim, v_mean_lim, fuel_t_lim]
+    [p_lim, T_lim, cr_lim, d_lim, far_lim, p_ratio_lim, v_mean_lim, fuel_t_lim]
 )
 
+#xlimits = np.array(
+#    [p_lim, T_lim, cr_lim, d_lim, far_lim, v_mean_lim, fuel_t_lim]
+#)
+
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 6000  # points per variable #6000 takes 20h (gives 18000 nonzero points)
+npoints = 100  # points per variable #6000 takes 20h (gives 18000 nonzero points) (for 8 dimensions)
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -101,11 +101,9 @@ start_simulating = timer()
 i = 0
 remove = 0
 
-for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
-#for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
+#for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
+for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
     i += 1
-
-    # TODO: Add variable combustion duration and shape ...
 
     # rough estimiation of the peak pressure
     pmax_seiliger = seiliger(p, T, cr, far_goal, bore, fuel)
@@ -118,45 +116,44 @@ for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
     if pmax_seiliger < 400 * 1e5 and T < t_limit:
 
         lv_max = 0.1 * bore
-        data = [
-            p,
-            T,
-            d.p_ratio,
-            d.cycle,
-            d.thermo,
-            d.cooling,
-            d.opposed,
-            cr,
-            bore,
-            d.bsr,
-            v_mean,
-            d.lms,
-            d.Twalls,
-            d.ch,
-            d.valve_timings,
-            d.n_valve,
-            lv_max,
-            d.cd,
-            d.eta_c,
-            d.mf_tot,
-            d.wa,
-            d.wm,
-            d.m_wiebe,
-            d.phi_sc,
-            d.phi_cd,
-            fuel_t,
-            d.p_fuel,
-            d.it,
-            d.wiebe_type,
-            d.valve_type,
-            far_goal,
-            d.cylinders,
-            d.fuel,
-            d.c1,
-            d.c4,
-            d.c5,
-            d.premixed,
-        ]
+        piston_input = {
+            'p_in': p,
+            'T_in': T,
+            'p_ratio': p_ratio,
+            'cycle': d.cycle,
+            'cooling': d.cooling,
+            'opposed': d.opposed,
+            'cr': cr,
+            'bore': bore,
+            'bsr': d.bsr,
+            'v_mean': v_mean,
+            'lms': d.lms,
+            'Twalls': d.Twalls,
+            'ch': d.ch,
+            'valve_timings': d.valve_timings,
+            'n_valve': d.n_valve,
+            'lv_max': lv_max,
+            'cd': d.cd,
+            'eta_c': d.eta_c,
+            'mf_tot': d.mf_tot,
+            'wa': d.wa,
+            'wm': d.wm,
+            'm_wiebe': d.m_wiebe,
+            'phi_sc': d.phi_sc,
+            'phi_cd': d.phi_cd,
+            'T_fuel': fuel_t,
+            'p_fuel': d.p_fuel,
+            'it': d.it,
+            'wiebe_type': d.wiebe_type,
+            'valve_type': d.valve_type,
+            'far_goal': far_goal,
+            'cylinders': d.cylinders,
+            'fuel': d.fuel,
+            'c1': d.c1,
+            'c4': d.c4,
+            'c5': d.c5,
+            'premixed': d.premixed,
+        }
 
         # run the simulation
         #print(p * 1e-5, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t)
@@ -180,7 +177,7 @@ for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
             EI_nox,
             volume_eff,
             nox_spec,
-        ) = run_piston_engine(data, flags)
+        ) = run_piston_engine(piston_input, flags)
         # save the output that is relevant
         if equ_trapped > 1.0:
             y[i - 1, :] = np.zeros(n_out)
@@ -207,7 +204,7 @@ for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
         remove = remove + 1
         # print(f"Number of data points removed: {remove} out of {i} in total")
 
-    if not (i % (ndoe // 1000  )):
+    if not (i % (ndoe // 100  )):
         mellantid = timer()
         elapsed_time = mellantid - start_simulating
         avg_iteration_time = elapsed_time / i
@@ -225,13 +222,13 @@ for p, T, cr, bore, far_goal, v_mean, fuel_t in sample_scaled:
 # Saving the arrays in sampled_data folder
 # Labels
 
-#headers_input = np.array(
-#    ["p_in", "T_in", "cr", "bore", "far", "PI", "v_mean", "T_fuel"]
-#)
-
 headers_input = np.array(
-    ["p_in", "T_in", "cr", "bore", "far", "v_mean", "T_fuel"]
+    ["p_in", "T_in", "cr", "bore", "far", "PI", "v_mean", "T_fuel"]
 )
+
+#headers_input = np.array(
+#    ["p_in", "T_in", "cr", "bore", "far", "v_mean", "T_fuel"]
+#)
 
 headers_output = np.array(
     ["T_out", "eff", "air_flow", "p_max", "T_max", "power", "heat_loss", "p_tdc", "nox"]
