@@ -4,7 +4,7 @@ from timeit import default_timer as timer
 import time
 import sys
 
-from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera, nox_model_cantera_fast
+from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera
 
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
@@ -956,10 +956,6 @@ def run_piston_engine(input, flags):
         no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
-
-        #no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera_fast.nox_calculations(T_z1, m_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
-        #                                                             rpm,
-        #                                                             m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
         end = timer()
         print(f'Runtime of NOx calculations: {end - start} [s]')

@@ -83,7 +83,12 @@ for lamba in lambdas:
     far = equ * far_stoich
     piston_input["far_goal"] = far  # fuel air ratio
 
-    Z = np.zeros_like(X)
+    Z1 = np.zeros_like(X)
+    Z2 = np.zeros_like(X)
+    Z3 = np.zeros_like(X)
+    Z4 = np.zeros_like(X)
+    Z5 = np.zeros_like(X)
+    Z6 = np.zeros_like(X)
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
             p_in = X[i, j]
@@ -96,8 +101,8 @@ for lamba in lambdas:
                 _,
                 _,
                 air_flow,
-                p_max_temp,
-                T_max_temp,
+                p_max,
+                T_max,
                 _,
                 _,
                 indicated_power,
@@ -106,19 +111,29 @@ for lamba in lambdas:
                 heat_loss,
                 p_tdc,
                 _,
-                nox_temp,
+                nox_ppm,
                 _,
                 EI_nox,
                 _,
                 nox_spec,
             ) = run_piston_engine(piston_input, flags)
 
-            Z[i, j] = EI_nox
+            Z1[i, j] = EI_nox
+            Z2[i, j] = nox_ppm
+            Z3[i, j] = air_flow
+            Z4[i, j] = p_max
+            Z5[i, j] = T_max
+            Z6[i, j] = T_out
 
     # Store the results
     results.append({
         'lambda': lamba,
-        'Z': Z.copy(),  # Important: copy the array
+        'Z1': Z1.copy(),  # Important: copy the array
+        'Z2': Z2.copy(),  # Important: copy the array
+        'Z3': Z3.copy(),  # Important: copy the array
+        'Z4': Z4.copy(),  # Important: copy the array
+        'Z5': Z5.copy(),  # Important: copy the array
+        'Z6': Z6.copy(),  # Important: copy the array
         'X': X,
         'Y': Y
     })
@@ -133,7 +148,12 @@ for result in results:
     lamba_val = result['lambda']
     X_flat = result['X'].flatten()
     Y_flat = result['Y'].flatten()
-    Z_flat = result['Z'].flatten()
+    Z1_flat = result['Z1'].flatten()
+    Z2_flat = result['Z2'].flatten()
+    Z3_flat = result['Z3'].flatten()
+    Z4_flat = result['Z4'].flatten()
+    Z5_flat = result['Z5'].flatten()
+    Z6_flat = result['Z6'].flatten()
 
     # Create dataframe for this lambda
     df_lambda = pd.DataFrame({
@@ -141,7 +161,12 @@ for result in results:
         'p_in_Pa': X_flat,
         'p_in_bar': X_flat * 1e-5,
         'T_in_K': Y_flat,
-        'NOx_g_per_kg': Z_flat
+        'NOx_g_per_kg': Z1_flat,
+        'NOx_ppm': Z2_flat,
+        'air_flow': Z3_flat,
+        'p_max': Z4_flat,
+        'T_max': Z5_flat,
+        'T_out': Z6_flat,
     })
     all_data.append(df_lambda)
 
@@ -149,5 +174,5 @@ for result in results:
 df_all = pd.concat(all_data, ignore_index=True)
 
 # Save the complete dataset
-df_all.to_csv('nox_contour_data_jetA_simulation.csv', index=False)
+df_all.to_csv('nox_contour_data/jetA_simulation.csv', index=False)
 print(f"Complete data saved to 'nox_contour_data_jetA_simulation.csv' ({len(df_all)} rows)")
