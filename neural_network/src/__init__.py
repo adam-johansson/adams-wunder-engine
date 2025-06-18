@@ -15,3 +15,5 @@ from .classes import (
     NET_straight,
     InferenceModelStraight,
 )
+
+from .surrogate_wrapper import nn_output_energy_conserved

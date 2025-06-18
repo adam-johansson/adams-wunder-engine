@@ -12,7 +12,7 @@ def seiliger(p1, t1, cr, far, bore, fuel):
     cv = cp / 1.4
 
     # lower heating value h2
-    if fuel == "h2":
+    if fuel == "H2":
         lhv = 119.96e6
     else:
         lhv = 42.8e6
