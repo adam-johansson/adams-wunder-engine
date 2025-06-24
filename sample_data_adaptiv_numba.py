@@ -35,7 +35,7 @@ flags = ["sweep"]
 
 # 8 with pratio and 7 without
 ndim = 8  # number of input variables
-n_out = 9  # Number of outputs from the piston model
+n_out = 10  # Number of outputs from the piston model
 
 
 start_sampling = timer()
@@ -72,7 +72,7 @@ xlimits = np.array(
 #)
 
 # Construction of the DOE, the training points  #approx 700 seconds for 60 training 60 validation
-npoints = 100  # points per variable #6000 takes 20h (gives 18000 nonzero points) (for 8 dimensions)
+npoints = 30000   # points per variable #6000 takes 20h (gives 18000 nonzero points) (for 8 dimensions)
 ndoe = ndim * npoints
 
 # create sampling on unit hypercube
@@ -164,7 +164,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
             air_flow,
             p_max,
             T_max,
-            _,
+            far_avg,
             equ_trapped,
             induced_power,
             _,
@@ -195,6 +195,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
                 heat_loss,
                 p_tdc,
                 nox,
+                far_avg
             )
             # print(y[i - 1, :])
 
@@ -204,7 +205,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
         remove = remove + 1
         # print(f"Number of data points removed: {remove} out of {i} in total")
 
-    if not (i % (ndoe // 100  )):
+    if not (i % (ndoe // 10000  )):
         mellantid = timer()
         elapsed_time = mellantid - start_simulating
         avg_iteration_time = elapsed_time / i
@@ -223,7 +224,7 @@ for p, T, cr, bore, far_goal, p_ratio, v_mean, fuel_t in sample_scaled:
 # Labels
 
 headers_input = np.array(
-    ["p_in", "T_in", "cr", "bore", "far", "PI", "v_mean", "T_fuel"]
+    ["p_in", "T_in", "cr", "bore", "far_goal", "PI", "v_mean", "T_fuel"]
 )
 
 #headers_input = np.array(
@@ -231,7 +232,7 @@ headers_input = np.array(
 #)
 
 headers_output = np.array(
-    ["T_out", "eff", "air_flow", "p_max", "T_max", "power", "heat_loss", "p_tdc", "nox"]
+    ["T_out", "eff", "air_flow", "p_max", "T_max", "power", "heat_loss", "p_tdc", "nox", "far_avg"]
 )
 
 # Adding the labels to the data
@@ -240,8 +241,6 @@ y_data = pd.DataFrame(y, columns=headers_output)
 combined_data = pd.concat([x_data, y_data], axis=1)
 
 # Writing data to file
-#x_data.to_csv("piston_engine/sampled_data/" + fuel + "/x.csv")
-#y_data.to_csv("piston_engine/sampled_data/" + fuel + "/y.csv")
 combined_data.to_csv("piston_engine/sampled_data/" + fuel + "/data.csv")
 end_sampling = timer()
 print(f"Total time for sampling data: {end_sampling - start_sampling} [s]")
