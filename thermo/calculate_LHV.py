@@ -4,11 +4,13 @@ from thermo import polynomials
 T = 298.15
 p = 1e5
 
+T2 = 298.15
+
 cp_h2, h_h2, s_h2, _, M_h2 = polynomials.H2(T, p)
 cp_o2, h_o2, s_o2, _, M_o2 = polynomials.O2(T, p)
-cp_h2o, h_h2o, s_h2o, _, M_h2o = polynomials.H2O(T, p)
-cp_co2, h_co2, s_co2, _, M_co2 = polynomials.CO2(T, p)
-cp_jetA, h_jetA, s_jetA, M_jetA = polynomials.JETA(T)
+cp_h2o, h_h2o, s_h2o, _, M_h2o = polynomials.H2O(T2, p)
+cp_co2, h_co2, s_co2, _, M_co2 = polynomials.CO2(T2, p)
+cp_jetA, h_jetA, s_jetA, M_jetA = polynomials.JETA_L(T)
 
 # M (molar mass) is kg/mol
 
@@ -87,3 +89,15 @@ LHV = -(H2 - H1) / m_jetA
 print(f"Mass 1 H2 + O2 mixture = {m1}")
 print(f"Mass 2 CO2 + H2O = {m2}")
 print(f"LHV of jetA = {LHV*1e-6} MJ/kg")
+
+from fuel import fuel_props
+
+far_s, LHV = fuel_props("jetA")
+print(f"far_s jetA: {far_s}")
+
+far_s, LHV = fuel_props("H2")
+
+print(f"far_s H2: {far_s}")
+
+
+

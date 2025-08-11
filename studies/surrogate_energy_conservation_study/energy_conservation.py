@@ -14,7 +14,7 @@ data = data[data.eff != 0]
 # input
 p_in = np.array((data.p_in))
 T_in = np.array((data.T_in))
-far = np.array((data.far))
+far = np.array((data.far_goal))
 p_ratio = np.array((data.PI))
 T_fuel = np.array((data.T_fuel))
 cr = np.array((data.cr))
@@ -93,7 +93,7 @@ efficiency_nn = np.zeros_like(p_in)
 # Load the trained model
 hidden_dim = 128
 layers = 2
-model = load_ANN(f"../../neural_network/models/{fuel}_{hidden_dim}_{layers}.pth")
+model = load_ANN(f"../../neural_network/models/{fuel}_{hidden_dim}_{layers}_pinn.pth")
 model = model.double()
 print(model)
 
