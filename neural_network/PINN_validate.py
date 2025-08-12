@@ -37,6 +37,7 @@ data = pd.read_csv("./input_data/" + folder + "/data.csv", index_col=0)
 # y = pd.read_csv('./input_data/' + folder + '/y_cleaned.csv', index_col=0)
 
 data = data[data.eff != 0]
+data = data[pd.notna(data.eff)]
 
 
 # Decide which data points should be input and output (not using eff for now)
@@ -51,6 +52,9 @@ y_labels = y.columns.tolist()
 # convert to numpy arrays
 X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
+
+print(np.argwhere(np.isnan(y)))
+print(np.argwhere(np.isnan(X)))
 
 
 # Split the data into training and testing
@@ -89,6 +93,8 @@ RSE_train = np.sqrt(np.square(np.subtract(y_train, y_train_hat)))
 rel_test = np.divide(RSE_test, y_test)
 rel_train = np.divide(RSE_train, y_train)
 
+print(np.argwhere(np.isnan(rel_train)))
+
 # mean absolute relative error
 MRE_test = np.mean(np.abs(rel_test), axis=0)
 MRE_train = np.mean(np.abs(rel_train), axis=0)
@@ -97,7 +103,7 @@ print("Test data %")
 for i, label in enumerate(y_labels):
     print(f"MRE {label}: {MRE_test[i] * 100:.2f} %")
 
-print("Test data %")
+print("Train data %")
 for i, label in enumerate(y_labels):
     print(f"MRE {label}: {MRE_train[i] * 100:.2f} %")
 

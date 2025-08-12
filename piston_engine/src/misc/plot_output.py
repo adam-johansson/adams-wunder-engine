@@ -350,7 +350,7 @@ def plot_details(
     return
 
 
-def plot_validation(phi, P, T, m, equ):
+def plot_validation_nasa(phi, P, T, m, equ):
     p_order = np.roll(P, np.argwhere((phi - phi[0]) * 180 / np.pi > 100)[0][0])
     T_order = np.roll(T, np.argwhere((phi - phi[0]) * 180 / np.pi > 100)[0][0])
     m_order = np.roll(m, np.argwhere((phi - phi[0]) * 180 / np.pi > 100)[0][0])
@@ -497,17 +497,17 @@ def plot_validation(phi, P, T, m, equ):
     p_sim = np.concatenate((phi_transpose, p_transpose), axis=1)
     p_true = np.concatenate((ca_NASA_transpose, p_NASA_transpose), axis=1)
 
-    np.savetxt("validation_output_data/m_validation.dat", m_true, fmt="%.5f")
-    np.savetxt("validation_output_data/m_simulation.dat", m_sim, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/m_validation.dat", m_true, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/m_simulation.dat", m_sim, fmt="%.5f")
 
-    np.savetxt("validation_output_data/equ_validation.dat", equ_true, fmt="%.5f")
-    np.savetxt("validation_output_data/equ_simulation.dat", equ_sim, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/equ_validation.dat", equ_true, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/equ_simulation.dat", equ_sim, fmt="%.5f")
 
-    np.savetxt("validation_output_data/T_validation.dat", T_true, fmt="%.5f")
-    np.savetxt("validation_output_data/T_simulation.dat", T_sim, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/T_validation.dat", T_true, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/T_simulation.dat", T_sim, fmt="%.5f")
 
-    np.savetxt("validation_output_data/p_validation.dat", p_true, fmt="%.5f")
-    np.savetxt("validation_output_data/p_simulation.dat", p_sim, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/p_validation.dat", p_true, fmt="%.5f")
+    np.savetxt("piston_engine/validation_output_data/NASA/p_simulation.dat", p_sim, fmt="%.5f")
 
     return
 

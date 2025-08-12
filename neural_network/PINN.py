@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import torch.optim.lr_scheduler as lr_scheduler
 
+from sklearn.preprocessing import KBinsDiscretizer
+
 import matplotlib.pyplot as plt
 
 from src import clean_folder, checkpoint, resume, save, load, save_inference, load_ANN
@@ -31,10 +33,12 @@ print(f"Number of datapoints total: {data.shape[0]}")
 
 # remove datapoints that were not sampled (invalid input)
 data = data[data.eff != 0]
+data = data[pd.notna(data.eff)]
 
 print(f"Number of datapoints removed during sampling: {data.shape[0]}")
 
 # Decide which data points should be input and output (not using eff for now)
+
 
 # COULD HAVE POWER AS INPUT AND GEOMETRY AS OUTPUT
 X = data[['p_in', 'T_in', 'PI', 'cr', 'bore',  'v_mean', 'T_fuel', 'far_goal']]
@@ -46,10 +50,23 @@ X = pd.DataFrame.to_numpy(X)
 y = pd.DataFrame.to_numpy(y)
 
 # Split the data into training and testing
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, train_size=0.8, test_size=0.2, random_state=42
-)
+#X_train, X_test, y_train, y_test = train_test_split(
+#    X, y, train_size=0.8, test_size=0.2, random_state=42
+#)
 
+# Choose your most important output variable (e.g., power or efficiency)
+key_output = data['power']  # or whichever output is most critical
+
+# Create bins for stratification
+n_bins = 30  # adjust based on your data size
+discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='quantile')
+stratify_labels = discretizer.fit_transform(key_output.values.reshape(-1, 1)).ravel()
+
+# Stratified split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, train_size=0.8, test_size=0.2,
+    stratify=stratify_labels, random_state=42
+)
 
 # Scale the data
 scaler = "standard"
@@ -135,7 +152,7 @@ criterion = PhysicsInformedLoss(
     y_scaler_params=y_scaler_params,
     fuel_type=folder,
     data_weight=1.0,
-    physics_weight=1.0
+    physics_weight=5.0
 )
 
 """criterion = PhysicsInformedLoss_vectorized(
