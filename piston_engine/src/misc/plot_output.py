@@ -1011,18 +1011,18 @@ def plot_nox_diesel_validation(phi, t1, t2, t, p, evo, sc, mf, no):
     import os
 
     dirname = os.path.dirname(__file__)
-    filename_p = os.path.join(dirname, "../../validation_output_data/NO_diesel/p.txt")
+    filename_p = os.path.join(dirname, "../../validation_output_data/NO_diesel_val_data/p.txt")
     filename_T0 = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/T_0.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/T_0.txt"
     )
     filename_T1 = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/T_1.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/T_1.txt"
     )
     filename_fuel = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/fuel.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/fuel.txt"
     )
     filename_NO = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/NO_80.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/NO_80.txt"
     )
     p_val = np.loadtxt(filename_p, delimiter=",")
     T0_val = np.loadtxt(filename_T0, delimiter=",")
@@ -1115,6 +1115,25 @@ def plot_nox_diesel_validation(phi, t1, t2, t, p, evo, sc, mf, no):
     ax4.legend(loc="best", fontsize="small", frameon=False)
     ax4.grid()
 
+    # convert to deg
+    phi_hp = phi_hp * 180 / np.pi
+
+    no_sim = np.hstack((phi_hp, np.transpose(np.atleast_2d(no))))
+
+    phi_min = no_val[0, 0]
+    phi_max = no_val[-1, 0]
+
+    no_sim = no_sim[(no_sim[:, 0] > phi_min) & (no_sim[:, 0] < phi_max)]
+
+    # take only every tenth data point
+    no_sim = no_sim[::10]
+
+    nos_sim_interpolated = np.interp(no_val[:,0], no_sim[:,0], no_sim[:,1])
+
+    nox_early = np.hstack((np.transpose(np.atleast_2d(nos_sim_interpolated)), no_val))
+
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_early.dat", nox_early, fmt="%.5f")
+
     #plt.show()
     return
 
@@ -1129,19 +1148,19 @@ def plot_nox_diesel_validation_late(phi, t1, t2, t, p, evo, sc, mf, no):
 
     dirname = os.path.dirname(__file__)
     filename_p = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/p_late.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/p_late.txt"
     )
     filename_T0 = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/T_0_late.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/T_0_late.txt"
     )
     filename_T1 = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/T_1_late.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/T_1_late.txt"
     )
     filename_fuel = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/fuel_late.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/fuel_late.txt"
     )
     filename_NO = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/NO_80_late.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/NO_80_late.txt"
     )
     p_val = np.loadtxt(filename_p, delimiter=",")
     T0_val = np.loadtxt(filename_T0, delimiter=",")
@@ -1233,6 +1252,25 @@ def plot_nox_diesel_validation_late(phi, t1, t2, t, p, evo, sc, mf, no):
     ax4.set_ylabel(r"NO concentration (ppm)", fontsize=fs)
     ax4.legend(loc="best", fontsize="small", frameon=False)
     ax4.grid()
+
+    # convert to deg
+    phi_hp = phi_hp * 180 / np.pi
+
+    no_sim = np.hstack((phi_hp, np.transpose(np.atleast_2d(no))))
+
+    phi_min = no_val[0, 0]
+    phi_max = no_val[-1, 0]
+
+    no_sim = no_sim[(no_sim[:, 0] > phi_min) & (no_sim[:, 0] < phi_max)]
+
+    # take only every tenth data point
+    no_sim = no_sim[::10]
+
+    nos_sim_interpolated = np.interp(no_val[:,0], no_sim[:,0], no_sim[:,1])
+
+    nox_late = np.hstack((np.transpose(np.atleast_2d(nos_sim_interpolated)), no_val))
+
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_late.dat", nox_late, fmt="%.5f")
 
     #plt.show()
 

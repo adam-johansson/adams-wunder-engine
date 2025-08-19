@@ -939,7 +939,7 @@ def run_piston_engine(input, flags):
 
 
         # Greek: 0.87. Heider: 0.91, Scania: 1.0
-        factor = 0.9
+        factor = 0.87
 
         start = timer()
         # get temperature and mass from reaction zone
@@ -985,8 +985,9 @@ def run_piston_engine(input, flags):
             np.savetxt("piston_engine/simulation_data/P.csv", P[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/T.csv", T[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/m.csv", m[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/V.csv", V[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/equ.csv", equ[-1], delimiter=",")
-            np.savetxt("piston_engine/simulation_data/rohr.csv", Q_in[-1], delimiter=",")
+            np.savetxt("piston_engine/simulation_data/Q_in.csv", Q_in[-1], delimiter=",")
             np.savetxt("piston_engine/simulation_data/phi.csv", phi, delimiter=",")
 
         if "plot_validation" in flags:

@@ -232,7 +232,7 @@ elif "cce" in flags:
         if d.fuel == "jetA":
 
             # Load the trained model
-            meta_model = load_ANN("../neural_network/models/jetA_128_2.pth")
+            meta_model = load_ANN("meta_models/jetA_128_2_pinn.pth")
 
         elif d.fuel == "H2":
 
@@ -241,7 +241,6 @@ elif "cce" in flags:
 
         meta_model.double()
         print(meta_model)
-
 
         #auxiliaries.global_optimisation(data, data_piston, flags, meta_model)
         auxiliaries.nsga_optimisation(cce_input, piston_input, flags, meta_model)

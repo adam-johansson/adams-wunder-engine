@@ -32,44 +32,44 @@ def sweep_no_diesel_greek_validation(d, flags):
         # from combustion book
         phi_cd_adjusted = phi_cd * (far_goal / far_dp) ** 0.6
 
-        data = [
-            d.p_in,
-            d.T_in,
-            d.p_ratio,
-            d.cycle,
-            d.cooling,
-            d.opposed,
-            d.cr,
-            d.d,
-            d.bsr,
-            d.v_mean,
-            d.lms,
-            d.Twalls,
-            d.ch,
-            d.valve_timings,
-            d.n_valve,
-            d.lv_max,
-            d.cd,
-            d.eta_c,
-            d.mf_tot,
-            d.wa,
-            d.wm,
-            m_wiebe,
-            phi_sc,
-            phi_cd_adjusted,
-            d.T_fuel,
-            d.p_fuel,
-            d.it,
-            d.wiebe_type,
-            d.valve_type,
-            far_goal,
-            d.cylinders,
-            d.fuel,
-            d.c1,
-            d.c4,
-            d.c5,
-            d.premixed,
-        ]
+        piston_input = {
+            'p_in': d.p_in,
+            'T_in': d.T_in,
+            'p_ratio': d.p_ratio,
+            'cycle': d.cycle,
+            'cooling': d.cooling,
+            'opposed': d.opposed,
+            'cr': d.cr,
+            'bore': d.d,
+            'bsr': d.bsr,
+            'v_mean': d.v_mean,
+            'lms': d.lms,
+            'Twalls': d.Twalls,
+            'ch': d.ch,
+            'valve_timings': d.valve_timings,
+            'n_valve': d.n_valve,
+            'lv_max': d.lv_max,
+            'cd': d.cd,
+            'eta_c': d.eta_c,
+            'mf_tot': d.mf_tot,
+            'wa': d.wa,
+            'wm': d.wm,
+            'm_wiebe': m_wiebe,
+            'phi_sc': phi_sc,
+            'phi_cd': phi_cd_adjusted,
+            'T_fuel': d.T_fuel,
+            'p_fuel': d.p_fuel,
+            'it': d.it,
+            'wiebe_type': d.wiebe_type,
+            'valve_type': d.valve_type,
+            'far_goal': far_goal,
+            'cylinders': d.cylinders,
+            'fuel': d.fuel,
+            'c1': d.c1,
+            'c4': d.c4,
+            'c5': d.c5,
+            'premixed': d.premixed,
+        }
 
         if far_goal > 0.039:
             flags.append("validate_nox_diesel_early")
@@ -94,7 +94,7 @@ def sweep_no_diesel_greek_validation(d, flags):
             EI_nox,
             volume_eff,
             nox_spec,
-        ) = run_piston_engine(data, flags)
+        ) = run_piston_engine(piston_input, flags)
 
         # print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
         nitrogen_oxides_early.append(no)
@@ -128,44 +128,44 @@ def sweep_no_diesel_greek_validation(d, flags):
         # from combustion book
         phi_cd_adjusted = phi_cd * (far_goal / far_dp) ** 0.6
 
-        data = [
-            d.p_in,
-            d.T_in,
-            d.p_ratio,
-            d.cycle,
-            d.cooling,
-            d.opposed,
-            d.cr,
-            d.d,
-            d.bsr,
-            d.v_mean,
-            d.lms,
-            d.Twalls,
-            d.ch,
-            d.valve_timings,
-            d.n_valve,
-            d.lv_max,
-            d.cd,
-            d.eta_c,
-            d.mf_tot,
-            d.wa,
-            d.wm,
-            m_wiebe,
-            phi_sc,
-            phi_cd_adjusted,
-            d.T_fuel,
-            d.p_fuel,
-            d.it,
-            d.wiebe_type,
-            d.valve_type,
-            far_goal,
-            d.cylinders,
-            d.fuel,
-            d.c1,
-            d.c4,
-            d.c5,
-            d.premixed,
-        ]
+        piston_input = {
+            'p_in': d.p_in,
+            'T_in': d.T_in,
+            'p_ratio': d.p_ratio,
+            'cycle': d.cycle,
+            'cooling': d.cooling,
+            'opposed': d.opposed,
+            'cr': d.cr,
+            'bore': d.d,
+            'bsr': d.bsr,
+            'v_mean': d.v_mean,
+            'lms': d.lms,
+            'Twalls': d.Twalls,
+            'ch': d.ch,
+            'valve_timings': d.valve_timings,
+            'n_valve': d.n_valve,
+            'lv_max': d.lv_max,
+            'cd': d.cd,
+            'eta_c': d.eta_c,
+            'mf_tot': d.mf_tot,
+            'wa': d.wa,
+            'wm': d.wm,
+            'm_wiebe': m_wiebe,
+            'phi_sc': phi_sc,
+            'phi_cd': phi_cd_adjusted,
+            'T_fuel': d.T_fuel,
+            'p_fuel': d.p_fuel,
+            'it': d.it,
+            'wiebe_type': d.wiebe_type,
+            'valve_type': d.valve_type,
+            'far_goal': far_goal,
+            'cylinders': d.cylinders,
+            'fuel': d.fuel,
+            'c1': d.c1,
+            'c4': d.c4,
+            'c5': d.c5,
+            'premixed': d.premixed,
+        }
 
         if far_goal > 0.04:
             flags.append("validate_nox_diesel_late")
@@ -190,7 +190,7 @@ def sweep_no_diesel_greek_validation(d, flags):
             EI_nox,
             volume_eff,
             nox_spec,
-        ) = run_piston_engine(data, flags)
+        ) = run_piston_engine(piston_input, flags)
 
         # print(f"Peak pressure: {p_max * 1e-5}, peak temp: {T_max}, NO: {no}")
         nitrogen_oxides_late.append(no)
@@ -204,22 +204,22 @@ def sweep_no_diesel_greek_validation(d, flags):
     dirname = os.path.dirname(__file__)
     print(dirname)
     filename_no_early = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/IMEP.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/IMEP.txt"
     )
     filename_pressure_early = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/peak_pressure_high.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/peak_pressure_high.txt"
     )
     filename_eff_early = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/eff_high.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/eff_high.txt"
     )
     filename_no_late = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/no_low.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/no_low.txt"
     )
     filename_pressure_late = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/peak_pressure_low.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/peak_pressure_low.txt"
     )
     filename_eff_late = os.path.join(
-        dirname, "../../validation_output_data/NO_diesel/eff_low.txt"
+        dirname, "../../validation_output_data/NO_diesel_val_data/eff_low.txt"
     )
 
     no_early_val = np.loadtxt(filename_no_early, delimiter=",")
@@ -272,5 +272,19 @@ def sweep_no_diesel_greek_validation(d, flags):
     ax8.legend(loc="best", fontsize="small", frameon=False)
 
     plt.show()
+
+    ax5.plot(IMEPs_early, nitrogen_oxides_early, marker="o", label="Simulation early")
+    ax5.plot(IMEPs_late, nitrogen_oxides_late, marker="o", label="Simulation late")
+    ax5.plot(
+        no_early_val[:, 0], no_early_val[:, 1], marker="x", label="Validation early"
+    )
+    ax5.plot(no_late_val[:, 0], no_late_val[:, 1], marker="x", label="Validation late")
+
+    all_data = np.vstack((IMEPs_early, nitrogen_oxides_early, IMEPs_late, nitrogen_oxides_late,
+                          no_early_val[:,0], no_early_val[:,1], no_late_val[:, 0], no_late_val[:, 1]))
+
+    all_data = np.transpose(all_data)
+
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/all_data.dat", all_data, fmt="%.5f")
 
     return

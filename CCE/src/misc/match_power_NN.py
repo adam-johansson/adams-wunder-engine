@@ -58,7 +58,7 @@ def match_power_nn(input, meta_model, power_req, core_flow, surrogate_status, p_
             # get the output of the surrogate
 
             piston_input = np.atleast_2d(
-                np.array([pin, Tin, cr, bore, far34, p_ratio, v_mean, T_fuel])
+                np.array([pin, Tin, p_ratio, cr, bore, v_mean, T_fuel, far34])
             )
             # T34, air_flow, p_max, T_max, induced_power, heat_loss, p_tdc = nn_output(piston_input, meta_model)
 
@@ -72,14 +72,10 @@ def match_power_nn(input, meta_model, power_req, core_flow, surrogate_status, p_
             # use meta model to get outputs from the piston egnine
             output = meta_model.inference(piston_input)[0]
 
-            # T34 = output[0]
-            # eta_th = output[1]
-            air_flow = output[2] * cylinders
-            # p_max = output[3]
-            # T_max = output[4]
-            indicated_power = output[5] * cylinders
-            # heat_loss = output[6] * cylinders
-            p_tdc = output[7]
+            indicated_power = output[0] * cylinders
+            air_flow = output[7] * cylinders
+            p_tdc = output[3]
+
 
         else:
             flags = ["sweep"]
@@ -196,8 +192,9 @@ def match_power_nn(input, meta_model, power_req, core_flow, surrogate_status, p_
 
     if surrogate_status:
         # get the output of the surrogate
+
         piston_input_final = np.atleast_2d(
-            np.array([pin, Tin, cr, bore, far34_final, p_ratio_final, v_mean, T_fuel])
+            np.array([pin, Tin, p_ratio_final, cr, bore, v_mean, T_fuel, far34_final])
         )
 
         # T34_final, air_flow_final, p_max_final, T_max_final, induced_power_final, heat_loss_final, p_tdc_final\
@@ -207,19 +204,17 @@ def match_power_nn(input, meta_model, power_req, core_flow, surrogate_status, p_
         output_final = meta_model.inference(piston_input_final)[0]
 
         # DENNA SKALL RÄKNAS UT ISTÄLLET!!!!
-        T34_final = output_final[0]
-        eta_th_final = output_final[1]
-        air_flow_final = output_final[2] * cylinders
-        p_max_final = output_final[3]
-        T_max_final = output_final[4]
-        indicated_power_final = output_final[5] * cylinders
-        heat_loss_final = output_final[6] * cylinders
-        p_tdc_final = output_final[7]
-        nox_ppm = output_final[8]
 
-        indicated_power_final = indicated_power_final
-        heat_loss_final = heat_loss_final
-        p_tdc_final = p_tdc_final
+        indicated_power_final = output_final[0] * cylinders
+        heat_loss_final = output_final[1] * cylinders
+        nox_ppm = output_final[2]
+        p_tdc_final = output_final[3]
+        p_max_final = output_final[4]
+        T_max_final = output_final[5]
+        T34_final = output_final[6]
+        air_flow_final = output_final[7] * cylinders
+
+
 
     else:
         flags = ["sweep"]

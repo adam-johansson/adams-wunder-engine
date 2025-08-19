@@ -104,3 +104,5 @@ c5 = 2.0  # shape factor for premixed burning function
 it = 40
 
 mf_tot = 1.5e-4
+
+premixed = False

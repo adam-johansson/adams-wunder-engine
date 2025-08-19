@@ -76,7 +76,6 @@ def nsga_optimisation(input, piston_input, flags, meta_model):
                              n_constr=2,  # for T out piston
                              xl=np.array([10, 10, 0.1, 6, 0.1, 0.9]),
                              xu=np.array([30, 30, 0.9, 12, 0.2, 1.5]))
-            # If pi_pe is included, n_var = 6, and adjust bounds accordingly
 
         def _evaluate(self, x, out, *args, **kwargs):
             F = []
@@ -116,8 +115,7 @@ def nsga_optimisation(input, piston_input, flags, meta_model):
                     "P max (bar)": extra["P max (bar)"],
                     "T max": extra["T max"],
                     "error": extra["error"],
-                    "constraint_violation": (extra["T_out_piston"] - 1350 or
-                                             extra["P max (bar)"] - 250),
+                    "constraint_violation": max(0, extra["T_out_piston"] - 1350) + max(0, extra["P max (bar)"] - 250),
                     "is_feasible": (extra["T_out_piston"] <= 1350 and
                     extra["P max (bar)"] <= 250)
                 }
@@ -127,7 +125,7 @@ def nsga_optimisation(input, piston_input, flags, meta_model):
             out["G"] = np.array(G)  # Constraint violations: ≤ 0 is feasible
 
     problem = MyEngineProblem()
-    algorithm = NSGA2(pop_size=50)
+    algorithm = NSGA2(pop_size=200)
 
     res = minimize(problem,
                    algorithm,

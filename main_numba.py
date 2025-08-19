@@ -15,11 +15,11 @@ from thermo import fuel_props
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-input_file = "validation.nasa_validation"
+#input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider"
-#input_file = "validation_twozone.nox_diesel_rakopolous"
+input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
 #input_file = "validation_chalmers.case3"
 # input_file = "validation_twozone.water_hydrogen"
@@ -39,7 +39,8 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+#flags = ['validation_h2_performance']  # H2 performance validation
 #flags = ['load']
 #flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
 #flags = ['plot_essentials', 'output', 'output_all', 'single', 'save']  # normal case
@@ -48,7 +49,7 @@ flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-#flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
+flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
 # flags = ['sweep_wiebe']
@@ -195,7 +196,7 @@ elif "load" in flags:
     from piston_engine.src.misc.post_processing import validation_error
     from numpy import genfromtxt
 
-    P = genfromtxt("simulation_data/P.csv", delimiter=",")
+    P = genfromtxt("piston_engine/simulation_data/P.csv", delimiter=",")
     T = genfromtxt("piston_engine/simulation_data/T.csv", delimiter=",")
     m = genfromtxt("piston_engine/simulation_data/m.csv", delimiter=",")
     equ = genfromtxt("piston_engine/simulation_data/equ.csv", delimiter=",")
