@@ -6,18 +6,18 @@ thermo = "NASA"
 
 fuel = "jetA"
 
-# cooling = "Hohenberg"
-cooling = "Woschni"
+cooling = "Hohenberg"
+#cooling = "Woschni"
 
 premixed = False
 
 opposed = False
-cr = 15.5
+cr = 15
 
 cylinders = 1  # V12
 
 # piston
-d = 0.37  # diameter  # 4 liter is it supposed to be (V * 4/pi)^(1/3)
+d = 0.172  # diameter  # approx 4 liter
 
 # rpm = 1400  # revolutions per minute
 v_mean = (1400 / 60) * 2 * d  # rpm rpm = v_mean / (2 * s) * 60 this is 1400 rpm
@@ -29,14 +29,14 @@ lms = 1 / (
 # lms = 1 / (2 * 1.5)  # connecting rod ratio
 
 # inlet and outlet conditions (1.5 bar)
-p_in = 1.5e5  # inlet pressure
-T_in = 298  # inlet temperature
+p_in = 1.6e5  # inlet pressure
+T_in = 330  # inlet temperature
 p_ratio = 0.95  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 400  # Liner temperature
-Tpiston = 400
-Thead = 400
+Twall = 500  # Liner temperature
+Tpiston = 500
+Thead = 500
 Twalls = [Twall, Tpiston, Thead]
 
 
@@ -65,7 +65,7 @@ cd = 0.8
 eta_c = 0.999
 
 # 0.035 works
-far_goal = 0.033
+far_goal = 0.03
 
 
 wiebe_type = "Single_mass"
@@ -77,14 +77,17 @@ wm = 1.40  # funkar
 
 
 # this is for single wiebe function
-m_wiebe = 0.36
+m_wiebe = 0.8
 
 # 0.35 + 359 + 80 works best so far
 
-phi_sc = (359 / 180) * np.pi  # angle at combustion start SORT OF GIVEN
+phi_sc = (357 / 180) * np.pi  # angle at combustion start SORT OF GIVEN
 phi_cd = (
-    80 / 180
+    50 / 180
 ) * np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
+
+
+
 T_fuel = 500
 p_fuel = 2500e5
 

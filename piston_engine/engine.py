@@ -74,6 +74,7 @@ def run_piston_engine(input, flags):
     rpm = 60*v_mean/(2*s)  # rpm from mean velocity
 
     V_d = d ** 2 * (np.pi / 4) * s  # displacement
+    print(f"Displacement: {V_d*1000} liter")
 
     if opposed:
         # Opposed piston has double volume

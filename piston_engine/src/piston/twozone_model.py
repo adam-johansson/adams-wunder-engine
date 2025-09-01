@@ -120,6 +120,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     A = (t_flame - T_sc) * factor
     print(f"Flame temp: {t_flame}")
     print(f"Sc temp: {T_sc}")
+    print(f"A: {A}. 1595 in Heider validation")
     Astar = _calculate_astar(A, lambda_gl, lambda_0, premixed, DEFAULT_C_FACTOR)
 
     # Solve for zone temperatures and volumes
