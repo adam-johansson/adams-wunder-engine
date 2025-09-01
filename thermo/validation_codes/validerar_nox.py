@@ -13,29 +13,25 @@ R_univ = 8.314510  # J mol^-1 K^-1
 # temperature
 T = 2500
 # pressure
-p = 15 * 1e5
+p = 1 * 1e5
 
-# volume
-V = 1.0
-
-# dont think this matters for this test
-m = 1
+# volume (assume 1 m3 at 1 bar)
+V = 1.0 * (1e5 / p)
 
 T_z1 = np.ones((num, 1)) * T
-m_z1 = np.ones((num, 1)) * m
 p_z1 = np.ones((num, 1)) * p
 V_z1 = np.ones((num, 1)) * V
 
-fuel_type = "H2"
+fuel_type = "jetA"
 
 # air-fuel ratio in burned zone
-lambda_z1 = 1.2
+lambda_z1 = 1.0
 
 # crank angle
 phi_z1 = np.linspace(0, 2 * np.pi, num)
 
 # rpm
-rpm = 3000
+rpm = 1000
 
 # total mass outflow during one cycle
 m_out_total = 1
@@ -52,9 +48,8 @@ equ_sc = 0.0
 m_trapped = 1
 equ_trapped = equ
 
-no_ppm, dNOdt, no_times, EI_nox = nox_calculations(
+no_ppm, dNOdt, no_times, EI_nox, mass_NO = nox_calculations(
     T_z1,
-    m_z1,
     p_z1,
     V_z1,
     fuel_type,
@@ -102,11 +97,13 @@ burning = cea.TPProblem(
 exhaust = burning.run()
 
 t_flame = exhaust.t
+print(t_flame)
 
 # mass fractions of combustion products
 fracs_cea = exhaust.prod_c
 
 xi_NO = fracs_cea["NO"]
+print(xi_NO)
 
 # concentration
 c_NO = (xi_NO * p) / (R_univ * T)
@@ -126,6 +123,9 @@ no_concentration_mass = m_NO / m_out_total
 no_concentration_mass = np.array([no_concentration_mass, no_concentration_mass]) * 1e6
 
 
+m_NO = np.array([m_NO, m_NO])
+
+
 fs = 16
 
 fig, ax1 = plt.subplots()
@@ -133,4 +133,11 @@ ax1.plot(no_times * 1000, no_ppm)
 ax1.plot([no_times[0], no_times[-1] * 1000], no_concentration_mass)
 ax1.set_xlabel(r"Time [ms]", fontsize=fs)
 ax1.set_ylabel(r"NO ppm (mass)", fontsize=fs)
+
+
+fig, ax2 = plt.subplots()
+ax2.plot(no_times * 1000, np.transpose(np.atleast_2d(mass_NO))*1e3  )
+ax2.plot([no_times[0], no_times[-1] * 1000], m_NO*1e3)
+ax2.set_xlabel(r"Time [ms]", fontsize=fs)
+ax2.set_ylabel(r"mass NO (g)", fontsize=fs)
 plt.show()

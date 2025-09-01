@@ -763,9 +763,9 @@ def plot_twozone_full(phi, t1, t2, t, evo, sc):
     # temperature after evo
     T_after = np.array(t[np.argwhere((phi > evo))])
 
-    t1 = np.concatenate((T_before, t1, T_after))
+    t1 = np.concatenate((T_before, np.transpose(np.atleast_2d(t1)), T_after), axis=0)
 
-    t2 = np.concatenate((T_before, t2, T_after))
+    t2 = np.concatenate((T_before, np.transpose(np.atleast_2d(t2)), T_after), axis=0)
 
     fig, ax1 = plt.subplots()
     ax1.plot(phi * 180 / np.pi, t, label="Single zone")
@@ -993,7 +993,7 @@ def plot_no_validation(no, phi):
     ax1.legend(lns, labs, loc="upper right")
     #ax1.set_title("NO production")
     ax1.set_ylabel(" NO concentration [ppm]") #mass based
-    ax2.set_ylabel("NO production [ppm/ $^{\circ}$]")
+    ax2.set_ylabel("NO production [ppm/ deg]")
     ax1.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]")
     # ax1.legend(loc='upper right', fontsize='small', frameon=False)
 
@@ -1814,5 +1814,227 @@ def val_chalmers(phi, p, T, Q, V, equ, premixed):
     #case 3
     print(f"Validation: eta: 40.1%, power: 6.7kW, IMEP: 8.5 bar, NOX: {3617} ppm, T_out: 798 K ")
     print(f"Validation fuel flow: {0.14} g/s")
+
+    return
+
+def plot_twozone_validation_final(phi, t1, t2, t, p, evo, sc, no, phi_z1):
+
+    # high pressure crank angles
+    phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+
+    # load data from Heider
+    import os
+
+    dirname = os.path.dirname(__file__)
+    filename_p = os.path.join(dirname, "../../validation_output_data/Heider_new/p.txt")
+    filename_T0 = os.path.join(dirname, "../../validation_output_data/Heider_new/T_0.txt")
+    filename_T1 = os.path.join(dirname, "../../validation_output_data/Heider_new/T_1.txt")
+    filename_T2 = os.path.join(dirname, "../../validation_output_data/Heider_new/T_2.txt")
+    p_heider = np.loadtxt(filename_p, delimiter=",")
+    T0_heider = np.loadtxt(filename_T0, delimiter=",")
+    T1_heider = np.loadtxt(filename_T1, delimiter=",")
+    T2_heider = np.loadtxt(filename_T2, delimiter=",")
+
+    # fs = 52
+    fs = 18
+    figsize = (20, 16)
+    res = 50
+
+    # fig, ax1 = plt.subplots(figsize=figsize)
+    fig, ax1 = plt.subplots()
+
+    ax1.plot(phi * 180 / np.pi, p * 1e-5, label="p", color="r", lw=1)
+    ax1.plot(
+        p_heider[:, 0],
+        p_heider[:, 1],
+        label="p validation",
+        color="k",
+        lw=1,
+        marker="o",
+    )
+
+    ax1.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax1.legend(loc="best", fontsize="small", frameon=False)
+    ax1.grid()
+    ax1.set_xlim(300, evo * 180 / np.pi)
+    ax1.set_ylim(-50, 100)
+    ax1.set_xticks([300, 360, 420, 480])
+    ax1.set_yticks([0, 50, 100])
+    ax1.tick_params(labelsize=fs)
+
+    ax1.set_ylabel(r"Pressure $p$ [bar]", fontsize=fs)
+
+    fig, ax2 = plt.subplots()
+    ax2.plot(phi * 180 / np.pi, t, label="Single zone", color="k", lw=1)
+    ax2.plot(phi_hp * 180 / np.pi, t1, label="T zone 2", color="g")
+    ax2.plot(phi_hp * 180 / np.pi, t2, label="T zone 1", color="b")
+
+
+    ax2.plot(
+        T0_heider[:, 0],
+        T0_heider[:, 1],
+        label="0 dim validation",
+        color="r",
+        lw=1,
+        marker="o",
+    )
+    ax2.plot(
+        T1_heider[:, 0],
+        T1_heider[:, 1],
+        label="Zone 1 validation",
+        color="g",
+        lw=1,
+        marker="o",
+    )
+    ax2.plot(
+        T2_heider[:, 0],
+        T2_heider[:, 1],
+        label="Zone 2 validation",
+        color="b",
+        lw=1,
+        marker="o",
+    )
+
+    ax2.set_ylabel(r"Temperature $T$ [K]]")
+    ax2.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]")
+    ax2.legend(loc="best", fontsize="small", frameon=False)
+    ax2.grid()
+    ax2.set_xlim(300, evo * 180 / np.pi)
+    ax2.set_ylim(500, 3500)
+    ax2.set_xticks([300, 360, 420, 480])
+    ax2.set_yticks([1000, 2000, 3000])
+
+    # phi = phi[1:]
+
+    ca = np.ndarray.flatten(phi_z1 * 180 / np.pi)
+    # d ppm /dca
+    dnodca = np.gradient(no, ca)
+
+    # dnomoldca = np.gradient(no_mol, ca)
+
+    # load data from Heider
+    import os
+
+    dirname = os.path.dirname(__file__)
+    filename_no = os.path.join(dirname, "../../validation_output_data/Heider_new/no.txt")
+    filename_dnodca = os.path.join(
+        dirname, "../../validation_output_data/Heider_new/dnodca.txt"
+    )
+
+    no_heider = np.loadtxt(filename_no, delimiter=",")
+    dnodca_heider = np.loadtxt(filename_dnodca, delimiter=",")
+
+    # plot temperatures and pressure
+    fig, ax3 = plt.subplots()
+
+    ax4 = ax3.twinx()
+
+    lns1 = ax3.plot(phi_z1 * 180 / np.pi, no, color="red", label="NO concentration")
+    lns2 = ax4.plot(phi_z1 * 180 / np.pi, dnodca, color="blue", label="dNOdphi")
+
+
+    lns3 = ax3.plot(
+        no_heider[:, 0], no_heider[:, 1], color="red", label="NO validation", marker="x"
+    )
+    lns4 = ax4.plot(
+        dnodca_heider[:, 0],
+        dnodca_heider[:, 1],
+        color="blue",
+        label="dNOdt validation",
+        marker="x",
+    )
+
+
+    ax3.set_xlim(355, 400)
+
+    # set which axis to which side
+    ax3.yaxis.tick_left()
+    ax4.yaxis.tick_right()
+
+    # added these three lines
+    lns = lns1 + lns2 + lns3 + lns4
+    labs = [l.get_label() for l in lns]
+    ax3.legend(lns, labs, loc="upper right")
+    #ax1.set_title("NO production")
+    ax3.set_ylabel(" NO concentration [ppm]") #mass based
+    ax4.set_ylabel("NO production [ppm / deg]")
+    ax3.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]")
+    # ax1.legend(loc='upper right', fontsize='small', frameon=False)
+
+
+
+    filename_T1_detailed = os.path.join(dirname, "../../validation_output_data/Heider_new/T_1_detailed.txt")
+    T1_heider_detailed = np.loadtxt(filename_T1_detailed, delimiter=",")
+
+    fig, ax5 = plt.subplots()
+
+    ax5.plot(phi_hp * 180 / np.pi, t1, label="T zone 1", color="b")
+
+    ax5.plot(
+        T1_heider_detailed[:, 0],
+        T1_heider_detailed[:, 1],
+        label="Zone 1 validation",
+        color="g",
+        lw=1,
+        marker="o",
+    )
+
+    # take only every tenth data point
+    no = no[::50]
+    dnodca = dnodca[::50]
+    p = p[::50]
+    t = t[::50]
+    t1 = t1[::50]
+    t2 = t2[::50]
+    phi_z1 = phi_z1[::50]
+    phi = phi[::50]
+    phi_hp = phi_hp[::50]
+
+
+    no_data_val = np.hstack((np.transpose(np.atleast_2d(no_heider[:, 1])),
+                         np.transpose(np.atleast_2d(no_heider[:,0])) ) )
+
+    no_data_sim = np.hstack((np.transpose(np.atleast_2d(no)), np.transpose(np.atleast_2d(phi_z1 * 180 / np.pi) ) ))
+
+    dno_data_val = np.hstack((np.transpose(np.atleast_2d(dnodca_heider[:, 1])),
+                         np.transpose(np.atleast_2d(dnodca_heider[:,0])) ) )
+
+    dno_data_sim = np.hstack((np.transpose(np.atleast_2d(dnodca)), np.transpose(np.atleast_2d(phi_z1 * 180 / np.pi) ) ))
+
+    p_data_val = np.hstack((np.transpose(np.atleast_2d(p_heider[:, 1])),
+                         np.transpose(np.atleast_2d(p_heider[:,0])) ) )
+
+    p_data_sim = np.hstack((np.transpose(np.atleast_2d(p))*1e-5, np.transpose(np.atleast_2d(phi * 180 / np.pi) ) ))
+
+
+
+    T_0_sim = np.hstack((np.transpose(np.atleast_2d(t)), np.transpose(np.atleast_2d(phi * 180 / np.pi) ) ))
+
+    T_0_val = np.hstack((np.transpose(np.atleast_2d(T0_heider[:, 1])),
+                         np.transpose(np.atleast_2d(T0_heider[:,0])) ) )
+
+    T_1_val = np.hstack((np.transpose(np.atleast_2d(T1_heider[:, 1])),
+                         np.transpose(np.atleast_2d(T1_heider[:,0])) ) )
+
+    T_2_val = np.hstack((np.transpose(np.atleast_2d(T2_heider[:, 1])),
+                         np.transpose(np.atleast_2d(T2_heider[:,0])) ) )
+
+    T_zone_sim = np.hstack((np.transpose(np.atleast_2d(t1)), np.transpose(np.atleast_2d(t2)),
+                            np.atleast_2d(phi_hp * 180 / np.pi)))
+
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/NO_val.dat", no_data_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/NO_sim.dat", no_data_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/dNO_val.dat", dno_data_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/dNO_sim.dat", dno_data_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/p_val.dat", p_data_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/p_sim.dat", p_data_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/T0_sim.dat", T_0_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/T_1_2_sim.dat", T_zone_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/T0_val.dat", T_0_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/T_1_val.dat", T_1_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/Heider_new_output/T_2_val.dat", T_2_val, fmt="%.5f")
+
+
+    plt.show()
 
     return

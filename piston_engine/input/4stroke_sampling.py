@@ -9,22 +9,22 @@ cooling = "Hohenberg"
 premixed = False
 
 opposed = False
-cr = 6.0
+cr = 10.0
 
 cylinders = 1  # V12
 
 # piston
-d = 0.10  # diameter
+d = 0.15  # diameter
 #d = 0.1699  # diameter
-v_mean = 15  # mean velocity from Kaiser's thesis
+v_mean = 10  # mean velocity from Kaiser's thesis
 bsr = 1  # bore stroke ratio
 # rpm = 4000  # revolutions per minute
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 8e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
-T_in = 670  # inlet temperature (670 cruise 770 TO)
-p_ratio = 1.1  # pressure ratio after and before engine
+p_in = 5.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
+T_in = 300  # inlet temperature (670 cruise 770 TO)
+p_ratio = 1.0  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500          # Liner temperature
@@ -60,7 +60,7 @@ cd = 0.8
 eta_c = 0.999
 
 throttle = 0.0294
-far_goal = 0.04
+far_goal = 0.035
 
 
 wiebe_type = "Single"
@@ -81,7 +81,7 @@ phi_sc = (345/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #
 phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
 
 
-T_fuel = 500
+T_fuel = 300
 p_fuel = 2500e5
 
 it = 300

@@ -46,9 +46,6 @@ for i in range(num):
             np.array([pin, Tin, p_ratio, cr, bore, v_mean, T_fuel, far])
         )
 
-        # T34_final, air_flow_final, p_max_final, T_max_final, induced_power_final, heat_loss_final, p_tdc_final\
-        #    = nn_output(piston_input_final, meta_model)
-
         # use meta model to get outputs from the piston egnine
         output = model.inference(piston_input)[0]
 
@@ -62,8 +59,16 @@ for i in range(num):
         T34 = output[6]
         air_flow = output[7]
 
+        fuel_flow = air_flow * far
+
+        out_flow = air_flow + fuel_flow
+
+        # calculate EI NOX (convert from ppm to fraction and from kg to g)
+        nox_gram = nox_ppm * out_flow * 1e-3
+        EI_nox = nox_gram / fuel_flow
+
         powers[i,j] = indicated_power
-        noxs[i,j] = nox_ppm
+        noxs[i,j] = EI_nox
 
 
 

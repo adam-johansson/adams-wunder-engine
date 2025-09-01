@@ -414,7 +414,8 @@ def _process_nox_results(NO_mol, times, m_tot, mf_tot, equ_global, m_global, fue
     # Emission index (g NOx/kg fuel)
     EI_nox = (m_NO[-1] / mf_tot) * G_PER_KG_FACTOR
 
-    return (no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO[-1])
+    #return (no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO[-1])
+    return (no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO)
 
 
 @njit

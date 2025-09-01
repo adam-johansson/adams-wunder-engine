@@ -147,7 +147,7 @@ def load_ANN(filename):
     from neural_network.src import InferenceModelStraight
 
     # loads the saved model
-    model = torch.load(filename)
+    model = torch.load(filename, weights_only=False)
     # retrieves the dimensions fo the network
     input_dim = model["in_features"]
     output_dim = model["out_features"]

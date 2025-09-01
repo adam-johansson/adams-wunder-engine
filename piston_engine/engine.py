@@ -939,7 +939,7 @@ def run_piston_engine(input, flags):
 
 
         # Greek: 0.87. Heider: 0.91, Scania: 1.0
-        factor = 0.87
+        factor = 0.905
 
         start = timer()
         # get temperature and mass from reaction zone
@@ -965,7 +965,7 @@ def run_piston_engine(input, flags):
         # calculate specific NOX emissions (g of NO per kWh of work produced)
 
         # convert from J to kwH and from kg to g
-        nox_spec = (m_NO / W[-1][-1]) * (3600 * 1e3) * 1e3
+        nox_spec = (m_NO[-1] / W[-1][-1]) * (3600 * 1e3) * 1e3
 
 
     elif cycle == "2T":
@@ -1002,11 +1002,13 @@ def run_piston_engine(input, flags):
 
         if "validate_twozone" in flags:
             # validate twozone model with the Heider picture
-            from piston_engine.src.misc.plot_output import plot_twozone_validation, plot_no_validation
+            from piston_engine.src.misc.plot_output import plot_twozone_validation, plot_no_validation, plot_twozone_validation_final
 
             # validate twozone model against Heider paper 1998 (from Simulating combustion textbook)
-            plot_twozone_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc)
-            plot_no_validation(no_ppm, phi_z1)
+            #plot_twozone_validation(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc)
+            #plot_no_validation(no_ppm, phi_z1)
+
+            plot_twozone_validation_final(phi, T_z1, T_z2, T[-1], P[-1], phi_open_out, phi_sc, no_ppm, phi_z1)
 
         elif "validate_nox_diesel_early" in flags:
             # validate NOx model with data from diesel engine (Rakopoulos et al)

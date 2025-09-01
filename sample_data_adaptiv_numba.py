@@ -41,7 +41,7 @@ n_out = 10  # Number of outputs from the piston model
 start_sampling = timer()
 
 # limits for the sampling
-p_lim = [1e5, 35e5]  # limits for input pressure
+p_lim = [1e5, 35e5]  # limits for input pressure (maybe lower p_lim slightly to never be on the limit)
 T_lim = [250, 1000]  # limits for input temperature
 cr_lim = [4, 16]  # limits for geometric compression ratio
 d_lim = [0.10, 0.20]  # limits for bore (piston diameter)
