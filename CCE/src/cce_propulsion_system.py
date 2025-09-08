@@ -326,6 +326,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Hot nozzle
     equ6 = equ5
+    m8 = m6
     F8, v8_id, v8, error = components.nozzle(
         p6, T6, pa, equ6, m6, cfg_core, cd_nozzle, fuel_type
     )
@@ -373,8 +374,9 @@ def run_cce(input, input_piston, flags, meta_model):
     T14 = T13  # adiabatic bypass
 
     # Cold nozzle ( no heat exchanger)
+    m18 = m14
     F18, v18_id, v18, error = components.nozzle(
-        p14, T14, pa, equ=0, m=m14, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+        p14, T14, pa, equ=0, m=m18, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
     if error:
         #print('Prob too low pressure and temperature in cold nozzle')
@@ -385,8 +387,9 @@ def run_cce(input, input_piston, flags, meta_model):
         return listofzeros
 
     # Cooling flow nozzle
+    m17 = m15
     F17, v17_id, v17, error = components.nozzle(
-        p15, T15, pa, equ=0, m=m15, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+        p15, T15, pa, equ=0, m=m17, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
     if error:
@@ -640,4 +643,33 @@ def run_cce(input, input_piston, flags, meta_model):
             print(p_max)
             sfc = sfc + punish_factor * (p_max - 300)
     # print(f'FAR: {far_piston}, T_before: {T32}, T_after: {T34}, bore: {bore_match} ')
-    return sfc, vel_ratio, F, m0, p_max, T_max, T32, T34, T4, far_piston, T35, EI_nox, error
+
+    output_dict = {
+        "sfc": sfc,
+        "vel_ratio": vel_ratio,
+        "thrust": F,
+        "specific thrust": Fs,
+        "mass flow": m0,
+        "p_max": p_max,
+        "T_max": T_max,
+        "T32": T32,
+        "T34": T34,
+        "T35": T35,
+        "T4": T4,
+        "far_piston": far_piston,
+        "EI_nox": EI_nox,
+        "core efficiency": eta_core,
+        "transmission efficiency": eta_transmission,
+        "thermal efficiency": eta_th,
+        "propulsive efficiency": eta_p,
+        "overall efficiency": eta_o,
+        "cold bypass thrust": F18,
+        "hot bypass thrust": F17,
+        "core thrust": F8,
+        "piston fuelflow": fuel_flow_piston,
+        "burner fuelflow": fuel_flow_burner,
+        "error": error
+    }
+
+
+    return output_dict

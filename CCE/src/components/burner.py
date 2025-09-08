@@ -14,14 +14,13 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
         cp_f, hf, s_f, M_f = JETA_L(t_fuel)
 
     # note that the fuel air ratio that is sought is ratio of added fuel to pure air in the gas
-
-    h1, u, cp, cv, R, gamma, s, M = mixture(t1, p1, equ=equ1, fuel_type=fuel_type)
+    h1, u, cp, cv, R, gamma, s, M = mixture(t1, p1, equivalence_ratio=equ1, fuel_type=fuel_type)
 
     # fuel air ratio of fuel already (burned) in the gas from previous burner
     far0 = equ1 * far_s
 
     def find_far(far):
-        h2, u, cp, cv, R, gamma, s, M = mixture(t2, p2, equ=far/far_s, fuel_type=fuel_type)
+        h2, u, cp, cv, R, gamma, s, M = mixture(t2, p2, equivalence_ratio=far/far_s, fuel_type=fuel_type)
 
         residual = h2 * (1 + far) - h1 * (1 + far0) - hf * (far - far0)
         return residual

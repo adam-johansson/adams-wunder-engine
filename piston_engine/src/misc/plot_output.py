@@ -1514,6 +1514,27 @@ def plot_no(phi, evo, sc, no):
 
     return
 
+def plot_no_with_equi(phi, evo, sc, no, no_equ):
+
+    # high pressure crank angles
+    phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+
+    fs = 18
+
+    fig, ax4 = plt.subplots()
+    ax4.plot(phi_hp * 180 / np.pi, no, label="NO concentration", color="k", lw=2)
+    ax4.plot(phi_hp * 180 / np.pi, no_equ, label="NO equilibrium", color="r", lw=2)
+
+    # ax4.set_xlim(260, 460)
+    ax4.set_xlabel(r"Crank angle $\theta$ [$^{\circ}$]", fontsize=fs)
+    ax4.set_ylabel(r"NO concentration (ppm)", fontsize=fs)
+    ax4.legend(loc="best", fontsize="small", frameon=False)
+    ax4.grid()
+
+    # plt.show()
+
+    return
+
 
 def plot_addedfuel(phi, dmfdphi):
     from scipy.integrate import cumtrapz

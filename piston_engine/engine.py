@@ -74,7 +74,7 @@ def run_piston_engine(input, flags):
     rpm = 60*v_mean/(2*s)  # rpm from mean velocity
 
     V_d = d ** 2 * (np.pi / 4) * s  # displacement
-    print(f"Displacement: {V_d*1000} liter")
+    #print(f"Displacement: {V_d*1000} liter")
 
     if opposed:
         # Opposed piston has double volume
@@ -959,6 +959,17 @@ def run_piston_engine(input, flags):
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
         end = timer()
+
+        # THIS IS ONLY WHEN WE WANT TO COMPARE NOX FROM KINETICS TO EQUILIBIRUM
+        nox_equilibrium = False
+        if nox_equilibrium:
+            from piston_engine.src.piston import nox_model_equi
+            from piston_engine.src.misc import plot_output
+            no_ppm_equi = nox_model_equi.nox(T_z1, p_z1, lambda_z1, equ_trapped)
+
+            plot_output.plot_no_with_equi(phi,phi_open_out,phi_sc,no_ppm, no_ppm_equi)
+
+
         #print(f'Runtime of NOx calculations: {end - start} [s]')
 
 

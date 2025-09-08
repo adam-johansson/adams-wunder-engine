@@ -26,22 +26,10 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
         input["fpr_outer"] = fpr[0]  # fpr
         # print(fpr[0])
         start = timer()
-        (
-            sfc,
-            v_ratio,
-            thrust,
-            m0,
-            p_max,
-            T_max,
-            T_in_piston,
-            T_out_piston,
-            TET,
-            far_piston,
-            T35,
-            EI_nox,
-            error,
-        ) = cce_propulsion_system.run_cce(input, data_piston, flags, meta_model)
+        cce_output_dict = cce_propulsion_system.run_cce(input, data_piston, flags, meta_model)
         end = timer()
+        error = cce_output_dict["error"]
+        sfc = cce_output_dict["sfc"]
         # print(f'one run cce: {end - start}')
         if error:
             # print(sfc, fpr)
@@ -52,6 +40,8 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
                 raise ValueError
             return sfc
         # cost = np.abs(thrust / m0 - Fs_goal)
+        thrust = cce_output_dict["thrust"]
+        m0 = cce_output_dict["mass flow"]
         cost = thrust / m0 - Fs_goal
         #print(f"Residual between specific thrust and goal thrust: {cost}. Outer FPR: {fpr}")
         return cost
@@ -96,21 +86,14 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
     #print(f"Matching outer FPR is: {opt_fpr[0]}")
     input["fpr_outer"] = opt_fpr[0]
 
-    (
-        sfc_final,
-        v_ratio_final,
-        thrust_final,
-        m0,
-        p_max,
-        T_max,
-        T_in_piston,
-        T_out_piston,
-        TET,
-        far_piston,
-        T35,
-        EI_nox,
-        error,
-    ) = cce_propulsion_system.run_cce(input, data_piston, flags, meta_model)
+    cce_output_dict = cce_propulsion_system.run_cce(input, data_piston, flags, meta_model)
+
+    thrust_final = cce_output_dict["thrust"]
+    m0 = cce_output_dict["mass flow"]
+
+
+    output_dict = cce_output_dict
+    output_dict["fpr"] = opt_fpr[0]
 
 
     if np.abs(thrust_final / m0 - Fs_goal) > 1e-3:
@@ -119,36 +102,9 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
         #print('andra error funkar')
         cost = sfc_final + np.abs(thrust_final / m0 - Fs_goal) * 1e3
         cost = 999
-        return (
-            cost,
-            0,
-            thrust_final,
-            m0,
-            opt_fpr[0],
-            p_max,
-            T_max,
-            T_in_piston,
-            T_out_piston,
-            TET,
-            far_piston,
-            T35,
-            EI_nox,
-            error,
-        )
+        output_dict["sfc"] = cost
+        output_dict["error"] = error
 
-    return (
-        sfc_final,
-        v_ratio_final,
-        thrust_final,
-        m0,
-        opt_fpr[0],
-        p_max,
-        T_max,
-        T_in_piston,
-        T_out_piston,
-        TET,
-        far_piston,
-        T35,
-        EI_nox,
-        error,
-    )
+        return output_dict
+
+    return output_dict

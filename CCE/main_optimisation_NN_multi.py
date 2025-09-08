@@ -19,10 +19,10 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-#flags = ["single", "print_output", "cce"]  # normal case
+flags = ["single", "print_output", "cce"]  # normal case
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
-flags = ['optim', "cce"]
+#flags = ['optim', "cce"]
 
 
 if "conventional" in flags:
@@ -109,6 +109,9 @@ elif "cce" in flags:
         "power_offtake": d.power_offtake,
         "surrogate": d.surrogate,
         "second_burner": d.second_burner,
+        "pi_pe": d.pi_pe,
+        "cr": d.cr,
+        "bore": d.bore,
     }
 
     piston_input = {
@@ -157,7 +160,7 @@ elif "cce" in flags:
         if d.fuel == "jetA":
 
             # Load the trained model
-            meta_model = load_ANN("../neural_network/models/jetA_128_2.pth")
+            meta_model = load_ANN("../neural_network/models/jetA_128_2_pinn.pth")
             meta_model.double()
             print(meta_model)
 
