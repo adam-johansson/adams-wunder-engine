@@ -1,4 +1,4 @@
-from CCE.src import cce_propulsion_system, geared_turbofan_h2_recuperated, geared_turbofan_jetA, cce_propulsion_system_h2
+from CCE.src import cce_propulsion_system_specific, geared_turbofan_h2_recuperated, geared_turbofan_jetA, cce_propulsion_system_h2
 from CCE.src import auxiliaries
 import importlib
 from neural_network.src import load_ANN
@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MR_TOC_jetA"
+input_file = "MR_TOC_jetA_spec"
 input_dir = "input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -19,8 +19,8 @@ d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-#flags = ["single", "print_output", "cce"]  # normal case
-flags = ['single', "cce"] # for matching thrust
+flags = ["single", "print_output", "cce"]  # normal case
+#flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
@@ -112,6 +112,7 @@ elif "cce" in flags:
         "pi_pe": d.pi_pe,
         "cr": d.cr,
         "bore": d.bore,
+        "far piston": d.far_piston,
     }
 
     piston_input = {
@@ -160,16 +161,16 @@ elif "cce" in flags:
         if d.fuel == "jetA":
 
             # Load the trained model
-            meta_model = load_ANN("../neural_network/models/jetA_128_2_pinn.pth")
+            meta_model = load_ANN("meta_models/jetA_128_2_pinn.pth")
             meta_model.double()
             print(meta_model)
 
 
 
-            output_dict   = auxiliaries.run_cce_fpr(cce_input, piston_input, flags, meta_model)
-            cce_input["fpr_outer"] = output_dict["fpr"]
-            flags.append("print_output")
-            output_dict = cce_propulsion_system.run_cce(cce_input, piston_input, flags, meta_model)
+            #output_dict   = auxiliaries.run_cce_fpr(cce_input, piston_input, flags, meta_model)
+            #cce_input["fpr_outer"] = output_dict["fpr"]
+            #flags.append("print_output")
+            output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
         elif d.fuel == "H2":
 

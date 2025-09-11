@@ -10,7 +10,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "TOC_jetA_param_study"
+input_file = "MR_TOC_jetA"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -114,7 +114,7 @@ print(meta_model)
 
 num = 100
 
-PRs = np.linspace(0.05,0.23, num)
+PRs = np.linspace(0.18,0.23, num)
 
 SFCs = np.zeros(num)
 

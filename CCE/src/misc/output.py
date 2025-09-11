@@ -32,6 +32,7 @@ def print_output(
     heat_loss,
     bpr_piston,
     m_nox,
+    fpr,
 ):
 
     print(f"Airflow piston: {airflow_piston} [kg/s]")
@@ -48,6 +49,7 @@ def print_output(
     # print(f"Specific thrust: {Fs} [Ns/kg]")
 
     print(f"Thrust: {F * 1e-3} [kN]")
+    print(f"Outer fan FPR: {fpr} [-]")
 
     print(f"Intake flow: {m0} [kg/s]")
     print(f"Core flow: {m2} [kg/s]")

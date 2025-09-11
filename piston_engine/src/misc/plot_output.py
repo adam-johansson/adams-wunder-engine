@@ -1537,14 +1537,14 @@ def plot_no_with_equi(phi, evo, sc, no, no_equ):
 
 
 def plot_addedfuel(phi, dmfdphi):
-    from scipy.integrate import cumtrapz
+    from scipy.integrate import cumulative_trapezoid
 
     # high pressure crank angles
     # phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
 
     fs = 18
 
-    fuel = cumtrapz(dmfdphi, phi, initial=0) * 1e6
+    fuel = cumulative_trapezoid(dmfdphi, phi, initial=0) * 1e6
 
     # we want phi where 50% of fuel is added. for chalmers h2 engine it is supposed to be at 368 deg
 

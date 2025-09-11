@@ -44,6 +44,7 @@ def run_cce(input, input_piston, flags, meta_model):
     t_fuel = input['t_fuel']
     t_tank = input['t_tank']
     power_offtake = input['power_offtake']
+    far_piston = input['far piston']
 
     error = False
     minor_error_mass = False
@@ -52,8 +53,8 @@ def run_cce(input, input_piston, flags, meta_model):
     # number of output variables from function
     outputs = 13
 
-    # calculate mass flow
-    m0 = Fn / Fs_req
+    # unit mass flow
+    m0 = 1.0
 
     # calculate pressure ratios based on OPR and pressure ratio split
     fpr_inner = 0.913 * fpr_outer
@@ -85,7 +86,6 @@ def run_cce(input, input_piston, flags, meta_model):
     m13 = m2 * bpr / (1 + bpr)  # bypass stream
 
     # Convert polytropic efficiency to isentropic for the fan
-
 
     # Inner fan
     p21, T21, P_inner_fan = components.compressor_isentropic(T2, p2, m21, eta_fan, fpr_inner)
@@ -142,59 +142,56 @@ def run_cce(input, input_piston, flags, meta_model):
     T32 = T31
 
 
-
-
     # Piston engine
+    input_piston["far piston"] = far_piston
     input_piston["p_in"] = p32
     input_piston["T_in"] = T32
     input_piston["p_ratio"] = pi_pe
     input_piston["cr"] = cr
-    input_piston["bore"] = bore
-    lv_max = 0.1 * bore
-    input_piston["lv_max"] = lv_max
     input_piston["T_fuel"] = t_fuel
-
-    # Number of V12 engines
-    nr_engines = 2
+    input_piston["p_loss_in"] = p_loss_piston_in
+    input_piston["p_loss_out"] = p_loss_piston_out
 
     power_req = P_hpc / eta_g + P_cooling + power_offtake
     # Piston engine powers the HPC + Cooling+ gearbox for hpc ( no shaft efficiency now) (circumv flow is within
     # the piston model)
-    power_req_single = power_req / nr_engines
-    # flow_req_single = m32 / nr_engines  # flow in each piston engine
 
-    (
-        T34,
-        T35,
-        p34,
-        p35,
-        m34_single,
-        m35_single,
-        far34,
-        far35,
-        power_piston,
-        air_flow,
-        p_max,
-        T_max,
-        far_piston,
-        induced_power,
-        friction_loss,
-        aux_loss,
-        heat_loss,
-        P_fuel_pump,
-        bore_match,
-        P_circumv,
-        m_nox,
-        error,
-    ) = misc.match_power_nn(
+
+    piston_output = misc.match_power_specific(
         input_piston,
         meta_model,
-        power_req_single,
-        core_flow=m31 / nr_engines,
-        surrogate_status=surrogate,
-        p_loss_in=p_loss_piston_in,
-        p_loss_out=p_loss_piston_out,
+        power_req,
+        core_flow=m31,
     )
+
+    p34 = piston_output["p34"]
+    p35 = piston_output["p35"]
+    m32 = piston_output["m32"]
+    m34 = piston_output["m34"]
+    m35 = piston_output["m35"]
+    T34 = piston_output["T34"]
+    T35 = piston_output["T35"]
+    far34 = piston_output["far34"]
+    far35 = piston_output["far35"]
+    m_nox = piston_output["m NO"]
+    friction_loss_pe = piston_output["friction loss"]
+    P_circumv = piston_output["P comp circumvent air"]
+    piston_aux_loss = piston_output["aux loss"]
+    piston_heat_loss = piston_output["heat loss"]
+    P_fuel_pump = piston_output["fuel pump"]
+    p_max = piston_output["p max"]
+    T_max = piston_output["T max"]
+    piston_power_net = piston_output["power_net"] #power of the piston shaft after friction, aux, fuel pump
+    # and compressing circumventing air
+    piston_indicated_p = piston_output["power_indicated"]
+
+
+    fuel_flow_piston = m34 * far34
+
+    # fraction of air led around engine (based on m31, after cooling flow is removed)
+    bpr_piston = (m31 - m32) / m31
+
+
 
     # if engine was not able to match power requirements or negative air flow, return error
     if error:
@@ -204,59 +201,13 @@ def run_cce(input, input_piston, flags, meta_model):
         listofzeros[-1] = error
         return listofzeros
 
-    # get total power from both V12 engines
-    # power_tot is power after friction, aux, fuel_pump and circumventing compressor
-    power_tot = nr_engines * power_piston  # break power on the piston engine shaft
-    air_flow_tot = nr_engines * air_flow
-    m34 = m34_single * nr_engines
-    m35 = m35_single * nr_engines
-    P_circumv_tot = P_circumv * nr_engines
-    fuel_flow_piston = air_flow_tot * far_piston
-    induced_power_tot = nr_engines * induced_power
-    friction_loss_tot = friction_loss * nr_engines
-    aux_loss_tot = aux_loss * nr_engines
-    heat_loss_tot = heat_loss * nr_engines
-    P_fuel_pump_tot = P_fuel_pump * nr_engines
-    m_nox_tot = m_nox * nr_engines
 
-    m_circumv = m31 - air_flow_tot
-
-
-
-    # checking if flow is matching
-    if m_circumv < 0:
-        minor_error_mass = True
-        error = True
-        # print('Larger flow in piston engine than core')
-        cost = 999 - m_circumv * 100
-
-        listofzeros = [0] * outputs
-        listofzeros[-1] = error
-        listofzeros[0] = cost
-        return listofzeros
-
-    """    # checking max pressure
-    if p_max > 250 * 1e5:
-        error = True
-        minor_error_pressure = True
-        #print(f'Maximum pressure reached: {p_max*1e-5} bar')
-        cost = 999 + (p_max - 250 * 1e5) * 100
-        #return cost, 0, 0, 0, error, 0, 0, 0, 0, 0, 0, 0
-        listofzeros = [0] * outputs
-        listofzeros[-1] = error
-        listofzeros[0] = cost
-        return listofzeros"""
-
-    bpr_piston = (
-        m_circumv / m31
-    )  # fraction of air led around engine (based on m31, after cooling flow is removed)
-    # mass flow going into the piston engines
-    m32 = m31 - m_circumv
 
     nr_of_cylinders_per_engine = input_piston["cylinders"]
-    V_d = bore_match * bore_match**2 / 4 * np.pi
-    V_d_tot = V_d * nr_of_cylinders_per_engine * nr_engines  # total displacement
-
+    #V_d = bore_match * bore_match**2 / 4 * np.pi
+    #V_d_tot = V_d * nr_of_cylinders_per_engine * nr_engines  # total displacement
+    V_d = 0.0
+    V_d_tot = 0.0
 
     equ35 = far35 / far_s
     if second_burner:
@@ -353,7 +304,7 @@ def run_cce(input, input_piston, flags, meta_model):
     # Split stream into cooling air and not cooling air
     # total amount of heat produced by piston engine
     cooling_req = (
-        heat_loss_tot + friction_loss_tot
+        piston_heat_loss + friction_loss_pe
     )
 
     # total amount of heat needed to be rejected (some heat used to heat fuel)
@@ -408,7 +359,7 @@ def run_cce(input, input_piston, flags, meta_model):
     mdot_fuel = fuel_flow_piston + fuel_flow_burner
 
     # NOx emission index
-    EI_nox = m_nox_tot / (mdot_fuel) * 1e3
+    EI_nox = m_nox / (mdot_fuel) * 1e3
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v17_id / v8_id
@@ -542,12 +493,12 @@ def run_cce(input, input_piston, flags, meta_model):
         s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
 
         misc.print_output(
-            air_flow_tot,
+            m32,
             sfc,
             F,
             m0,
             m21,
-            power_tot,
+            piston_power_net,
             power_hpc,
             power_offtake,
             power_lpt,
@@ -560,15 +511,15 @@ def run_cce(input, input_piston, flags, meta_model):
             T_max,
             far34 / far_s,
             far_s,
-            induced_power_tot,
+            piston_indicated_p,
             fuel_flow_piston,
             fuel_flow_burner,
             V_d_tot,
-            friction_loss_tot,
-            aux_loss_tot,
-            heat_loss_tot,
+            friction_loss_pe,
+            piston_aux_loss,
+            piston_heat_loss,
             bpr_piston,
-            m_nox_tot,
+            m_nox,
             fpr_outer,
         )
 
@@ -580,20 +531,20 @@ def run_cce(input, input_piston, flags, meta_model):
         # power lost in the compressor gearbox
         # assuming offtake is taken before gearbox
         piston_gearbox = (
-            induced_power_tot
-            - P_fuel_pump_tot
-            - P_circumv_tot
-            - friction_loss_tot
-            - aux_loss_tot
+            piston_indicated_p
+            - P_fuel_pump
+            - P_circumv
+            - friction_loss_pe
+            - piston_aux_loss
             - P_cooling
             - power_offtake
         ) * (1 - eta_g)
         misc.power_balance(
-            induced_power_tot,
-            friction_loss_tot,
-            aux_loss_tot,
-            P_fuel_pump_tot,
-            P_circumv_tot,
+            piston_indicated_p,
+            friction_loss_pe,
+            piston_aux_loss,
+            P_fuel_pump,
+            P_circumv,
             P_cooling,
             piston_gearbox,
             power_offtake,
@@ -603,7 +554,7 @@ def run_cce(input, input_piston, flags, meta_model):
             P_lpc,
             (P_inner_fan + P_outer_fan) * (1 - eta_g) / eta_g,
             P_inner_fan + P_outer_fan,
-            heat_loss_tot,
+            piston_heat_loss,
             heating_fuel,
             heating_bypass,
         )
@@ -615,8 +566,8 @@ def run_cce(input, input_piston, flags, meta_model):
             t_tank,
             fuel_type,
             t_fuel,
-            induced_power_tot,
-            heat_loss_tot,
+            piston_indicated_p,
+            piston_heat_loss,
             T32,
             T34,
             p32,
@@ -636,9 +587,9 @@ def run_cce(input, input_piston, flags, meta_model):
         # print(f'ideal jet velocity ratio: {vel_ratio}')
 
         # cost function if minor errors NOT USED FOR NOW
-        if minor_error_mass:
-            punish_factor = 1e-4
-            sfc = sfc - punish_factor * m_circumv
+        #if minor_error_mass:
+        #    punish_factor = 1e-4
+        #    sfc = sfc - punish_factor * m_circumv
 
         if minor_error_pressure:
             punish_factor = 1e-4
@@ -658,7 +609,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "T34": T34,
         "T35": T35,
         "T4": T4,
-        "far_piston": far_piston,
+        "far_piston": far34,
         "EI_nox": EI_nox,
         "core efficiency": eta_core,
         "transmission efficiency": eta_transmission,
