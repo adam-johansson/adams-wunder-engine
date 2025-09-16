@@ -1,10 +1,10 @@
 import numpy as np
 
-from CCE.src import cce_propulsion_system
+from CCE.src import cce_propulsion_system, cce_propulsion_system_specific
 from timeit import default_timer as timer
 
 from scipy.optimize import (
-    fsolve,
+    fsolve, brentq
 )
 
 # THIS IS THE MOST UP TO DATE VERSION
@@ -108,3 +108,39 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
         return output_dict
 
     return output_dict
+
+
+
+def run_cce_bpr(input, data_piston, meta_model):
+
+    Fs_goal = input["Fs_req"]  # specific thrust
+
+    flags = ["single", "cce"]
+
+    def find_bpr(x):
+
+        input["bpr"] = x
+
+        output_dict = cce_propulsion_system_specific.run_cce(input,data_piston,flags,meta_model)
+        if output_dict["error"]:
+            if output_dict["error_type"] == "LPT" or "Hot nozzle":
+                #too high BPR means LPT does not work
+                # maybe need to add p6-pa here to help the brentq algorithm
+                Fs = 0.0
+            else:
+                # other error...
+                Fs = 0.0
+
+        else:
+            Fs = output_dict["specific thrust"]
+
+        residual = np.array([Fs - Fs_goal])
+
+        return residual
+
+
+    bpr = brentq(find_bpr, 5, 25)
+
+    return bpr
+
+

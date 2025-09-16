@@ -111,7 +111,7 @@ def match_power_specific(input, meta_model, power_req, core_flow):
 
 
     fraction = brentq(find_match, 0, 1)
-    print(fraction)
+    #print(fraction)
 
     # mass flow into the piston engine that matches HPC power
     mdot_in = fraction * core_flow

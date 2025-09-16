@@ -167,9 +167,9 @@ elif "cce" in flags:
 
 
 
-            #output_dict   = auxiliaries.run_cce_fpr(cce_input, piston_input, flags, meta_model)
-            #cce_input["fpr_outer"] = output_dict["fpr"]
-            #flags.append("print_output")
+            bpr = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
+            cce_input["bpr"] = bpr
+            flags.append("print_output")
             output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
         elif d.fuel == "H2":

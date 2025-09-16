@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
 
-from thermo import fuel_props
+from thermo import fuel_props, work_potential
 
 
 def run_cce(input, input_piston, flags, meta_model):
@@ -101,12 +101,19 @@ def run_cce(input, input_piston, flags, meta_model):
     p25, T25, P_lpc = components.compressor(T21, p22, m21, eta_p_lpc, pi_ipc)
     m25 = m21
 
-    # Inter compressor loss
-    p26 = 0.9885 * p25
+    # Inter compressor loss DO I NEED THIS??
+    #p26 = 0.9885 * p25
+
+    # Intercooler
+    p26, T26, ptemp, Ttemp, effectivness_intercooler = components.intercool(p25, T25, m25, p13, T13, m13*0.1)
+
+    print(f"IN: {p25*1e-5}, {T25}, {p13*1e-5}, {T13}")
+    print(f"Out: {p26 * 1e-5}, {T26}, {ptemp * 1e-5}, {Ttemp}")
+    print(f"Effectivness IC: {effectivness_intercooler}")
 
 
     # HPC
-    p3, T3, P_hpc = components.compressor(T25, p26, m25, eta_p_hpc, pi_hpc)
+    p3, T3, P_hpc = components.compressor(T26, p26, m25, eta_p_hpc, pi_hpc)
     m3 = m25
 
     # Remove cooling flow
@@ -195,11 +202,14 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # if engine was not able to match power requirements or negative air flow, return error
     if error:
-        cost = 999
-        listofzeros = [0] * outputs
-        listofzeros[0] = cost
-        listofzeros[-1] = error
-        return listofzeros
+        print("problem with piston engine matching")
+        output_dict={
+            "sfc": 999,
+            "error": error,
+            "error_type": "PISTON"
+
+        }
+        return output_dict
 
 
 
@@ -262,12 +272,14 @@ def run_cce(input, input_piston, flags, meta_model):
     )
 
     if error:
-        # print('Prob too high power demand on LPT')
-        cost = 999
-        listofzeros = [0] * outputs
-        listofzeros[-1] = error
-        listofzeros[0] = cost
-        return listofzeros
+        #print('Prob too high power demand on LPT')
+        output_dict={
+            "sfc": 999,
+            "error": error,
+            "error_type": "LPT"
+
+        }
+        return output_dict
 
 # Turbine exhaust duct pressure loss
     p6 = p5 * 0.99
@@ -283,12 +295,15 @@ def run_cce(input, input_piston, flags, meta_model):
     )
 
     if error:
-        #print(f'Prob too low pressure and temperature in hot nozzle. p, T: {p6, T6}')
-        cost = 999 + (pa - p6)
-        listofzeros = [0] * outputs
-        listofzeros[-1] = error
-        listofzeros[0] = cost
-        return listofzeros
+        #print('Hot nozzle fails. Prob too low pressure.')
+        output_dict={
+            "sfc": 999,
+            "error": error,
+            "error_type": "Hot nozzle",
+            "error_info": pa-p6
+
+        }
+        return output_dict
 
     # Heating the fuel
     if fuel_type == "H2":
@@ -363,7 +378,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v17_id / v8_id
-    print(vel_ratio)
+    #print(vel_ratio)
 
     power_hpc = (
         P_hpc / eta_g
@@ -385,7 +400,7 @@ def run_cce(input, input_piston, flags, meta_model):
     )
 
     # Efficiencies
-    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs = misc.calc_efficiencies_cce(
+    eff_dict = misc.calc_efficiencies_cce(
         F,
         mdot_fuel,
         m14,
@@ -402,7 +417,22 @@ def run_cce(input, input_piston, flags, meta_model):
         fuel_type,
         pa,
         LHV,
+        m21,
+        p13,
+        T13,
+        p15,
+        T15,
     )
+
+
+    sfc = eff_dict["sfc"]
+    eta_core = eff_dict["core eff"]
+    eta_transfer = eff_dict["transfer eff"]
+    eta_th = eff_dict["thermal eff"]
+    eta_p = eff_dict["propulsive eff"]
+    eta_o = eff_dict["overall eff"]
+    Fs = eff_dict["specific thrust"]
+    core_spec_power = eff_dict["core specific power"]
 
     if "print_output" in flags:
 
@@ -523,7 +553,7 @@ def run_cce(input, input_piston, flags, meta_model):
             fpr_outer,
         )
 
-        misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, Fs)
+        misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transfer, eta_core, Fs)
 
         misc.plot_stations_cce(p_array, T_array)
 
@@ -602,6 +632,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "vel_ratio": vel_ratio,
         "thrust": F,
         "specific thrust": Fs,
+        "core specific power": core_spec_power,
         "mass flow": m0,
         "p_max": p_max,
         "T_max": T_max,
@@ -612,7 +643,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "far_piston": far34,
         "EI_nox": EI_nox,
         "core efficiency": eta_core,
-        "transmission efficiency": eta_transmission,
+        "transmission efficiency": eta_transfer,
         "thermal efficiency": eta_th,
         "propulsive efficiency": eta_p,
         "overall efficiency": eta_o,
