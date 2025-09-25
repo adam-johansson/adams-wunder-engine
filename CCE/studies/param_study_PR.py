@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from CCE.src import cce_propulsion_system, cce_propulsion_system_h2
+from CCE.src import cce_propulsion_system_specific
 from CCE.src import auxiliaries
 import importlib
 from neural_network.src import load_ANN
@@ -10,7 +10,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MR_TOC_jetA"
+input_file = "MR_TOC_jetA_spec"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -27,7 +27,7 @@ flags = ['single', "cce"] # for matching thrust/no plots
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
-constant_F = True
+constant_F = False
 
 
 cce_input = {
@@ -65,6 +65,8 @@ cce_input = {
     "pi_pe": d.pi_pe,
     "cr": d.cr,
     "bore": d.bore,
+    "far piston": d.far_piston,
+    'effectiveness IC': d.eff_IC,
 }
 
 piston_input = {
@@ -114,9 +116,15 @@ print(meta_model)
 
 num = 100
 
-PRs = np.linspace(0.18,0.23, num)
+param_name = "pressure split"
+params = np.linspace(0.1,0.8, num)
 
 SFCs = np.zeros(num)
+EI_noxs = np.zeros(num)
+
+pmaxs = np.zeros(num)
+dT_intercoolers = np.zeros(num)
+T3s = np.zeros(num)
 
 core_effs = np.zeros(num)
 thermal_effs = np.zeros(num)
@@ -125,6 +133,9 @@ propulsive_effs = np.zeros(num)
 overall_effs = np.zeros(num)
 
 specific_thrusts = np.zeros(num)
+specific_powers = np.zeros(num)
+
+
 hot_bypass_thrusts = np.zeros(num)
 cold_bypass_thrusts = np.zeros(num)
 core_thrusts = np.zeros(num)
@@ -132,21 +143,20 @@ core_thrusts = np.zeros(num)
 piston_fuelflow = np.zeros(num)
 burner_fuelflow = np.zeros(num)
 
-fprs = np.zeros(num)
+bprs = np.zeros(num)
 
 
 i = 0
-for PR in PRs:
+for PR in params:
 
     cce_input["PR"] = PR
 
-    if constant_F:
-        output_dict = auxiliaries.run_cce_fpr(cce_input, piston_input, flags, meta_model)
 
-        fprs[i] = output_dict["fpr"]
+    bpr = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
 
-    else:
-        output_dict = cce_propulsion_system.run_cce(cce_input, piston_input, flags, meta_model)
+    bprs[i] = bpr
+
+    output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
     #print(f"Mass flow: {output_dict["mass flow"]} kg/s")
     #print(f"Specific thrust: {output_dict["specific thrust"]} N/kg/s")
@@ -154,6 +164,8 @@ for PR in PRs:
 
 
     SFCs[i] = output_dict["sfc"]
+    pmaxs[i] = output_dict["p_max"]
+    EI_noxs[i] = output_dict["EI_nox"]
 
     core_effs[i] = output_dict["core efficiency"]
     transmission_effs[i] = output_dict["transmission efficiency"]
@@ -162,6 +174,10 @@ for PR in PRs:
     overall_effs[i] = output_dict["overall efficiency"]
 
     specific_thrusts[i] = output_dict["specific thrust"]
+    specific_powers[i] = output_dict["core specific power"]
+    dT_intercoolers[i] = output_dict["dT intercooler"]
+    T3s[i] = output_dict["T32"]
+
     hot_bypass_thrusts[i] = output_dict["hot bypass thrust"]
     cold_bypass_thrusts[i] = output_dict["cold bypass thrust"]
     core_thrusts[i] = output_dict["core thrust"]
@@ -178,52 +194,117 @@ for PR in PRs:
 
 _, ax1 = plt.subplots()
 
-ax1.plot(PRs, SFCs*1e6)
+ax1.plot(params, SFCs*1e6)
+ax1.set_xlabel(f"{param_name}")
 
 
 _, ax2 = plt.subplots()
 
-ax2.plot(PRs, transmission_effs*100,label="Transmission", linewidth="2")
-ax2.plot(PRs, propulsive_effs*100,label="Propulsive", linewidth="2")
-ax2.plot(PRs, core_effs*100,label="Core", linewidth="2")
-ax2.plot(PRs, thermal_effs*100,label="Thermal", linewidth="2")
-ax2.plot(PRs, overall_effs*100,label="Overall", linewidth="2")
+ax2.plot(params, transmission_effs*100,label="Transmission", linewidth="2")
+ax2.plot(params, propulsive_effs*100,label="Propulsive", linewidth="2")
+ax2.plot(params, core_effs*100,label="Core", linewidth="2")
+ax2.plot(params, thermal_effs*100,label="Thermal", linewidth="2")
+ax2.plot(params, overall_effs*100,label="Overall", linewidth="2")
+ax2.set_xlabel(f"{param_name}")
 ax2.legend()
 
 _, ax3 = plt.subplots()
-ax3.plot(PRs, specific_thrusts)
+ax3.plot(params, specific_thrusts)
+ax3.set_xlabel(f"{param_name}")
 
 _, ax4 = plt.subplots()
-ax4.plot(PRs, core_effs*100,label="Core", linewidth="2")
-ax4.plot(PRs, thermal_effs*100,label="Thermal", linewidth="2")
+ax4.plot(params, core_effs*100,label="Core", linewidth="2")
+ax4.plot(params, thermal_effs*100,label="Thermal", linewidth="2")
+ax4.set_xlabel(f"{param_name}")
 ax4.legend()
 
 _, ax5 = plt.subplots()
-ax5.plot(PRs, transmission_effs*100,label="Transmission", linewidth="2")
-ax5.plot(PRs, propulsive_effs*100,label="Propulsive", linewidth="2")
+ax5.plot(params, transmission_effs*100,label="Transmission", linewidth="2")
+ax5.plot(params, propulsive_effs*100,label="Propulsive", linewidth="2")
+ax5.set_xlabel(f"{param_name}")
 ax5.legend()
 
 _, ax6 = plt.subplots()
-ax6.plot(PRs, hot_bypass_thrusts*1e-3,label="Hot", linewidth="2")
-ax6.plot(PRs, cold_bypass_thrusts*1e-3,label="Cold", linewidth="2")
-ax6.plot(PRs, core_thrusts*1e-3,label="Core", linewidth="2")
+ax6.plot(params, hot_bypass_thrusts*1e-3,label="Hot", linewidth="2")
+ax6.plot(params, cold_bypass_thrusts*1e-3,label="Cold", linewidth="2")
+ax6.plot(params, core_thrusts*1e-3,label="Core", linewidth="2")
+ax6.set_xlabel(f"{param_name}")
 ax6.legend()
 
 _, ax7 = plt.subplots()
-ax7.plot(PRs, piston_fuelflow,label="Piston", linewidth="2")
-ax7.plot(PRs, burner_fuelflow,label="Burner", linewidth="2")
-ax7.plot(PRs, burner_fuelflow + piston_fuelflow,label="Total", linewidth="2")
+ax7.plot(params, piston_fuelflow,label="Piston", linewidth="2")
+ax7.plot(params, burner_fuelflow,label="Burner", linewidth="2")
+ax7.plot(params, burner_fuelflow + piston_fuelflow,label="Total", linewidth="2")
+ax7.set_xlabel(f"{param_name}")
 ax7.legend()
 
 _, ax8 = plt.subplots()
-ax8.plot(PRs, 100*piston_fuelflow / (piston_fuelflow + burner_fuelflow),label="Piston", linewidth="2")
-ax8.plot(PRs, 100*burner_fuelflow/ (piston_fuelflow + burner_fuelflow),label="Burner", linewidth="2")
+ax8.plot(params, 100*piston_fuelflow / (piston_fuelflow + burner_fuelflow),label="Piston", linewidth="2")
+ax8.plot(params, 100*burner_fuelflow/ (piston_fuelflow + burner_fuelflow),label="Burner", linewidth="2")
+ax8.set_xlabel(f"{param_name}")
 ax8.legend()
 
-if constant_F:
-    _, ax9 = plt.subplots()
-    ax9.plot(PRs, fprs)
+
+_, ax9 = plt.subplots()
+ax9.plot(params, bprs)
+ax9.set_xlabel(f"{param_name}")
+ax9.set_ylabel("BPR")
+
+_, ax10 = plt.subplots()
+ax10.plot(params, pmaxs*1e-5)
+ax10.set_xlabel(f"{param_name}")
+ax10.set_ylabel("max pressure")
+
+_, ax11 = plt.subplots()
+ax11.plot(params, EI_noxs)
+ax11.set_xlabel(f"{param_name}")
+ax11.set_ylabel("EI NOx [g/kg]")
+
+_, ax12 = plt.subplots()
+ax12.plot(params, thermal_effs*100)
+ax12.set_xlabel(f"{param_name}")
+ax12.set_ylabel("Thermal efficiency [percent]")
+
+_, ax13 = plt.subplots()
+ax13.plot(params, specific_powers*1e-3)
+ax13.set_xlabel(f"{param_name}")
+ax13.set_ylabel("Specific power core [kW/kg/s]")
+
+_, ax14 = plt.subplots()
+ax14.plot(dT_intercoolers, specific_powers*1e-3)
+ax14.set_xlabel(f"dT intercooler")
+ax14.set_ylabel("Specific power core [kW/kg/s]")
+
+_, ax15 = plt.subplots()
+ax15.plot(dT_intercoolers, EI_noxs)
+ax15.set_xlabel(f"dT intercooler")
+ax15.set_ylabel("EI NOx [g/kg]")
+
+_, ax16 = plt.subplots()
+ax16.plot(dT_intercoolers, thermal_effs*100)
+ax16.set_xlabel(f"dT intercooler")
+ax16.set_ylabel("Thermal efficiency [percent]")
+
+
+_, ax17 = plt.subplots()
+ax17.plot(params, dT_intercoolers)
+ax17.set_xlabel(f"{param_name}")
+ax17.set_ylabel("dT intercooler [K]")
+
+_, ax18 = plt.subplots()
+ax18.plot(params, T3s)
+ax18.set_xlabel(f"{param_name}")
+ax18.set_ylabel("T3 [K]")
 
 
 plt.show()
+
+NO_PR = np.vstack((params, EI_noxs)).transpose()
+eff_PR = np.vstack((params, thermal_effs*100)).transpose()
+power_PR = np.vstack((params, specific_powers*1e-3)).transpose()
+
+# save output for plotting in latex
+np.savetxt("./results/NOX_pressure_split.dat", NO_PR, fmt="%.5f")
+np.savetxt("./results/efficiency_pressure_split.dat", eff_PR, fmt="%.5f")
+np.savetxt("./results/power_pressure_split.dat", power_PR, fmt="%.5f")
 

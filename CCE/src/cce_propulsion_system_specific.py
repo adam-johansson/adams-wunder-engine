@@ -45,6 +45,8 @@ def run_cce(input, input_piston, flags, meta_model):
     t_tank = input['t_tank']
     power_offtake = input['power_offtake']
     far_piston = input['far piston']
+    effectiveness_IC = input['effectiveness IC']
+    dp_inter_compressor = input['dp_inter_compressor']
 
     error = False
     minor_error_mass = False
@@ -59,7 +61,7 @@ def run_cce(input, input_piston, flags, meta_model):
     # calculate pressure ratios based on OPR and pressure ratio split
     fpr_inner = 0.913 * fpr_outer
     OPR_c = OPR / fpr_inner  # OPR of the compressor, excluding fan
-    OPR_c = OPR_c / 0.9885 #account for the pressure loss after LPC
+    OPR_c = OPR_c / (1-dp_inter_compressor) #account for the pressure loss after LPC
     pi_ipc = OPR_c**PR
     pi_hpc = OPR_c / pi_ipc
 
@@ -94,7 +96,7 @@ def run_cce(input, input_piston, flags, meta_model):
     p13, T13, P_outer_fan = components.compressor_isentropic(T2, p2, m13, eta_fan, fpr_outer)
 
     # Compressor intake loss
-    p22 = 0.99 * p21
+    p22 = p21
 
 
     # LPC
@@ -102,15 +104,24 @@ def run_cce(input, input_piston, flags, meta_model):
     m25 = m21
 
     # Inter compressor loss DO I NEED THIS??
-    #p26 = 0.9885 * p25
+    p255 = p25 * (1-dp_inter_compressor)
 
     # Intercooler
-    p26, T26, ptemp, Ttemp, effectivness_intercooler = components.intercool(p25, T25, m25, p13, T13, m13*0.1)
+    if input["intercooler"]:
 
-    print(f"IN: {p25*1e-5}, {T25}, {p13*1e-5}, {T13}")
-    print(f"Out: {p26 * 1e-5}, {T26}, {ptemp * 1e-5}, {Ttemp}")
-    print(f"Effectivness IC: {effectivness_intercooler}")
+        p26, T26, p_intercooler, T_intercooler, m_intercooler =\
+            components.intercool(p255, T25, m25, p13, T13, effectiveness_IC)
 
+        #print(f"Delta T intercooler: {T25 - T26}")
+        dT_intercooler = T25 - T26
+
+    else:
+        p26 = p255
+        T26 = T25
+        p_intercooler = p13
+        T_intercooler = T13
+        m_intercooler = 0.0
+        dT_intercooler = 0.0
 
     # HPC
     p3, T3, P_hpc = components.compressor(T26, p26, m25, eta_p_hpc, pi_hpc)
@@ -171,6 +182,18 @@ def run_cce(input, input_piston, flags, meta_model):
         core_flow=m31,
     )
 
+    # if engine was not able to match power requirements, negative air flow or input outside surrogate limits, return error
+    if piston_output["error"]:
+        print("problem with piston engine matching")
+        output_dict = {
+            "sfc": 999,
+            "error": error,
+            "error_type": "PISTON"
+
+        }
+        return output_dict
+
+
     p34 = piston_output["p34"]
     p35 = piston_output["p35"]
     m32 = piston_output["m32"]
@@ -191,25 +214,13 @@ def run_cce(input, input_piston, flags, meta_model):
     piston_power_net = piston_output["power_net"] #power of the piston shaft after friction, aux, fuel pump
     # and compressing circumventing air
     piston_indicated_p = piston_output["power_indicated"]
+    #displacement = piston_output["tot engine displacement"]
 
 
     fuel_flow_piston = m34 * far34
 
     # fraction of air led around engine (based on m31, after cooling flow is removed)
     bpr_piston = (m31 - m32) / m31
-
-
-
-    # if engine was not able to match power requirements or negative air flow, return error
-    if error:
-        print("problem with piston engine matching")
-        output_dict={
-            "sfc": 999,
-            "error": error,
-            "error_type": "PISTON"
-
-        }
-        return output_dict
 
 
 
@@ -221,6 +232,16 @@ def run_cce(input, input_piston, flags, meta_model):
 
     equ35 = far35 / far_s
     if second_burner:
+        if T4_req < T35:
+            print("T4 lower than T35")
+            output_dict = {
+                "sfc": 999,
+                "error": error,
+                "error_type": "T4"
+
+            }
+            return output_dict
+
         # Second burner
         p4, T4, far_4 = components.burner(
             p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel
@@ -281,7 +302,7 @@ def run_cce(input, input_piston, flags, meta_model):
         }
         return output_dict
 
-# Turbine exhaust duct pressure loss
+    # Turbine exhaust duct pressure loss
     p6 = p5 * 0.99
     T6 = T5
     m6 = m5
@@ -335,7 +356,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     #print(f"Mass flow of engine oil: {m_oil} kg/s")
 
-    m14 = m13 - m15  # mass flow not going through heat exchanger
+    m14 = m13 - m15 - m_intercooler  # mass flow not going through heat exchanger
     p14 = (1 - dp_bypass) * p13
     T14 = T13  # adiabatic bypass
 
@@ -366,9 +387,22 @@ def run_cce(input, input_piston, flags, meta_model):
         listofzeros[0] = cost
         return listofzeros
 
+    # Intercooler nozzle
+    F_ic_nozzle, v_ic_nozzle_id, v_ic_nozzle, error = components.nozzle(
+        p_intercooler, T_intercooler, pa, equ=0, m=m_intercooler, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+    )
+
+    if error:
+        #print('Prob too low pressure and temperature in cooling nozzle')
+        cost = 999 + (pa - p15)
+        listofzeros = [0] * outputs
+        listofzeros[-1] = error
+        listofzeros[0] = cost
+        return listofzeros
+
     # Thrust
     v_0 = a * Mach  # air speed
-    F = F8 + F18 + F17 - v_0 * m2  # net thrust
+    F = F8 + F18 + F17 + F_ic_nozzle - v_0 * m2  # net thrust
 
     # Total fuel flow
     mdot_fuel = fuel_flow_piston + fuel_flow_burner
@@ -422,6 +456,10 @@ def run_cce(input, input_piston, flags, meta_model):
         T13,
         p15,
         T15,
+        v_ic_nozzle_id,
+        T_intercooler,
+        p_intercooler,
+        m_intercooler,
     )
 
 
@@ -433,6 +471,25 @@ def run_cce(input, input_piston, flags, meta_model):
     eta_o = eff_dict["overall eff"]
     Fs = eff_dict["specific thrust"]
     core_spec_power = eff_dict["core specific power"]
+
+    # calculate piston engine displacement based on real mass flow
+    m_real = Fn / Fs
+    m32_real = m32 * m_real
+    m32_per_cylinder = m32_real / 24
+
+    slope = piston_output["slope"]
+    intercept = piston_output["intercept"]
+
+    bore = np.sqrt((m32_per_cylinder - intercept) / slope)
+
+    bsr = input_piston["bsr"]
+
+    # Calculate displacement
+    stroke = bore / bsr  # using bore-to-stroke ratio
+    displacement = np.pi / 4 * bore ** 2 * stroke  # m³
+    displacement_tot = displacement * 24
+
+
 
     if "print_output" in flags:
 
@@ -524,6 +581,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
         misc.print_output(
             m32,
+            m32_real,
             sfc,
             F,
             m0,
@@ -544,13 +602,15 @@ def run_cce(input, input_piston, flags, meta_model):
             piston_indicated_p,
             fuel_flow_piston,
             fuel_flow_burner,
-            V_d_tot,
+            displacement_tot,
+            bore,
             friction_loss_pe,
             piston_aux_loss,
             piston_heat_loss,
             bpr_piston,
             m_nox,
             fpr_outer,
+            bpr,
         )
 
         misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transfer, eta_core, Fs)
@@ -652,8 +712,19 @@ def run_cce(input, input_piston, flags, meta_model):
         "core thrust": F8,
         "piston fuelflow": fuel_flow_piston,
         "burner fuelflow": fuel_flow_burner,
+        "dT intercooler": dT_intercooler,
+        "engine displacement": displacement,
         "error": error
     }
 
+    if p_max > 250*1e5:
+        print(f"Warning: pmax {p_max*1e-5} bar larger than 250 bar")
+    if T4 < T35:
+        print(f"Warning: T4 {T4} smaller than T35 {T35}")
+    if T34 > 1200:
+        print(f"Warning: T_out {T34} of piston larger than 1200K")
+
+    #print(p0*1e-5, p_max*1e-5, p_max/p0)
+    #print(T_max)
 
     return output_dict

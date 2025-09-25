@@ -6,6 +6,7 @@ import os
 
 def print_output(
     airflow_piston,
+    airflow_piston_real,
     sfc,
     F,
     m0,
@@ -27,17 +28,22 @@ def print_output(
     fuel_flow_piston,
     fuel_flow_burner,
     V_d_tot,
+    bore,
     friction_loss,
     aux_loss,
     heat_loss,
     bpr_piston,
     m_nox,
     fpr,
+    bpr,
 ):
 
     print(f"Airflow piston: {airflow_piston} [kg/s]")
+    print(f"Airflow piston real: {airflow_piston_real} [kg/s]")
 
-    print(f"Total displacement for the 2 V12s: {V_d_tot * 1000} [liter]")
+    print(f"Total displacement of the piston engine: {V_d_tot * 1000} [liter]")
+    print(f"Piston bore (assuming 24 cylinder): {bore * 1000} [mm]")
+
 
     print(f"Thrust specific fuel consumption (TSFC): {sfc * 1e6} [mg/Ns]")
     # print(f"Nozzle pressure ratio, cold: {pi_c} and hot: {pi_h}")
@@ -50,6 +56,7 @@ def print_output(
 
     print(f"Thrust: {F * 1e-3} [kN]")
     print(f"Outer fan FPR: {fpr} [-]")
+    print(f"BPR: {bpr} [-]")
 
     print(f"Intake flow: {m0} [kg/s]")
     print(f"Core flow: {m2} [kg/s]")

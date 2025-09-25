@@ -2,6 +2,7 @@ from piston_engine.src.misc import post_processing
 from scipy.optimize import brentq
 from CCE.src import components
 from thermo import fuel_props
+from neural_network.src import input_outside_limits
 
 import numpy as np
 
@@ -32,6 +33,12 @@ def match_power_specific(input, meta_model, power_req, core_flow):
     piston_input = np.atleast_2d(
         np.array([pin, Tin, p_ratio, cr, bore, v_mean, T_fuel, far34])
     )
+
+    if input_outside_limits(piston_input):
+        output = {
+            "error": True
+        }
+        return output
 
     # use meta model to get outputs from the piston engine
     output = meta_model.inference(piston_input)[0]
@@ -77,6 +84,54 @@ def match_power_specific(input, meta_model, power_req, core_flow):
     # make it specific
     friction_loss = friction_loss / m_in
     aux_loss = aux_loss / m_in
+
+    # Replace this section in your code:
+
+    # calculate displacement
+    # get data point for larger bore
+    bore2 = 0.175
+    piston_input2 = np.atleast_2d(
+        np.array([pin, Tin, p_ratio, cr, bore2, v_mean, T_fuel, far34])
+    )
+
+    # use meta model to get outputs from the piston engine
+    output_bore2 = meta_model.inference(piston_input2)[0]
+
+    # mass flow of air into the engine
+    m_2 = output_bore2[7]
+
+    # smaller bore
+    bore0 = 0.125
+    piston_input0 = np.atleast_2d(
+        np.array([pin, Tin, p_ratio, cr, bore0, v_mean, T_fuel, far34])
+    )
+
+    # use meta model to get outputs from the piston engine
+    output_bore0 = meta_model.inference(piston_input0)[0]
+
+    # mass flow of air into the engine
+    m_0 = output_bore0[7]
+
+    # Create arrays for curve fitting
+    bore_array = np.array([bore0, bore, bore2])  # bore is 0.15 from earlier
+    mass_flow_array = np.array([m_0, m_in, m_2])  # m_in from original calculation
+
+    # Fit mass flow vs bore^2 relationship: m_dot = a * bore^2 + b
+    # This assumes m_dot ∝ bore^2 as you discussed (piston speed limited)
+    bore_squared = bore_array ** 2
+
+    # Linear fit: mass_flow = slope * bore^2 + intercept
+    slope = np.polyfit(bore_squared, mass_flow_array, 1)[0]
+    intercept = np.polyfit(bore_squared, mass_flow_array, 1)[1]
+
+    # Function to predict required bore from mass flow
+    def bore_from_mass_flow(target_mass_flow):
+        # Solve: target_mass_flow = slope * bore^2 + intercept
+        # bore^2 = (target_mass_flow - intercept) / slope
+        if target_mass_flow < intercept:
+            print("Warning: Target mass flow below minimum (intercept)")
+            return 0
+        return np.sqrt((target_mass_flow - intercept) / slope)
 
 
 
@@ -172,6 +227,18 @@ def match_power_specific(input, meta_model, power_req, core_flow):
 
     m_NOX = nox_ppm * m34 * 1e-6
 
+    # Calculate required bore for the actual engine
+    required_bore = bore_from_mass_flow(mdot_in)
+
+    # Calculate displacement
+    stroke = required_bore / bsr  # using bore-to-stroke ratio
+    displacement = np.pi / 4 * required_bore ** 2 * stroke  # m³
+    displacement_per_cyl = displacement / 24 # liters
+
+
+    #print(f"Displacement per cylinder: {displacement_per_cyl * 1000:.2f} L")
+    #print(f"Total engine displacement: {displacement * 1000:.1f} L")
+
     output_dict={
         "power_net": power_net,
         "power_indicated": indicated_power_tot,
@@ -193,6 +260,9 @@ def match_power_specific(input, meta_model, power_req, core_flow):
         "p max": p_max,
         "T max": T_max,
         "m NO": m_NOX,
+        "slope": slope,
+        "intercept": intercept,
+        "error": False,
 
     }
 

@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MR_TOC_jetA_spec"
+input_file = "MR_TOC_jetA_intercool"
 input_dir = "input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -113,6 +113,9 @@ elif "cce" in flags:
         "cr": d.cr,
         "bore": d.bore,
         "far piston": d.far_piston,
+        'effectiveness IC': d.eff_IC,
+        "dp_inter_compressor": d.dp_inter_compressor,
+        "intercooler": d.intercooler,
     }
 
     piston_input = {

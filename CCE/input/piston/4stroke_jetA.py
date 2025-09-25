@@ -13,7 +13,7 @@ opposed = False
 
 cylinders = 12  # V12
 
-v_mean = 18  # mean velocity from Kaiser's thesis
+v_mean = 14  # mean velocity from Kaiser's thesis
 
 bsr = 1  # bore stroke ratio
 # rpm = 4000  # revolutions per minute

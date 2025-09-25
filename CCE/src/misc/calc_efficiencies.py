@@ -23,6 +23,10 @@ def calc_efficiencies_cce(
     T_beforehx,
     p_afterhx,
     T_afterhx,
+    v_intercooler_id,
+    T_intercooler,
+    p_intercooler,
+    m_intercooler,
 ):
     sfc = mdot_fuel / F  # Thrust specific fuel consumption
 
@@ -31,6 +35,7 @@ def calc_efficiencies_cce(
         m_cold * v_cold_id**2
         + m_cold_hx * v_cold_hx_id**2
         + m_hot * v_hot_id**2
+        + m_intercooler * v_intercooler_id ** 2
         - m_intake * v_0**2
     )
 
@@ -57,7 +62,18 @@ def calc_efficiencies_cce(
     # work potential increase due to heating the bypass
     P_hx = m_cold_hx * (WP_afterhx - WP_beforehx)
 
-    P_core2 = P_core + P_hx
+    # temperature and pressure before intercooler and oil/piston engine cooler are the same
+
+    # work potential before bypass hx
+    WP_before_ic = thermo.work_potential(T_beforehx, p_beforehx, 0.0, pa, fuel_type)
+
+    # work potential after bypass hx
+    WP_after_ic = thermo.work_potential(T_intercooler, p_intercooler, 0.0, pa, fuel_type)
+
+    # work potential increase due to heating the bypass
+    P_ic = m_intercooler * (WP_after_ic - WP_before_ic)
+
+    P_core2 = P_core + P_hx + P_ic
 
     #print(f"Pcore: {P_core}")
     #print(f"Pcore2: {P_core2}")

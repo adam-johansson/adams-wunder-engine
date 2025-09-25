@@ -21,3 +21,5 @@ from .surrogate_wrapper import nn_output_energy_conserved
 from .help_functions import scale_data
 
 from .physics_loss import PhysicsInformedLoss
+
+from .surrogate_limits import input_outside_limits
