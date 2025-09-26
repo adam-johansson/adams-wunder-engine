@@ -17,20 +17,19 @@ power_offtake = 0.0
 bpr = 16.0  # bypass ratio
 
 
-
 fpr_outer = 1.396  # Outer fan pressure ratio
-bore = 0.18 #not used
+bore = 0.18 # not used
 
 # piston engine stuff
 pi_pe = 1.0
 cr = 9
-far_piston = 0.04
+far_piston = 0.05
 
 OPR = 20  # overall pressure ratio (including losses)
 PR = 0.3  # pressure split, with regard to the LPC
 eff_IC = 0.7
 
-T4 = 1000  # [K] Turbine entry temperature
+T4 = 1200  # [K] Turbine entry temperature
 
 dp_intake = 0.2 / 100  # intake pressure loss
 dp_bypass = 0.0 / 100  # bypass duct pressure loss
@@ -62,6 +61,7 @@ bpr_c = 0.0  # cooling from fraction of core flow
 second_burner = True
 surrogate = True
 intercooler = False
+specific = False
 
 
 # fuel temperature upon injection in piston engine and burner

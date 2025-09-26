@@ -55,8 +55,11 @@ def run_cce(input, input_piston, flags, meta_model):
     # number of output variables from function
     outputs = 13
 
-    # unit mass flow
-    m0 = 1.0
+    if input["specific"]:
+        # unit mass flow
+        m0 = 1.0
+    else:
+        m0 = Fn / Fs_req
 
     # calculate pressure ratios based on OPR and pressure ratio split
     fpr_inner = 0.913 * fpr_outer
@@ -175,12 +178,22 @@ def run_cce(input, input_piston, flags, meta_model):
     # the piston model)
 
 
-    piston_output = misc.match_power_specific(
-        input_piston,
-        meta_model,
-        power_req,
-        core_flow=m31,
-    )
+    if input["specific"]:
+        piston_output = misc.match_power_specific(
+            input_piston,
+            meta_model,
+            power_req,
+            core_flow=m31,
+        )
+
+    else:
+        piston_output = misc.match_power_bore(
+            input_piston,
+            meta_model,
+            power_req,
+            core_flow=m31,
+        )
+
 
     # if engine was not able to match power requirements, negative air flow or input outside surrogate limits, return error
     if piston_output["error"]:
@@ -223,15 +236,9 @@ def run_cce(input, input_piston, flags, meta_model):
     # fraction of air led around engine (based on m31, after cooling flow is removed)
     bpr_piston = (m31 - m32) / m31
 
-
-
-    nr_of_cylinders_per_engine = input_piston["cylinders"]
-    #V_d = bore_match * bore_match**2 / 4 * np.pi
-    #V_d_tot = V_d * nr_of_cylinders_per_engine * nr_engines  # total displacement
-    V_d = 0.0
-    V_d_tot = 0.0
-
     equ35 = far35 / far_s
+
+
     if second_burner:
         if T4_req < T35:
             #print("T4 lower than T35")
@@ -475,21 +482,27 @@ def run_cce(input, input_piston, flags, meta_model):
     core_spec_power = eff_dict["core specific power"]
 
     # calculate piston engine displacement based on real mass flow
-    m_real = Fn / Fs
-    m32_real = m32 * m_real
-    m32_per_cylinder = m32_real / 24
+    if input["specific"]:
+        m_real = Fn / Fs
+        m32_real = m32 * m_real
+        m32_per_cylinder = m32_real / 24
 
-    slope = piston_output["slope"]
-    intercept = piston_output["intercept"]
+        slope = piston_output["slope"]
+        intercept = piston_output["intercept"]
 
-    bore = np.sqrt((m32_per_cylinder - intercept) / slope)
+        bore = np.sqrt((m32_per_cylinder - intercept) / slope)
 
-    bsr = input_piston["bsr"]
+        bsr = input_piston["bsr"]
 
-    # Calculate displacement
-    stroke = bore / bsr  # using bore-to-stroke ratio
-    displacement = np.pi / 4 * bore ** 2 * stroke  # m³
-    displacement_tot = displacement * 24
+        # Calculate displacement
+        stroke = bore / bsr  # using bore-to-stroke ratio
+        displacement = np.pi / 4 * bore ** 2 * stroke  # m³
+        displacement_tot = displacement * 24
+    else:
+        bore = piston_output["bore"]
+        displacement = piston_output["displacement"]
+        displacement_tot = displacement * 24
+        m32_real = m32
 
 
 

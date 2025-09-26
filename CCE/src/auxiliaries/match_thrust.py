@@ -144,7 +144,7 @@ def run_cce_bpr(input, data_piston, meta_model):
         return residual
 
     try:
-        bpr = brentq(find_bpr, 5, 25)
+        bpr = brentq(find_bpr, 12, 25)
     except ValueError as e:
         if piston_error:
             # Piston error occurred, set error flag and return
