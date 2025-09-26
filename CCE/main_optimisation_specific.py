@@ -7,7 +7,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MR_TOC_jetA_intercool"
+input_file = "MR_TOC_jetA"
 input_dir = "input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -168,10 +168,8 @@ elif "cce" in flags:
             meta_model.double()
             print(meta_model)
 
-
-
-            bpr = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
-            cce_input["bpr"] = bpr
+            dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
+            cce_input["bpr"] = dict["bpr"]
             flags.append("print_output")
             output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 

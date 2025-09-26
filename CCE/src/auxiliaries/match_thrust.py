@@ -110,37 +110,59 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
     return output_dict
 
 
-
 def run_cce_bpr(input, data_piston, meta_model):
-
     Fs_goal = input["Fs_req"]  # specific thrust
 
     flags = ["single", "cce"]
 
+    error = False
+    piston_error = False  # Flag to track piston errors
+
     def find_bpr(x):
+        nonlocal piston_error  # Allow modification of outer scope variable
 
         input["bpr"] = x
 
-        output_dict = cce_propulsion_system_specific.run_cce(input,data_piston,flags,meta_model)
-        if output_dict["error"]:
-            if output_dict["error_type"] == "LPT" or "Hot nozzle":
-                #too high BPR means LPT does not work
-                # maybe need to add p6-pa here to help the brentq algorithm
-                Fs = 0.0
-            else:
-                # other error...
-                Fs = 0.0
+        output_dict = cce_propulsion_system_specific.run_cce(input, data_piston, flags, meta_model)
 
+        if output_dict["error"]:
+            if output_dict["error_type"] == "LPT" or output_dict["error_type"] == "Hot nozzle":
+                # Too high BPR means LPT does not work
+                # Return very low thrust to guide brentq to lower BPR
+                Fs = 0.0
+            elif output_dict["error_type"] == "piston" or output_dict["error_type"] == "T4":
+                # Set flag and raise exception to break out of brentq
+                piston_error = True
+                raise ValueError("Piston error encountered")
+            else:
+                # Other error - return low thrust
+                Fs = 0.0
         else:
             Fs = output_dict["specific thrust"]
 
         residual = np.array([Fs - Fs_goal])
-
         return residual
 
+    try:
+        bpr = brentq(find_bpr, 5, 25)
+    except ValueError as e:
+        if piston_error:
+            # Piston error occurred, set error flag and return
+            error = True
+            bpr = None
+        else:
+            # Some other ValueError, re-raise it
+            raise e
+    except ValueError:
+        # brentq failed to converge (no piston error)
+        error = True
+        bpr = None
 
-    bpr = brentq(find_bpr, 5, 25)
+    output = {
+        "bpr": bpr,
+        "error": error
+    }
 
-    return bpr
+    return output  # Return the full output dict, not just bpr
 
 

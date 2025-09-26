@@ -184,6 +184,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # if engine was not able to match power requirements, negative air flow or input outside surrogate limits, return error
     if piston_output["error"]:
+        error = True
         print("problem with piston engine matching")
         output_dict = {
             "sfc": 999,
@@ -233,7 +234,8 @@ def run_cce(input, input_piston, flags, meta_model):
     equ35 = far35 / far_s
     if second_burner:
         if T4_req < T35:
-            print("T4 lower than T35")
+            #print("T4 lower than T35")
+            error = True
             output_dict = {
                 "sfc": 999,
                 "error": error,
