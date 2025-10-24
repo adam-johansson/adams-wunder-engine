@@ -81,13 +81,13 @@ batch_size = 64
 epochs = 3000
 
 # number of neurons of hidden layers
-hidden_dim = 256
+hidden_dim = 128
 
 # number of hidden layers - 1
 layers = 2
 
 lr = 1e-3
-weight_decay = 10e-1
+weight_decay = 1e-3
 
 # allows for starting from a checkpoint
 start_epoch = 0
@@ -144,7 +144,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_dec
 
 # learning rate scheduler (100 patience normal)
 scheduler = lr_scheduler.ReduceLROnPlateau(
-    optimizer, "min", patience=10, factor=0.5, min_lr=1e-5
+    optimizer, "min", patience=10, factor=0.5, min_lr=1e-6
 )
 
 # saving losses for each epoch to visualize

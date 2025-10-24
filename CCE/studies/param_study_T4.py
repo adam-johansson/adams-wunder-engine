@@ -121,7 +121,7 @@ print(meta_model)
 num = 100
 
 param_name = "T4"
-params = np.linspace(800,1500, num)
+params = np.linspace(800,1800, num)
 
 SFCs = np.zeros(num)
 EI_noxs = np.zeros(num)
@@ -149,6 +149,10 @@ core_thrusts = np.zeros(num)
 piston_fuelflow = np.zeros(num)
 burner_fuelflow = np.zeros(num)
 
+cool_ngv = np.zeros(num)
+cool_rotor = np.zeros(num)
+m_core = np.zeros(num)
+
 bprs = np.zeros(num)
 
 
@@ -164,9 +168,11 @@ for T4 in params:
     if dict["error"]:
         bprs[i] = dict["bpr"]
 
+
     else:
 
         bprs[i] = dict["bpr"]
+
 
         output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
@@ -199,6 +205,10 @@ for T4 in params:
         piston_fuelflow[i] = output_dict["piston fuelflow"]
         burner_fuelflow[i] = output_dict["burner fuelflow"]
 
+        cool_ngv[i] = output_dict["m_cool_ngv"]
+        cool_rotor[i] = output_dict["m_cool_rotor"]
+        m_core[i] = output_dict["core mass flow"]
+
 
     i = i+1
 
@@ -210,6 +220,7 @@ _, ax1 = plt.subplots()
 
 ax1.plot(params, SFCs*1e6)
 ax1.set_xlabel(f"{param_name}")
+ax1.set_xlabel(f"SFC [mg/Ns]")
 
 
 _, ax2 = plt.subplots()
@@ -313,6 +324,19 @@ ax18.plot(params, Tmaxs)
 ax18.set_xlabel(f"{param_name}")
 ax18.set_ylabel("T max [K]")
 
+
+_, ax19 = plt.subplots()
+ax19.plot(params, cool_ngv, label="NGV")
+ax19.plot(params, cool_rotor, label="Rotor")
+ax19.plot(params, cool_ngv + cool_rotor, label="Total")
+ax19.set_xlabel(f"{param_name}")
+ax19.set_ylabel("m cool [kg/s]")
+ax19.legend()
+
+_, ax20 = plt.subplots()
+ax20.plot(params, (cool_ngv + cool_rotor)/m_core )
+ax20.set_xlabel(f"{param_name}")
+ax20.set_ylabel("fraction cool [-]")
 
 plt.show()
 

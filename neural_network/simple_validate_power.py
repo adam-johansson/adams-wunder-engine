@@ -24,7 +24,7 @@ from src import load_ANN
 
 # Load the trained model
 hidden_dim = 128
-layers = 1
+layers = 2
 model = load_ANN(f"./models/straight_{hidden_dim}_{layers}.pth")
 print(model)
 

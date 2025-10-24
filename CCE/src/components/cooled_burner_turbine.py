@@ -155,7 +155,8 @@ def burner_turbine(input_dictionary):
 
         # that means: cooling will only happen when T4 = T4_req
 
-        c_cool = 0.052
+        #c_cool = 0.052
+        c_cool = 0.128
         # T4 higher than rotor material limit
 
         # starting guess for cooling mass flow
@@ -269,6 +270,7 @@ def burner_turbine(input_dictionary):
             # use new cooling mass flow for next iteration
             m_cooling = m_cooling_new
 
+        m_cooling = m_cooling_new
         # fraction of cooling air used for ngv cooling
         q_ngv = m_ngv / m_cooling
 
@@ -290,7 +292,7 @@ def burner_turbine(input_dictionary):
 
 
         if error:
-            # print('Prob too high power demand on LPT')
+            #print('Prob too high power demand on LPT')
             output_dict = {
                 "sfc": 999,
                 "error": error,

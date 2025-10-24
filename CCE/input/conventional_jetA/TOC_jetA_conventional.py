@@ -1,4 +1,3 @@
-# Two shaft CCE piston fueled on hydrogen
 
 alt = 10058.0  # [m] altitude
 M = 0.70  # Flight Mach number

@@ -6,16 +6,10 @@ from neural_network.src import load_ANN
 from timeit import default_timer as timer
 
 # Importing input parameters
-
-input_file = "MR_TOC_jetA"
-input_dir = "input.cce_jetA"
-path = input_dir + "." + input_file
-
 input_file_pist = "4stroke_jetA"
 input_dir_pist = "input.piston"
 path_pist = input_dir_pist + "." + input_file_pist
 
-d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
@@ -24,6 +18,17 @@ flags = ["single", "print_output", "cce"]  # normal case
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
+if "cce" in flags:
+    input_file = "MR_TOC_jetA"
+    input_dir = "input.cce_jetA"
+    path = input_dir + "." + input_file
+    d = importlib.import_module(path)
+
+elif "conventional" in flags:
+    input_file = "mid_range_TOC_jetA_conventional"
+    input_dir = "input.conventional_jetA"
+    path = input_dir + "." + input_file
+    d = importlib.import_module(path)
 
 if "conventional" in flags:
     data_dict = {
@@ -43,8 +48,6 @@ if "conventional" in flags:
         "dPcomb": d.dPcomb,
         "eta_s": d.eta_s,
         "eta_g": d.eta_g,
-        "q_ngv": d.q_ngv,
-        "bpr_c": d.bpr_c,
         "eta_hpt": d.eta_hpt,
         "eta_lpt": d.eta_lpt,
         "cfg_core": d.cfg_core,
@@ -68,7 +71,7 @@ if "conventional" in flags:
     else:
         (
             sfc, vel_ratio, F, m0
-        ) = geared_turbofan_jetA.run_turbofan(data, flags)
+        ) = geared_turbofan_jetA.run_turbofan(data_dict, flags)
 
     print(f"mass flow: {m0} [kg/s]")
     print(f"SFC: {sfc*1e6} [mg/Ns]")

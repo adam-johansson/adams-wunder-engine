@@ -8,41 +8,33 @@ from CCE.src.gas_props.air_properties import isa
 from thermo import fuel_props
 
 
-def run_turbofan(indata, flags):
-    [
-        Fn,
-        disa,
-        bpr,
-        T4_req,
-        fpr_outer,
-        Fs_req,
-        dp_in,
-        dp_bypass,
-        Mach,
-        eta_fan,
-        eta_p_hpc,
-        eta_p_ipc,
-        eta_b,
-        dPcomb,
-        eta_s,
-        eta_g,
-        q_ngv,
-        bpr_c,
-        eta_hpt,
-        eta_lpt,
-        cfg_core,
-        cfg_bypass,
-        cd_nozzle,
-        alt,
-        fuel_type,
-        OPR,
-        PR,
-        t_fuel,
-        t_tank,
-        offtake,
-        dp_rec,
-        dT_rec,
-    ] = indata
+def run_turbofan(input, flags):
+    Fn = input['Fn']
+    dTisa = input['dTisa']
+    bpr = input['bpr']
+    T4_req = input['T4']
+    fpr_outer = input['fpr_outer']
+    Fs_req = input['Fs_req']
+    dp_intake = input['dp_intake']
+    dp_bypass = input['dp_bypass']
+    Mach = input['M']
+    eta_fan = input['eta_fan']
+    eta_p_ipc = input['eta_p_lpc']
+    eta_p_hpc = input['eta_p_hpc']
+    eta_b = input['eta_b']
+    dPcomb = input['dPcomb']
+    eta_s = input['eta_s']
+    eta_g = input['eta_g']
+    eta_hpt = input['eta_hpt']
+    eta_lpt = input['eta_lpt']
+    cfg_core = input['cfg_core']
+    cfg_bypass = input['cfg_bypass']
+    cd_nozzle = input['cd_nozzle']
+    alt = input['alt']
+    fuel_type = input['fuel']
+    OPR = input['OPR']
+    PR = input['PR']
+    t_fuel = input['t_fuel']
 
     # calculate mass flow
     m0 = Fn / Fs_req
@@ -59,7 +51,7 @@ def run_turbofan(indata, flags):
 
     # ISA table
     pa, Ta, a = isa(
-        alt, disa, False
+        alt, dTisa, False
     )  # static pressure, static temperature and speed of sound
 
     # calculate optimum fpr from Gouya paper (Unsure if this works for me)
@@ -69,7 +61,7 @@ def run_turbofan(indata, flags):
     p0, T0 = compressible.stagnation(pa, Ta, Mach)
 
     # Inlet
-    p2, T2 = components.inlet(p0, T0, dp_in)
+    p2, T2 = components.inlet(p0, T0, dp_intake)
     m2 = m0
 
     # Split core and bypass mass flow
@@ -86,7 +78,7 @@ def run_turbofan(indata, flags):
     # Inner fan
     p22, T22, P_inner_fan = components.compressor_isentropic(T2, p2, m22, eta_fan, fpr_inner)
 
-    # LPC
+    # IPC
     p24, T24, P_lpc = components.compressor(T22, p22, m22, eta_p_ipc, pi_ipc)
     m24 = m22
 
@@ -99,46 +91,69 @@ def run_turbofan(indata, flags):
     p3, T3, P_hpc = components.compressor(T25, p25, m25, eta_p_hpc, pi_hpc)
     m3 = m25
 
-    # Calculate cooling
-    #c_cool = 0.052
-    #eta_cool = (T4_req - 1350)
+    T31 = T3
+    p31 = p3
 
-    # Remove cooling flow
-    m_cool = m3 * bpr_c
-    m31 = m3 - m_cool  # core flow after cooling air is removed
-    p31 = p3  # pressure of main flow
-    T31 = T3  # temperature of main flow after removal of cooling flow
+    input_burner_turbine = {
+        "m31": m3,
+        "m32": 0.0,
+        "m34": 0.0,
+        "T_cooling": T3,
+        "T34": T3,
+        "T4_req": T4_req,
+        "far34": 0.0,
+        "fuel_type": fuel_type,
+        "T_fuel": t_fuel,
+        "dP_comb": dPcomb,
+        "eta_b": eta_b,
+        "p34": p3,
+        "power_req": P_hpc / eta_s,
+        "eta_s_lpt": eta_hpt,
+        "second burner": True,
+    }
 
-    T_cool = T3
-    p_cool = p3
+    output_burner_turbine = components.burner_turbine(input_burner_turbine)
 
-    # Burner
-    p4, T4, far_burner = components.burner(
-        p31, T31, 0.0, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel
-    )
+    # if error in burner_turbine
+    if output_burner_turbine["error"]:
+        error = True
+        # print("problem with piston engine matching")
+        output_dict = {
+            "sfc": 999,
+            "error": error,
+            "error_type": "PISTON"
 
-    # fuel added to the mass flow
-    fuel_flow_burner = far_burner * m31
-    m4 = m31 + fuel_flow_burner
+        }
+        return output_dict
 
-    # fuel air equivalence ratio
-    equ4 = far_burner / far_s
+    # number 6 is just after 1% pressure loss after turbine duct
+    m31 = output_burner_turbine["m35"]
+    m4 = output_burner_turbine["m4"]
+    m41 = output_burner_turbine["m46"]
+    m45 = output_burner_turbine["m5"]
+    p4 = output_burner_turbine["p4"]
+    p41 = output_burner_turbine["p5"]
+    p45 = output_burner_turbine["p6"]
+    T4 = output_burner_turbine["T4"]
+    # T46 is after ngv cooling
+    T41 = output_burner_turbine["T46"]
+    # T47 is after power extraction
+    T42 = output_burner_turbine["T47"]
+    # T5 is after rotor cooling
+    T45 = output_burner_turbine["T5"]
+    equ4 = output_burner_turbine["equ4"]
+    equ41 = output_burner_turbine["equ46"]
+    equ45 = output_burner_turbine["equ5"]
+    fuel_flow_burner = output_burner_turbine["fuel_flow_burner"]
+    m_cool = output_burner_turbine["m_cool"]
+    m_cool_ngv = output_burner_turbine["m_ngv"]
+    m_cool_rotor = output_burner_turbine["m_rotor"]
+    q_ngv = output_burner_turbine["q_ngv"]
 
-    # HPT
-    power_hpt = P_hpc / eta_s + offtake
-    p45, T41, T42, T45, m41, m45, equ41, equ45, error = components.turbine(
-        T4,
-        p4,
-        m4,
-        equ4,
-        power_hpt,
-        eta_hpt,
-        fuel_type,
-        cooling=True,
-        t_cool=T_cool,
-        m1_cool=m_cool,
-        q_ngv=q_ngv,
-    )
+
+    print(f"Cooling ratio: {m_cool / m3}")
+
+    far_burner = equ4 * far_s
 
 
     # Low pressure turbine, powering fan and LPC

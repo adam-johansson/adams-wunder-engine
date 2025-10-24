@@ -271,7 +271,10 @@ def run_cce(input, input_piston, flags, meta_model):
     T6 = output_burner_turbine["T5"]
     fuel_flow_burner = output_burner_turbine["fuel_flow_burner"]
     m_cool = output_burner_turbine["m_cool"]
+    m_cool_ngv = output_burner_turbine["m_ngv"]
+    m_cool_rotor = output_burner_turbine["m_rotor"]
     q_ngv = output_burner_turbine["q_ngv"]
+
 
     # Hot nozzle
     equ6 = equ5
@@ -297,6 +300,7 @@ def run_cce(input, input_piston, flags, meta_model):
             300e5, t_tank, 0.08, t_fuel, fuel_flow_piston + fuel_flow_burner
         )
     else:
+        # add fuel heating here
         heating_fuel = 0.0
         oil_temp_1 = 400
 
@@ -679,6 +683,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "specific thrust": Fs,
         "core specific power": core_spec_power,
         "mass flow": m0,
+        "core mass flow": m31,
         "p_max": p_max,
         "T_max": T_max,
         "T31": T31,
@@ -701,6 +706,8 @@ def run_cce(input, input_piston, flags, meta_model):
         "burner fuelflow": fuel_flow_burner,
         "dT intercooler": dT_intercooler,
         "engine displacement": displacement,
+        "m_cool_ngv": m_cool_ngv,
+        "m_cool_rotor": m_cool_rotor,
         "error": error
     }
 

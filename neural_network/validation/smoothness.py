@@ -11,7 +11,7 @@ folder = "jetA"
 # Load the trained model
 hidden_dim = 128
 layers = 2
-model = load_ANN(f"../models/{folder}_{hidden_dim}_{layers}_pinn.pth")
+model = load_ANN(f"../models/{folder}_{hidden_dim}_{layers}.pth")
 model = model.double()
 print(model)
 

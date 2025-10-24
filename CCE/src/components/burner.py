@@ -26,11 +26,14 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
         return residual
 
     f = brentq(find_far, 0.0, far_s)
-
     # taking into account combustion losses (only on added fuel)
     f_added = f - far0
     #print(f_added)
     f_added_real = f_added / eta
+
+    if f_added_real > far_s:
+        print("WARNING FAR is higher than stoich in burner")
+
     f_real = far0 + f_added_real
 
     return p2, t2, f_real

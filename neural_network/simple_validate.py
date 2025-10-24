@@ -24,7 +24,7 @@ from src import load_ANN
 
 folder = "jetA"
 # Load the trained model
-hidden_dim = 256
+hidden_dim = 128
 
 layers = 2
 model = load_ANN(f"./models/{folder}_{hidden_dim}_{layers}.pth")

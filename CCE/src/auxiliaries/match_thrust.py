@@ -141,10 +141,11 @@ def run_cce_bpr(input, data_piston, meta_model):
             Fs = output_dict["specific thrust"]
 
         residual = np.array([Fs - Fs_goal])
+        #print(residual, x)
         return residual
 
     try:
-        bpr = brentq(find_bpr, 12, 27)
+        bpr = brentq(find_bpr, 12, 40)
     except ValueError:
         error = True
         bpr = None

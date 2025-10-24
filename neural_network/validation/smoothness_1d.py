@@ -14,7 +14,7 @@ folder = "jetA"
 # Load the trained model
 hidden_dim = 128
 layers = 2
-model = load_ANN(f"../models/{folder}_{hidden_dim}_{layers}_pinn.pth")
+model = load_ANN(f"../models/{folder}_{hidden_dim}_{layers}.pth")
 model = model.double()
 print(model)
 
@@ -23,10 +23,10 @@ p_ratio = 1.0
 cr = 10
 bore = 0.15
 v_mean = 10
-T_fuel = 300
-far = 0.035
-Tin = 300
-pin = 1.1e5
+T_fuel = 400
+far = 0.045
+Tin = 600
+pin = 10e5
 
 far_s, LHV = fuel_props(folder)
 
