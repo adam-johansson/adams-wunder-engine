@@ -71,20 +71,19 @@ def turbine(
                 error,
             )
 
-    h2 = (
-        h1 - (power_req / m1) / eta
-    )  # specific enthalpy after expansion (for pressure calculation)
+    h2_s = h1 - (power_req / m1) / eta
+    # isentropic specific enthalpy after expansion (for pressure calculation)
 
     h2_real = h1 - (power_req / m1)  # specific enthalpy after expansion (real)
 
     equ2 = equ1  # no cooling air is inserted at the rotor. only before or after
     m2 = m1
 
-    def find_t2(t):
+    def find_t2_s(t):
         h2_guess, _, _, _, _, _, _, _ = mixture(
             t, p_dummy, equ1, fuel_type=fuel_type
         )
-        return h2 - h2_guess
+        return h2_s - h2_guess
 
     def find_t2_real(t):
         h2_guess, _, _, _, _, _, _, _ = mixture(
@@ -92,9 +91,8 @@ def turbine(
         )
         return h2_real - h2_guess
 
-    # t2 = fsolve(find_t2, x0=t1_main)[0]  # temperature after rotor (for calculating pressure drop)
     try:
-        t2 = brentq(find_t2, 200, 2500)
+        t2_s = brentq(find_t2_s, 200, 2500)
     except ValueError:
         error = True
         # print('trubbel')
@@ -130,8 +128,8 @@ def turbine(
     psi1 = entropy_func(
         t1, p1_main, equ1, fuel_type
     )  # before work extraction from rotor
-    psi2 = entropy_func(t2, p1_main, equ2, fuel_type)  # after rotor
-    pr = np.exp(psi2 - psi1)  # pressure ratio over rotor
+    psi2_s = entropy_func(t2_s, p1_main, equ2, fuel_type)  # after rotor
+    pr = np.exp(psi2_s - psi1)  # pressure ratio over rotor
     p2 = p1_main * pr  # pressure after rotor
 
     # cooling air inserted after rotor

@@ -661,6 +661,7 @@ def run_piston_engine(input, flags):
 
             else:
                 # Non-premixed: fuel flow based on actual exhaust fuel-air ratio
+                # fuel air ratio is based on the intake pure air flow
                 mf_tot = m_in_IP[-1][-1] * far_goal
 
             # Track convergence of fuel mass iteration

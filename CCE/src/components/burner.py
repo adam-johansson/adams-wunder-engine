@@ -29,6 +29,7 @@ def burner(p1, t1, equ1, t2, dp, eta, fuel_type, t_fuel):
 
     # taking into account combustion losses (only on added fuel)
     f_added = f - far0
+    #print(f_added)
     f_added_real = f_added / eta
     f_real = far0 + f_added_real
 

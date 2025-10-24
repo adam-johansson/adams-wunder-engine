@@ -117,6 +117,7 @@ elif "cce" in flags:
         "dp_inter_compressor": d.dp_inter_compressor,
         "intercooler": d.intercooler,
         "specific": d.specific,
+        "v_mean": d.v_mean,
     }
 
     piston_input = {
@@ -165,7 +166,7 @@ elif "cce" in flags:
         if d.fuel == "jetA":
 
             # Load the trained model
-            meta_model = load_ANN("meta_models/jetA_128_2_pinn.pth")
+            meta_model = load_ANN("meta_models/jetA_256_2.pth")
             meta_model.double()
             print(meta_model)
 

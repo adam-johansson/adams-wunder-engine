@@ -1,7 +1,5 @@
-import numpy as np
 from thermo.thermo_computations import mixture
 
-# from CoolProp.CoolProp import PropsSI
 
 
 def entropy_func(t, p, equ=0, fuel_type=False):

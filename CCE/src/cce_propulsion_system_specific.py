@@ -26,8 +26,6 @@ def run_cce(input, input_piston, flags, meta_model):
     dPcomb = input['dPcomb']
     eta_s = input['eta_s']
     eta_g = input['eta_g']
-    q_ngv = input['q_ngv']
-    bpr_c = input['bpr_c']
     eta_s_lpt = input['eta_lpt']
     cfg_core = input['cfg_core']
     cfg_bypass = input['cfg_bypass']
@@ -47,6 +45,7 @@ def run_cce(input, input_piston, flags, meta_model):
     far_piston = input['far piston']
     effectiveness_IC = input['effectiveness IC']
     dp_inter_compressor = input['dp_inter_compressor']
+    v_mean = input['v_mean']
 
     error = False
     minor_error_mass = False
@@ -130,51 +129,29 @@ def run_cce(input, input_piston, flags, meta_model):
     p3, T3, P_hpc = components.compressor(T26, p26, m25, eta_p_hpc, pi_hpc)
     m3 = m25
 
-    # Remove cooling flow
-    m_cool = m3 * bpr_c
-    m31 = m3 - m_cool  # core flow after cooling air is removed
-    p31 = p3  # pressure of main flow
-    T31 = T3  # temperature of main flow after removal of cooling flow
-
     p_loss_piston_in = 0.03
-    p_loss_piston_out = 0.03
-
-
-    if second_burner:
-        p4 = p31 * (1-p_loss_piston_in) * pi_pe * (1-p_loss_piston_out) * (1 - dPcomb)
-    else:
-        p4 = p31 * (1-p_loss_piston_in) * pi_pe * (1-p_loss_piston_out)
-
-
-    # Compress cooling flow
-    if p4 > p3:
-        pi_cool = p4 / p3
-        p_cool, T_cool, P_cooling = components.compressor(
-            T3, p3, m_cool * q_ngv, 0.85, pi_cool
-        )
-    else:
-        P_cooling = 0.0
-        T_cool = T3
-        p_cool = p3
+    p_loss_piston_out = 0.0
 
 
     # Piston intake duct pressure loss
-    p32 = (1-p_loss_piston_in) * p31
-    T32 = T31
+    p31 = (1-p_loss_piston_in) * p3
+    T31 = T3
+    m31 = m3
 
 
     # Piston engine
     input_piston["far piston"] = far_piston
-    input_piston["p_in"] = p32
-    input_piston["T_in"] = T32
+    input_piston["p_in"] = p31
+    input_piston["T_in"] = T31
     input_piston["p_ratio"] = pi_pe
     input_piston["cr"] = cr
+    input_piston["v_mean"] = v_mean
     input_piston["T_fuel"] = t_fuel
     input_piston["p_loss_in"] = p_loss_piston_in
     input_piston["p_loss_out"] = p_loss_piston_out
 
-    power_req = P_hpc / eta_g + P_cooling + power_offtake
-    # Piston engine powers the HPC + Cooling+ gearbox for hpc ( no shaft efficiency now) (circumv flow is within
+    power_req = P_hpc / eta_g + power_offtake
+    # Piston engine powers the HPC + gearbox for hpc ( no shaft efficiency now) (circumv flow is within
     # the piston model)
 
 
@@ -198,7 +175,7 @@ def run_cce(input, input_piston, flags, meta_model):
     # if engine was not able to match power requirements, negative air flow or input outside surrogate limits, return error
     if piston_output["error"]:
         error = True
-        print("problem with piston engine matching")
+        #print("problem with piston engine matching")
         output_dict = {
             "sfc": 999,
             "error": error,
@@ -212,11 +189,12 @@ def run_cce(input, input_piston, flags, meta_model):
     p35 = piston_output["p35"]
     m32 = piston_output["m32"]
     m34 = piston_output["m34"]
-    m35 = piston_output["m35"]
+    #m35 = piston_output["m35"]
     T34 = piston_output["T34"]
-    T35 = piston_output["T35"]
+    T_cool = piston_output["T_circumv"]
+    #T35 = piston_output["T35"]
     far34 = piston_output["far34"]
-    far35 = piston_output["far35"]
+    #far35 = piston_output["far35"]
     m_nox = piston_output["m NO"]
     friction_loss_pe = piston_output["friction loss"]
     P_circumv = piston_output["P comp circumvent air"]
@@ -231,91 +209,69 @@ def run_cce(input, input_piston, flags, meta_model):
     #displacement = piston_output["tot engine displacement"]
 
 
-    fuel_flow_piston = m34 * far34
+    # pure air massflow to the engine (m32) is the basis for the fuel air ratio
+    fuel_flow_piston = m32 * far34
 
-    # fraction of air led around engine (based on m31, after cooling flow is removed)
+    # fraction of air led around engine (based on m31)
     bpr_piston = (m31 - m32) / m31
 
-    equ35 = far35 / far_s
+    # power requirement on the LPT
+    power_required_LPT = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
 
+    input_burner_turbine = {
+        "m31": m31,
+        "m32": m32,
+        "m34": m34,
+        "T_cooling": T_cool,
+        "T34": T34,
+        "T4_req": T4_req,
+        "far34": far34,
+        "fuel_type": fuel_type,
+        "T_fuel": t_fuel,
+        "dP_comb": dPcomb,
+        "eta_b": eta_b,
+        "p34": p34,
+        "power_req": power_required_LPT,
+        "eta_s_lpt": eta_s_lpt,
+        "second burner": second_burner,
+    }
 
-    if second_burner:
-        if T4_req < T35:
-            #print("T4 lower than T35")
-            error = True
-            output_dict = {
-                "sfc": 999,
-                "error": error,
-                "error_type": "T4"
+    output_burner_turbine = components.burner_turbine(input_burner_turbine)
 
-            }
-            return output_dict
-
-        # Second burner
-        p4, T4, far_4 = components.burner(
-            p35, T35, equ35, T4_req, dPcomb, eta_b, fuel_type, t_fuel=t_fuel
-        )
-
-        # fuel air ratio of added fuel
-        far_burner = far_4 - far35
-
-        # m31 is pure air. After cooling flow removed but before piston.
-        m4 = (
-            m31 + fuel_flow_piston + far_burner * m31
-        )  # flow after burner. air + fuel piston + fuel burner
-
-        # burner fuel flow
-        fuel_flow_burner = far_burner * m31
-
-        # fuel air ratio after burner and piston engine
-        equ4 = far_4 / far_s
-
-    else:
-        # skipping second burner
-        p4 = p35
-        T4 = T35
-        m4 = m35
-        fuel_flow_burner = 0
-        far_burner = 0
-        far4 = far35
-
-        equ4 = far4 / far_s
-
-
-
-
-    # Low pressure turbine, powering fan and IPC
-    # IPC + inner and outer fan (with gearbox efficiency) + everything shaft efficiency
-    power_lpt = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
-    p5, T46, T47, T5, m46, m5, equ46, equ5, error = components.turbine(
-        T4,
-        p4,
-        m4,
-        equ4,
-        power_lpt,
-        eta_s_lpt,
-        fuel_type,
-        cooling=True,
-        t_cool=T_cool,
-        m1_cool=m_cool,
-        q_ngv=q_ngv,
-    )
-
-    if error:
-        #print('Prob too high power demand on LPT')
-        output_dict={
+    # if error in burner_turbine
+    if output_burner_turbine["error"]:
+        error = True
+        #print("problem with piston engine matching")
+        output_dict = {
             "sfc": 999,
             "error": error,
-            "error_type": "LPT"
+            "error_type": "PISTON"
 
         }
         return output_dict
 
-    # Turbine exhaust duct pressure loss
-    p6 = p5 * 0.99
-    T6 = T5
-    m6 = m5
-
+    # number 6 is just after 1% pressure loss after turbine duct
+    equ35 = output_burner_turbine["equ35"]
+    equ4 = output_burner_turbine["equ4"]
+    equ46 = output_burner_turbine["equ46"]
+    equ5 = output_burner_turbine["equ5"]
+    m35 = output_burner_turbine["m35"]
+    m4 = output_burner_turbine["m4"]
+    m46 = output_burner_turbine["m46"]
+    m6 = output_burner_turbine["m5"]
+    p4 = output_burner_turbine["p4"]
+    p5 = output_burner_turbine["p5"]
+    p6 = output_burner_turbine["p6"]
+    T35 = output_burner_turbine["T35"]
+    T4 = output_burner_turbine["T4"]
+    # T46 is after ngv cooling
+    T46 = output_burner_turbine["T46"]
+    # T47 is after rotor cooling
+    T47 = output_burner_turbine["T47"]
+    T6 = output_burner_turbine["T5"]
+    fuel_flow_burner = output_burner_turbine["fuel_flow_burner"]
+    m_cool = output_burner_turbine["m_cool"]
+    q_ngv = output_burner_turbine["q_ngv"]
 
     # Hot nozzle
     equ6 = equ5
@@ -416,8 +372,17 @@ def run_cce(input, input_piston, flags, meta_model):
     # Total fuel flow
     mdot_fuel = fuel_flow_piston + fuel_flow_burner
 
-    # NOx emission index
-    EI_nox = m_nox / (mdot_fuel) * 1e3
+    # NOx emission index from piston engine
+    EI_nox_PE = 1e3 * m_nox / (mdot_fuel)
+
+    if second_burner:
+        # NOx emission index from burner
+        EI_nox_burner = 0.007549 * T4 * (p35*1e-3 /3027)**0.37 * np.exp((1.8*T35 - 1471)/345) * (fuel_flow_burner/mdot_fuel)
+    else:
+        EI_nox_burner = 0.0
+
+    # total
+    EI_nox = EI_nox_PE + EI_nox_burner
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v17_id / v8_id
@@ -520,7 +485,7 @@ def run_cce(input, input_piston, flags, meta_model):
                     p25,
                     p3,
                     p31,
-                    p32,
+                    p31,
                     p34,
                     p35,
                     p4,
@@ -541,13 +506,13 @@ def run_cce(input, input_piston, flags, meta_model):
             T25,
             T3,
             T31,
-            T32,
+            T31,
             T34,
             T35,
             T4,
             T4,
             T46,
-            T5,
+            T6,
             T6,
         )
         m_array = (
@@ -565,7 +530,7 @@ def run_cce(input, input_piston, flags, meta_model):
             m4,
             m4,
             m46,
-            m5,
+            m6,
             m6,
         )
 
@@ -581,7 +546,7 @@ def run_cce(input, input_piston, flags, meta_model):
                     0.0,
                     0.0,
                     far34,
-                    far35,
+                    equ35 * far_s,
                     equ4 * far_s,
                     equ46 * far_s,
                     equ46 * far_s,
@@ -604,7 +569,7 @@ def run_cce(input, input_piston, flags, meta_model):
             piston_power_net,
             power_hpc,
             power_offtake,
-            power_lpt,
+            power_required_LPT,
             p3,
             T3,
             p35,
@@ -635,6 +600,11 @@ def run_cce(input, input_piston, flags, meta_model):
         misc.csv_output_cce(p_array, T_array, m_array, far_array, s_array)
         # power lost in the compressor gearbox
         # assuming offtake is taken before gearbox
+
+
+        # I dont divide the power needed to compress circumventing air and cooling air right now
+        P_cooling = 0.0
+
         piston_gearbox = (
             piston_indicated_p
             - P_fuel_pump
@@ -654,8 +624,8 @@ def run_cce(input, input_piston, flags, meta_model):
             piston_gearbox,
             power_offtake,
             P_hpc,
-            power_lpt,
-            power_lpt * (1 - eta_s),
+            power_required_LPT,
+            power_required_LPT * (1 - eta_s),
             P_lpc,
             (P_inner_fan + P_outer_fan) * (1 - eta_g) / eta_g,
             P_inner_fan + P_outer_fan,
@@ -673,9 +643,9 @@ def run_cce(input, input_piston, flags, meta_model):
             t_fuel,
             piston_indicated_p,
             piston_heat_loss,
-            T32,
+            T31,
             T34,
-            p32,
+            p31,
             p34,
             m32,
             m34,
@@ -711,12 +681,14 @@ def run_cce(input, input_piston, flags, meta_model):
         "mass flow": m0,
         "p_max": p_max,
         "T_max": T_max,
-        "T32": T32,
+        "T31": T31,
         "T34": T34,
         "T35": T35,
         "T4": T4,
         "far_piston": far34,
         "EI_nox": EI_nox,
+        "EI_nox_PE": EI_nox_PE,
+        "EI_nox_burner": EI_nox_burner,
         "core efficiency": eta_core,
         "transmission efficiency": eta_transfer,
         "thermal efficiency": eta_th,
@@ -733,11 +705,14 @@ def run_cce(input, input_piston, flags, meta_model):
     }
 
     if p_max > 250*1e5:
-        print(f"Warning: pmax {p_max*1e-5} bar larger than 250 bar")
+        #print(f"Warning: pmax {p_max*1e-5} bar larger than 250 bar")
+        output_dict["error_type"] = "p_max"
     if T4 < T35:
-        print(f"Warning: T4 {T4} smaller than T35 {T35}")
+        #print(f"Warning: T4 {T4} smaller than T35 {T35}")
+        output_dict["error_type"] = "T4"
     if T34 > 1200:
-        print(f"Warning: T_out {T34} of piston larger than 1200K")
+        #print(f"Warning: T_out {T34} of piston larger than 1200K")
+        output_dict["error_type"] = "T34"
 
     #print(p0*1e-5, p_max*1e-5, p_max/p0)
     #print(T_max)

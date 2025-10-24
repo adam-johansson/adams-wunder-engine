@@ -10,7 +10,7 @@ from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MR_TOC_jetA_spec"
+input_file = "MR_TOC_jetA"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -67,6 +67,10 @@ cce_input = {
     "bore": d.bore,
     "far piston": d.far_piston,
     'effectiveness IC': d.eff_IC,
+    'dp_inter_compressor': d.dp_inter_compressor,
+    "intercooler": d.intercooler,
+    "specific": d.specific,
+    "v_mean": d.v_mean,
 }
 
 piston_input = {
@@ -110,20 +114,23 @@ piston_input = {
 
 
 # Load the trained model
-meta_model = load_ANN("../meta_models/jetA_128_2_pinn.pth")
+meta_model = load_ANN("../meta_models/jetA_256_2.pth")
 meta_model.double()
 print(meta_model)
 
 num = 100
 
 param_name = "T4"
-params = np.linspace(800,1400, num)
+params = np.linspace(800,1500, num)
 
 SFCs = np.zeros(num)
 EI_noxs = np.zeros(num)
+EI_noxs_pe = np.zeros(num)
+EI_noxs_burner = np.zeros(num)
 
 pmaxs = np.zeros(num)
 dT_intercoolers = np.zeros(num)
+Tmaxs = np.zeros(num)
 
 core_effs = np.zeros(num)
 thermal_effs = np.zeros(num)
@@ -149,39 +156,48 @@ i = 0
 for T4 in params:
 
     cce_input["T4"] = T4
+    print(T4)
 
 
-    bpr = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
+    dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
 
-    bprs[i] = bpr
+    if dict["error"]:
+        bprs[i] = dict["bpr"]
 
-    output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
+    else:
 
-    #print(f"Mass flow: {output_dict["mass flow"]} kg/s")
-    #print(f"Specific thrust: {output_dict["specific thrust"]} N/kg/s")
-    #print(f"Thrust: {output_dict["thrust"] * 1e-3} kN")
+        bprs[i] = dict["bpr"]
+
+        output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
+
+        #print(f"Mass flow: {output_dict["mass flow"]} kg/s")
+        #print(f"Specific thrust: {output_dict["specific thrust"]} N/kg/s")
+        #print(f"Thrust: {output_dict["thrust"] * 1e-3} kN")
 
 
-    SFCs[i] = output_dict["sfc"]
-    pmaxs[i] = output_dict["p_max"]
-    EI_noxs[i] = output_dict["EI_nox"]
+        SFCs[i] = output_dict["sfc"]
+        pmaxs[i] = output_dict["p_max"]
+        EI_noxs[i] = output_dict["EI_nox"]
+        EI_noxs_pe[i] = output_dict["EI_nox_PE"]
+        EI_noxs_burner[i] = output_dict["EI_nox_burner"]
 
-    core_effs[i] = output_dict["core efficiency"]
-    transmission_effs[i] = output_dict["transmission efficiency"]
-    thermal_effs[i] = output_dict["thermal efficiency"]
-    propulsive_effs[i] = output_dict["propulsive efficiency"]
-    overall_effs[i] = output_dict["overall efficiency"]
+        core_effs[i] = output_dict["core efficiency"]
+        transmission_effs[i] = output_dict["transmission efficiency"]
+        thermal_effs[i] = output_dict["thermal efficiency"]
+        propulsive_effs[i] = output_dict["propulsive efficiency"]
+        overall_effs[i] = output_dict["overall efficiency"]
 
-    specific_thrusts[i] = output_dict["specific thrust"]
-    specific_powers[i] = output_dict["core specific power"]
-    dT_intercoolers[i] = output_dict["dT intercooler"]
+        specific_thrusts[i] = output_dict["specific thrust"]
+        specific_powers[i] = output_dict["core specific power"]
+        dT_intercoolers[i] = output_dict["dT intercooler"]
+        Tmaxs[i] = output_dict["T_max"]
 
-    hot_bypass_thrusts[i] = output_dict["hot bypass thrust"]
-    cold_bypass_thrusts[i] = output_dict["cold bypass thrust"]
-    core_thrusts[i] = output_dict["core thrust"]
+        hot_bypass_thrusts[i] = output_dict["hot bypass thrust"]
+        cold_bypass_thrusts[i] = output_dict["cold bypass thrust"]
+        core_thrusts[i] = output_dict["core thrust"]
 
-    piston_fuelflow[i] = output_dict["piston fuelflow"]
-    burner_fuelflow[i] = output_dict["burner fuelflow"]
+        piston_fuelflow[i] = output_dict["piston fuelflow"]
+        burner_fuelflow[i] = output_dict["burner fuelflow"]
 
 
     i = i+1
@@ -254,9 +270,12 @@ ax10.set_xlabel(f"{param_name}")
 ax10.set_ylabel("max pressure")
 
 _, ax11 = plt.subplots()
-ax11.plot(params, EI_noxs)
+ax11.plot(params, EI_noxs, label="Total")
+ax11.plot(params, EI_noxs_pe, label="PE")
+ax11.plot(params, EI_noxs_burner, label="Burner")
 ax11.set_xlabel(f"{param_name}")
 ax11.set_ylabel("EI NOx [g/kg]")
+ax11.legend()
 
 _, ax12 = plt.subplots()
 ax12.plot(params, thermal_effs*100)
@@ -288,6 +307,11 @@ _, ax17 = plt.subplots()
 ax17.plot(params, dT_intercoolers)
 ax17.set_xlabel(f"{param_name}")
 ax17.set_ylabel("dT intercooler [K]")
+
+_, ax18 = plt.subplots()
+ax18.plot(params, Tmaxs)
+ax18.set_xlabel(f"{param_name}")
+ax18.set_ylabel("T max [K]")
 
 
 plt.show()

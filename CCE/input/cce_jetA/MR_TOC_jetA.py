@@ -22,8 +22,9 @@ bore = 0.18 # not used
 
 # piston engine stuff
 pi_pe = 1.0
-cr = 9
+cr = 10
 far_piston = 0.05
+v_mean = 15
 
 OPR = 20  # overall pressure ratio (including losses)
 PR = 0.3  # pressure split, with regard to the LPC

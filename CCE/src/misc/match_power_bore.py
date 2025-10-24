@@ -2,7 +2,7 @@ from piston_engine.src.misc import post_processing
 from scipy.optimize import brentq
 from CCE.src import components
 from thermo import fuel_props
-from neural_network.src import input_outside_limits
+from neural_network.src import nn_output_energy_conserved, input_outside_limits
 
 import numpy as np
 
@@ -56,27 +56,24 @@ def match_power_bore(input, meta_model, power_req, core_flow):
             np.array([pin, Tin, p_ratio, cr, bore, v_mean, T_fuel, far34])
         )
 
-        # use meta model to get outputs from the piston engine
-        output = meta_model.inference(piston_input)[0]
+        output = nn_output_energy_conserved(meta_model,piston_input,fuel_type)
 
-        # mass flow of air into the engine
-        m_in = output[7]
-
-        # specific power and specific heat loss
         indicated_power = output[0]
-        heat_loss = output[1]
-        nox_ppm = output[2]
-        p_tdc = output[3]
-        p_max = output[4]
-        T_max = output[5]
-        T34 = output[6]
+        nox_ppm = output[1]
+        p_tdc = output[2]
+        p_max = output[3]
+        T_max = output[4]
+        T34 = output[5]
+        m_in = output[6]
+        heat_loss = output[7]
         p34 = pin * p_ratio
 
-        fuel_type = input["fuel"]
         far_s, LHV = fuel_props(fuel_type)
 
         #specific fuel flow (since fuel_flow_tot = far34 * m_in)
         fuel_flow = far34 * m_in
+
+        # heat loss is calculated to conserve energy
 
         # specific power needed to pressurise the fuel
         P_fuel_pump = components.fuel_pump(p_tdc, fuel_type, fuel_flow)
@@ -140,8 +137,14 @@ def match_power_bore(input, meta_model, power_req, core_flow):
         residual = np.array([power_piston - power_req / (nr_engines * cylinders)])
         return residual
 
+    try:
+        bore_match = brentq(find_match, 0.1, 0.2)
+    except ValueError:
+        output_dict = {
+            "error": True
+        }
+        return output_dict
 
-    bore_match = brentq(find_match, 0.1, 0.2)
 
     # Now use the stored values from the last iteration
     mdot_in = last_outputs['m_in'] * nr_engines * cylinders
@@ -202,6 +205,7 @@ def match_power_bore(input, meta_model, power_req, core_flow):
         "piston flow fraction": fraction,
         "T34": T34,
         "T35": T35,
+        "T_circumv": T_circumv,
         "p34": p34,
         "p35": p35,
         "m32": mdot_in,

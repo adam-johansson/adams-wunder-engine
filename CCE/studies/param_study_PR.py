@@ -69,6 +69,8 @@ cce_input = {
     'effectiveness IC': d.eff_IC,
     'dp_inter_compressor': d.dp_inter_compressor,
     "intercooler": d.intercooler,
+    "specific": d.specific,
+    "v_mean": d.v_mean,
 }
 
 piston_input = {
@@ -119,7 +121,7 @@ print(meta_model)
 num = 100
 
 param_name = "PR"
-params = np.linspace(0.1,0.9, num)
+params = np.linspace(0.2,0.6, num)
 
 SFCs = np.zeros(num)
 EI_noxs = np.zeros(num)
@@ -152,6 +154,7 @@ i = 0
 for PR in params:
 
     cce_input["PR"] = PR
+    #print(PR)
 
 
     dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
