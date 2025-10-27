@@ -2,6 +2,7 @@ import numpy as np
 import importlib
 from timeit import default_timer as timer
 
+from CCE.input.cce_jetA.MR_TOC_jetA import life_hack
 from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
 
@@ -46,6 +47,8 @@ def run_cce(input, input_piston, flags, meta_model):
     effectiveness_IC = input['effectiveness IC']
     dp_inter_compressor = input['dp_inter_compressor']
     v_mean = input['v_mean']
+    # life hack can be either: "Not", "Simulate" or "Express"
+    life_hack = input["life_hack"]
 
     error = False
     minor_error_mass = False
@@ -163,6 +166,18 @@ def run_cce(input, input_piston, flags, meta_model):
             core_flow=m31,
         )
 
+    elif life_hack == "Simulate" or life_hack == "Express" or life_hack == "Simulate_final":
+
+        if life_hack == "Simulate_final":
+            input_piston["bore"] = bore
+
+        piston_output = misc.match_power_lifehack(
+            input_piston,
+            power_req,
+            core_flow=m31,
+            life_hack=life_hack
+        )
+
     else:
         piston_output = misc.match_power_bore(
             input_piston,
@@ -207,7 +222,10 @@ def run_cce(input, input_piston, flags, meta_model):
     # and compressing circumventing air
     piston_indicated_p = piston_output["power_indicated"]
     #displacement = piston_output["tot engine displacement"]
-
+    k_m = piston_output["k_m"]
+    k0_T = piston_output["k0_T"]
+    k1_T = piston_output["k1_T"]
+    piston_specific_power = piston_output["specific_power"]
 
     # pure air massflow to the engine (m32) is the basis for the fuel air ratio
     fuel_flow_piston = m32 * far34
@@ -708,6 +726,11 @@ def run_cce(input, input_piston, flags, meta_model):
         "engine displacement": displacement,
         "m_cool_ngv": m_cool_ngv,
         "m_cool_rotor": m_cool_rotor,
+        "k_m": k_m,
+        "k0_T": k0_T,
+        "k1_T": k1_T,
+        "piston_specific_power": piston_specific_power,
+        "bore": bore,
         "error": error
     }
 

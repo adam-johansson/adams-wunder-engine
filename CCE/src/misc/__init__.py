@@ -18,4 +18,5 @@ from .fpr_opt import fpr_opt
 from .match_power_NN import match_power_nn
 from .match_power_specific import match_power_specific
 from .match_power_bore import match_power_bore
+from .match_power_lifehack import match_power_lifehack
 from .calc_entropy_array import entropy_array

@@ -13,7 +13,8 @@ path_pist = input_dir_pist + "." + input_file_pist
 d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # normal case
-flags = ["single", "print_output", "cce"]  # normal case
+#flags = ["single", "print_output", "cce"]  # normal case
+flags = ["life_hack", "cce"]  # life hack version
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
 #flags = ['optim', "cce"]
@@ -121,6 +122,7 @@ elif "cce" in flags:
         "intercooler": d.intercooler,
         "specific": d.specific,
         "v_mean": d.v_mean,
+        "life_hack": d.life_hack,
     }
 
     piston_input = {
@@ -229,5 +231,37 @@ elif "cce" in flags:
 
         auxiliaries.global_optimisation(cce_input, piston_input, flags, meta_model)
         #auxiliaries.nsga_optimisation(cce_input, piston_input, flags, meta_model)
+
+
+    elif "life_hack" in flags:
+        meta_model = "placeholder"
+
+        # run once to get specific power and linear output temperature from piston engine
+        cce_input["life_hack"] = "Simulate"
+        # bpr 15 will almost certainly work
+        cce_input["bpr"] = 20
+        output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
+
+        # input simulation data for bpr matching
+        piston_input["k_m"] = output_dict["k_m"]
+        piston_input["k0_T"] = output_dict["k0_T"]
+        piston_input["k1_T"] = output_dict["k1_T"]
+        piston_input["piston_specific_power"] = output_dict["piston_specific_power"]
+
+        # no simulation just quick evaluations
+        cce_input["life_hack"] = "Express"
+
+
+        dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
+        print(dict["bpr"], dict["bore_match"])
+
+
+        cce_input["bpr"] = dict["bpr"][0]
+        cce_input["bore"] = dict["bore_match"]
+
+        flags.append("print_output")
+        cce_input["life_hack"] = "Simulate_final"
+        print("Final simulation")
+        output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
     else:
         print("No known flags")

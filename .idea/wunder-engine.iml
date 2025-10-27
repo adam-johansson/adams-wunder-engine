@@ -7,6 +7,17 @@
       <excludeFolder url="file://$MODULE_DIR$/venv-adam" />
       <excludeFolder url="file://$MODULE_DIR$/.venv1" />
       <excludeFolder url="file://$MODULE_DIR$/.venv2" />
+      <excludeFolder url="file://$MODULE_DIR$/CCE" />
+      <excludeFolder url="file://$MODULE_DIR$/Heat_exchanger" />
+      <excludeFolder url="file://$MODULE_DIR$/Strömning" />
+      <excludeFolder url="file://$MODULE_DIR$/investigation" />
+      <excludeFolder url="file://$MODULE_DIR$/neural_network" />
+      <excludeFolder url="file://$MODULE_DIR$/piston_engine" />
+      <excludeFolder url="file://$MODULE_DIR$/studies" />
+      <excludeFolder url="file://$MODULE_DIR$/thermo" />
+      <excludeFolder url="file://$MODULE_DIR$/thermo_outdated" />
+      <excludeFolder url="file://$MODULE_DIR$/twozone" />
+      <excludeFolder url="file://$MODULE_DIR$/validation" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (wunder-engine) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

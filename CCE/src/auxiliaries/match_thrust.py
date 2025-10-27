@@ -3,6 +3,7 @@ import numpy as np
 from CCE.src import cce_propulsion_system, cce_propulsion_system_specific
 from timeit import default_timer as timer
 
+from mpmath.libmp import fzero
 from scipy.optimize import (
     fsolve, brentq
 )
@@ -113,23 +114,32 @@ def run_cce_fpr(input, data_piston, flags, meta_model):
 def run_cce_bpr(input, data_piston, meta_model):
     Fs_goal = input["Fs_req"]  # specific thrust
 
-    flags = ["single", "cce"]
+    if meta_model == "placeholder":
+        flags = ["life_hack", "cce"]
+    else:
+        flags = ["single", "cce"]
 
     error = False
     piston_error = False  # Flag to track piston errors
 
+    # Store the last bore match
+    last_outputs = {}
     def find_bpr(x):
         nonlocal piston_error  # Allow modification of outer scope variable
 
-        input["bpr"] = x
+        input["bpr"] = x[0]
+
+        print(x)
 
         output_dict = cce_propulsion_system_specific.run_cce(input, data_piston, flags, meta_model)
 
         if output_dict["error"]:
+            print(output_dict["error_type"])
             if output_dict["error_type"] == "LPT" or output_dict["error_type"] == "Hot nozzle":
                 # Too high BPR means LPT does not work
                 # Return very low thrust to guide brentq to lower BPR
                 Fs = 0.0
+                bore = 999
             elif output_dict["error_type"] == "piston" or output_dict["error_type"] == "T4":
                 # Set flag and raise exception to break out of brentq
                 piston_error = True
@@ -137,21 +147,29 @@ def run_cce_bpr(input, data_piston, meta_model):
             else:
                 # Other error - return low thrust
                 Fs = 0.0
+                bore = 999
         else:
             Fs = output_dict["specific thrust"]
+            bore = output_dict["bore"]
+
+        last_outputs.update({
+            'bore_match': bore,
+        })
 
         residual = np.array([Fs - Fs_goal])
-        #print(residual, x)
+        print(residual, x)
         return residual
 
     try:
-        bpr = brentq(find_bpr, 12, 40)
+        #bpr = brentq(find_bpr, 12, 40)
+        bpr = fsolve(find_bpr, x0=20)
     except ValueError:
         error = True
         bpr = None
 
     output = {
         "bpr": bpr,
+        "bore_match": last_outputs['bore_match'],
         "error": error
     }
 

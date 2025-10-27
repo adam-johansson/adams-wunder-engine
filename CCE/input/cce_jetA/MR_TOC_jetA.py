@@ -21,7 +21,7 @@ fpr_outer = 1.396  # Outer fan pressure ratio
 bore = 0.18 # not used
 
 # piston engine stuff
-pi_pe = 1.2
+pi_pe = 1.1
 cr = 10
 far_piston = 0.05
 v_mean = 15
@@ -63,6 +63,7 @@ second_burner = True
 surrogate = True
 intercooler = False
 specific = False
+life_hack = True
 
 
 # fuel temperature upon injection in piston engine and burner
