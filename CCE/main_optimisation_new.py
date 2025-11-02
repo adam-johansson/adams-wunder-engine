@@ -1,3 +1,8 @@
+
+import sys
+sys.path.append("./../")
+
+
 from CCE.src import cce_propulsion_system_specific, geared_turbofan_h2_recuperated, geared_turbofan_jetA, cce_propulsion_system_h2
 from CCE.src import auxiliaries
 import importlib
@@ -20,7 +25,7 @@ flags = ["life_hack", "cce"]  # life hack version
 #flags = ['optim', "cce"]
 
 if "cce" in flags:
-    input_file = "MR_TOC_jetA"
+    input_file = "MR_cruise_jetA"
     input_dir = "input.cce_jetA"
     path = input_dir + "." + input_file
     d = importlib.import_module(path)
@@ -123,6 +128,7 @@ elif "cce" in flags:
         "specific": d.specific,
         "v_mean": d.v_mean,
         "life_hack": d.life_hack,
+        "start_of_combustion": d.start_of_combustion,
     }
 
     piston_input = {
@@ -246,6 +252,8 @@ elif "cce" in flags:
         piston_input["k_m"] = output_dict["k_m"]
         piston_input["k0_T"] = output_dict["k0_T"]
         piston_input["k1_T"] = output_dict["k1_T"]
+        piston_input["k0_H"] = output_dict["k0_H"]
+        piston_input["k1_H"] = output_dict["k1_H"]
         piston_input["piston_specific_power"] = output_dict["piston_specific_power"]
 
         # no simulation just quick evaluations

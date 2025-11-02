@@ -1,16 +1,23 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+import sys
+sys.path.append("./../../../")
+
+
+
 from CCE.src import cce_propulsion_system_specific
 from CCE.src import auxiliaries
 import importlib
-from neural_network.src import load_ANN
 
 from timeit import default_timer as timer
 
 # Importing input parameters
 
-input_file = "MR_TOC_jetA_spec"
+operating_point = "cruise"
+
+input_file = f"MR_{operating_point}_jetA"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -21,11 +28,9 @@ path_pist = input_dir_pist + "." + input_file_pist
 d = importlib.import_module(path)
 d_p = importlib.import_module(path_pist)
 
-#flags = ["single", "print_output", "conventional"]  # normal case
-#flags = ["single", "print_output", "cce"]  # normal case
-flags = ['single', "cce"] # for matching thrust/no plots
-#flags = ['sweep']
-#flags = ['optim', "cce"]
+
+flags = ["life_hack", "cce"]  # life hack version
+
 
 constant_F = False
 
@@ -68,6 +73,10 @@ cce_input = {
     "far piston": d.far_piston,
     'effectiveness IC': d.eff_IC,
     'dp_inter_compressor': d.dp_inter_compressor,
+    "intercooler": d.intercooler,
+    "specific": d.specific,
+    "v_mean": d.v_mean,
+    "start_of_combustion": d.start_of_combustion,
 }
 
 piston_input = {
@@ -110,22 +119,22 @@ piston_input = {
 }
 
 
-# Load the trained model
-meta_model = load_ANN("../meta_models/jetA_128_2_pinn.pth")
-meta_model.double()
-print(meta_model)
 
-num = 100
+num = 10
 
-param_name = "effectiveness"
-params = np.linspace(0.3,0.8, num)
+
+param_name = "compression_ratio"
+params = np.linspace(10,18, num)
+
 
 SFCs = np.zeros(num)
 EI_noxs = np.zeros(num)
+EI_noxs_pe = np.zeros(num)
+EI_noxs_burner = np.zeros(num)
 
 pmaxs = np.zeros(num)
 dT_intercoolers = np.zeros(num)
-T3s = np.zeros(num)
+Tmaxs = np.zeros(num)
 
 core_effs = np.zeros(num)
 thermal_effs = np.zeros(num)
@@ -144,52 +153,101 @@ core_thrusts = np.zeros(num)
 piston_fuelflow = np.zeros(num)
 burner_fuelflow = np.zeros(num)
 
+cool_ngv = np.zeros(num)
+cool_rotor = np.zeros(num)
+m_core = np.zeros(num)
+
 bprs = np.zeros(num)
 
+meta_model = "placeholder"
 
+
+start = timer()
 i = 0
-for effectiveness in params:
-    print(effectiveness)
+for compression_ratio in params:
 
-    cce_input["effectiveness IC"] = effectiveness
+    lap1 = timer()
 
+    cce_input["cr"] = compression_ratio
+    print(compression_ratio)
 
-    bpr = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
-
-    bprs[i] = bpr
-
+    # run once to get specific power and linear output temperature from piston engine
+    cce_input["life_hack"] = "Simulate"
+    # bpr 20 will almost certainly work
+    cce_input["bpr"] = 20
     output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
-    #print(f"Mass flow: {output_dict["mass flow"]} kg/s")
-    #print(f"Specific thrust: {output_dict["specific thrust"]} N/kg/s")
-    #print(f"Thrust: {output_dict["thrust"] * 1e-3} kN")
+    # input simulation data for bpr matching
+    piston_input["k_m"] = output_dict["k_m"]
+    piston_input["k0_T"] = output_dict["k0_T"]
+    piston_input["k1_T"] = output_dict["k1_T"]
+    piston_input["k0_H"] = output_dict["k0_H"]
+    piston_input["k1_H"] = output_dict["k1_H"]
+    piston_input["piston_specific_power"] = output_dict["piston_specific_power"]
+
+    # no simulation just quick evaluations to find BPR to match thrust
+    cce_input["life_hack"] = "Express"
+
+    dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
+
+    if dict["error"]:
+        # if no BPR is found that matches thrust
+        bprs[i] = dict["bpr"]
 
 
-    SFCs[i] = output_dict["sfc"]
-    pmaxs[i] = output_dict["p_max"]
-    EI_noxs[i] = output_dict["EI_nox"]
+    else:
 
-    core_effs[i] = output_dict["core efficiency"]
-    transmission_effs[i] = output_dict["transmission efficiency"]
-    thermal_effs[i] = output_dict["thermal efficiency"]
-    propulsive_effs[i] = output_dict["propulsive efficiency"]
-    overall_effs[i] = output_dict["overall efficiency"]
+        cce_input["bpr"] = dict["bpr"][0]
+        cce_input["bore"] = dict["bore_match"]
 
-    specific_thrusts[i] = output_dict["specific thrust"]
-    specific_powers[i] = output_dict["core specific power"]
-    dT_intercoolers[i] = output_dict["dT intercooler"]
-    T3s[i] = output_dict["T32"]
+        bprs[i] = dict["bpr"][0]
 
-    hot_bypass_thrusts[i] = output_dict["hot bypass thrust"]
-    cold_bypass_thrusts[i] = output_dict["cold bypass thrust"]
-    core_thrusts[i] = output_dict["core thrust"]
 
-    piston_fuelflow[i] = output_dict["piston fuelflow"]
-    burner_fuelflow[i] = output_dict["burner fuelflow"]
+        # final simulation with known bore and BPR to get all info and especially NOX
+        cce_input["life_hack"] = "Simulate_final"
+        #print("Final simulation")
+        output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
+        #print(f"Mass flow: {output_dict["mass flow"]} kg/s")
+        #print(f"Specific thrust: {output_dict["specific thrust"]} N/kg/s")
+        #print(f"Thrust: {output_dict["thrust"] * 1e-3} kN")
+
+
+        SFCs[i] = output_dict["sfc"]
+        pmaxs[i] = output_dict["p_max"]
+        EI_noxs[i] = output_dict["EI_nox"]
+        EI_noxs_pe[i] = output_dict["EI_nox_PE"]
+        EI_noxs_burner[i] = output_dict["EI_nox_burner"]
+
+        core_effs[i] = output_dict["core efficiency"]
+        transmission_effs[i] = output_dict["transmission efficiency"]
+        thermal_effs[i] = output_dict["thermal efficiency"]
+        propulsive_effs[i] = output_dict["propulsive efficiency"]
+        overall_effs[i] = output_dict["overall efficiency"]
+
+        specific_thrusts[i] = output_dict["specific thrust"]
+        specific_powers[i] = output_dict["core specific power"]
+        dT_intercoolers[i] = output_dict["dT intercooler"]
+        Tmaxs[i] = output_dict["T_max"]
+
+        hot_bypass_thrusts[i] = output_dict["hot bypass thrust"]
+        cold_bypass_thrusts[i] = output_dict["cold bypass thrust"]
+        core_thrusts[i] = output_dict["core thrust"]
+
+        piston_fuelflow[i] = output_dict["piston fuelflow"]
+        burner_fuelflow[i] = output_dict["burner fuelflow"]
+
+        cool_ngv[i] = output_dict["m_cool_ngv"]
+        cool_rotor[i] = output_dict["m_cool_rotor"]
+        m_core[i] = output_dict["core mass flow"]
+
+    lap2 = timer()
+    print(f"Simulation time for 1 point: {lap2 - lap1} seconds")
 
     i = i+1
 
+end = timer()
+print(f"Total simulation time for {i} evaluation points: {end - start} seconds")
 
 
 
@@ -198,6 +256,7 @@ _, ax1 = plt.subplots()
 
 ax1.plot(params, SFCs*1e6)
 ax1.set_xlabel(f"{param_name}")
+ax1.set_xlabel(f"SFC [mg/Ns]")
 
 
 _, ax2 = plt.subplots()
@@ -258,9 +317,12 @@ ax10.set_xlabel(f"{param_name}")
 ax10.set_ylabel("max pressure")
 
 _, ax11 = plt.subplots()
-ax11.plot(params, EI_noxs)
+ax11.plot(params, EI_noxs, label="Total")
+ax11.plot(params, EI_noxs_pe, label="PE")
+ax11.plot(params, EI_noxs_burner, label="Burner")
 ax11.set_xlabel(f"{param_name}")
 ax11.set_ylabel("EI NOx [g/kg]")
+ax11.legend()
 
 _, ax12 = plt.subplots()
 ax12.plot(params, thermal_effs*100)
@@ -294,19 +356,38 @@ ax17.set_xlabel(f"{param_name}")
 ax17.set_ylabel("dT intercooler [K]")
 
 _, ax18 = plt.subplots()
-ax18.plot(params, T3s)
+ax18.plot(params, Tmaxs)
 ax18.set_xlabel(f"{param_name}")
-ax18.set_ylabel("T3 [K]")
+ax18.set_ylabel("T max [K]")
 
 
+_, ax19 = plt.subplots()
+ax19.plot(params, cool_ngv, label="NGV")
+ax19.plot(params, cool_rotor, label="Rotor")
+ax19.plot(params, cool_ngv + cool_rotor, label="Total")
+ax19.set_xlabel(f"{param_name}")
+ax19.set_ylabel("m cool [kg/s]")
+ax19.legend()
+
+_, ax20 = plt.subplots()
+ax20.plot(params, (cool_ngv + cool_rotor)/m_core )
+ax20.set_xlabel(f"{param_name}")
+ax20.set_ylabel("fraction cool [-]")
+10 * 1000
 plt.show()
 
-NO_PR = np.vstack((params, EI_noxs)).transpose()
-eff_PR = np.vstack((params, thermal_effs*100)).transpose()
-power_PR = np.vstack((params, specific_powers*1e-3)).transpose()
+NO = np.vstack((params, EI_noxs)).transpose()
+eff = np.vstack((params, thermal_effs*100)).transpose()
+power = np.vstack((params, specific_powers*1e-3)).transpose()
+peak_pressure = np.vstack((params, pmaxs*1e-5)).transpose()
+fuel_consumption = np.vstack((params, SFCs*1e6)).transpose()
+bypass_ratios = np.vstack((params, bprs)).transpose()
 
 # save output for plotting in latex
-np.savetxt("./results/NOX_pressure_split.dat", NO_PR, fmt="%.5f")
-np.savetxt("./results/efficiency_pressure_split.dat", eff_PR, fmt="%.5f")
-np.savetxt("./results/power_pressure_split.dat", power_PR, fmt="%.5f")
+np.savetxt(f"./results/{operating_point}/{param_name}/NOX.dat", NO, fmt="%.5f")
+np.savetxt(f"./results/{operating_point}/{param_name}/efficiency.dat", eff, fmt="%.5f")
+np.savetxt(f"./results/{operating_point}/{param_name}/spec_power.dat", power, fmt="%.5f")
+np.savetxt(f"./results/{operating_point}/{param_name}/pmax.dat", peak_pressure, fmt="%.5f")
+np.savetxt(f"./results/{operating_point}/{param_name}/SFC.dat", fuel_consumption, fmt="%.5f")
+np.savetxt(f"./results/{operating_point}/{param_name}/BPR.dat", bypass_ratios, fmt="%.5f")
 

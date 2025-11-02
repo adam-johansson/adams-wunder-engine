@@ -129,7 +129,7 @@ def run_cce_bpr(input, data_piston, meta_model):
 
         input["bpr"] = x[0]
 
-        print(x)
+        #print(x)
 
         output_dict = cce_propulsion_system_specific.run_cce(input, data_piston, flags, meta_model)
 
@@ -157,7 +157,7 @@ def run_cce_bpr(input, data_piston, meta_model):
         })
 
         residual = np.array([Fs - Fs_goal])
-        print(residual, x)
+        #print(residual, x)
         return residual
 
     try:
@@ -166,6 +166,7 @@ def run_cce_bpr(input, data_piston, meta_model):
     except ValueError:
         error = True
         bpr = None
+        last_outputs['bore_match'] = None
 
     output = {
         "bpr": bpr,

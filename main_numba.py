@@ -15,9 +15,9 @@ from thermo import fuel_props
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-#input_file = "validation.nasa_validation"
+input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
-input_file = "4stroke_sampling"
+#input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider_new"
 #input_file = "validation_twozone.two_zone_heider_new"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
@@ -40,7 +40,7 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
 #flags = ['validation_h2_performance']  # H2 performance validation
 #flags = ['load']
 #flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
@@ -58,7 +58,7 @@ d = importlib.import_module(path)
 # flags = ['sweep_newcastle']
 # flags = ['sweep_hcci']
 # flags = ['fit_water_paper', 'single']
-flags = ['single', 'plot_twozone', 'plot_essentials'] # to look at the nox and twozone
+#flags = ['single', 'plot_twozone', 'plot_essentials'] # to look at the nox and twozone
 #flags = ["single"]
 #flags = ["load"]
 # flags = ["single", "fit_newcastle"]

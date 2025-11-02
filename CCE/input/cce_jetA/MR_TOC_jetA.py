@@ -20,17 +20,21 @@ bpr = 16.0  # bypass ratio (also not used)
 fpr_outer = 1.396  # Outer fan pressure ratio
 bore = 0.18 # not used
 
+
+## OBS: OPR 18 and CR 10 worked
+
 # piston engine stuff
-pi_pe = 1.1
-cr = 10
+pi_pe = 1.5
+cr = 15
 far_piston = 0.05
 v_mean = 15
+start_of_combustion = 345
 
-OPR = 18  # overall pressure ratio (including losses)
-PR = 0.3  # pressure split, with regard to the LPC
+OPR = 10  # overall pressure ratio (including losses)
+PR = 0.1  # pressure split, with regard to the LPC
 eff_IC = 0.7
 
-T4 = 1400  # [K] Turbine entry temperature (1200)
+T4 = 1150  # [K] Turbine entry temperature (1200)
 
 dp_intake = 0.2 / 100  # intake pressure loss
 dp_bypass = 0.0 / 100  # bypass duct pressure loss
@@ -60,7 +64,7 @@ q_ngv = 0.5  # fraction of cooling from cooling first stator
 bpr_c = 0.0  # cooling from fraction of core flow
 
 second_burner = True
-surrogate = True
+surrogate = False
 intercooler = False
 specific = False
 life_hack = True

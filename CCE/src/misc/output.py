@@ -13,11 +13,16 @@ def print_output(
     m2,
     power_tot,
     power_hpc,
+    power_piston_circumv,
+    power_fuel_pump,
     offtake,
     power_lpt,
+    power_fan,
+    power_lpc,
     p3,
     T3,
     p35,
+    T34,
     T35,
     T4,
     p_max,
@@ -37,6 +42,8 @@ def print_output(
     fpr,
     bpr,
 ):
+
+    print(f"T4: {T4} K and T35: {T35} K and T34: {T34} K ")
 
     print(f"Airflow piston: {airflow_piston} [kg/s]")
     print(f"Airflow piston real: {airflow_piston_real} [kg/s]")
@@ -62,8 +69,12 @@ def print_output(
     print(f"Core flow: {m2} [kg/s]")
     print(f"Power from piston engine: {power_tot * 1e-3} [kW]")
     print(f"Power required by the HPC: {power_hpc * 1e-3} [kW]")
+    print(f"Power required by the PE circumv compressor: {power_piston_circumv * 1e-3} [kW]")
+    print(f"Power required by the fuel pump: {power_fuel_pump* 1e-3} [kW]")
     print(f"Power offtake on HP spool: {offtake* 1e-3} [kW]")
-    print(f"Power required by the fan: {power_lpt * 1e-3} [kW]")
+    print(f"Power extracted in LPT: {power_lpt * 1e-3} [kW]")
+    print(f"Power required by fan: {power_fan * 1e-3} [kW]")
+    print(f"Power required by LPC: {power_lpc * 1e-3} [kW]")
     print(f"Max pressure in piston engine: {p_max * 1e-5} [bar]")
     print(f"Max temperature in piston engine: {T_max} [K]")
     print(f"Trapped FAR piston: {equ_trapped * far_s} [-]")

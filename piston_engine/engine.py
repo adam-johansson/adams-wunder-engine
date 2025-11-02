@@ -50,7 +50,7 @@ def run_piston_engine(input, flags):
     valve_type = input['valve_type']
     far_goal = input['far_goal']
     cylinders = input['cylinders']
-    fuel_type = input['fuel']  # Note: you had 'fuel_type' in your unpacking but 'fuel' in the dict
+    fuel_type = input['fuel']
     c1 = input['c1']
     c4 = input['c4']
     c5 = input['c5']
@@ -944,7 +944,7 @@ def run_piston_engine(input, flags):
         factor = 0.905
 
         start = timer()
-        # get temperature and mass from reaction zone
+        # get temperature and mass from reaction zone (zone 1 is hot zone)
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
                                                                                                     phi_open_out, phi_sc,
@@ -953,6 +953,7 @@ def run_piston_engine(input, flags):
                                                                                                     factor, premixed)
         end = timer()
         #print(f'Runtime of twozone calculations: {end - start} [s]')
+        T_max_twozone = np.max(T_z1)
 
         start = timer()
         no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
@@ -1129,4 +1130,4 @@ def run_piston_engine(input, flags):
 
     return (T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
         power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,
-            volume_eff, nox_spec)
+            volume_eff, nox_spec, T_max_twozone)

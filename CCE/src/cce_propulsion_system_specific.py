@@ -92,8 +92,6 @@ def run_cce(input, input_piston, flags, meta_model):
     m21 = m2 / (1 + bpr)  # core flow
     m13 = m2 * bpr / (1 + bpr)  # bypass stream
 
-    # Convert polytropic efficiency to isentropic for the fan
-
     # Inner fan
     p21, T21, P_inner_fan = components.compressor_isentropic(T2, p2, m21, eta_fan, fpr_inner)
 
@@ -143,7 +141,9 @@ def run_cce(input, input_piston, flags, meta_model):
 
 
     # Piston engine
-    input_piston["far piston"] = far_piston
+    phi_sc = (input["start_of_combustion"] / 180) * np.pi
+
+    input_piston["far_goal"] = far_piston
     input_piston["p_in"] = p31
     input_piston["T_in"] = T31
     input_piston["p_ratio"] = pi_pe
@@ -152,6 +152,9 @@ def run_cce(input, input_piston, flags, meta_model):
     input_piston["T_fuel"] = t_fuel
     input_piston["p_loss_in"] = p_loss_piston_in
     input_piston["p_loss_out"] = p_loss_piston_out
+    input_piston["phi_sc"] = phi_sc
+
+    # add start of combustion here later
 
     power_req = P_hpc / eta_g + power_offtake
     # Piston engine powers the HPC + gearbox for hpc ( no shaft efficiency now) (circumv flow is within
@@ -177,6 +180,31 @@ def run_cce(input, input_piston, flags, meta_model):
             core_flow=m31,
             life_hack=life_hack
         )
+
+        if piston_output["error"]:
+            error = True
+            # print("problem with piston engine matching")
+            output_dict = {
+                "sfc": 999,
+                "error": error,
+                "error_type": "PISTON"
+
+            }
+            return output_dict
+
+        if life_hack == "Simulate":
+
+            output_dict = {
+                "k_m": piston_output["k_m"],
+                "k0_T": piston_output["k0_T"],
+                "k1_T": piston_output["k1_T"],
+                "k0_H": piston_output["k0_H"],
+                "k1_H": piston_output["k1_H"],
+                "piston_specific_power": piston_output["specific_power"],
+            }
+
+            return output_dict
+
 
     else:
         piston_output = misc.match_power_bore(
@@ -210,7 +238,7 @@ def run_cce(input, input_piston, flags, meta_model):
     #T35 = piston_output["T35"]
     far34 = piston_output["far34"]
     #far35 = piston_output["far35"]
-    m_nox = piston_output["m NO"]
+    m_nox_piston = piston_output["m NO"]
     friction_loss_pe = piston_output["friction loss"]
     P_circumv = piston_output["P comp circumvent air"]
     piston_aux_loss = piston_output["aux loss"]
@@ -225,13 +253,20 @@ def run_cce(input, input_piston, flags, meta_model):
     k_m = piston_output["k_m"]
     k0_T = piston_output["k0_T"]
     k1_T = piston_output["k1_T"]
+    k0_H = piston_output["k0_H"]
+    k1_H = piston_output["k1_H"]
     piston_specific_power = piston_output["specific_power"]
+    T_max_twozone = piston_output["T_max_twozone"]
 
     # pure air massflow to the engine (m32) is the basis for the fuel air ratio
     fuel_flow_piston = m32 * far34
 
-    # fraction of air led around engine (based on m31)
-    bpr_piston = (m31 - m32) / m31
+    # bypass ratio piston
+    bpr_piston = (m31 - m32) / m32
+
+    #power on piston engine shaft
+    piston_power_shaft = piston_power_net + P_circumv
+
 
     # power requirement on the LPT
     power_required_LPT = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
@@ -395,16 +430,21 @@ def run_cce(input, input_piston, flags, meta_model):
     mdot_fuel = fuel_flow_piston + fuel_flow_burner
 
     # NOx emission index from piston engine
-    EI_nox_PE = 1e3 * m_nox / (mdot_fuel)
+    EI_nox_PE = 1e3 * m_nox_piston / fuel_flow_piston
 
     if second_burner:
         # NOx emission index from burner
-        EI_nox_burner = 0.007549 * T4 * (p35*1e-3 /3027)**0.37 * np.exp((1.8*T35 - 1471)/345) * (fuel_flow_burner/mdot_fuel)
+        EI_nox_burner = 0.007549 * T4 * (p35*1e-3 /3027)**0.37 * np.exp((1.8*T35 - 1471)/345)
+        # m_nox in kg
+        m_nox_burner = EI_nox_burner * fuel_flow_burner * 1e-3
     else:
         EI_nox_burner = 0.0
+        m_nox_burner = 0.0
+
 
     # total
-    EI_nox = EI_nox_PE + EI_nox_burner
+    m_nox_total = m_nox_burner + m_nox_piston
+    EI_nox = 1e3 * m_nox_total / mdot_fuel
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v17_id / v8_id
@@ -590,12 +630,17 @@ def run_cce(input, input_piston, flags, meta_model):
             m21,
             piston_power_net,
             power_hpc,
+            P_circumv,
+            P_fuel_pump,
             power_offtake,
             power_required_LPT,
+            P_inner_fan + P_outer_fan,
+            P_lpc,
             p3,
             T3,
             p35,
             T34,
+            T35,
             T4,
             p_max,
             T_max,
@@ -610,7 +655,7 @@ def run_cce(input, input_piston, flags, meta_model):
             piston_aux_loss,
             piston_heat_loss,
             bpr_piston,
-            m_nox,
+            m_nox_piston,
             fpr_outer,
             bpr,
         )
@@ -700,6 +745,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "thrust": F,
         "specific thrust": Fs,
         "core specific power": core_spec_power,
+        "core power": core_spec_power * m21,
         "mass flow": m0,
         "core mass flow": m31,
         "p_max": p_max,
@@ -709,6 +755,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "T35": T35,
         "T4": T4,
         "far_piston": far34,
+        "m_NO_tot": m_nox_total,
         "EI_nox": EI_nox,
         "EI_nox_PE": EI_nox_PE,
         "EI_nox_burner": EI_nox_burner,
@@ -729,8 +776,13 @@ def run_cce(input, input_piston, flags, meta_model):
         "k_m": k_m,
         "k0_T": k0_T,
         "k1_T": k1_T,
+        "k0_H": k0_H,
+        "k1_H": k1_H,
         "piston_specific_power": piston_specific_power,
         "bore": bore,
+        "bpr_piston": bpr_piston,
+        "piston_power": piston_power_shaft,
+        "T_max_twozone": T_max_twozone,
         "error": error
     }
 

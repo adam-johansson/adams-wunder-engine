@@ -370,10 +370,10 @@ def JETA_L(T):
         + b2
     )
 
-    # enthalpy of formation
-    hf = -303403.000 / M
-    hf = 0
-    h = h - hf  # J kg^-1
+    # enthalpy of formation DONT USE THIS
+    #hf = -303403.000 / M
+    #hf = 0
+    #h = h - hf  # J kg^-1
 
     return cp, h, s, M
 

@@ -25,7 +25,7 @@ def flame_temp_inhouse(t_soc, equ_sc, equ_combustion, fuel_type):
     # mixture properties before combustion
     h_soc, _, _, _, _, _, _, _ = mixture(t_soc, p_dummy, equ_sc, fuel_type)
 
-    # fuel air ratio of burned gasses before combustion (CO2 and H2O in mixture)
+    # fuel air ratio of burned gases before combustion (CO2 and H2O in mixture)
     far_soc = equ_sc * far_s
 
     # mass of gas mixture before combustion (excluding fresh fuel)
