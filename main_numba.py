@@ -15,10 +15,10 @@ from thermo import fuel_props
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-input_file = "validation.nasa_validation"
+#input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
-#input_file = "validation_twozone.two_zone_heider_new"
+input_file = "validation_twozone.two_zone_heider_new"
 #input_file = "validation_twozone.two_zone_heider_new"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
@@ -40,7 +40,7 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
 #flags = ['validation_h2_performance']  # H2 performance validation
 #flags = ['load']
 #flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
@@ -49,7 +49,7 @@ flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 
 # flags = ['single', 'output_all']  # normal case no plots
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
-#flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
+flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
@@ -130,6 +130,7 @@ if "single" in flags:
         EI_nox,
         volume_eff,
         nox_spec,
+        _,
     ) = run_piston_engine(piston_input, flags)
     end = timer()
     print(f"Time: {end - start}")

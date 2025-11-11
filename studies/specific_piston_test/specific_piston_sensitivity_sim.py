@@ -118,6 +118,7 @@ for bore in bores:
         EI_nox,
         _,
         nox_spec,
+        _,
     ) = run_piston_engine(piston_input, flags)
 
 

@@ -354,11 +354,15 @@ def _calculate_nitrogen_concentration(c_O, c_N2, c_O2, c_OH, c_H, c_NO, k1_f, k2
 
     # Quasi-steady state: dc_N/dt = 0
     numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
+    #KOLLA UPP DETTA!
 
     if V > 0:
         denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V
     else:
         denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
+
+    # Remove dVdt/V term - quasi-steady state based on chemistry only
+    #denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
 
     # Prevent division by very small numbers
     if abs(denominator) < 1e-20:
