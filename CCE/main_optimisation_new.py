@@ -17,8 +17,6 @@ path_pist = input_dir_pist + "." + input_file_pist
 
 d_p = importlib.import_module(path_pist)
 
-hej = 78
-
 #flags = ["single", "print_output", "conventional"]  # normal case
 #flags = ["single", "print_output", "cce"]  # normal case
 flags = ["life_hack", "cce"]  # life hack version
