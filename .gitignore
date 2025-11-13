@@ -27,3 +27,4 @@ __pycache__/
 **.pdf
 **.png
 /studies/NOX_contour_piston_study/NOx_contour_data/
+.venv2

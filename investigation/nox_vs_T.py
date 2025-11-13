@@ -13,7 +13,7 @@ from piston_engine.engine import run_piston_engine
 flags = ["sweep"]
 
 # Importing input parameters
-input_file_pist = "4stroke_sampling"
+input_file_pist = "4stroke_standard"
 input_dir_pist = "piston_engine.input"
 path_pist = input_dir_pist + "." + input_file_pist
 
@@ -60,7 +60,7 @@ piston_input = {
 
 num = 10
 far_stoich, _ = fuel_props("jetA")
-equ_array = np.linspace(0.2,1 / 1.25, num)
+T_in_array = np.linspace(300,700, num)
 
 
 
@@ -75,14 +75,14 @@ i = 0
 
 start = timer()
 
-for equ in equ_array: 
+for T_in in T_in_array: 
 
     lap1 = timer()
 
     print(i)
 
-    far_goal = far_stoich * equ
-    piston_input["far_goal"] = far_goal
+
+    piston_input["T_in"] = T_in
 
     piston_output = run_piston_engine(piston_input, flags)
 
@@ -105,37 +105,36 @@ print(f"Total simulation time for {i} evaluation points: {end - start} seconds")
 
 _, ax1 = plt.subplots()
 
-ax1.plot(equ_array, nox_array)
-ax1.set_xlabel("Equivalence ratio")
+ax1.plot(T_in_array, nox_array)
+ax1.set_xlabel("Inlet temperature [K]")
 ax1.set_ylabel("NO [ppm]")
 
 _, ax2 = plt.subplots()
 
-ax2.plot(equ_array, T_max_two_zone_array)
-ax2.scatter(equ_array, T_max_two_zone_array)
-ax2.set_xlabel("Equivalence ratio")
+ax2.plot(T_in_array, T_max_two_zone_array)
+ax2.set_xlabel("Inlet temperature [K]")
 ax2.set_ylabel("T_max hot zone [K]")
 
 
 _, ax3 = plt.subplots()
-ax3.plot(equ_array, T_max_single_zone_array)
-ax3.set_xlabel("Equivalence ratio")
+ax3.plot(T_in_array, T_max_single_zone_array)
+ax3.set_xlabel("Inlet temperature [K]")
 ax3.set_ylabel("T_max single zone [K]")
 
 _, ax4 = plt.subplots()
-ax4.plot(equ_array, p_max_array*1e-5)
-ax4.set_xlabel("Equivalence ratio")
+ax4.plot(T_in_array, p_max_array*1e-5)
+ax4.set_xlabel("Inlet temperature [K]")
 ax4.set_ylabel("peak pressure [bar]")
 
 
 _, ax5 = plt.subplots()
-ax5.plot(equ_array, T_flame_array)
-ax5.set_xlabel("Equivalence ratio")
+ax5.plot(T_in_array, T_flame_array)
+ax5.set_xlabel("Inlet temperature [K]")
 ax5.set_ylabel("flame temperature [K]")
 
 _, ax6 = plt.subplots()
-ax6.plot(equ_array, T_sc_array)
-ax6.set_xlabel("Equivalence ratio")
+ax6.plot(T_in_array, T_sc_array)
+ax6.set_xlabel("Inlet temperature [K]")
 ax6.set_ylabel("T start of combustion [K]")
 
 

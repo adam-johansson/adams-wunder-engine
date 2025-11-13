@@ -238,6 +238,8 @@ def _calculate_gas_concentrations(gas, fuel_type, T, p, c_NO, initial_fractions)
     xi_NO = c_NO * (R_UNIV_J * T) / p if p > 0 else 0.0
     xi_O2 = max(0.0, xi_O2_0 - 0.5 * xi_NO)
     xi_N2 = max(0.0, xi_N2_0 - 0.5 * xi_NO)
+    #xi_O2 = xi_O2_0
+    #xi_N2 = xi_N2_0
 
     # Set gas composition
     try:
@@ -355,6 +357,7 @@ def _calculate_nitrogen_concentration(c_O, c_N2, c_O2, c_OH, c_H, c_NO, k1_f, k2
     # Quasi-steady state: dc_N/dt = 0
     numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
     #KOLLA UPP DETTA!
+
 
     if V > 0:
         denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V

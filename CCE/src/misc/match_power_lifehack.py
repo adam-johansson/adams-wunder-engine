@@ -29,56 +29,29 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
         input["bore"] = bore_high
 
-        (
-            T_out_high,
-            _,
-            eta_th_high,
-            _,
-            _,
-            _,
-            _,
-            _,
-            indicated_power_high,
-            _,
-            _,
-            heat_loss_high,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-        ) = run_piston_engine(input, flags)
+  
+
+        piston_output = run_piston_engine(input, flags)
+
+        T_out_high = piston_output["T_out"]
+        heat_loss_high = piston_output["heat_loss"]
 
         #print("Sim 1 done")
         #print(f"Heat loss sim 1: {heat_loss_high*24*1e-3} kW")
 
         input["bore"] = bore_mid
 
-        (
-            T_out_mid,
-            _,
-            eta_th_mid,
-            m_in,
-            p_max,
-            T_max,
-            _,
-            _,
-            indicated_power,
-            _,
-            _,
-            heat_loss_mid,
-            p_tdc,
-            _,
-            nox_ppm,
-            _,
-            EI_nox,
-            _,
-            nox_spec,
-            _
-        ) = run_piston_engine(input, flags)
+        
+        piston_output = run_piston_engine(input, flags)
+
+        T_out_mid = piston_output["T_out"]
+        heat_loss_mid = piston_output["heat_loss"]
+        m_in = piston_output["air_flow"]
+        p_max = piston_output["peak pressure"]
+        T_max = piston_output["peak temperature"]
+        indicated_power = piston_output["indicated power"]
+        p_tdc = piston_output["p_tdc"]
+        nox_ppm = piston_output["no_ppm"]
 
         #print("Sim 2 done")
         #print(f"pmax: {p_max*1e-5} bar ")
@@ -110,28 +83,15 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         # calculate NOX for bore that was matching
         flags = ["sweep"]
 
-        (
-            _,
-            _,
-            _,
-            _,
-            p_max,
-            T_max,
-            _,
-            _,
-            _,
-            _,
-            _,
-            heat_loss_final_sim,
-            p_tdc,
-            _,
-            nox_ppm,
-            _,
-            _,
-            _,
-            _,
-            T_max_twozone,
-        ) = run_piston_engine(input, flags)
+        piston_output = run_piston_engine(input, flags)
+
+        heat_loss_final_sim = piston_output["heat_loss"]
+        p_max = piston_output["peak pressure"]
+        T_max = piston_output["peak temperature"]
+        p_tdc = piston_output["p_tdc"]
+        nox_ppm = piston_output["no_ppm"]   
+        T_max_twozone = piston_output["peak temperature hot zone"]
+
 
         #print("Final sim done")
         #print(f"Heta loss final sim: {heat_loss_final_sim*24*1e-3} kW")

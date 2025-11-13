@@ -13,7 +13,7 @@ from piston_engine.engine import run_piston_engine
 flags = ["sweep"]
 
 # Importing input parameters
-input_file_pist = "4stroke_sampling"
+input_file_pist = "4stroke_standard"
 input_dir_pist = "piston_engine.input"
 path_pist = input_dir_pist + "." + input_file_pist
 
@@ -60,7 +60,7 @@ piston_input = {
 
 num = 10
 far_stoich, _ = fuel_props("jetA")
-equ_array = np.linspace(0.2,1 / 1.25, num)
+p_in_array = np.linspace(1e5,5e5, num)
 
 
 
@@ -70,19 +70,27 @@ T_max_single_zone_array = np.zeros(num)
 T_flame_array = np.zeros(num)
 T_sc_array = np.zeros(num)
 p_max_array = np.zeros(num)
+p_sc_array = np.zeros(num)
+
+
+
+p0 = 1e5
+T0 = 300
 
 i = 0
 
 start = timer()
 
-for equ in equ_array: 
+for p_in in p_in_array: 
 
     lap1 = timer()
 
     print(i)
 
-    far_goal = far_stoich * equ
-    piston_input["far_goal"] = far_goal
+    T_in = T0*(p_in/p0)**(0.4/1.4)
+
+    piston_input["p_in"] = p_in
+    piston_input["T_in"] = T_in
 
     piston_output = run_piston_engine(piston_input, flags)
 
@@ -97,6 +105,7 @@ for equ in equ_array:
     p_max_array[i] = piston_output["peak pressure"]
     T_flame_array[i] = piston_output["flame temperature"]
     T_sc_array[i] = piston_output["T start of combustion"]
+    p_sc_array[i] = piston_output["p start of combustion"]
 
     i = i + 1
 
@@ -105,38 +114,42 @@ print(f"Total simulation time for {i} evaluation points: {end - start} seconds")
 
 _, ax1 = plt.subplots()
 
-ax1.plot(equ_array, nox_array)
-ax1.set_xlabel("Equivalence ratio")
+ax1.plot(p_in_array*1e-5, nox_array)
+ax1.set_xlabel("Inlet pressure [bar]")
 ax1.set_ylabel("NO [ppm]")
 
 _, ax2 = plt.subplots()
 
-ax2.plot(equ_array, T_max_two_zone_array)
-ax2.scatter(equ_array, T_max_two_zone_array)
-ax2.set_xlabel("Equivalence ratio")
+ax2.plot(p_in_array*1e-5, T_max_two_zone_array)
+ax2.set_xlabel("Inlet pressure [bar]")
 ax2.set_ylabel("T_max hot zone [K]")
 
 
 _, ax3 = plt.subplots()
-ax3.plot(equ_array, T_max_single_zone_array)
-ax3.set_xlabel("Equivalence ratio")
+ax3.plot(p_in_array*1e-5, T_max_single_zone_array)
+ax3.set_xlabel("Inlet pressure [bar]")
 ax3.set_ylabel("T_max single zone [K]")
 
 _, ax4 = plt.subplots()
-ax4.plot(equ_array, p_max_array*1e-5)
-ax4.set_xlabel("Equivalence ratio")
+ax4.plot(p_in_array*1e-5, p_max_array*1e-5)
+ax4.set_xlabel("Inlet pressure [bar]")
 ax4.set_ylabel("peak pressure [bar]")
 
 
 _, ax5 = plt.subplots()
-ax5.plot(equ_array, T_flame_array)
-ax5.set_xlabel("Equivalence ratio")
+ax5.plot(p_in_array*1e-5, T_flame_array)
+ax5.set_xlabel("Inlet pressure [bar]")
 ax5.set_ylabel("flame temperature [K]")
 
 _, ax6 = plt.subplots()
-ax6.plot(equ_array, T_sc_array)
-ax6.set_xlabel("Equivalence ratio")
+ax6.plot(p_in_array*1e-5, T_sc_array)
+ax6.set_xlabel("Inlet pressure [bar]")
 ax6.set_ylabel("T start of combustion [K]")
+
+_, ax7 = plt.subplots()
+ax7.plot(p_in_array*1e-5, p_sc_array*1e-5)
+ax7.set_xlabel("Inlet pressure [bar]")
+ax7.set_ylabel("p start of combustion [bar]")
 
 
 

@@ -1,7 +1,9 @@
 import math
 import numpy as np
+from scipy import integrate
+import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
- 
+import cantera as ct
 from numba import njit
 
 from thermo import (
@@ -14,6 +16,7 @@ from thermo import (
 
 from thermo.polynomials import N2, O2, O, OH, N, NO, H
 
+from piston_engine.src.piston.nox_integration import improved_nox_integration
 
 # Constants
 R_UNIV_J = 8.314510  # J mol^-1 K^-1
@@ -144,7 +147,7 @@ def nox_calculations(
 def _setup_cantera_gas(fuel_type):
     """Setup Cantera gas object with appropriate species."""
 
-    # this will only treat the OHC system, handling the partial equilibirum
+    # this will treat full equilibirum 
 
     try:
         species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
@@ -152,7 +155,7 @@ def _setup_cantera_gas(fuel_type):
         raise RuntimeError(f"Failed to load Cantera species: {e}")
 
     if fuel_type == "jetA":
-        species_names = ["CO2", "H2O", "O2", "CO", "OH", "H2", "O", "H", "N2"]
+        species_names = ["CO2", "H2O", "O2", "CO", "OH", "H2", "O", "H", "N2", "NO", "N"]
     elif fuel_type == "H2":
         species_names = ["H2O", "O2", "OH", "H2", "O", "H", "N2"]
     else:
@@ -192,35 +195,24 @@ def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
     c_NO = var[0] / V if V > 0 else 0.0
 
     # Calculate current gas composition
-    c_O, c_N2, c_O2, c_OH, c_H = _calculate_gas_concentrations(
+    c_O_equ, c_N2_equ, c_O2_equ, c_OH_equ, c_H_equ, c_NO_equ = _calculate_gas_concentrations(
         gas, fuel_type, T, p, c_NO, initial_fractions
     )
 
     # Calculate reaction rate constants
     k1_f, k2_f, k3_f, k1_r, k2_r, k3_r = _calculate_rate_constants(T)
 
-    numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
+    # Reaction from Internal Combustion Engines, Applied Thermosciences and from
+    # Development and validation of a multi-zone combustion model for performance and nitric oxide formation in syngas fueled spark ignition engine
+    # written by CD Rakopolous
 
+    alpha = c_NO / c_NO_equ
+    R1 = k1_f * c_O_equ * c_N2_equ
+    R2 = k2_r * c_NO_equ * c_O_equ
+    R3 = k3_r * c_NO_equ * c_H_equ
 
+    dNOdt = (2 * R1 * (1 - alpha**2) / (1 + alpha * R1 / (R2 + R3))        ) * V
 
-    # Remove dVdt/V term - quasi-steady state based on chemistry only
-    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
-
-    c_N = numerator / denominator
-
-
-    #print(f"c_O: {c_O}, c_N: {c_N}, c_N2: {c_N2}, c_NO: {c_NO}")
-
-    # Simplified version (only forward reaction but also expression for O concentration)
-    #dNOdt = 4.7 * 1e13 * c_N2 * np.sqrt(c_O2*1e-3) * np.exp(-67837/T) * V
-
-    # Forward and backward reaction
-    dNOdt = (2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N) * V
-    #print(f"Forward: {2 * k1_f * c_O * c_N2} Backward: {2 * k1_r * c_NO * c_N}")
-    #print(f"dNOdt: {dNOdt}")
-    #print(f"V: {V}")
-    # Only forward reaction
-    #dNOdt = 2 * k1_f * c_O * c_N2 * V
     return dNOdt
 
 
@@ -229,15 +221,6 @@ def _calculate_gas_concentrations(gas, fuel_type, T, p, c_NO, initial_fractions)
 
     # Unpack initial molar fractions
     (xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0) = initial_fractions
-
-    # Account for NO formation in mass balance
-    xi_NO = c_NO * (R_UNIV_J * T) / p if p > 0 else 0.0
-    #xi_O2 = max(0.0, xi_O2_0 - 0.5 * xi_NO)
-    #xi_N2 = max(0.0, xi_N2_0 - 0.5 * xi_NO)
-
-    # probably does not matter for N2
-    #xi_N2 = xi_N2_0
-    #xi_O2 = xi_O2_0
 
 
     # Set gas composition
@@ -273,6 +256,14 @@ def _calculate_gas_concentrations(gas, fuel_type, T, p, c_NO, initial_fractions)
         xi_OH = fractions["OH"]
     except:
         xi_OH = 0.0
+    try:
+        xi_N2 = fractions["N2"]
+    except:
+        xi_N2 = 0.0
+    try:
+        xi_NO = fractions["NO"]
+    except:
+        xi_NO = 0.0
 
 
     
@@ -283,9 +274,10 @@ def _calculate_gas_concentrations(gas, fuel_type, T, p, c_NO, initial_fractions)
     c_O2 = (xi_O2 * p) / (R_UNIV_J * T)
     c_O = (xi_O * p) / (R_UNIV_J * T)
     c_OH = (xi_OH * p) / (R_UNIV_J * T)
-    c_N2 = (xi_N2_0 * p) / (R_UNIV_J * T)
+    c_N2 = (xi_N2 * p) / (R_UNIV_J * T)
+    c_NO = (xi_NO * p) / (R_UNIV_J * T)
 
-    return c_O, c_N2, c_O2, c_OH, c_H
+    return c_O, c_N2, c_O2, c_OH, c_H, c_NO
 
 
 @njit()

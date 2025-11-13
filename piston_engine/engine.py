@@ -4,7 +4,7 @@ from timeit import default_timer as timer
 import time
 import sys
 
-from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model_cantera
+from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model, nox_model_alternative
 
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
@@ -67,7 +67,7 @@ def run_piston_engine(input, flags):
     phi_close_out = valve_timings[3]
 
     # number of outputs from the function
-    nr_output = 19
+    nr_output = 20
 
     s = d/bsr  # stroke retrieved from bore stroke ratio
     l_con = s/(2*lms)  # connecting rod length
@@ -945,7 +945,7 @@ def run_piston_engine(input, flags):
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)
-        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc = twozone_model.twozone(phi, P[-1], T[-1],
+        T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc, T_flame, T_sc, p_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
                                                                                                     phi_open_out, phi_sc,
                                                                                                     LHV, far_s,
@@ -956,7 +956,7 @@ def run_piston_engine(input, flags):
         T_max_twozone = np.max(T_z1)
 
         start = timer()
-        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_cantera.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_alternative.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
@@ -1125,9 +1125,33 @@ def run_piston_engine(input, flags):
             from piston_engine.src.misc.output import output_power
             output_power(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single,
                          equ_avg)
+            
+
+    output_dict = {
+        "T_out": T_out[-1],
+        "break power": break_power_engine,
+        "eta_th": eta_th,
+        "air_flow": air_flow_engine,
+        "peak pressure": p_max,
+        "peak temperature": T_max,
+        "far": far_avg,
+        "equ_trapped": equ_trapped,
+        "indicated power": power_engine,
+        "friction_loss_power": friction_loss_power,
+        "aux_loss_power": aux_loss_power,
+        "heat_loss": heat_losses,
+        "p_tdc": p_tdc,
+        "out_flow": out_flow,
+        "no_ppm": no_ppm[-1],
+        "imep": imep,
+        "EI_NO": EI_nox,
+        "volume_eff": volume_eff,
+        "nox_spec": nox_spec,
+        "peak temperature hot zone": T_max_twozone,
+        "flame temperature": T_flame,
+        "T start of combustion": T_sc,
+        "p start of combustion": p_sc,
+    }
 
 
-
-    return (T_out[-1], break_power_engine, eta_th, air_flow_engine, p_max, T_max, far_avg, equ_trapped,\
-        power_engine, friction_loss_power, aux_loss_power, heat_losses, p_tdc, out_flow, no_ppm[-1], imep, EI_nox,
-            volume_eff, nox_spec, T_max_twozone)
+    return output_dict

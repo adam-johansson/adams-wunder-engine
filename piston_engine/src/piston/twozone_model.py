@@ -3,8 +3,8 @@ from scipy import integrate
 from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cantera
 from numba import njit
 
-# Constants
-DEFAULT_LAMBDA_0_DIESEL = 1.00
+# Constants 
+DEFAULT_LAMBDA_0_DIESEL = 1.0 #normally 1.0
 DEFAULT_LAMBDA_0_H2 = 1.01
 DEFAULT_C_FACTOR = 0.15  # for 4 valves and central injection
 DEFAULT_POLYTROPE_AVERAGING_DEGREES = 10
@@ -123,6 +123,9 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     #print(f"A: {A}. 1595 in Heider validation")
     Astar = _calculate_astar(A, lambda_gl, lambda_0, premixed, DEFAULT_C_FACTOR)
 
+
+    #print(Astar)
+
     # Solve for zone temperatures and volumes
     T1, T2, V1, V2 = _calculate_zone_properties(p_hp, V_hp, m1, m2, R1, R2, Astar, B)
 
@@ -133,7 +136,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     if max_relative_error > 0.01:  # 1% tolerance
         print(f"Warning: Volume conservation error exceeds 1%. Max relative error: {max_relative_error:.3f}")
 
-    return T1, m1, p_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc
+    return T1, m1, p_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc, t_flame, T_sc, p_sc
 
 
 def _determine_lambda_0(premixed, fuel_type, lambda_gl):
