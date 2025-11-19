@@ -1840,6 +1840,7 @@ def val_chalmers(phi, p, T, Q, V, equ, premixed):
 
 def plot_twozone_validation_final(phi, t1, t2, t, p, evo, sc, no, phi_z1):
 
+
     # high pressure crank angles
     phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
 

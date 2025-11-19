@@ -1,7 +1,8 @@
 import math
 import numpy as np
 from scipy.integrate import solve_ivp
- 
+import cantera as ct
+
 from numba import njit
 
 from thermo import (
@@ -122,7 +123,6 @@ def nox_calculations(
         method="LSODA",
         y0=np.array([0.0]),
         t_eval=times,
-        max_step=np.inf,
         rtol=1e-6,
         atol=1e-12
     )
@@ -199,13 +199,10 @@ def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
     # Calculate reaction rate constants
     k1_f, k2_f, k3_f, k1_r, k2_r, k3_r = _calculate_rate_constants(T)
 
+
+    # find concentration of N based on the quasi-steady assumption
     numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
-
-
-
-    # Remove dVdt/V term - quasi-steady state based on chemistry only
     denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
-
     c_N = numerator / denominator
 
 
@@ -216,6 +213,9 @@ def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
 
     # Forward and backward reaction
     dNOdt = (2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N) * V
+    
+    
+    
     #print(f"Forward: {2 * k1_f * c_O * c_N2} Backward: {2 * k1_r * c_NO * c_N}")
     #print(f"dNOdt: {dNOdt}")
     #print(f"V: {V}")
@@ -231,7 +231,7 @@ def _calculate_gas_concentrations(gas, fuel_type, T, p, c_NO, initial_fractions)
     (xi_N2_0, xi_O2_0, xi_CO2_0, xi_H2O_0, xi_Ar_0) = initial_fractions
 
     # Account for NO formation in mass balance
-    xi_NO = c_NO * (R_UNIV_J * T) / p if p > 0 else 0.0
+    #xi_NO = c_NO * (R_UNIV_J * T) / p if p > 0 else 0.0
     #xi_O2 = max(0.0, xi_O2_0 - 0.5 * xi_NO)
     #xi_N2 = max(0.0, xi_N2_0 - 0.5 * xi_NO)
 
@@ -323,64 +323,16 @@ def _calculate_rate_constants(T):
     # Forward rate constants (convert from cm³ to m³)
     # Note: GRI-Mech reaction (1) is defined as N+NO<=>N2+O, so we use reverse coefficients
     k1_r = 2.70e13 * math.exp(-355.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
-    k2_f = 9.0e9 * T * math.exp(-6500.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
-    k3_f = 3.36e13 * math.exp(-385.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
+    k2 = 9.0e9 * T * math.exp(-6500.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
+    k3 = 3.36e13 * math.exp(-385.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
 
     # Calculate other rate constants using equilibrium relationships
-    k1_f = k1_r * Kc_1
-    k2_r = k2_f / Kc_2
-    k3_r = k3_f / Kc_3
+    k1 = k1_r * Kc_1
+    k2_r = k2 / Kc_2
+    k3_r = k3 / Kc_3
 
-    return k1_f, k2_f, k3_f, k1_r, k2_r, k3_r
+    return k1, k2, k3, k1_r, k2_r, k3_r
 
-
-@njit()
-def _calculate_nitrogen_concentration(c_O, c_N2, c_O2, c_OH, c_H, c_NO, k1_f, k2_f, k3_f, k1_r, k2_r, k3_r, V, dVdt):
-    """Calculate N atom concentration using quasi-steady state assumption."""
-
-    # Quasi-steady state: dc_N/dt = 0
-    numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
-
-
-    #if V > 0:
-    #    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V
-    #else:
-    #    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
-
-    # Remove dVdt/V term - quasi-steady state based on chemistry only
-    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
-
-    # Prevent division by very small numbers
-    if abs(denominator) < 1e-20:
-        return 0.0
-
-    return numerator / denominator
-
-
-@njit()
-def _calculate_nox_formation_rate(c_O, c_N2, c_N, c_NO, k1_f, k1_r, V, dVdt):
-    """Calculate the net NOx formation rate."""
-
-    # Net rate from extended Zeldovich mechanism
-    dc_NOdt_chem = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
-
-
-    #if V > 0:
-    #    # Include volume change effects
-    #    #dc_NOdt_vol = -(c_NO + c_N) * dVdt / V
-    #    dc_NOdt_vol = -c_NO * dVdt / V
-    #    dc_NOdt = dc_NOdt_chem + dc_NOdt_vol
-    #    # Convert concentration rate to molar rate
-    #    dNOdt = dc_NOdt * V + c_NO * dVdt
-    #else:
-    #    if V >= 0:
-    #        dNOdt = dc_NOdt_chem * V
-    #    else:
-    #        dNOdt = 0.0
-    
-    dNOdt = dc_NOdt_chem * V
-
-    return dNOdt
 
 
 @njit()
@@ -428,7 +380,7 @@ def numba_gradient_uniform(y, x):
     -------
     gradient : ndarray
         Gradient of y with respect to x
-    """
+    """   
     n = len(y)
     gradient = np.zeros_like(y)
 

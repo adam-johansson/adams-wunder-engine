@@ -22,7 +22,7 @@ bsr = 1  # bore stroke ratio
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 1.1e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
+p_in = 1.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
 T_in = 300  # inlet temperature (670 cruise 770 TO)
 p_ratio = 1.0  # pressure ratio after and before engine
 

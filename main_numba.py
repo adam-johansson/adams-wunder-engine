@@ -15,10 +15,10 @@ from thermo import fuel_props
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
 #input_file = "H2_validation_italian.4stroke_hydrogen_validation_italian_08_v2"
-input_file = "validation.nasa_validation"
+#input_file = "validation.nasa_validation"
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
-#input_file = "validation_twozone.two_zone_heider_new"
+input_file = "validation_twozone.two_zone_heider_alt"
 #input_file = "validation_twozone.nox_diesel_rakopolous"
 # input_file = "validation_twozone.scania_d12"
 #input_file = "validation_chalmers.case3"
@@ -26,6 +26,7 @@ input_file = "validation.nasa_validation"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
 #input_file = "4stroke_hydrogen_crashing_case"
+#input_file = "4stroke_standard"
 
 input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
@@ -39,7 +40,8 @@ d = importlib.import_module(path)
 
 # to plot validation: first run validation case then run load
 
-flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
+#flags = ["single"]
+#flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 'plot_essentials', 'save']  # NASA validation case
 #flags = ['validation_h2_performance']  # H2 performance validation
 #flags = ['load']
 #flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
@@ -48,7 +50,7 @@ flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 
 # flags = ['single', 'output_all']  # normal case no plots
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
-#flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
+flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
 #flags = ['sweep_no_greek', 'save']  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
@@ -58,7 +60,6 @@ flags = ['validation', 'fuel_mass', 'output_all', 'single', 'plot_convergence', 
 # flags = ['sweep_hcci']
 # flags = ['fit_water_paper', 'single']
 #flags = ['single', 'plot_twozone', 'plot_essentials'] # to look at the nox and twozone
-#flags = ["single"]
 #flags = ["load"]
 # flags = ["single", "fit_newcastle"]
 # flags = ["sweep_chalmers_h2"]

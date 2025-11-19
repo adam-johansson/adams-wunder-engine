@@ -26,7 +26,7 @@ CM3_TO_M3 = 1e-6
 PPM_FACTOR = 1e6
 G_PER_KG_FACTOR = 1e3
 DEFAULT_ODE_MAX_STEP = 1e-5
-SPECIES_THRESHOLD = 1e-20
+SPECIES_THRESHOLD = 1e-15
 
 
 def nox_calculations(
@@ -116,7 +116,7 @@ def nox_calculations(
     def dNOdt_fun(t, var):
         return _nox_ode_function(
             t, var, times, temperatures, pressures, volumes, dVdt_s,
-            gas, fuel_type, initial_fractions
+            gas, fuel_type, initial_fractions, rpm
         )
 
     sol = solve_ivp(
@@ -125,7 +125,6 @@ def nox_calculations(
         method="LSODA",
         y0=np.array([0.0]),
         t_eval=times,
-        max_step=np.inf,
         rtol=1e-6,
         atol=1e-12
     )
@@ -149,24 +148,21 @@ def _setup_cantera_gas(fuel_type):
 
     # this will treat full equilibirum 
 
-    try:
-        species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
-    except Exception as e:
-        raise RuntimeError(f"Failed to load Cantera species: {e}")
+
+    species = {S.name: S for S in ct.Species.list_from_file("gri30.yaml")}
 
     if fuel_type == "jetA":
         species_names = ["CO2", "H2O", "O2", "CO", "OH", "H2", "O", "H", "N2", "NO", "N"]
     elif fuel_type == "H2":
-        species_names = ["H2O", "O2", "OH", "H2", "O", "H", "N2"]
+        species_names = ["H2O", "O2", "OH", "H2", "O", "H", "N2", "NO", "N"]
     else:
         raise ValueError(f"Unsupported fuel type: {fuel_type}")
 
-    try:
-        ohc_species = [species[name] for name in species_names]
-        gas = ct.Solution(thermo="ideal-gas", species=ohc_species)
-        return gas
-    except KeyError as e:
-        raise RuntimeError(f"Missing species in Cantera database: {e}")
+
+    ohc_species = [species[name] for name in species_names]
+    gas = ct.Solution(thermo="ideal-gas", species=ohc_species)
+    return gas
+
 
 
 def _calculate_time_vector(phi, rpm):
@@ -177,7 +173,7 @@ def _calculate_time_vector(phi, rpm):
 
 
 def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
-                      gas, fuel_type, initial_fractions):
+                      gas, fuel_type, initial_fractions, rpm):
     """ODE function for NOx formation rate."""
 
     # Find closest time index
@@ -193,6 +189,7 @@ def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
 
     # Current NO concentration
     c_NO = var[0] / V if V > 0 else 0.0
+    
 
     # Calculate current gas composition
     c_O_equ, c_N2_equ, c_O2_equ, c_OH_equ, c_H_equ, c_NO_equ = _calculate_gas_concentrations(
@@ -206,12 +203,19 @@ def _nox_ode_function(t, var, times, temperatures, pressures, volumes, dVdt_s,
     # Development and validation of a multi-zone combustion model for performance and nitric oxide formation in syngas fueled spark ignition engine
     # written by CD Rakopolous
 
+
     alpha = c_NO / c_NO_equ
     R1 = k1_f * c_O_equ * c_N2_equ
     R2 = k2_r * c_NO_equ * c_O_equ
     R3 = k3_r * c_NO_equ * c_H_equ
 
     dNOdt = (2 * R1 * (1 - alpha**2) / (1 + alpha * R1 / (R2 + R3))        ) * V
+
+    #rps = rpm / 60.0
+    #radians_per_s = rps * 2.0 * np.pi
+    #phi = radians_per_s * t
+
+    #print(f"Time: {t*1e3} ms, phi: {phi * 180 / np.pi } deg, alpha: {alpha}, c_NO_equ: {c_NO_equ}, c_NO: {c_NO}")
 
     return dNOdt
 
@@ -315,64 +319,23 @@ def _calculate_rate_constants(T):
     # Forward rate constants (convert from cm³ to m³)
     # Note: GRI-Mech reaction (1) is defined as N+NO<=>N2+O, so we use reverse coefficients
     k1_r = 2.70e13 * math.exp(-355.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
-    k2_f = 9.0e9 * T * math.exp(-6500.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
-    k3_f = 3.36e13 * math.exp(-385.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
+    k2 = 9.0e9 * T * math.exp(-6500.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
+    k3 = 3.36e13 * math.exp(-385.0 / (R_UNIV_CAL * T)) * CM3_TO_M3
 
     # Calculate other rate constants using equilibrium relationships
-    k1_f = k1_r * Kc_1
-    k2_r = k2_f / Kc_2
-    k3_r = k3_f / Kc_3
+    k1 = k1_r * Kc_1
+    k2_r = k2 / Kc_2
+    k3_r = k3 / Kc_3
 
-    return k1_f, k2_f, k3_f, k1_r, k2_r, k3_r
+    # from textbook ICE applied thermosciences
+    #k1 = 1.8 * 1e14 * np.exp(-38370/T) * CM3_TO_M3
+    #k1_r = 3.8 * 1e13 * np.exp(-425/T) * CM3_TO_M3
+    #k2 = 1.8 * 1e10 * T * np.exp(-4680/T) * CM3_TO_M3
+    #k2_r = 3.8 * 1e9 * T * np.exp(-20820/T) * CM3_TO_M3
+    #k3 = 7.1 * 1e13 * np.exp(-450/T) * CM3_TO_M3
+    #k3_r = 1.7 * 1e14 * np.exp(-24560/T) * CM3_TO_M3
 
-
-@njit()
-def _calculate_nitrogen_concentration(c_O, c_N2, c_O2, c_OH, c_H, c_NO, k1_f, k2_f, k3_f, k1_r, k2_r, k3_r, V, dVdt):
-    """Calculate N atom concentration using quasi-steady state assumption."""
-
-    # Quasi-steady state: dc_N/dt = 0
-    numerator = (k1_f * c_O * c_N2 + k2_r * c_NO * c_O + k3_r * c_NO * c_H)
-
-
-    #if V > 0:
-    #    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH + dVdt / V
-    #else:
-    #    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
-
-    # Remove dVdt/V term - quasi-steady state based on chemistry only
-    denominator = k1_r * c_NO + k2_f * c_O2 + k3_f * c_OH
-
-    # Prevent division by very small numbers
-    if abs(denominator) < 1e-20:
-        return 0.0
-
-    return numerator / denominator
-
-
-@njit()
-def _calculate_nox_formation_rate(c_O, c_N2, c_N, c_NO, k1_f, k1_r, V, dVdt):
-    """Calculate the net NOx formation rate."""
-
-    # Net rate from extended Zeldovich mechanism
-    dc_NOdt_chem = 2 * k1_f * c_O * c_N2 - 2 * k1_r * c_NO * c_N
-
-
-    #if V > 0:
-    #    # Include volume change effects
-    #    #dc_NOdt_vol = -(c_NO + c_N) * dVdt / V
-    #    dc_NOdt_vol = -c_NO * dVdt / V
-    #    dc_NOdt = dc_NOdt_chem + dc_NOdt_vol
-    #    # Convert concentration rate to molar rate
-    #    dNOdt = dc_NOdt * V + c_NO * dVdt
-    #else:
-    #    if V >= 0:
-    #        dNOdt = dc_NOdt_chem * V
-    #    else:
-    #        dNOdt = 0.0
-    
-    dNOdt = dc_NOdt_chem * V
-
-    return dNOdt
+    return k1, k2, k3, k1_r, k2_r, k3_r
 
 
 @njit()
@@ -387,9 +350,10 @@ def _process_nox_results(NO_mol, times, m_tot, mf_tot, equ_global, m_global, fue
     _, _, _, _, M_NO = NO(t_dummy, p_dummy)
 
     # Convert to mass
+    # array of mass of NO for each time step
     m_NO = NO_mol * M_NO
 
-    # Mass-based concentration (ppm)
+    # Mass-based concentration (ppm) with regarsd to total mass going out of the cylinder
     no_concentration_mass = (m_NO / m_tot) * PPM_FACTOR
 
     # Volume-based concentration (ppm)

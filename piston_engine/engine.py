@@ -934,14 +934,15 @@ def run_piston_engine(input, flags):
             print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
             return np.zeros(nr_output)
 
-    if cycle == "4T":
+    if (cycle == "4T" and far_goal > 0.0):
         ## NOX calculations
         # get the heat addition from fuel curve
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
 
-        # Greek: 0.87. Heider: 0.91, Scania: 1.0
-        factor = 0.905
+        # Greek: 0.87. Heider: 0.91, Scania: 1.0 
+        # 0.905 was used before for validation
+        factor = 0.95
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)
@@ -967,9 +968,10 @@ def run_piston_engine(input, flags):
         if nox_equilibrium:
             from piston_engine.src.piston import nox_model_equi
             from piston_engine.src.misc import plot_output
-            no_ppm_equi = nox_model_equi.nox(T_z1, p_z1, lambda_z1, equ_trapped)
+            no_ppm_equi = nox_model_equi.nox(T_z1, p_z1, m_z1, lambda_z1, equ_trapped, m_out_EP[-1][-1])
 
             plot_output.plot_no_with_equi(phi,phi_open_out,phi_sc,no_ppm, no_ppm_equi)
+            plt.show()
 
 
         #print(f'Runtime of NOx calculations: {end - start} [s]')
@@ -986,6 +988,10 @@ def run_piston_engine(input, flags):
         EI_nox = 999
         no_ppm = np.array([999])
         nox_spec = 999
+        T_max_twozone = 0
+        T_flame = 0
+        T_sc = 0
+        p_sc = 0
 
 
     # post processing
