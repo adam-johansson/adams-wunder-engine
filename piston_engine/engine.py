@@ -942,7 +942,8 @@ def run_piston_engine(input, flags):
 
         # Greek: 0.87. Heider: 0.91, Scania: 1.0 
         # 0.905 was used before for validation
-        factor = 0.95
+        # 0.875 and lambda = 1.1 is good match
+        factor = 0.88
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)
@@ -957,7 +958,7 @@ def run_piston_engine(input, flags):
         T_max_twozone = np.max(T_z1)
 
         start = timer()
-        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_alternative.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                      rpm,
                                                                      m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 

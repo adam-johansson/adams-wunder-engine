@@ -7,8 +7,8 @@ thermo = "NASA"
 fuel = "jetA"
 
 # used Hohenberg before
-cooling = "Hohenberg"
-#cooling = "Woschni"
+#cooling = "Hohenberg"
+cooling = "Woschni"
 
 opposed = False
 premixed = False
@@ -34,11 +34,11 @@ lms = 1 / (
 )  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
 
 # inlet and outlet conditions
-p_in = 1.0125e5 * 0.9  # inlet pressure  #0.85
+p_in = 1.0125e5 * 0.95  # inlet pressure  #0.85
 T_in = 298  # inlet temperature
-p_ratio = 1.1  # pressure ratio after and before engine
+p_ratio = 1.1  # pressure ratio after and before engine 
 
-ch = 1.0  # multiplier to decrease or increase heat transfer
+ch = 0.9  # multiplier to decrease or increase heat transfer
 
 # Heat transfer
 # given
