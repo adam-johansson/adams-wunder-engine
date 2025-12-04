@@ -11,8 +11,8 @@ def sweep_no_diesel_greek_validation(d, flags):
     # validate against the Rakolpoulos paper
     # the three different load cases (-20 degrees injection timing)
 
-    # design point far 0.0425
-    far_dp = 0.0395
+    # design point far 0.0395
+    far_dp = 0.0399
     fuel_air_ratios = np.linspace(0.0267, far_dp, num)
     # cds = np.linspace(35, 41.72, num) * np.pi / 180
     # m_wiebes = np.linspace(2.20,2.21,num)
@@ -99,14 +99,14 @@ def sweep_no_diesel_greek_validation(d, flags):
     EI_late = []
 
     # the three different load cases (-15 degrees injection timing)
-    #far_dp = 0.046
+    far_dp = 0.0395
     fuel_air_ratios = np.linspace(0.026, far_dp, num)
     # matches Woschni
     # fuel_air_ratios = np.array([0.031, 0.038, 0.0465])
 
     phi_sc = (353.0 / 180) * np.pi  # angle at combustion start
-    phi_cd = (35.0 / 180) * np.pi
-    m_wiebe = 2.5
+    phi_cd = (36.0 / 180) * np.pi
+    m_wiebe = 2.6
 
     # m_wiebes = np.linspace(2.28, 2.28, num)
     # cds = np.linspace(35,39.96, num) * np.pi/180

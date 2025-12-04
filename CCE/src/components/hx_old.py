@@ -18,6 +18,7 @@ def hx_NASA(pc_i, tc_i, heating_power, th_i):
     # assuming pressure losses (dont care about oil for now)
     pc_o = pc_i * (1 - dp_c)
 
+
     # we assume that the air will be heated to 90% of the oil temperature
     tc_o = tc_i + (th_i-tc_i) * 0.9
 
@@ -36,6 +37,14 @@ def hx_NASA(pc_i, tc_i, heating_power, th_i):
 
     # oil mass flow
     m_oil = heating_power / ((th_i - th_o) * cp_oil)
+
+    cp_air = 1000
+
+
+    print(f"Oil temperature in: {th_i} air temperature in: {tc_i}")
+    print(f"Oil temperature out: {th_o} air temperature out: {tc_o}")
+    print(f"Oil mass flow: {m_oil} air mass flow: {m_c}")
+    print(f"cp*mdot oil: {cp_oil * m_oil} cp*mdot air: {m_c * cp_air}")
 
     # return air outlet pressure and temperature and massflow
     return pc_o, tc_o, m_c, m_oil

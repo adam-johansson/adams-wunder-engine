@@ -355,7 +355,7 @@ def run_cce(input, input_piston, flags, meta_model):
     else:
         # add fuel heating here
         heating_fuel = 0.0
-        oil_temp_1 = 400
+        oil_temp_1 = 500
 
 
     # Bypass stream

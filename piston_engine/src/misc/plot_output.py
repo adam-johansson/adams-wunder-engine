@@ -1117,22 +1117,59 @@ def plot_nox_diesel_validation(phi, t1, t2, t, p, evo, sc, mf, no):
 
     # convert to deg
     phi_hp = phi_hp * 180 / np.pi
+    phi = phi * 180 / np.pi
 
-    no_sim = np.hstack((phi_hp, np.transpose(np.atleast_2d(no))))
+    phi = phi - 360
+    phi_hp = phi_hp - 360
+
+    no_sim = np.vstack((np.transpose(phi_hp), no))
+    no_sim = np.transpose(no_sim)
+    
+    p_sim = np.vstack((phi, p*1e-5))
+    p_sim = np.transpose(p_sim)
+
+    T_sim = np.vstack((phi, t))
+    T_sim = np.transpose(T_sim)
+
+    no_val[:,0] = no_val[:,0] - 360
+    p_val[:,0] = p_val[:,0] - 360
+    T0_val[:,0] = T0_val[:,0] - 360
+
 
     phi_min = no_val[0, 0]
     phi_max = no_val[-1, 0]
 
     no_sim = no_sim[(no_sim[:, 0] > phi_min) & (no_sim[:, 0] < phi_max)]
 
-    # take only every tenth data point
-    no_sim = no_sim[::10]
 
-    nos_sim_interpolated = np.interp(no_val[:,0], no_sim[:,0], no_sim[:,1])
+    phi_min = p_val[0, 0]
+    phi_max = p_val[-1, 0]
 
-    nox_early = np.hstack((np.transpose(np.atleast_2d(nos_sim_interpolated)), no_val))
+    p_sim = p_sim[(p_sim[:, 0] > phi_min) & (p_sim[:, 0] < phi_max)]
 
-    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_early.dat", nox_early, fmt="%.5f")
+    phi_min = T0_val[0, 0]
+    phi_max = T0_val[-1, 0]
+
+    T_sim = T_sim[(T_sim[:, 0] > phi_min) & (T_sim[:, 0] < phi_max)]
+
+    # take only every hunderedth data point
+    no_sim = no_sim[::100]
+    p_sim = p_sim[::100]
+    T_sim = T_sim[::100]
+
+    #nos_sim_interpolated = np.interp(no_val[:,0], no_sim[:,0], no_sim[:,1])
+
+    #nox_early = np.hstack((np.transpose(np.atleast_2d(nos_sim_interpolated)), no_val))
+
+
+
+
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_early_sim.dat", no_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_early_val.dat", no_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/pressure_early_sim.dat", p_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/pressure_early_val.dat", p_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/temperature_early_sim.dat", T_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/temperature_early_val.dat", T0_val, fmt="%.5f")
 
     #plt.show()
     return
@@ -1253,26 +1290,61 @@ def plot_nox_diesel_validation_late(phi, t1, t2, t, p, evo, sc, mf, no):
     ax4.legend(loc="best", fontsize="small", frameon=False)
     ax4.grid()
 
-    # convert to deg
+       # convert to deg
     phi_hp = phi_hp * 180 / np.pi
+    phi = phi * 180 / np.pi
 
-    no_sim = np.hstack((phi_hp, np.transpose(np.atleast_2d(no))))
+    phi = phi - 360
+    phi_hp = phi_hp - 360
+
+    no_sim = np.vstack((np.transpose(phi_hp), no))
+    no_sim = np.transpose(no_sim)
+
+    p_sim = np.vstack((phi, p*1e-5))
+    p_sim = np.transpose(p_sim)
+
+    T_sim = np.vstack((phi, t))
+    T_sim = np.transpose(T_sim)
+
+    no_val[:,0] = no_val[:,0] - 360
+    p_val[:,0] = p_val[:,0] - 360
+    T0_val[:,0] = T0_val[:,0] - 360
+
 
     phi_min = no_val[0, 0]
     phi_max = no_val[-1, 0]
 
     no_sim = no_sim[(no_sim[:, 0] > phi_min) & (no_sim[:, 0] < phi_max)]
 
+
+    phi_min = p_val[0, 0]
+    phi_max = p_val[-1, 0]
+
+    p_sim = p_sim[(p_sim[:, 0] > phi_min) & (p_sim[:, 0] < phi_max)]
+
+    phi_min = T0_val[0, 0]
+    phi_max = T0_val[-1, 0]
+
+    T_sim = T_sim[(T_sim[:, 0] > phi_min) & (T_sim[:, 0] < phi_max)]
+
     # take only every tenth data point
-    no_sim = no_sim[::10]
+    no_sim = no_sim[::100]
+    p_sim = p_sim[::100]
+    T_sim = T_sim[::100]
 
-    nos_sim_interpolated = np.interp(no_val[:,0], no_sim[:,0], no_sim[:,1])
+    #nos_sim_interpolated = np.interp(no_val[:,0], no_sim[:,0], no_sim[:,1])
 
-    nox_late = np.hstack((np.transpose(np.atleast_2d(nos_sim_interpolated)), no_val))
+    #nox_late = np.hstack((np.transpose(np.atleast_2d(nos_sim_interpolated)), no_val))
 
-    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_late.dat", nox_late, fmt="%.5f")
 
-    #plt.show()
+
+
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_late_sim.dat", no_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/nox_late_val.dat", no_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/pressure_late_sim.dat", p_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/pressure_late_val.dat", p_val, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/temperature_late_sim.dat", T_sim, fmt="%.5f")
+    np.savetxt("./piston_engine/validation_output_data/NO_diesel_val_output/temperature_late_val.dat", T0_val, fmt="%.5f")
 
     return
 

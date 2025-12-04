@@ -4,7 +4,7 @@ from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cante
 from numba import njit
 
 # Constants 
-DEFAULT_LAMBDA_0_DIESEL = 1.11 #normally 1.0
+DEFAULT_LAMBDA_0_DIESEL = 1.10 #normally 1.0
 DEFAULT_LAMBDA_0_H2 = 1.01
 DEFAULT_C_FACTOR = 0.15  # for 4 valves and central injection
 DEFAULT_POLYTROPE_AVERAGING_DEGREES = 10

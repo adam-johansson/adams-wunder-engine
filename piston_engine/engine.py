@@ -942,8 +942,10 @@ def run_piston_engine(input, flags):
 
         # Greek: 0.87. Heider: 0.91, Scania: 1.0 
         # 0.905 was used before for validation
-        # 0.875 and lambda = 1.1 is good match
-        factor = 0.88
+        # 0.88 and lambda = 1.1 is good match
+        # 0.84 and lambda = 1.05 also good
+        # 0.95 and lambda = 1.15
+        factor = 0.885
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)
