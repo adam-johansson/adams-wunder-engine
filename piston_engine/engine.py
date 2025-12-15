@@ -940,12 +940,17 @@ def run_piston_engine(input, flags):
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
 
 
-        # Greek: 0.87. Heider: 0.91, Scania: 1.0 
-        # 0.905 was used before for validation
-        # 0.88 and lambda = 1.1 is good match
-        # 0.84 and lambda = 1.05 also good
-        # 0.95 and lambda = 1.15
-        factor = 0.885
+        # factor 0.885 and lambda = 1.1 BÄST
+        # factor 0.865 and lambda = 1.09 BRA EXAKT SAMMA SOM 1.08
+        # factor 0.865 and lambda = 1.08 BRA TYP LIKA BRA SOM 1.1 
+        # factor 0.8575 and lambda = 1.07 BRA
+        # factor 0.8425 and lambda = 1.06 Ganska BRA
+        # factor 0.8425 and lambda = 1.05 RÄTT BRA
+        # factor 0.8425 and lambda = 1.04 HELT OK
+        # factor 0.84 and lambda = 1.03 SÅDÄR
+        # factor 0.83 and lambda = 1.02 GÅR EJ
+        # factor ? and lambda = 1.0 
+        factor = 0.845
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)

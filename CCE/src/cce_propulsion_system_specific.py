@@ -432,9 +432,17 @@ def run_cce(input, input_piston, flags, meta_model):
     # NOx emission index from piston engine
     EI_nox_PE = 1e3 * m_nox_piston / fuel_flow_piston
 
+
+
     if second_burner:
+
+        #T35_equivalent = misc.equivalent_temperature(T35, p35, equ35, fuel_type)
+
+        #print(T35, T35_equivalent)
+        T35_equivalent = T35
+
         # NOx emission index from burner
-        EI_nox_burner = 0.007549 * T4 * (p35*1e-3 /3027)**0.37 * np.exp((1.8*T35 - 1471)/345)
+        EI_nox_burner = 0.007549 * T4 * (p35*1e-3 /3027)**0.37 * np.exp((1.8*T35_equivalent - 1471)/345)
         # m_nox in kg
         m_nox_burner = EI_nox_burner * fuel_flow_burner * 1e-3
     else:

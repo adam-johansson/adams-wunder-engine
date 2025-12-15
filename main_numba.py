@@ -19,7 +19,7 @@ from thermo import fuel_props
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider_alt"
-input_file = "validation_twozone.nox_diesel_rakopolous"
+input_file = "validation_twozone.nox_diesel_rakopolous_lambda1"
 # input_file = "validation_twozone.scania_d12"
 #input_file = "validation_chalmers.case3"
 # input_file = "validation_twozone.water_hydrogen"
@@ -199,11 +199,11 @@ elif "load" in flags:
 
 
 elif "sweep_no_greek" in flags:
-    from piston_engine.src.misc.sweep_no_validation import (
-        sweep_no_diesel_greek_validation,
+    from piston_engine.src.misc.sweep_no_validation_lambda1 import (
+        sweep_no_diesel_greek_validation_lambda1,
     )
 
-    sweep_no_diesel_greek_validation(d, flags)
+    sweep_no_diesel_greek_validation_lambda1(d, flags)
 
 
 elif "sweep_no_kth" in flags:

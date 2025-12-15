@@ -5,21 +5,26 @@ import os
 from piston_engine.engine import run_piston_engine
 
 
-def sweep_no_diesel_greek_validation(d, flags):
+def sweep_no_diesel_greek_validation_lambda1(d, flags):
 
     num = 3
     # validate against the Rakolpoulos paper
     # the three different load cases (-20 degrees injection timing)
 
     # design point far 0.0425
-    far_dp = 0.03975
-    fuel_air_ratios = np.linspace(0.0267, far_dp, num)
+    far_dp = 0.0427
+    fuel_air_ratios = np.linspace(0.02925, far_dp, num)
     # cds = np.linspace(35, 41.72, num) * np.pi / 180
     # m_wiebes = np.linspace(2.20,2.21,num)
 
-    phi_sc = (352.0 / 180) * np.pi  # angle at combustion start
-    phi_cd = (40.0 / 180) * np.pi
-    m_wiebe = 1.3
+    Twall = 400  # Liner temperature
+    Tpiston = 400
+    Thead = 400
+    Twalls = [Twall, Tpiston, Thead]
+
+    phi_sc = (351.0 / 180) * np.pi  # angle at combustion start
+    phi_cd = (39.5 / 180) * np.pi
+    m_wiebe = 1.50
 
     nitrogen_oxides_early = []
     EI_early = []
@@ -31,6 +36,7 @@ def sweep_no_diesel_greek_validation(d, flags):
 
         # from combustion book
         phi_cd_adjusted = phi_cd * (far_goal / far_dp) ** 0.6
+        #phi_cd_adjusted = phi_cd 
 
         piston_input = {
             'p_in': d.p_in,
@@ -71,7 +77,7 @@ def sweep_no_diesel_greek_validation(d, flags):
             'premixed': d.premixed,
         }
 
-        if far_goal > 0.039:
+        if far_goal > 0.041:
             flags.append("validate_nox_diesel_early")
 
         piston_output = run_piston_engine(piston_input, flags)
@@ -98,22 +104,25 @@ def sweep_no_diesel_greek_validation(d, flags):
     EI_late = []
 
     # the three different load cases (-15 degrees injection timing)
-    far_dp = 0.0401
-    fuel_air_ratios = np.linspace(0.0267, far_dp, num)
+    far_dp = 0.0427
+    fuel_air_ratios = np.linspace(0.0288, far_dp, num)
     # matches Woschni
     # fuel_air_ratios = np.array([0.031, 0.038, 0.0465])
 
-    phi_sc = (354.0 / 180) * np.pi  # angle at combustion start
-    phi_cd = (40.0 / 180) * np.pi
-    m_wiebe = 1.5
+    phi_sc = (351.0 / 180) * np.pi  # angle at combustion start
+    phi_cd = (40.25 / 180) * np.pi
+    m_wiebe = 2.5
 
-    # m_wiebes = np.linspace(2.28, 2.28, num)
-    # cds = np.linspace(35,39.96, num) * np.pi/180
+    Twall = 400  # Liner temperature
+    Tpiston = 400
+    Thead = 400
+    Twalls = [Twall, Tpiston, Thead]
 
     for far_goal in fuel_air_ratios:
 
         # from combustion book
         phi_cd_adjusted = phi_cd * (far_goal / far_dp) ** 0.6
+        #phi_cd_adjusted = phi_cd 
 
         piston_input = {
             'p_in': d.p_in,
@@ -127,7 +136,7 @@ def sweep_no_diesel_greek_validation(d, flags):
             'bsr': d.bsr,
             'v_mean': d.v_mean,
             'lms': d.lms,
-            'Twalls': d.Twalls,
+            'Twalls': Twalls,
             'ch': d.ch,
             'valve_timings': d.valve_timings,
             'n_valve': d.n_valve,
@@ -154,7 +163,7 @@ def sweep_no_diesel_greek_validation(d, flags):
             'premixed': d.premixed,
         }
 
-        if far_goal > 0.04:
+        if far_goal > 0.041:
             flags.append("validate_nox_diesel_late")
 
         piston_output = run_piston_engine(piston_input, flags)

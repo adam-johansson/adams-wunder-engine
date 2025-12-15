@@ -25,7 +25,7 @@ flags = ["life_hack", "cce"]  # life hack version
 #flags = ['optim', "cce"]
 
 if "cce" in flags:
-    input_file = "MR_cruise_jetA"
+    input_file = "MR_TO_jetA"
     input_dir = "input.cce_jetA"
     path = input_dir + "." + input_file
     d = importlib.import_module(path)
@@ -103,8 +103,6 @@ elif "cce" in flags:
         "dPcomb": d.dPcomb,
         "eta_s": d.eta_s,
         "eta_g": d.eta_g,
-        "q_ngv": d.q_ngv,
-        "bpr_c": d.bpr_c,
         "eta_lpt": d.eta_lpt,
         "cfg_core": d.cfg_core,
         "cfg_bypass": d.cfg_bypass,

@@ -33,10 +33,10 @@ OPR = 20  # overall pressure ratio (including losses)
 PR = 0.2  # pressure split, with regard to the LPC
 eff_IC = 0.7
 
-T4 = 1000  # [K] Turbine entry temperature (1200)
+T4 = 1100  # [K] Turbine entry temperature (1200)
 
-
-second_burner = False
+ 
+second_burner = True
 surrogate = False
 intercooler = False
 specific = False

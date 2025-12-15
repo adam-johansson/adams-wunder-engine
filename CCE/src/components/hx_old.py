@@ -41,10 +41,10 @@ def hx_NASA(pc_i, tc_i, heating_power, th_i):
     cp_air = 1000
 
 
-    print(f"Oil temperature in: {th_i} air temperature in: {tc_i}")
-    print(f"Oil temperature out: {th_o} air temperature out: {tc_o}")
-    print(f"Oil mass flow: {m_oil} air mass flow: {m_c}")
-    print(f"cp*mdot oil: {cp_oil * m_oil} cp*mdot air: {m_c * cp_air}")
+    #print(f"Oil temperature in: {th_i} air temperature in: {tc_i}")
+    #print(f"Oil temperature out: {th_o} air temperature out: {tc_o}")
+    #print(f"Oil mass flow: {m_oil} air mass flow: {m_c}")
+    #print(f"cp*mdot oil: {cp_oil * m_oil} cp*mdot air: {m_c * cp_air}")
 
     # return air outlet pressure and temperature and massflow
     return pc_o, tc_o, m_c, m_oil

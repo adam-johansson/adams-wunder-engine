@@ -49,7 +49,7 @@ def print_output(
     print(f"Airflow piston real: {airflow_piston_real} [kg/s]")
 
     print(f"Total displacement of the piston engine: {V_d_tot * 1000} [liter]")
-    print(f"Piston bore (assuming 24 cylinder): {bore * 1000} [mm]")
+    print(f"Piston bore: {bore * 1000} [mm]")
 
 
     print(f"Thrust specific fuel consumption (TSFC): {sfc * 1e6} [mg/Ns]")

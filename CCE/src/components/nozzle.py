@@ -10,7 +10,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
 
     error = False
     if p1 < pa:
-        # print(f'Nozzle pressure is {p1} and lower than ambient pressure {pa}')
+        print(f'Nozzle pressure is {p1} and lower than ambient pressure {pa}')
         F = float("nan")
         v2 = float("nan")
         v2_id = float("nan")

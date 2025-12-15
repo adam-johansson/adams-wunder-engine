@@ -22,3 +22,4 @@ from .ode_solvers import euler, euler_cantera
 from .cantera_combustion_fractions import molar_fractions_combustion
 
 from.thermo_computations_vector import mixture_vectorized
+

@@ -327,8 +327,9 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
     # Calculate displacement
     stroke = bore_match / bsr  # using bore-to-stroke ratio
-    displacement = np.pi / 4 * bore_match ** 2 * stroke  # m³
-    displacement_per_cyl = displacement / 24
+    displacement = np.pi / 4 * (bore_match ** 2 ) * stroke  # m³
+    #displacement_per_cyl = displacement / 24
+
 
     output_dict={
         "power_net": power_piston,
@@ -352,7 +353,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         "T max": T_max,
         "m NO": m_NOX,
         "bore": bore_match,
-        "displacement": displacement_per_cyl,
+        "displacement": displacement,
         "k_m": k_m,
         "k0_T": k0_T,
         "k1_T": k1_T,
