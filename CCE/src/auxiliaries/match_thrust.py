@@ -121,11 +121,12 @@ def run_cce_bpr(input, data_piston, meta_model):
 
     error = False
     piston_error = False  # Flag to track piston errors
+    error_type = False
 
     # Store the last bore match
     last_outputs = {}
     def find_bpr(x):
-        nonlocal piston_error  # Allow modification of outer scope variable
+        nonlocal piston_error, error, error_type  # Allow modification of outer scope variable
 
         input["bpr"] = x[0]
 
@@ -140,9 +141,13 @@ def run_cce_bpr(input, data_piston, meta_model):
                 # Return very low thrust to guide brentq to lower BPR
                 Fs = 0.0
                 bore = 999
+                error_type = output_dict["error_type"]
+                error = True
+
             elif output_dict["error_type"] == "piston" or output_dict["error_type"] == "T4":
                 # Set flag and raise exception to break out of brentq
                 piston_error = True
+                error_type = output_dict["error_type"]
                 raise ValueError("Piston error encountered")
             else:
                 # Other error - return low thrust
@@ -151,6 +156,8 @@ def run_cce_bpr(input, data_piston, meta_model):
         else:
             Fs = output_dict["specific thrust"]
             bore = output_dict["bore"]
+            error = False
+            error_type = False
 
         last_outputs.update({
             'bore_match': bore,
@@ -160,6 +167,7 @@ def run_cce_bpr(input, data_piston, meta_model):
         #print(residual, x)
         return residual
 
+
     try:
         #bpr = brentq(find_bpr, 12, 40)
         bpr = fsolve(find_bpr, x0=20)
@@ -167,11 +175,13 @@ def run_cce_bpr(input, data_piston, meta_model):
         error = True
         bpr = None
         last_outputs['bore_match'] = None
+        error_type = "Can't match thrust"
 
     output = {
         "bpr": bpr,
         "bore_match": last_outputs['bore_match'],
-        "error": error
+        "error": error,
+        "error_type": error_type
     }
 
     return output  # Return the full output dict, not just bpr

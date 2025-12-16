@@ -312,6 +312,7 @@ def run_cce(input, input_piston, flags, meta_model):
     m4 = output_burner_turbine["m4"]
     m46 = output_burner_turbine["m46"]
     m6 = output_burner_turbine["m5"]
+    p35 = output_burner_turbine["p35"]
     p4 = output_burner_turbine["p4"]
     p5 = output_burner_turbine["p5"]
     p6 = output_burner_turbine["p6"]
@@ -477,10 +478,38 @@ def run_cce(input, input_piston, flags, meta_model):
         q_ngv=q_ngv,
     )
 
+        # calculate piston engine displacement based on real mass flow
+    if input["specific"]:
+        m_real = Fn / Fs
+        m32_real = m32 * m_real
+        m32_per_cylinder = m32_real / 24
+
+        slope = piston_output["slope"]
+        intercept = piston_output["intercept"]
+
+        bore = np.sqrt((m32_per_cylinder - intercept) / slope)
+
+        bsr = input_piston["bsr"]
+
+        # Calculate displacement
+        stroke = bore / bsr  # using bore-to-stroke ratio
+        displacement = np.pi / 4 * bore ** 2 * stroke  # m³
+        displacement_tot = displacement * 24
+    else:
+        bsr = input_piston["bsr"]
+        bore = piston_output["bore"]
+        displacement = piston_output["displacement"]
+
+        stroke = bore / bsr
+        displacement_tot = displacement * 24
+        m32_real = m32
+
+
     # Efficiencies
     eff_dict = misc.calc_efficiencies_cce(
         F,
         mdot_fuel,
+        fuel_flow_piston,
         m14,
         v18_id,
         m15,
@@ -504,6 +533,18 @@ def run_cce(input, input_piston, flags, meta_model):
         T_intercooler,
         p_intercooler,
         m_intercooler,
+        T26,
+        p26, 
+        m25,
+        T35,
+        p35, 
+        m35,
+        equ35,
+        displacement_tot,
+        piston_indicated_p,
+        v_mean,
+        stroke,
+        m_cool,
     )
 
 
@@ -513,32 +554,13 @@ def run_cce(input, input_piston, flags, meta_model):
     eta_th = eff_dict["thermal eff"]
     eta_p = eff_dict["propulsive eff"]
     eta_o = eff_dict["overall eff"]
+    eta_gg = eff_dict["gas generator eff"]
     Fs = eff_dict["specific thrust"]
     core_spec_power = eff_dict["core specific power"]
-
-    # calculate piston engine displacement based on real mass flow
-    if input["specific"]:
-        m_real = Fn / Fs
-        m32_real = m32 * m_real
-        m32_per_cylinder = m32_real / 24
-
-        slope = piston_output["slope"]
-        intercept = piston_output["intercept"]
-
-        bore = np.sqrt((m32_per_cylinder - intercept) / slope)
-
-        bsr = input_piston["bsr"]
-
-        # Calculate displacement
-        stroke = bore / bsr  # using bore-to-stroke ratio
-        displacement = np.pi / 4 * bore ** 2 * stroke  # m³
-        displacement_tot = displacement * 24
-    else:
-        bore = piston_output["bore"]
-        displacement = piston_output["displacement"]
-        displacement_tot = displacement * 24
-        m32_real = m32
-
+    gg_spec_power_mass = eff_dict["gas generator mass specific power"]
+    gg_spec_power_disp = eff_dict["gas generator spec displacement"]
+    gg_power = eff_dict["GG power"]
+    cooling_ratio = eff_dict["cooling ratio"]
 
 
     if "print_output" in flags:
@@ -666,9 +688,13 @@ def run_cce(input, input_piston, flags, meta_model):
             m_nox_piston,
             fpr_outer,
             bpr,
+            gg_spec_power_mass,
+            gg_spec_power_disp,
+            gg_power,
+            cooling_ratio,
         )
 
-        misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transfer, eta_core, Fs)
+        misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transfer, eta_core, Fs, eta_gg)
 
         misc.plot_stations_cce(p_array, T_array)
 
@@ -689,6 +715,7 @@ def run_cce(input, input_piston, flags, meta_model):
             - P_cooling
             - power_offtake
         ) * (1 - eta_g)
+
         misc.power_balance(
             piston_indicated_p,
             friction_loss_pe,

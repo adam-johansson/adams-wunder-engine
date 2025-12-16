@@ -41,6 +41,10 @@ def print_output(
     m_nox,
     fpr,
     bpr,
+    p_gg_spec_mass,
+    P_gg_spec_disp,
+    P_gg,
+    cooling_ratio
 ):
 
     print(f"T4: {T4} K and T35: {T35} K and T34: {T34} K ")
@@ -88,9 +92,15 @@ def print_output(
     print(f"Heat losses: {heat_loss * 1e-6} [MW]")
     print(f"BPR around piston: {bpr_piston} [-]")
 
+    print(f"Gas generator mass specific power: {p_gg_spec_mass * 1e-3} [kJ/kg]")
+    print(f"Gas generator displacement specific power: {P_gg_spec_disp * 1e-6} [kW/liter]")
+    print(f"Gas generator displacement specific power: {P_gg * 1e-3} [kW]")
+
     # calculate emission index
     EI_nox = m_nox / (fuel_flow_piston + fuel_flow_burner) * 1e3
     print(f"Emission index NOx: {EI_nox} [g/kg]")
+
+    print(f"Cooling ratio (HPC inlet reference): {cooling_ratio}")
 
     return
 
@@ -379,11 +389,12 @@ def optimisation_csv(data):
     return
 
 
-def print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, fs):
+def print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, fs, eta_gg):
 
     print(f"Core efficiency: {eta_core}")
     print(f"Transmission efficiency: {eta_transmission}")
     print(f"Thermal efficiency: {eta_th}")
+    print(f"Gas generator efficiency: {eta_gg}")
     print(f"Propulsive efficiency: {eta_p}")
     print(f"Overall efficiency: {eta_o}")
     print(f"Specific thrust: {fs} [N/(kg/s)]")

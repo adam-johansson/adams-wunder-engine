@@ -317,6 +317,7 @@ def burner_turbine(input_dictionary):
         "T46": T46,
         "T47": T47,
         "T5": T5,
+        "p35": p35,
         "p4": p4,
         "p5": p5,
         "p6": p6,

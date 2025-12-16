@@ -22,6 +22,7 @@ def work_potential(t1, p1, equ1, p0, fuel_type):
     # entropy function after isentropic expansion to ambient state
     psi0_isen = psi1 - np.log(p1 / p0)
 
+
     def find_t0(t):
         return psi0_isen - entropy_func(t, p1, equ1, fuel_type)  # p1 or p0 here?
 
@@ -31,6 +32,7 @@ def work_potential(t1, p1, equ1, p0, fuel_type):
         t0_isen, p0, equ1, fuel_type
     )  # get thermo_outdated properties for the fluid
 
+    # basically v_id^2 / 2
     wp = h1 - h0_isen
 
     return wp

@@ -949,7 +949,7 @@ def run_piston_engine(input, flags):
         # factor 0.8425 and lambda = 1.04 HELT OK
         # factor 0.84 and lambda = 1.03 SÅDÄR
         # factor 0.83 and lambda = 1.02 GÅR EJ
-        # factor ? and lambda = 1.0 
+        # factor 0.845 and lambda = 1.0 
         factor = 0.845
 
         start = timer()

@@ -44,6 +44,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         
         piston_output = run_piston_engine(input, flags)
 
+
         T_out_mid = piston_output["T_out"]
         heat_loss_mid = piston_output["heat_loss"]
         m_in = piston_output["air_flow"]
@@ -328,7 +329,6 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     # Calculate displacement
     stroke = bore_match / bsr  # using bore-to-stroke ratio
     displacement = np.pi / 4 * (bore_match ** 2 ) * stroke  # m³
-    #displacement_per_cyl = displacement / 24
 
 
     output_dict={

@@ -24,8 +24,9 @@ flags = ["life_hack", "cce"]  # life hack version
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
+
 if "cce" in flags:
-    input_file = "MR_TO_jetA"
+    input_file = "MR_TOC_jetA"
     input_dir = "input.cce_jetA"
     path = input_dir + "." + input_file
     d = importlib.import_module(path)
@@ -242,6 +243,8 @@ elif "cce" in flags:
         meta_model = "placeholder"
 
         # run once to get specific power and linear output temperature from piston engine
+        # this simulation run will quite after the piston engine simulations
+
         cce_input["life_hack"] = "Simulate"
         # bpr 15 will almost certainly work
         cce_input["bpr"] = 20
@@ -261,14 +264,18 @@ elif "cce" in flags:
 
         dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
         print(dict["bpr"], dict["bore_match"])
+        if dict["error"] == True:
+            print(f"No match because: {dict["error_type"]}")
+        
+        else:
 
 
-        cce_input["bpr"] = dict["bpr"][0]
-        cce_input["bore"] = dict["bore_match"]
+            cce_input["bpr"] = dict["bpr"][0]
+            cce_input["bore"] = dict["bore_match"]
 
-        flags.append("print_output")
-        cce_input["life_hack"] = "Simulate_final"
-        print("Final simulation")
-        output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
+            flags.append("print_output")
+            cce_input["life_hack"] = "Simulate_final"
+            print("Final simulation")
+            output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
     else:
         print("No known flags")

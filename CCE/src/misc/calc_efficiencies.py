@@ -4,6 +4,7 @@ import thermo
 def calc_efficiencies_cce(
     F,
     mdot_fuel,
+    mdot_fuel_pe,
     m_cold,
     v_cold_id,
     m_cold_hx,
@@ -27,6 +28,18 @@ def calc_efficiencies_cce(
     T_intercooler,
     p_intercooler,
     m_intercooler,
+    T26,
+    p26, 
+    m26,
+    T35,
+    p35, 
+    m35,
+    equ35,
+    displacement,
+    piston_indicated_power,
+    v_mean,
+    stroke,
+    m_cool,
 ):
     sfc = mdot_fuel / F  # Thrust specific fuel consumption
 
@@ -41,6 +54,13 @@ def calc_efficiencies_cce(
 
     # Thrust power
     P_thrust = F * v_0
+
+    # Gas generator power
+    WP_before_hpc = thermo.work_potential(T26, p26, 0.0, pa, fuel_type)
+
+    WP_after_pe = thermo.work_potential(T35, p35, equ35, pa, fuel_type)
+
+    P_gg = WP_after_pe * m35 - WP_before_hpc * m26
 
     # Core power
 
@@ -75,15 +95,13 @@ def calc_efficiencies_cce(
 
     P_core2 = P_core + P_hx + P_ic
 
-    #print(f"Pcore: {P_core}")
-    #print(f"Pcore2: {P_core2}")
-    #print(f"Phx: {P_hx}")
-
 
     P_core_spec = P_core / m_core_nofuel
 
-    # Fuel power
+    # Fuel power (piston engine + burner)
     P_fuel = mdot_fuel * LHV
+
+    P_fuel_pe = mdot_fuel_pe * LHV
 
     # Propulsive efficiency
     eta_p = P_thrust / P_kin
@@ -92,8 +110,25 @@ def calc_efficiencies_cce(
     eta_core = P_core / P_fuel
     eta_core2 = P_core2 / P_fuel
 
-    #print(f"eta core: {eta_core*100}")
-    #print(f"eta core2: {eta_core2*100}")
+    # Gas generator efficency
+    eta_gg = P_gg / P_fuel_pe
+
+    # Mass specific gas generator power J/kg
+    P_gg_spec_mass = P_gg / m26
+
+    # Gas generator power per liter of piston engine displacement W / m3
+    P_gg_spec_displacement = P_gg / displacement
+
+    # Mean effective pressure
+    # if twostroke change 0.5 to 1
+    rps = v_mean / (2 * stroke)
+    imep = piston_indicated_power / (0.5 * rps * displacement)
+
+    print(f"rpm: {rps * 60}, IMEP: {imep * 1e-5} bar")
+
+
+    cooling_ratio = m_cool / m26
+
 
     # Transmission efficiency
     eta_transfer = P_kin / P_core
@@ -111,9 +146,14 @@ def calc_efficiencies_cce(
         "transfer eff": eta_transfer,
         "thermal eff": eta_th,
         "propulsive eff": eta_p,
+        "gas generator eff": eta_gg,
         "overall eff": eta_o,
         "specific thrust": Fs,
-        "core specific power": P_core_spec
+        "core specific power": P_core_spec,
+        "gas generator mass specific power": P_gg_spec_mass,
+        "gas generator spec displacement": P_gg_spec_displacement,
+        "GG power": P_gg,
+        "cooling ratio": cooling_ratio,
     }
     return output_dict
 

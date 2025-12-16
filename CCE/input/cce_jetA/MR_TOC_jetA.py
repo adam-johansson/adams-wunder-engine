@@ -20,16 +20,16 @@ power_offtake = 150e3
 
 # piston engine stuff
 pi_pe = 1.0
-cr = 10
+cr = 8
 far_piston = 0.04
 v_mean = 15
 start_of_combustion = 345
 
-OPR = 15  # overall pressure ratio (including losses)
+OPR = 20  # overall pressure ratio (including losses)
 PR = 0.3  # pressure split, with regard to the LPC
 eff_IC = 0.7
 
-T4 = 1150  # [K] Turbine entry temperature (1200)
+T4 = 1400  # [K] Turbine entry temperature (1200)
 
 dp_intake = 0.2 / 100  # intake pressure loss
 dp_bypass = 0.0 / 100  # bypass duct pressure loss
