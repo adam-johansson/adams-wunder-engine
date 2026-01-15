@@ -44,7 +44,9 @@ def print_output(
     p_gg_spec_mass,
     P_gg_spec_disp,
     P_gg,
-    cooling_ratio
+    cooling_ratio,
+    deltaT_IC_hot,
+    deltaT_IC_cold,
 ):
 
     print(f"T4: {T4} K and T35: {T35} K and T34: {T34} K ")
@@ -101,6 +103,8 @@ def print_output(
     print(f"Emission index NOx: {EI_nox} [g/kg]")
 
     print(f"Cooling ratio (HPC inlet reference): {cooling_ratio}")
+    print(f"Intercooler delta T hot: {deltaT_IC_hot}")
+    print(f"Intercooler delta T cold: {deltaT_IC_cold}")
 
     return
 
@@ -117,6 +121,7 @@ def csv_output_cce(p, t, m, far, s):
         "15",
         "21",
         "25",
+        "26",
         "3",
         "31",
         "32",
@@ -205,7 +210,7 @@ def csv_output_jetA_geared(p, t, m, far, s):
 def plot_stations_cce(p_array, t_array):
     # plotting the different stations
 
-    stations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    stations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
     labels = [
         "2",
@@ -214,6 +219,7 @@ def plot_stations_cce(p_array, t_array):
         "15",
         "21",
         "25",
+        "26",
         "3",
         "31",
         "32",

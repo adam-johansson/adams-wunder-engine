@@ -33,8 +33,8 @@ def burner_turbine(input_dictionary):
 
 
     # material limits
-    T_ngv = 1350
-    T_rotor = 1250
+    T_ngv = 1201
+    T_rotor = 1201
 
     #flow bypassing the piston engine
     m_bypass = m31 - m32
@@ -156,7 +156,8 @@ def burner_turbine(input_dictionary):
         # that means: cooling will only happen when T4 = T4_req
 
         #c_cool = 0.052
-        c_cool = 0.128
+        #c_cool = 0.128 used with rotor 1250 and stattor 1350
+        c_cool = 0.08 #used with 1200K for both
         # T4 higher than rotor material limit
 
         # starting guess for cooling mass flow

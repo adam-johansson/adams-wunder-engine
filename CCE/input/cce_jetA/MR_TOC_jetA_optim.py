@@ -19,16 +19,16 @@ power_offtake = 150e3
 ## OBS: OPR 18 and CR 10 worked
 
 # piston engine stuff
-pi_pe = 1.1
-cr = 8  # 8
-far_piston = 0.035
+pi_pe = 1.5
+cr = 6
+far_piston = 0.03
 v_mean = 16
 start_of_combustion = 355
 
-OPR = 18  # overall pressure ratio (including losses) (16 + far 03)
+OPR = 26  # overall pressure ratio (including losses) (16 + far 03)
 PR = 0.3  # pressure split, with regard to the LPC
 eff_IC = 0.7
-ratio_IC = 0.0
+ratio_IC = 1.0
 
 T4 = 1200  # [K] Turbine entry temperature (1200)
 
@@ -57,12 +57,11 @@ cfg_bypass = 99.5 / 100  # bypass thrust coefficient
 cd_nozzle = 99.0 / 100  # nozzle discharge coefficient
 
 
-second_burner = True
+second_burner = False
 surrogate = False
 intercooler = True
 specific = False
 life_hack = True
-piston_mode = "DI"
 
 bore = 0.18 # not used
 

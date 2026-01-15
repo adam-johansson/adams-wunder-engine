@@ -6,8 +6,9 @@ fuel = 'jetA'
 
 cooling = "Hohenberg"
 
-premixed = False
+premixed = True
 opposed = False
+hcci = True
 
 
 
@@ -74,12 +75,11 @@ wm = 1.40  # funkar
 
 
 
-# this if for single wiebe function
-# VALUES FROM NASAS TWOSTROKE PAPER
-m_wiebe = 1.0
+# this if for single wiebe function (values from Bengt Johansson HCCI paper)
+m_wiebe = 4.0
 
-phi_sc = 99999 # angle at combustion start  THIS WORKED WITH SINGLE #345
-phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
+phi_sc = (362/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #345
+phi_cd = (10/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
 
 
 T_fuel = 0

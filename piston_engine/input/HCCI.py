@@ -6,27 +6,25 @@ fuel = 'jetA'
 
 cooling = "Hohenberg"
 
-premixed = False
 opposed = False
+mode = "HCCI"
 
 
-
-cr = 0
+cr = 8
 
 cylinders = 1  # V12
 
 # piston
-d = 0  # diameter
-#d = 0.1699  # diameter
-v_mean = 0  # mean velocity from Kaiser's thesis
+d = 0.200  # diameter
+v_mean = 16  # mean velocity from Kaiser's thesis
 bsr = 1  # bore stroke ratio
 # rpm = 4000  # revolutions per minute
 lms = 0.28  # connecting rod ratio from Hanbuch Verbrennungsmotor sid 95
 
 # inlet and outlet conditions
-p_in = 0 # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
-T_in = 0  # inlet temperature (670 cruise 770 TO)
-p_ratio = 0  # pressure ratio after and before engine
+p_in = 7.039e5 # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
+T_in = 644.5  # inlet temperature (670 cruise 770 TO)
+p_ratio = 1.1  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 500          # Liner temperature
@@ -61,7 +59,7 @@ cd = 0.8
 # 99.9 should be used
 eta_c = 0.999
 
-far_goal = 999
+far_goal = 0.03330
 
 
 wiebe_type = "Single"
@@ -76,13 +74,16 @@ wm = 1.40  # funkar
 
 # this if for single wiebe function
 # VALUES FROM NASAS TWOSTROKE PAPER
-m_wiebe = 1.0
+m_wiebe = 4.0
 
-phi_sc = 99999 # angle at combustion start  THIS WORKED WITH SINGLE #345
-phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
+#phi_sc = (362/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #345
+#phi_cd = (10/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
+
+phi_sc = (362/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #345
+phi_cd = (10/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
 
 
-T_fuel = 0
+T_fuel = 300
 p_fuel = 2500e5
 
 it = 300

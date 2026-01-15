@@ -40,6 +40,8 @@ def calc_efficiencies_cce(
     v_mean,
     stroke,
     m_cool,
+    heatloss_pe,
+    total_friction_pe,
 ):
     sfc = mdot_fuel / F  # Thrust specific fuel consumption
 
@@ -60,7 +62,12 @@ def calc_efficiencies_cce(
 
     WP_after_pe = thermo.work_potential(T35, p35, equ35, pa, fuel_type)
 
+
+    #h26, _, _, _, _, _, _, _ = thermo.mixture(T26, p26, 0.0, fuel_type)
+    #h35, _, _, _, _, _, _, _ = thermo.mixture(T35, p35, equ35, fuel_type)
+
     P_gg = WP_after_pe * m35 - WP_before_hpc * m26
+    #P_gg = h35 * m35 - h26 * m26
 
     # Core power
 
@@ -124,8 +131,13 @@ def calc_efficiencies_cce(
     rps = v_mean / (2 * stroke)
     imep = piston_indicated_power / (0.5 * rps * displacement)
 
-    print(f"rpm: {rps * 60}, IMEP: {imep * 1e-5} bar")
+    #print(f"rpm: {rps * 60}, IMEP: {imep * 1e-5} bar")
 
+    # percentage of fuel energy of piston engine goes to heat through the walls
+    eta_heatloss = heatloss_pe / P_fuel_pe
+
+    # perceantage of fuel energy of piston engine going to friction, oil pump and fuel pump
+    eta_friction = total_friction_pe / P_fuel_pe
 
     cooling_ratio = m_cool / m26
 
@@ -154,6 +166,8 @@ def calc_efficiencies_cce(
         "gas generator spec displacement": P_gg_spec_displacement,
         "GG power": P_gg,
         "cooling ratio": cooling_ratio,
+        "heatloss percentage": eta_heatloss,
+        "friction percentage": eta_friction,
     }
     return output_dict
 

@@ -4,7 +4,7 @@ from timeit import default_timer as timer
 import time
 import sys
 
-from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model, nox_model_alternative
+from piston_engine.src.piston import valve_isentrop, walls, wiebe, port_isentrop, twozone_model, nox_model, nox_model_alternative, nox_model_hcci
 
 from piston_engine.src.misc import post_processing
 from piston_engine.src.misc.entropy import entropy_calc
@@ -54,8 +54,22 @@ def run_piston_engine(input, flags):
     c1 = input['c1']
     c4 = input['c4']
     c5 = input['c5']
-    premixed = input['premixed']
 
+    mode = input["mode"]
+
+    if mode == "DI":
+        premixed = False
+        HCCI = False
+    elif mode == "SI":
+        premixed = True
+        HCCI = False
+    elif mode == "HCCI":
+        premixed = True
+        HCCI = True
+    else:
+        print(f"Unknown mode of operation: {mode}")
+
+        
     # outlet pressure
     p_out = p_ratio * p_in
 
@@ -479,7 +493,6 @@ def run_piston_engine(input, flags):
     scale_ODE = True
     if scale_ODE == True:
 
-
         # Scaling factors for the variables to keep them of the same order of magnitude
         scaler = np.array([1e-3, 1e3, 1e-3, 1e-3, 1e2, 1e-5, 1e-3, 1e2, 1e3, 1e1, 1e2, 1e-3, 1e2,
                            1e-2, 1e1, 1e2, 1e-2, 1e1, 1e2, 1e-3, 1e-2, 1e-2, 1e2, 1e-3, 1e-3])
@@ -629,8 +642,12 @@ def run_piston_engine(input, flags):
         energy_in.append(results[23])
         fuel_enthalpy_in.append(results[24])
 
-
-        equ_avg = (mf[-1][-1] / m_in_IP[-1][-1]) / far_s
+        # inflow of pure air
+        if premixed:
+            m_in_air = (m_in_IP[-1][-1] / (1 + far_goal))
+        else:
+            m_in_air = m_in_IP[-1][-1]
+        equ_avg = (mf[-1][-1] / m_in_air) / far_s
 
         # Simple way to calculate fuel-air ratio - works quite well
         if 'fuel_mass' not in flags:
@@ -954,6 +971,7 @@ def run_piston_engine(input, flags):
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)
+        # if premixed, lambda_z1 = lambda_gl
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc, T_flame, T_sc, p_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
                                                                                                     phi_open_out, phi_sc,
@@ -963,11 +981,29 @@ def run_piston_engine(input, flags):
         end = timer()
         #print(f'Runtime of twozone calculations: {end - start} [s]')
         T_max_twozone = np.max(T_z1)
-
         start = timer()
-        no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
-                                                                     rpm,
-                                                                     m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+        ## FOR HCCI we use single zone for NOX
+        if HCCI:
+                # use single zone values for the nox calculations
+                hp_mask = (phi > phi_sc) & (phi < phi_open_out)
+                phi_z1 = phi[hp_mask]
+                p_z1 = P[-1][hp_mask]
+                T_z1 = T[-1][hp_mask]
+                V_z1 = V[-1][hp_mask]
+                m_z1 = m[-1][hp_mask]
+                equ_z1 = equ[-1][hp_mask]
+
+
+        
+        if HCCI:
+            no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_hcci.nox_calculations(T_z1, p_z1, V_z1, equ_z1, fuel_type, phi_z1,
+                                                rpm,
+                                                m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+        else:
+            no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+                                                                        rpm,
+                                                                        m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
         end = timer()
 
@@ -975,11 +1011,18 @@ def run_piston_engine(input, flags):
         nox_equilibrium = False
         if nox_equilibrium:
             from piston_engine.src.piston import nox_model_equi
-            from piston_engine.src.misc import plot_output
-            no_ppm_equi = nox_model_equi.nox(T_z1, p_z1, m_z1, lambda_z1, equ_trapped, m_out_EP[-1][-1])
+            from piston_engine.src.misc import plot_output, save_nox_equ
+            if HCCI:
+                no_ppm_equi = nox_model_equi.nox_hcci(T_z1, p_z1, m_z1, equ_z1, equ_trapped, m_out_EP[-1][-1])
+            else:
+                no_ppm_equi = nox_model_equi.nox(T_z1, p_z1, m_z1, lambda_z1, equ_trapped, m_out_EP[-1][-1])
 
             plot_output.plot_no_with_equi(phi,phi_open_out,phi_sc,no_ppm, no_ppm_equi)
             plt.show()
+
+
+            save_nox_equ.save_nox(phi, phi_open_out,phi_sc,no_ppm, no_ppm_equi, p_z1, T_z1)
+
 
 
         #print(f'Runtime of NOx calculations: {end - start} [s]')

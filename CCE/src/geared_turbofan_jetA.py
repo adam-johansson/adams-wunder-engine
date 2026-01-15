@@ -315,10 +315,12 @@ def run_turbofan(input, flags):
 
         s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
 
-        misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, Fs)
+        misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, Fs, 0.0)  
 
         misc.plot_stations_jetA_geared(p_array, T_array)
 
         misc.csv_output_jetA_geared(p_array, T_array, m_array, far_array, s_array)
+
+        print(f"cooling fraction: {m_cool / m3}")
 
     return sfc, vel_ratio, F, m0

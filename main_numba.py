@@ -10,7 +10,7 @@ from thermo import fuel_props
 # import all the input variables
 
 # input_file = "4T_HP"
-# input_file = "4stroke"
+#input_file = "4stroke"
 #input_file = "4stroke_kaiser"
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
@@ -19,14 +19,17 @@ from thermo import fuel_props
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider_alt"
-input_file = "validation_twozone.nox_diesel_rakopolous_lambda1"
+#input_file = "validation_twozone.nox_diesel_rakopolous_lambda1"
 # input_file = "validation_twozone.scania_d12"
 #input_file = "validation_chalmers.case3"
-# input_file = "validation_twozone.water_hydrogen"
+#input_file = "validation_twozone.water_hydrogen"
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
 #input_file = "4stroke_hydrogen_crashing_case"
 #input_file = "4stroke_standard"
+#input_file = "paper1_nox.cr45"
+input_file = "HCCI"
+
 
 input_dir = "piston_engine.input"
 path = input_dir + "." + input_file
@@ -51,7 +54,7 @@ d = importlib.import_module(path)
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-flags = ['sweep_no_greek']  # NO validation Rakoplpous
+#flags = ['sweep_no_greek']  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
 # flags = ['sweep_wiebe']
@@ -59,7 +62,7 @@ flags = ['sweep_no_greek']  # NO validation Rakoplpous
 # flags = ['sweep_newcastle']
 # flags = ['sweep_hcci']
 # flags = ['fit_water_paper', 'single']
-#flags = ['single', 'plot_twozone', 'plot_essentials'] # to look at the nox and twozone
+flags = ['single', 'plot_twozone', 'plot_essentials'] # to look at the nox and twozone
 #flags = ["load"]
 # flags = ["single", "fit_newcastle"]
 # flags = ["sweep_chalmers_h2"]
@@ -103,7 +106,7 @@ piston_input = {
     'c1': d.c1,
     'c4': d.c4,
     'c5': d.c5,
-    'premixed': d.premixed,
+    'mode': d.mode,
 }
 
 

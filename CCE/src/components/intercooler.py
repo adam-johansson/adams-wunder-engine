@@ -2,10 +2,9 @@ from thermo import mixture
 import math
 
 
-def intercool(ph_i, th_i, mh, pc_i, tc_i,  effectiveness):
+def intercool(ph_i, th_i, mh, pc_i, tc_i,  effectiveness, c_ratio):
     """
     Air-to-air heat exchanger using effectiveness-NTU method
-    Cold mass flow is adjusted to achieve Cr = 1 (balanced heat exchanger)
 
     Args:
         ph_i: Hot side inlet pressure (Pa)
@@ -24,11 +23,19 @@ def intercool(ph_i, th_i, mh, pc_i, tc_i,  effectiveness):
     """
 
     # Hard coded parameters
-    UA = 100
-    dp_hot = 0.05
-    dp_cold = 0.05
     max_iter = 10
     tol = 1e-3
+
+    # pressure losses
+    # constant for cold side
+    dp_cold = 0.07
+
+    # linearly varying from 0 to 7 percent for hot side
+
+    if c_ratio < 1.0:
+        dp_hot = c_ratio * 0.07
+    else:
+        dp_hot = 0.07
 
 
     # Initial guess for outlet temperatures
@@ -49,18 +56,14 @@ def intercool(ph_i, th_i, mh, pc_i, tc_i,  effectiveness):
         _, _, cp_hot, _, _, _, _, _ = mixture(t_avg_hot, ph_i, 0)
         _, _, cp_cold, _, _, _, _, _ = mixture(t_avg_cold, pc_i, 0)
 
-        # Calculate cold mass flow for Cr = 1 (C_hot = C_cold)
-        mc = mh * cp_hot / cp_cold
+        # Calculate cold mass flow for a given heat capacity ratio
+        mc = c_ratio* mh * cp_hot / cp_cold
 
         # Heat capacity rates
         C_hot = mh * cp_hot  # W/K
         C_cold = mc * cp_cold  # W/K
 
-        # With Cr = 1, both C_min and C_max are equal
         C_min = min(C_hot, C_cold)
-
-        # Heat capacity rate ratio (should be 1)
-        Cr = C_min / max(C_hot, C_cold)
 
         # Maximum possible heat transfer
         Q_max = C_min * (th_i - tc_i)

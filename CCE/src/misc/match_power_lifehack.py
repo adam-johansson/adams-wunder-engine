@@ -219,8 +219,9 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         return residual
 
     try:
-        bore_match = brentq(find_match, 0.1, 0.2)
+        bore_match = brentq(find_match, 0.1, 0.25)
     except ValueError:
+        print(f"No bore found to match power")
         output_dict = {
             "error": True
         }

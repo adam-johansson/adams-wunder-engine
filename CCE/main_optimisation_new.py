@@ -11,7 +11,7 @@ from neural_network.src import load_ANN
 from timeit import default_timer as timer
 
 # Importing input parameters
-input_file_pist = "4stroke_jetA"
+input_file_pist = "4stroke_jetA_HCCI"
 input_dir_pist = "input.piston"
 path_pist = input_dir_pist + "." + input_file_pist
 
@@ -26,7 +26,9 @@ flags = ["life_hack", "cce"]  # life hack version
 
 
 if "cce" in flags:
-    input_file = "MR_TOC_jetA"
+    #input_file = "MR_TOC_jetA"
+    input_file = "MR_TOC_jetA_HCCI"
+    #input_file = "MR_TOC_jetA_optim"
     input_dir = "input.cce_jetA"
     path = input_dir + "." + input_file
     d = importlib.import_module(path)
@@ -128,6 +130,8 @@ elif "cce" in flags:
         "v_mean": d.v_mean,
         "life_hack": d.life_hack,
         "start_of_combustion": d.start_of_combustion,
+        "ratio IC": d.ratio_IC,
+        "piston_mode": d.piston_mode,
     }
 
     piston_input = {

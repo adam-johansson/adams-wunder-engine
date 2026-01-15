@@ -137,6 +137,7 @@ def run_cce_bpr(input, data_piston, meta_model):
         if output_dict["error"]:
             print(output_dict["error_type"])
             if output_dict["error_type"] == "LPT" or output_dict["error_type"] == "Hot nozzle":
+                print(f"fel2")
                 # Too high BPR means LPT does not work
                 # Return very low thrust to guide brentq to lower BPR
                 Fs = 0.0
@@ -144,13 +145,21 @@ def run_cce_bpr(input, data_piston, meta_model):
                 error_type = output_dict["error_type"]
                 error = True
 
-            elif output_dict["error_type"] == "piston" or output_dict["error_type"] == "T4":
-                # Set flag and raise exception to break out of brentq
-                piston_error = True
+            elif output_dict["error_type"] == "PISTON" or output_dict["error_type"] == "T4" or output_dict["error_type"] == "second burner temp":
+                # Too low BPR means piston needs to do too much work and it will fail (need too large bore)
+                # larger piston also means higher T35 wich could exceed T4
+                # return very high thrust to guide brentq to higher BPR
+                print("hej")
+                Fs = 999999
+                bore = 999
                 error_type = output_dict["error_type"]
-                raise ValueError("Piston error encountered")
+                error = True
+                
+                
+                #raise ValueError("Piston error encountered")
             else:
                 # Other error - return low thrust
+                print(f"fel")
                 Fs = 0.0
                 bore = 999
         else:
