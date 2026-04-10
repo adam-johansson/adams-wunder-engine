@@ -168,6 +168,7 @@ def calc_efficiencies_cce(
         "cooling ratio": cooling_ratio,
         "heatloss percentage": eta_heatloss,
         "friction percentage": eta_friction,
+        "core power": P_core,
     }
     return output_dict
 
@@ -292,4 +293,4 @@ def calc_efficiencies_jetA_geared(
     # Specific thrust
     Fs = F / m_intake
 
-    return sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs
+    return sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs, P_core

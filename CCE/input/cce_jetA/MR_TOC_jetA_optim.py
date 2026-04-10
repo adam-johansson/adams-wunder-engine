@@ -20,12 +20,12 @@ power_offtake = 150e3
 
 # piston engine stuff
 pi_pe = 1.5
-cr = 6
-far_piston = 0.03
+cr = 7
+far_piston = 0.033
 v_mean = 16
 start_of_combustion = 355
 
-OPR = 26  # overall pressure ratio (including losses) (16 + far 03)
+OPR = 28  # overall pressure ratio (including losses) (16 + far 03)
 PR = 0.3  # pressure split, with regard to the LPC
 eff_IC = 0.7
 ratio_IC = 1.0
@@ -62,6 +62,7 @@ surrogate = False
 intercooler = True
 specific = False
 life_hack = True
+piston_mode = "DI"
 
 bore = 0.18 # not used
 

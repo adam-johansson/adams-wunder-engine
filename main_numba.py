@@ -26,9 +26,9 @@ from thermo import fuel_props
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
 #input_file = "4stroke_hydrogen_crashing_case"
-#input_file = "4stroke_standard"
+input_file = "4stroke_standard"
 #input_file = "paper1_nox.cr45"
-input_file = "HCCI"
+#input_file = "HCCI"
 
 
 input_dir = "piston_engine.input"

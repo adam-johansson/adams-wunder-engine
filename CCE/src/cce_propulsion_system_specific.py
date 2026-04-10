@@ -6,7 +6,7 @@ from CCE.input.cce_jetA.MR_TOC_jetA import life_hack
 from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
 
-from thermo import fuel_props, work_potential
+from thermo import fuel_props, work_potential, mixture
 
 
 def run_cce(input, input_piston, flags, meta_model):
@@ -22,12 +22,12 @@ def run_cce(input, input_piston, flags, meta_model):
     Mach = input['M']
     eta_fan = input['eta_fan']
     eta_p_lpc = input['eta_p_lpc']
-    eta_p_hpc = input['eta_p_hpc']
+    eta_p_hpc_0 = input['eta_p_hpc']
     eta_b = input['eta_b']
     dPcomb = input['dPcomb']
     eta_s = input['eta_s']
     eta_g = input['eta_g']
-    eta_s_lpt = input['eta_lpt']
+    eta_s_lpt_0 = input['eta_lpt']
     cfg_core = input['cfg_core']
     cfg_bypass = input['cfg_bypass']
     cd_nozzle = input['cd_nozzle']
@@ -50,6 +50,7 @@ def run_cce(input, input_piston, flags, meta_model):
     v_mean = input['v_mean']
     # life hack can be either: "Not", "Simulate" or "Express"
     life_hack = input["life_hack"]
+    LPT_eff_type = input['LPT_eff_type']
 
     error = False
     minor_error_mass = False
@@ -65,7 +66,7 @@ def run_cce(input, input_piston, flags, meta_model):
         m0 = Fn / Fs_req
 
     # calculate pressure ratios based on OPR and pressure ratio split
-    fpr_inner = 0.913 * fpr_outer
+    fpr_inner = fpr_outer * 0.9136
     OPR_c = OPR / fpr_inner  # OPR of the compressor, excluding fan
     OPR_c = OPR_c / (1-dp_inter_compressor) #account for the pressure loss after LPC
     pi_ipc = OPR_c**PR
@@ -97,6 +98,7 @@ def run_cce(input, input_piston, flags, meta_model):
     p21, T21, P_inner_fan = components.compressor_isentropic(T2, p2, m21, eta_fan, fpr_inner)
 
     # Outer fan
+    #print(f"BPR: {bpr}. Outer flow: {m13} kg/s. FPR: {fpr_outer}")
     p13, T13, P_outer_fan = components.compressor_isentropic(T2, p2, m13, eta_fan, fpr_outer)
 
     # Compressor intake loss
@@ -130,10 +132,65 @@ def run_cce(input, input_piston, flags, meta_model):
         deltaT_intercooler_hot = 0.0
         deltaT_intercooler_cold = 0.0
 
-    # HPC
-    p3, T3, P_hpc = components.compressor(T26, p26, m25, eta_p_hpc, pi_hpc)
-    m3 = m25
 
+    if life_hack == "Simulate":
+        max_iter = 100
+        tol = 1e-6
+
+        # first guess on the polytropic efficiency. the 0 value is for 13 mm blade height
+        eta_p_hpc = eta_p_hpc_0
+        for i in range(max_iter):
+            eta_p_hpc_old = eta_p_hpc  # save previous iteration value
+            
+            # HPC
+            p3, T3, P_hpc = components.compressor(T26, p26, m25, eta_p_hpc, pi_hpc)
+            m3 = m25
+
+            # Properties after HPC
+            _, _, _, _, R3, gamma3, _, _ = mixture(T3, p3, equivalence_ratio=0.0, fuel_type=fuel_type)
+
+            # Assume exit axial Mach number 0.254 and hub_tip_ratio 0.925 (Rolt 2017)
+            Mach3 = 0.254
+            hub_tip_ratio = 0.925
+
+            # HPC outlet area
+            A3 = m3 / ( np.sqrt(gamma3)*Mach3*p3*(1/np.sqrt(R3*T3))*(1+0.5*(gamma3-1)*Mach3**2)**( -0.5*(gamma3+1)/(gamma3-1) ))
+
+            # last stage hub and tip
+            r_tip_HPC2 = np.sqrt(A3 / (np.pi * (1-hub_tip_ratio**2) ) )
+            r_hub_HPC2 = r_tip_HPC2 * hub_tip_ratio
+
+            last_blade_height = r_tip_HPC2 - r_hub_HPC2
+
+            last_blade_height_mm = last_blade_height*1000
+
+            eta_p_hpc_correction = 0.0532 - 0.5547*(1/last_blade_height_mm) - 1.7724*(1/(last_blade_height_mm**2))
+
+            eta_p_hpc = eta_p_hpc_0 + eta_p_hpc_correction
+            
+            if abs(eta_p_hpc - eta_p_hpc_old) < tol:
+                #print(f"Converged in {i+1} iterations")
+                break
+        else:
+            # the for-else clause triggers only if break was never hit
+            print(f"Warning: did not converge after {max_iter} iterations")
+
+        print(f"HPC outlet area:{A3}. Last blade height: {last_blade_height*1000} mm. T3: {T3} K")
+        print(f"ETA before correction: {eta_p_hpc_0}. Correction: {eta_p_hpc_correction}. After correction: {eta_p_hpc}")
+
+            # LPT efficiency also changed according to Rolt 2017
+        eta_s_lpt = eta_s_lpt_0 + eta_p_hpc_correction * 0.5
+
+    else:
+        # Cant change efficiency when using the polynomials for the piston engine
+        eta_p_hpc = eta_p_hpc_0
+        eta_s_lpt = eta_s_lpt_0
+        # HPC
+        p3, T3, P_hpc = components.compressor(T26, p26, m25, eta_p_hpc, pi_hpc)
+        m3 = m25
+
+
+    #eta_p_hpc = eta_p_hpc + eta_p_hpc_correction
     p_loss_piston_in = 0.0
     p_loss_piston_out = 0.0
 
@@ -189,7 +246,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
         if piston_output["error"]:
             error = True
-            # print("problem with piston engine matching")
+            #print("problem with piston engine matching")
             output_dict = {
                 "sfc": 999,
                 "error": error,
@@ -207,6 +264,9 @@ def run_cce(input, input_piston, flags, meta_model):
                 "k0_H": piston_output["k0_H"],
                 "k1_H": piston_output["k1_H"],
                 "piston_specific_power": piston_output["specific_power"],
+                "eta_hpc": eta_p_hpc,
+                "eta_lpt": eta_s_lpt,
+                "error": False,
             }
 
             return output_dict
@@ -244,6 +304,8 @@ def run_cce(input, input_piston, flags, meta_model):
     #T35 = piston_output["T35"]
     far34 = piston_output["far34"]
     #far35 = piston_output["far35"]
+    
+    # nox in kilogram
     m_nox_piston = piston_output["m NO"]
     friction_loss_pe = piston_output["friction loss"]
     P_circumv = piston_output["P comp circumvent air"]
@@ -280,6 +342,8 @@ def run_cce(input, input_piston, flags, meta_model):
     # power requirement on the LPT
     power_required_LPT = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
 
+    #print(f"power LPT:{power_required_LPT}")
+
     input_burner_turbine = {
         "m31": m31,
         "m32": m32,
@@ -295,6 +359,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "p34": p34,
         "power_req": power_required_LPT,
         "eta_s_lpt": eta_s_lpt,
+        "eff_type": LPT_eff_type,
         "second burner": second_burner,
     }
 
@@ -303,7 +368,7 @@ def run_cce(input, input_piston, flags, meta_model):
     # if error in burner_turbine
     if output_burner_turbine["error"]:
         error = True
-        #print("problem with piston engine matching")
+        #print("problem with burner turbine")
         output_dict = {
             "sfc": 999,
             "error": error,
@@ -339,15 +404,20 @@ def run_cce(input, input_piston, flags, meta_model):
     q_ngv = output_burner_turbine["q_ngv"]
 
 
-    # Hot nozzle
-    equ6 = equ5
-    m8 = m6
-    F8, v8_id, v8, error = components.nozzle(
-        p6, T6, pa, equ6, m6, cfg_core, cd_nozzle, fuel_type
-    )
 
+    # Hot nozzle
+    loss_hotnozzle = 1 - 0.98507827788
+    m8 = m6
+    p8 = p6 * (1-loss_hotnozzle)
+    T8 = T6
+    equ8 = equ5
+
+    F8, v8_id, v8, error = components.nozzle(
+        p8, T8, pa, equ8, m8, cfg_core, cd_nozzle, fuel_type
+    )
+    #print(f"hot nozzle thrust: {F8}")
     if error:
-        #print('Hot nozzle fails. Prob too low pressure.')
+        print('Hot nozzle fails. Prob too low pressure.')
         output_dict={
             "sfc": 999,
             "error": error,
@@ -397,6 +467,8 @@ def run_cce(input, input_piston, flags, meta_model):
     F18, v18_id, v18, error = components.nozzle(
         p14, T14, pa, equ=0, m=m18, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
+
+
     if error:
         #print('Prob too low pressure and temperature in cold nozzle')
         cost = 999 + (pa - p14)
@@ -408,7 +480,7 @@ def run_cce(input, input_piston, flags, meta_model):
     # Cooling flow nozzle
     m17 = m15
     F17, v17_id, v17, error = components.nozzle(
-        p15, T15, pa, equ=0, m=m17, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+        p15*0.99, T15, pa, equ=0, m=m17, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
     if error:
@@ -421,7 +493,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Intercooler nozzle
     F_ic_nozzle, v_ic_nozzle_id, v_ic_nozzle, error = components.nozzle(
-        p_intercooler, T_intercooler, pa, equ=0, m=m_intercooler, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+        p_intercooler*0.99, T_intercooler, pa, equ=0, m=m_intercooler, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
     if error:
@@ -435,6 +507,8 @@ def run_cce(input, input_piston, flags, meta_model):
     # Thrust
     v_0 = a * Mach  # air speed
     F = F8 + F18 + F17 + F_ic_nozzle - v_0 * m2  # net thrust
+
+
 
     # Total fuel flow
     mdot_fuel = fuel_flow_piston + fuel_flow_burner
@@ -462,30 +536,35 @@ def run_cce(input, input_piston, flags, meta_model):
 
 
     # total
-    # convert NO from piston engine to NO2 (molar mass 30 to molar mass 46)
+    # convert NO from piston engine to NO2 (molar mass 30 to molar mass 46) (still in kilogram)
     m_nox_piston = m_nox_piston * 1.53
-    print(f"EI nox burner: {EI_nox_burner} g/s")
 
-    print(f"m nox burner: {m_nox_burner*1000} g/s")
-    print(f"m nox piston: {m_nox_piston*1000} g/s")
-    print(f"m fuel: {mdot_fuel} kg/s")
+    # mass concentration of nox in the piston exhaust
+    #nox_piston_ppm = (m_nox_piston / m34) *1e6
 
+    
     m_nox_total = m_nox_burner + m_nox_piston
     EI_nox = 1e3 * m_nox_total / mdot_fuel
 
-    print(f"mass flow nox tot: {m_nox_total*1000} g/s")
-    print(f"EI NOX tot: {EI_nox}")
+    #if life_hack == "Simulate_final":
+    #    print(f"EI nox burner: {EI_nox_burner} g/s")
+    #    # print gram per second
+    #    print(f"m nox burner: {m_nox_burner*1000} g/s")
+    #    print(f"m nox piston: {m_nox_piston*1000} g/s")
+    #    print(f"m fuel: {mdot_fuel} kg/s")
+    #    print(f"mass flow nox tot: {m_nox_total*1000} g/s")
+    #    print(f"EI NOX tot: {EI_nox}")
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v17_id / v8_id
     #print(vel_ratio)
-
     power_hpc = (
         P_hpc / eta_g
     )  # power required by the hpc divided by mechanical efficiency (from piston engine/HPT)
 
+
     # Calculating the work potential left after powering lpc and inner fan
-    p_wp, _, _, T_wp, _, m_wp, _, equ_wp, error = components.turbine(
+    p_wp, _, _, T_wp, _, m_wp, _, equ_wp, _, error = components.turbine(
         T4,
         p4,
         m4,
@@ -493,6 +572,7 @@ def run_cce(input, input_piston, flags, meta_model):
         (P_lpc + P_inner_fan / eta_g) / eta_s,
         eta_s_lpt,
         fuel_type,
+        efficiency_type=LPT_eff_type,
         cooling=True,
         t_cool=T_cool,
         m1_cool=m_cool,
@@ -525,7 +605,7 @@ def run_cce(input, input_piston, flags, meta_model):
         displacement_tot = displacement * 24
         m32_real = m32
 
-
+    #print(f"Vi kommer till eff")
     # Efficiencies
     eff_dict = misc.calc_efficiencies_cce(
         F,
@@ -535,7 +615,7 @@ def run_cce(input, input_piston, flags, meta_model):
         v18_id,
         m15,
         v17_id,
-        m6,
+        m8,
         v8_id,
         m0,
         v_0,
@@ -586,7 +666,11 @@ def run_cce(input, input_piston, flags, meta_model):
     gg_spec_power_disp = eff_dict["gas generator spec displacement"]
     gg_power = eff_dict["GG power"]
     cooling_ratio = eff_dict["cooling ratio"]
+    P_core = eff_dict["core power"]
 
+
+    core_power_per_m3 = P_core / displacement_tot
+    #print(f"Vi kommer till print output")
 
     if "print_output" in flags:
 
@@ -610,7 +694,7 @@ def run_cce(input, input_piston, flags, meta_model):
                     p4,
                     p5,
                     p5,
-                    p6,
+                    p8,
                 ]
             )
             * 1e-3
@@ -632,7 +716,7 @@ def run_cce(input, input_piston, flags, meta_model):
             T4,
             T46,
             T6,
-            T6,
+            T8,
         )
         m_array = (
             m2,
@@ -651,7 +735,7 @@ def run_cce(input, input_piston, flags, meta_model):
             m4,
             m46,
             m6,
-            m6,
+            m8,
         )
 
         far_array = (
@@ -673,7 +757,7 @@ def run_cce(input, input_piston, flags, meta_model):
                     equ46 * far_s,
                     equ5 * far_s,
                     equ5 * far_s,
-                    equ6 * far_s,
+                    equ8 * far_s,
                 ]
             )
         )
@@ -726,6 +810,14 @@ def run_cce(input, input_piston, flags, meta_model):
         )
 
         misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transfer, eta_core, Fs, eta_gg)
+
+        print(f"Core power: {P_core*1e-3} kW")
+        print(f"Specific core power: {P_core/m21*1e-3} kJ/kg")
+        print(f"Core power per litre: {P_core/displacement_tot*1e-6} kW/litre")
+        print(f"Outer fan power: {P_outer_fan*1e-3} kW")
+        print(f"Core thrust power: {F8 * v_0 *1e-3} kW")
+        print(f"Thrust specific NOX: { 1e6*m_nox_total / F} mg/Ns")
+        print(f"Thrust: {F*1e-3} kN")
 
         misc.plot_stations_cce(p_array, T_array)
 
@@ -810,11 +902,13 @@ def run_cce(input, input_piston, flags, meta_model):
         "thrust": F,
         "specific thrust": Fs,
         "core specific power": core_spec_power,
-        "core power": core_spec_power * m21,
+        "core power per m3": core_power_per_m3,
+        "core power": P_core,
         "mass flow": m0,
         "core mass flow": m31,
         "p_max": p_max,
         "T_max": T_max,
+        "m34": m34,
         "T31": T31,
         "T34": T34,
         "T35": T35,
@@ -824,6 +918,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "EI_nox": EI_nox,
         "m_nox_PE": m_nox_piston,
         "m_nox_burner": m_nox_burner,
+        "thrust specific nox": m_nox_total / F,
         "core efficiency": eta_core,
         "transmission efficiency": eta_transfer,
         "thermal efficiency": eta_th,
@@ -837,7 +932,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "burner fuelflow": fuel_flow_burner,
         "delta T intercooler hot": deltaT_intercooler_hot,
         "delta T intercooler cold": deltaT_intercooler_cold,
-        "engine displacement": displacement,
+        "engine displacement": displacement_tot,
         "m_cool_ngv": m_cool_ngv,
         "m_cool_rotor": m_cool_rotor,
         "k_m": k_m,
@@ -874,5 +969,6 @@ def run_cce(input, input_piston, flags, meta_model):
 
     #print(p0*1e-5, p_max*1e-5, p_max/p0)
     #print(T_max)
+    #print(f"Vi kommer hit")
 
     return output_dict

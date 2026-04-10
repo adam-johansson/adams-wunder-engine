@@ -24,6 +24,7 @@ def burner_turbine(input_dictionary):
     power_req = input_dictionary["power_req"]
     eta_s_lpt = input_dictionary["eta_s_lpt"]
     second_burner = input_dictionary["second burner"]
+    turbine_eff_type = input_dictionary["eff_type"]
 
     # stoichiometric fuel air ratio
     far_s, _ = fuel_props(fuel_type)
@@ -50,6 +51,7 @@ def burner_turbine(input_dictionary):
         m_rotor = 0.0
         q_ngv = 0.0
         m_cooling = 0.0
+        eta_p = 0.0
 
         # mass flow before piston engine
         # m31
@@ -130,6 +132,7 @@ def burner_turbine(input_dictionary):
             power_req,
             eta_s_lpt,
             fuel_type,
+            efficiency_type=turbine_eff_type,
             cooling=cooling,
         )
 
@@ -155,9 +158,9 @@ def burner_turbine(input_dictionary):
 
         # that means: cooling will only happen when T4 = T4_req
 
-        #c_cool = 0.052
-        #c_cool = 0.128 used with rotor 1250 and stattor 1350
-        c_cool = 0.08 #used with 1200K for both
+
+        #c_cool = 0.08 #used with 1200K for both
+        c_cool = 0.0875 # obtained from calibration with 1200K for rotor and stator and ToC MINMAL mid range enigine
         # T4 higher than rotor material limit
 
         # starting guess for cooling mass flow
@@ -277,7 +280,7 @@ def burner_turbine(input_dictionary):
 
         # here calculate the turbine..
         # Low pressure turbine, powering fan and IPC
-        p5, T46, T47, T5, m46, m5, equ46, equ5, error = components.turbine(
+        p5, T46, T47, T5, m46, m5, equ46, equ5, eta_p, error = components.turbine(
             T4,
             p4,
             m4,
@@ -285,6 +288,7 @@ def burner_turbine(input_dictionary):
             power_req,
             eta_s_lpt,
             fuel_type,
+            efficiency_type=turbine_eff_type,
             cooling=True,
             t_cool=T_cooling,
             m1_cool=m_cooling,
@@ -330,6 +334,7 @@ def burner_turbine(input_dictionary):
         "m_rotor": m_rotor,
         "m_cool": m_cooling,
         "q_ngv": q_ngv,
+        "eta_p_turbine": eta_p,
         "error": error,
 
     }

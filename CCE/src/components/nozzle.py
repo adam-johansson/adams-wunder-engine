@@ -10,7 +10,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
 
     error = False
     if p1 < pa:
-        print(f'Nozzle pressure is {p1} and lower than ambient pressure {pa}')
+        #print(f'Nozzle pressure is {p1} and lower than ambient pressure {pa}')
         F = float("nan")
         v2 = float("nan")
         v2_id = float("nan")
@@ -35,7 +35,7 @@ def nozzle(p1, t1, pa, equ, m, cfg, cd, fuel_type):
     try:
         t2_s = brentq(find_t2_s, 200, 1500)
     except ValueError:
-        print("Problem with nozzle.")
+        #print("Problem with nozzle.")
         error = True
         return float("nan"), float("nan"), float("nan"), error
 

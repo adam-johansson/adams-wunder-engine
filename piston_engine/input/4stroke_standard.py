@@ -7,9 +7,10 @@ fuel = 'jetA'
 cooling = "Hohenberg"
 
 premixed = False
-
 opposed = False
-cr = 10.0
+mode = "DI"
+
+cr = 14.0
 
 cylinders = 1  # V12
 
@@ -24,7 +25,7 @@ lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verb
 # inlet and outlet conditions
 p_in = 1.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
 T_in = 300  # inlet temperature (670 cruise 770 TO)
-p_ratio = 1.0  # pressure ratio after and before engine
+p_ratio = 1.1  # pressure ratio after and before engine
 
 # Heat transfer
 Twall = 400          # Liner temperature
@@ -60,7 +61,7 @@ cd = 0.8
 eta_c = 0.999
 
 throttle = 0.0294
-far_goal = 0.035
+far_goal = 0.04
 
 
 wiebe_type = "Single"

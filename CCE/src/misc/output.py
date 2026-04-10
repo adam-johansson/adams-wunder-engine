@@ -186,6 +186,7 @@ def csv_output_jetA_geared(p, t, m, far, s):
         "0",
         "2",
         "22",
+        "24",
         "25",
         "3",
         "31",
@@ -194,8 +195,9 @@ def csv_output_jetA_geared(p, t, m, far, s):
         "42",
         "45",
         "5",
-        "6",
+        "8",
         "12",
+        "18",
     )
     stations = np.atleast_2d(stations).T
     data = np.concatenate(
@@ -229,7 +231,7 @@ def plot_stations_cce(p_array, t_array):
         "41",
         "43",
         "5",
-        "6",
+        "8",
     ]
 
     fig, ax1 = plt.subplots()
@@ -310,13 +312,14 @@ def plot_stations_rec_h2_geared(p_array, t_array):
 def plot_stations_jetA_geared(p_array, t_array):
     # plotting the different stations
 
-    stations = np.linspace(0,14,14)
+    stations = np.linspace(0,16,16)
 
     labels = [
         "a",
         "0",
         "2",
         "22",
+        "24",
         "25",
         "3",
         "31",
@@ -327,6 +330,7 @@ def plot_stations_jetA_geared(p_array, t_array):
         "5",
         "6",
         "12",
+        "18",
     ]
 
     fig, ax1 = plt.subplots()

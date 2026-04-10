@@ -11,23 +11,23 @@ from neural_network.src import load_ANN
 from timeit import default_timer as timer
 
 # Importing input parameters
-input_file_pist = "4stroke_jetA_HCCI"
+input_file_pist = "4stroke_jetA"
 input_dir_pist = "input.piston"
 path_pist = input_dir_pist + "." + input_file_pist
 
 d_p = importlib.import_module(path_pist)
 
-#flags = ["single", "print_output", "conventional"]  # normal case
+#flags = ["single", "print_output", "conventional"]  # geared turbofan case
 #flags = ["single", "print_output", "cce"]  # normal case
-flags = ["life_hack", "cce"]  # life hack version
+flags = ["life_hack", "cce", "print_output"]  # life hack version
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
 
 if "cce" in flags:
-    #input_file = "MR_TOC_jetA"
-    input_file = "MR_TOC_jetA_HCCI"
+    input_file = "MR_TOC_jetA"
+    #input_file = "MR_TOC_jetA_HCCI"
     #input_file = "MR_TOC_jetA_optim"
     input_dir = "input.cce_jetA"
     path = input_dir + "." + input_file
@@ -71,6 +71,8 @@ if "conventional" in flags:
         "power_offtake": d.power_offtake,
         "dp_rec": d.dp_rec,
         "dT_rec": d.dT_rec,
+        "HPT_eff_type": d.HPT_eff_type,
+        "LPT_eff_type": d.LPT_eff_type,
     }
 
     if d.fuel == "H2":
@@ -86,6 +88,7 @@ if "conventional" in flags:
     print(f"SFC: {sfc*1e6} [mg/Ns]")
     print(f"Thrust: {F*1e-3} [kN]]")
     print(f"Velocity ratio: {vel_ratio}")
+   
 
 elif "cce" in flags:
 
@@ -132,6 +135,7 @@ elif "cce" in flags:
         "start_of_combustion": d.start_of_combustion,
         "ratio IC": d.ratio_IC,
         "piston_mode": d.piston_mode,
+        "LPT_eff_type": d.LPT_eff_type,
     }
 
     piston_input = {
@@ -251,7 +255,7 @@ elif "cce" in flags:
 
         cce_input["life_hack"] = "Simulate"
         # bpr 15 will almost certainly work
-        cce_input["bpr"] = 20
+        cce_input["bpr"] = 19
         output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
         # input simulation data for bpr matching
@@ -261,6 +265,10 @@ elif "cce" in flags:
         piston_input["k0_H"] = output_dict["k0_H"]
         piston_input["k1_H"] = output_dict["k1_H"]
         piston_input["piston_specific_power"] = output_dict["piston_specific_power"]
+        cce_input["eta_p_hpc"] = output_dict["eta_hpc"]
+        cce_input["eta_lpt"] = output_dict["eta_lpt"]
+
+        #print(output_dict["piston_specific_power"])
 
         # no simulation just quick evaluations
         cce_input["life_hack"] = "Express"

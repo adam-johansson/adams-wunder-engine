@@ -130,14 +130,13 @@ def run_cce_bpr(input, data_piston, meta_model):
 
         input["bpr"] = x[0]
 
-        #print(x)
-
         output_dict = cce_propulsion_system_specific.run_cce(input, data_piston, flags, meta_model)
 
+
         if output_dict["error"]:
-            print(output_dict["error_type"])
+            #print(output_dict["error_type"])
             if output_dict["error_type"] == "LPT" or output_dict["error_type"] == "Hot nozzle":
-                print(f"fel2")
+                #print(f"fel2")
                 # Too high BPR means LPT does not work
                 # Return very low thrust to guide brentq to lower BPR
                 Fs = 0.0
@@ -149,7 +148,7 @@ def run_cce_bpr(input, data_piston, meta_model):
                 # Too low BPR means piston needs to do too much work and it will fail (need too large bore)
                 # larger piston also means higher T35 wich could exceed T4
                 # return very high thrust to guide brentq to higher BPR
-                print("hej")
+                #print("hej")
                 Fs = 999999
                 bore = 999
                 error_type = output_dict["error_type"]
@@ -159,7 +158,7 @@ def run_cce_bpr(input, data_piston, meta_model):
                 #raise ValueError("Piston error encountered")
             else:
                 # Other error - return low thrust
-                print(f"fel")
+                #print(f"fel")
                 Fs = 0.0
                 bore = 999
         else:
@@ -173,13 +172,13 @@ def run_cce_bpr(input, data_piston, meta_model):
         })
 
         residual = np.array([Fs - Fs_goal])
-        #print(residual, x)
+        #print(f"Thrust residual {residual} bpr {x} bore: {bore}")
         return residual
 
 
     try:
         #bpr = brentq(find_bpr, 12, 40)
-        bpr = fsolve(find_bpr, x0=20)
+        bpr = fsolve(find_bpr, x0=15)
     except ValueError:
         error = True
         bpr = None

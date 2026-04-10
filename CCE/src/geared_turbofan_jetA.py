@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
 
-from thermo import fuel_props
+from thermo import fuel_props, mixture
 
 
 def run_turbofan(input, flags):
@@ -35,16 +35,27 @@ def run_turbofan(input, flags):
     OPR = input['OPR']
     PR = input['PR']
     t_fuel = input['t_fuel']
+    P_offtake = input["power_offtake"]
+    LPT_eff_type = input['LPT_eff_type']
+    HPT_eff_type = input["HPT_eff_type"]
 
     # calculate mass flow
     m0 = Fn / Fs_req
 
     # calculate pressure ratios based on OPR and pressure ratio split
-    fpr_inner = 0.913 * fpr_outer
-    OPR_c = OPR / fpr_inner  # OPR of the compressor, excluding fan
-    OPR_c = OPR_c / 0.9885 #account for the pressure loss after LPC
-    pi_ipc = OPR_c**PR
-    pi_hpc = OPR_c / pi_ipc
+    fpr_inner = fpr_outer * 0.9136
+    OPR_c = OPR / fpr_inner  # OPR of the LPC and HPC, excluding fan
+    
+    # pressure loss after LPC where the sealing air for the LPT is extracted
+    loss_LPC = 1 - 0.98706735441
+
+
+    OPR_c = OPR_c / (1 - loss_LPC) #account for the pressure loss after LPC
+    #pi_ipc = OPR_c**PR
+    #pi_hpc = OPR_c / pi_ipc
+
+    pi_ipc = 2.8
+    pi_hpc = 13.8
 
     # fuel props
     far_s, LHV = fuel_props(fuel_type)
@@ -70,6 +81,7 @@ def run_turbofan(input, flags):
     m12 = m2 * bpr / (1 + bpr)
 
     # Outer fan
+    #print(f"BPR: {bpr}. Outer flow: {m12} kg/s. FPR: {fpr_outer}")
     p12, T12, P_outer_fan = components.compressor_isentropic(T2, p2, m12, eta_fan, fpr_outer)
 
     # Core stream
@@ -82,10 +94,15 @@ def run_turbofan(input, flags):
     p24, T24, P_lpc = components.compressor(T22, p22, m22, eta_p_ipc, pi_ipc)
     m24 = m22
 
-    # Inter compressor loss
-    p25 = 0.9885 * p24
+    # Inter compressor loss and removal of sealing flow for LPT (2 %)
+    p25 = p24 * (1 - loss_LPC)
     T25 = T24
-    m25 = m24
+
+    m_LPT_cooling = m24 * 0.02
+    
+    m25 = m24 - m_LPT_cooling
+
+
 
     # HPC
     p3, T3, P_hpc = components.compressor(T25, p25, m25, eta_p_hpc, pi_hpc)
@@ -93,6 +110,31 @@ def run_turbofan(input, flags):
 
     T31 = T3
     p31 = p3
+
+
+    # Properties after HPC
+    _, _, _, _, R3, gamma3, _, _ = mixture(T3, p3, equivalence_ratio=0.0, fuel_type=fuel_type)
+
+    # Assume exit axial Mach number 0.254 and hub_tip_ratio 0.925 (Rolt 2017)
+    Mach3 = 0.254
+    hub_tip_ratio = 0.925
+
+    # HPC outlet area
+    A3 = m3 / ( np.sqrt(gamma3)*Mach3*p3*(1/np.sqrt(R3*T3))*(1+0.5*(gamma3-1)*Mach3**2)**( -0.5*(gamma3+1)/(gamma3-1) ))
+
+    # last stage hub and tip
+    r_tip_HPC2 = np.sqrt(A3 / (np.pi * (1-hub_tip_ratio**2) ) )
+    r_hub_HPC2 = r_tip_HPC2 * hub_tip_ratio
+
+    last_blade_height = r_tip_HPC2 - r_hub_HPC2
+    last_blade_height_mm = last_blade_height*1000
+
+    eta_p_hpc_correction = 0.0532 - 0.5547*(1/last_blade_height_mm) - 1.7724*(1/(last_blade_height_mm**2))
+
+    eta_p_hpc_0 = eta_p_hpc - eta_p_hpc_correction
+
+    print(f"HPC outlet area:{A3}. Last blade height: {last_blade_height_mm} mm. Original HPC efficiency: {eta_p_hpc_0}")
+    
 
     input_burner_turbine = {
         "m31": m3,
@@ -107,8 +149,9 @@ def run_turbofan(input, flags):
         "dP_comb": dPcomb,
         "eta_b": eta_b,
         "p34": p3,
-        "power_req": P_hpc / eta_s,
+        "power_req": (P_hpc + P_offtake) / eta_s,
         "eta_s_lpt": eta_hpt,
+        "eff_type": HPT_eff_type,
         "second burner": True,
     }
 
@@ -149,17 +192,17 @@ def run_turbofan(input, flags):
     m_cool_ngv = output_burner_turbine["m_ngv"]
     m_cool_rotor = output_burner_turbine["m_rotor"]
     q_ngv = output_burner_turbine["q_ngv"]
+    eta_HPT_poly = output_burner_turbine["eta_p_turbine"]
 
 
     print(f"Cooling ratio: {m_cool / m3}")
 
     far_burner = equ4 * far_s
 
-
     # Low pressure turbine, powering fan and LPC
     # IPC + inner and outer fan (with gearbox efficiency) + everything shaft efficiency
     power_lpt = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
-    p5, T5, m5, equ5, error = components.turbine(
+    p5, _, _, T5, _, m5, _, equ5, eta_LPT_poly, error = components.turbine(
         T45,
         p45,
         m45,
@@ -167,26 +210,42 @@ def run_turbofan(input, flags):
         power_lpt,
         eta_lpt,
         fuel_type,
-        cooling=False,
+        efficiency_type=LPT_eff_type,
+        cooling=True,
+        t_cool=T25,
+        m1_cool=m_LPT_cooling,
+        q_ngv=1.0
     )
+
+    print(f"Polytropic HPT efficiency: {eta_HPT_poly}")
+    print(f"Polytropic LPT efficiency: {eta_LPT_poly}")
+
+
+
+    print(f"p45: {p45*1e-5}, p5: {p5*1e-5}, T45: {T45} T5: {T5}, equ5{equ5}, equ45:{equ45}")
 
 
     # Hot nozzle
-    m6 = m5
-    p6 = p5
-    T6 = T5
+    loss_hotnozzle = 1 - 0.98507827788
+    m8 = m5
+    p8 = p5 * (1-loss_hotnozzle)
+    T8 = T5
+    equ8 = equ5
 
     # Hot nozzle (no recuperation)
-    equ6 = equ5
     F8, v8_id, v8, error = components.nozzle(
-        p6, T6, pa, equ6, m6, cfg_core, cd_nozzle, fuel_type
+        p8, T8, pa, equ8, m8, cfg_core, cd_nozzle, fuel_type
     )
 
     # Bypass stream
+    # Losses in bypass duct
+    T18 = T12
+    p18 = p12 * (1-dp_bypass)
+    m18 = m12
 
     # Cold nozzle
     F18, v18_id, v18, error = components.nozzle(
-        p12, T12, pa, equ=0, m=m12, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+        p18, T18, pa, equ=0, m=m12, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
     # Thrust
@@ -195,11 +254,18 @@ def run_turbofan(input, flags):
     # Net thrust
     F = F8 + F18 - v_0 * m2
 
+    # NOx
+    EI_nox= 0.007549 * T4 * (p3*1e-3 /3027)**0.37 * np.exp((1.8*T3- 1471)/345)
+    print(f"EI_nox: {EI_nox} g/kg")
+
+    # Mass flow of NOX (kg/s)
+    m_nox = EI_nox * fuel_flow_burner * 1e-3
+
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v18_id / v8_id
 
     # Calculating the work potential left after powering LPC and inner fan
-    p_wp, T_wp, m_wp, equ_wp, error = components.turbine(
+    p_wp, _, _, T_wp, _, m_wp, _, equ_wp, _, error = components.turbine(
         T45,
         p45,
         m45,
@@ -207,16 +273,20 @@ def run_turbofan(input, flags):
         (P_lpc + P_inner_fan / eta_g) / eta_s,
         eta_lpt,
         fuel_type,
-        cooling=False,
+        efficiency_type=LPT_eff_type,
+        cooling=True,
+        t_cool=T25,
+        m1_cool=m_LPT_cooling,
+        q_ngv=1.0
     )
 
     # Efficiencies
-    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs = misc.calc_efficiencies_jetA_geared(
+    sfc, eta_core, eta_transmission, eta_th, eta_p, eta_o, Fs, P_core = misc.calc_efficiencies_jetA_geared(
         F,
         fuel_flow_burner,
         m12,
         v18_id,
-        m6,
+        m8,
         v8_id,
         m0,
         v_0,
@@ -237,6 +307,7 @@ def run_turbofan(input, flags):
                         p0,
                         p2,
                         p22,
+                        p24,
                         p25,
                         p3,
                         p31,
@@ -245,8 +316,9 @@ def run_turbofan(input, flags):
                         p45,
                         p45,
                         p5,
-                        p6,
+                        p8,
                         p12,
+                        p18,
                     ]
                 )
                 * 1e-5
@@ -258,6 +330,7 @@ def run_turbofan(input, flags):
                     T0,
                     T2,
                     T22,
+                    T24,
                     T25,
                     T3,
                     T31,
@@ -266,8 +339,9 @@ def run_turbofan(input, flags):
                     T42,
                     T45,
                     T5,
-                    T6,
+                    T8,
                     T12,
+                    T18,
                 ]
             )
         )
@@ -278,6 +352,7 @@ def run_turbofan(input, flags):
                     m0,
                     m2,
                     m22,
+                    m24,
                     m25,
                     m3,
                     m31,
@@ -286,8 +361,9 @@ def run_turbofan(input, flags):
                     m41,
                     m45,
                     m5,
-                    m6,
+                    m8,
                     m12,
+                    m18,
                 ]
             )
         )
@@ -302,12 +378,14 @@ def run_turbofan(input, flags):
                     0.0,
                     0.0,
                     0.0,
+                    0.0,
                     far_burner,
                     far_s * equ41,
                     far_s * equ41,
                     far_s * equ45,
                     far_s * equ5,
-                    far_s * equ6,
+                    far_s * equ8,
+                    0.0,
                     0.0,
                 ]
             )
@@ -316,6 +394,16 @@ def run_turbofan(input, flags):
         s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
 
         misc.print_efficiencies(eta_o, eta_p, eta_th, eta_transmission, eta_core, Fs, 0.0)  
+
+            
+        # Thrust specific NOX emissions (kg/s/N)
+        ts_nox = m_nox / F
+
+        print(f"Core power: {P_core*1e-3} kW")
+        print(f"Specific core power: {P_core/m22*1e-3} kJ/kg")
+        print(f"Outer fan power: {P_outer_fan*1e-3} kW")
+        print(f"Core thrust power: {F8 * v_0 *1e-3} kW")
+        print(f"Thrust specific NOX emissions: {ts_nox*1e6} mg/Ns")
 
         misc.plot_stations_jetA_geared(p_array, T_array)
 

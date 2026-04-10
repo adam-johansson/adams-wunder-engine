@@ -1001,7 +1001,7 @@ def run_piston_engine(input, flags):
                                                 rpm,
                                                 m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
         else:
-            no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+            no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model_alternative.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                         rpm,
                                                                         m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 

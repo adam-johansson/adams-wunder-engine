@@ -6,7 +6,6 @@ from scipy.optimize import brentq
 from thermo import mixture, entropy_func, fuel_props
 
 
-# add fuel type in the input later
 def turbine(
     t1_main,
     p1_main,
@@ -15,6 +14,7 @@ def turbine(
     power_req,
     eta,
     fuel_type,
+    efficiency_type,
     cooling,
     t_cool=9999,
     m1_cool=9999,
@@ -68,45 +68,21 @@ def turbine(
                 float("nan"),
                 float("nan"),
                 float("nan"),
+                float("nan"),
                 error,
             )
-
-    h2_s = h1 - (power_req / m1) / eta
-    # isentropic specific enthalpy after expansion (for pressure calculation)
 
     h2_real = h1 - (power_req / m1)  # specific enthalpy after expansion (real)
 
     equ2 = equ1  # no cooling air is inserted at the rotor. only before or after
     m2 = m1
 
-    def find_t2_s(t):
-        h2_guess, _, _, _, _, _, _, _ = mixture(
-            t, p_dummy, equ1, fuel_type=fuel_type
-        )
-        return h2_s - h2_guess
-
     def find_t2_real(t):
         h2_guess, _, _, _, _, _, _, _ = mixture(
             t, p_dummy, equ1, fuel_type=fuel_type
         )
         return h2_real - h2_guess
-
-    try:
-        t2_s = brentq(find_t2_s, 200, 2500)
-    except ValueError:
-        error = True
-        # print('trubbel')
-        return (
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            error,
-        )
+    
 
     try:
         t2_real = brentq(find_t2_real, 200, 2500)
@@ -122,15 +98,65 @@ def turbine(
             float("nan"),
             float("nan"),
             float("nan"),
+            float("nan"),
             error,
         )
 
+    # entropy function before work extraction over the rotor
     psi1 = entropy_func(
         t1, p1_main, equ1, fuel_type
-    )  # before work extraction from rotor
-    psi2_s = entropy_func(t2_s, p1_main, equ2, fuel_type)  # after rotor
-    pr = np.exp(psi2_s - psi1)  # pressure ratio over rotor
-    p2 = p1_main * pr  # pressure after rotor
+    )  
+
+    # Calculating the isentropic pressure ratio to be able to calculate the polytropic efficiency (from Walsh and Fletscher) (or when using the polytropic efficiency)
+    psi2_isen = entropy_func(t2_real, p1_main, equ2, fuel_type)  # real T, isentropic pr
+    pr_isentropic = np.exp(psi2_isen - psi1)
+
+
+    if efficiency_type == "isen":
+        h2_s = h1 - (power_req / m1) / eta
+    # isentropic specific enthalpy after expansion (for pressure calculation)
+
+        # temperature used to find the pressure after expansion (with isentropic efficiency)
+        def find_t2_s(t):
+            h2_guess, _, _, _, _, _, _, _ = mixture(
+                t, p_dummy, equ1, fuel_type=fuel_type
+            )
+            return h2_s - h2_guess
+
+
+        try:
+            t2_s = brentq(find_t2_s, 200, 2500)
+        except ValueError:
+            error = True
+            # print('trubbel')
+            return (
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                error,
+            )
+
+        psi2_s = entropy_func(t2_s, p1_main, equ2, fuel_type)  # after rotor
+        pr = np.exp(psi2_s - psi1)  # pressure ratio over rotor
+        p2 = p1_main * pr  # pressure after rotor
+
+        # polytropic efficiency
+        eta_different = np.log(pr_isentropic) / np.log(pr)
+
+    elif efficiency_type == "poly":
+
+        pr = pr_isentropic**(1/eta)
+        p2 = p1_main * pr  # pressure after rotor
+
+        #isentropic efficiency
+        eta_different = 0.0
+
 
     # cooling air inserted after rotor
 
@@ -166,10 +192,11 @@ def turbine(
                 float("nan"),
                 float("nan"),
                 float("nan"),
+                float("nan"),
                 error,
             )
 
     if cooling:
-        return p2, t1, t2_real, t3, m1, m3, equ1, equ3, error
+        return p2, t1, t2_real, t3, m1, m3, equ1, equ3, eta_different, error
     else:
         return p2, t3, m3, equ3, error

@@ -76,10 +76,10 @@ wm = 1.40  # funkar
 
 # this if for single wiebe function
 # VALUES FROM NASAS TWOSTROKE PAPER
-m_wiebe = 1.0
+m_wiebe = 2.0
 
 phi_sc = 99999 # angle at combustion start  THIS WORKED WITH SINGLE #345
-phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
+phi_cd = (50/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
 
 
 T_fuel = 0

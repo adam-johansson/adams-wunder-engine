@@ -1,3 +1,9 @@
+
+import sys
+sys.path.append("./../")
+
+
+
 from thermo import polynomials
 
 

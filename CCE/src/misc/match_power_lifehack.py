@@ -103,6 +103,12 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         k1_H = input["k1_H"]
         k0_H = input["k0_H"]
 
+        # This is only to check
+        indicated_power_check = piston_output["indicated power"]
+        T_out_mid_check = piston_output["T_out"]
+        heat_loss_mid_check = piston_output["heat_loss"]
+        m_in_check = piston_output["air_flow"]
+
 
     else:
         #import specific power and coefficients
@@ -221,7 +227,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     try:
         bore_match = brentq(find_match, 0.1, 0.25)
     except ValueError:
-        print(f"No bore found to match power")
+        #print(f"No bore found to match power")
         output_dict = {
             "error": True
         }
@@ -294,6 +300,18 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
     if life_hack == "Simulate_final":
         heat_loss_diff = (heat_loss - heat_loss_final_sim*24) / (24 *heat_loss_final_sim)
+        print(f"heat loss diff: {heat_loss_diff}")
+
+        # just to check
+
+        power_diff = indicated_power / (nr_engines * cylinders) - indicated_power_check
+        T_out_diff = T34 - T_out_mid_check
+        m_in_diff = mdot_in / (nr_engines * cylinders) - m_in_check
+
+        print(f"power diff: {power_diff*1e-3} kW fraction: {power_diff / indicated_power_check}")
+        print(f"Tout diff: {T_out_diff} K fraction: {T_out_diff / T_out_mid_check}")
+        print(f"mass diff: {m_in_diff} kg/s fraction: {m_in_diff / m_in_check}")
+
         if heat_loss_diff > 1e-2:
             print(f"Heat loss error larger than 1 percent: {heat_loss_diff}")
 
@@ -325,9 +343,10 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
     p35 = p34 * (1- p_loss_out)
 
+    # output in kg
     m_NOX = nox_ppm * m34 * 1e-6
 
-    # Calculate displacement
+    # Calculate displacement for one cylinder
     stroke = bore_match / bsr  # using bore-to-stroke ratio
     displacement = np.pi / 4 * (bore_match ** 2 ) * stroke  # m³
 

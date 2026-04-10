@@ -8,7 +8,6 @@ cooling = "Hohenberg"
 
 premixed = True
 opposed = False
-hcci = True
 
 
 
