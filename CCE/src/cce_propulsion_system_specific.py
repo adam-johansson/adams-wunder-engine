@@ -175,8 +175,11 @@ def run_cce(input, input_piston, flags, meta_model):
             # the for-else clause triggers only if break was never hit
             print(f"Warning: did not converge after {max_iter} iterations")
 
-        print(f"HPC outlet area:{A3}. Last blade height: {last_blade_height*1000} mm. T3: {T3} K")
-        print(f"ETA before correction: {eta_p_hpc_0}. Correction: {eta_p_hpc_correction}. After correction: {eta_p_hpc}")
+        #print(f"HPC outlet area:{A3}. Last blade height: {last_blade_height*1000} mm. T3: {T3} K")
+        #print(f"ETA before correction: {eta_p_hpc_0}. Correction: {eta_p_hpc_correction}. After correction: {eta_p_hpc}")
+
+        if last_blade_height_mm < 13:
+            print(f"Last blade height smaller than 13 mm. Size: {last_blade_height_mm} mm.")
 
             # LPT efficiency also changed according to Rolt 2017
         eta_s_lpt = eta_s_lpt_0 + eta_p_hpc_correction * 0.5

@@ -83,10 +83,18 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     elif life_hack == "Simulate_final":
         # calculate NOX for bore that was matching
         flags = ["sweep"]
-
         piston_output = run_piston_engine(input, flags)
+       
+       
+        try:
+            heat_loss_final_sim = piston_output["heat_loss"]
+        except IndexError:
+            # piston simulation not converging
+            output_dict = {
+                "error": True
+            }
+            return output_dict
 
-        heat_loss_final_sim = piston_output["heat_loss"]
         p_max = piston_output["peak pressure"]
         T_max = piston_output["peak temperature"]
         p_tdc = piston_output["p_tdc"]
@@ -300,7 +308,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
     if life_hack == "Simulate_final":
         heat_loss_diff = (heat_loss - heat_loss_final_sim*24) / (24 *heat_loss_final_sim)
-        print(f"heat loss diff: {heat_loss_diff}")
+        #print(f"heat loss diff: {heat_loss_diff}")
 
         # just to check
 
@@ -308,9 +316,9 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         T_out_diff = T34 - T_out_mid_check
         m_in_diff = mdot_in / (nr_engines * cylinders) - m_in_check
 
-        print(f"power diff: {power_diff*1e-3} kW fraction: {power_diff / indicated_power_check}")
-        print(f"Tout diff: {T_out_diff} K fraction: {T_out_diff / T_out_mid_check}")
-        print(f"mass diff: {m_in_diff} kg/s fraction: {m_in_diff / m_in_check}")
+        #print(f"power diff: {power_diff*1e-3} kW fraction: {power_diff / indicated_power_check}")
+        #print(f"Tout diff: {T_out_diff} K fraction: {T_out_diff / T_out_mid_check}")
+        #print(f"mass diff: {m_in_diff} kg/s fraction: {m_in_diff / m_in_check}")
 
         if heat_loss_diff > 1e-2:
             print(f"Heat loss error larger than 1 percent: {heat_loss_diff}")

@@ -21,7 +21,7 @@ power_offtake = 150e3
 # piston engine stuff
 pi_pe = 1.1
 cr = 8  # 8
-far_piston = 0.0325
+far_piston = 0.0325  * (44 / 43)  # adjust for difference in LHV between JETA and SAF
 v_mean = 14
 start_of_combustion = 355
 
@@ -30,7 +30,7 @@ PR = 0.25  # pressure split, with regard to the LPC
 eff_IC = 0.7
 ratio_IC = 0.0
 
-T4 = 1170  # [K] Turbine entry temperature (1200)
+T4 = 1250  # [K] Turbine entry temperature (1200)
 
 dp_intake = 0.00264968668  # intake pressure loss
 dp_bypass = 0.00994454006  # bypass duct pressure loss

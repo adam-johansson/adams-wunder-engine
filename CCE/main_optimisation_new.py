@@ -255,7 +255,7 @@ elif "cce" in flags:
 
         cce_input["life_hack"] = "Simulate"
         # bpr 15 will almost certainly work
-        cce_input["bpr"] = 19
+        cce_input["bpr"] = 20
         output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
         # input simulation data for bpr matching

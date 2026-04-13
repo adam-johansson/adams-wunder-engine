@@ -11,7 +11,11 @@
 **/my_output.out
 **/my_output.plt
 **/CEA_Wrap_error.out
-CCE/studies/ 
+CCE/studies/param_sweeps
+CCE/studies/param_sweeps_old
+CCE/studies/results_old
+CCE/studies/pareto/optimisation_data
+CCE/studies/carpet_sweeps/results 
 .idea/
 __pycache__/
 *.pyc
