@@ -248,7 +248,7 @@ fig.add_annotation(
     y=1.155,     # arrowhead y
     ax=85,      # text box x (in data coordinates)
     ay=1.17,    # text box y (in data coordinates)
-    text="T34 > 1250 K",
+    text="T<sub>34</sub> > 1250 K",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
     arrowsize=1,    # relative size of arrowhead
@@ -317,7 +317,7 @@ fig.add_annotation(
     y=1.025,
     #xref="paper",
     #yref="paper",
-    text="Π<sub>piston</sub> [-]",
+    text="Π<sub>p</sub> [-]",
     showarrow=False,
     font=dict(size=28, family="Times New Roman", weight=700, color="black"),
     textangle=50,  # rotate to follow axis

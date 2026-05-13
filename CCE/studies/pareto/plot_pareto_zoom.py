@@ -5,7 +5,7 @@ import plotly.io as pio
 pio.renderers.default = "browser"
 
 
-seed = 9
+seed = 1
 output_dir = f"optimisation_data/seed_{seed}"
 
 all_df = pd.read_csv(f"{output_dir}/all_evaluations.csv")
@@ -13,9 +13,14 @@ pareto_df = pd.read_csv(f"{output_dir}/pareto_solutions.csv")
 hv_df = pd.read_csv(f"{output_dir}/hypervolume.csv")
 
 # --- Pareto front plot ---
-feasible = all_df[all_df['is_feasible']]
-infeasible = all_df[~all_df['is_feasible'] & (all_df['eta_th'] != 0.0)]
+feasible = all_df[all_df['is_feasible'] & (all_df['eta_th'] > 0.53)]
+infeasible = all_df[~all_df['is_feasible'] & (all_df['eta_th'] > 0.53)]
 pareto_sorted = pareto_df.sort_values('eta_th')
+pareto_sorted = pareto_sorted[(pareto_sorted["eta_th"] > 0.53)]
+
+
+
+
 
 fig1 = go.Figure()
 
@@ -41,8 +46,8 @@ fig1.add_trace(go.Scatter(
     marker=dict(
         size=10,
         #color=feasible['piston_fuelsplit'],
-        #color=feasible['core_power_per_litre'],
-        color=feasible['split'],
+        color=feasible['core_power_per_litre'],
+        #color=feasible['split'],
         #color=feasible['far'],
         colorscale='Viridis',
         #cmin=feasible['piston_fuelsplit'].quantile(0.05),
@@ -52,7 +57,7 @@ fig1.add_trace(go.Scatter(
         showscale=True,
         colorbar=dict(
             title=dict(
-                text="Piston fuel fraction [-]",
+                text="Ẇ<sub>core,V<sub>d</sub></sub> [kW/litre]",
                 font=dict(size=textsize, family="Times New Roman"),
                 side="right",
             ),
@@ -81,14 +86,6 @@ fig1.add_trace(go.Scatter(
     name='Pareto front',
 ))
 
-# Reference point
-fig1.add_trace(go.Scatter(
-    x=[49.4],
-    y=[0.188],
-    mode='markers',
-    marker=dict(symbol='cross', size=16, color='blue', line=dict(width=1, color='black')),
-    name='Reference',
-))
 
 # high efficiency point
 fig1.add_annotation(
@@ -118,62 +115,6 @@ fig1.add_annotation(
     borderwidth=1,
 )
 
-# low nox point
-fig1.add_annotation(
-    x=40.78,
-    y=0.138,
-    ax=90,   # adjust these to position the text box
-    ay=-160,
-    text=(
-        "OPR = 10.0<br>"
-        "T<sub>4</sub> = 1599.9 K<br>"
-        "Λ = 0.50<br>"
-        "Π<sub>pe</sub> = 0.98<br>"
-        "ϵ = 4.14<br>"
-        "<i>f</i> = 2.00%<br>"
-        "IC = 0.996"
-        #"Ẇ<sub>core,V<sub>d</sub></sub> = 63.43kW/litre"
-    ),
-    showarrow=True,
-    arrowhead=2,
-    arrowsize=1,
-    arrowwidth=2,
-    arrowcolor="black",
-    font=dict(size=textsize, family="Times New Roman", color="black"),
-    align="left",
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-)
-
-
-# middle point
-fig1.add_annotation(
-    x=52.98,
-    y=0.618,
-    ax=120,   # adjust these to position the text box
-    ay=+40,
-    text=(
-        "OPR = 17.11<br>"
-        "T<sub>4</sub> = 1210 K<br>"
-        "Λ = 0.367<br>"
-        "Π<sub>pe</sub> = 1.58<br>"
-        "ϵ = 11.32<br>"
-        "<i>f</i> = 2.78%<br>"
-        "IC = 0.994"
-        #"Ẇ<sub>core,V<sub>d</sub></sub> = 69.46kW/litre"
-    ),
-    showarrow=True,
-    arrowhead=2,
-    arrowsize=1,
-    arrowwidth=2,
-    arrowcolor="black",
-    font=dict(size=textsize, family="Times New Roman", color="black"),
-    align="left",
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-)
 
 
 fig1.update_layout(
@@ -209,7 +150,7 @@ fig1.update_layout(
 
     margin=dict(l=20, r=20, t=20, b=20),
 )
-fig1.write_image(f"{output_dir}/pareto_plot.pdf", scale=2)
+fig1.write_image(f"{output_dir}/pareto_plot_zoom.pdf", scale=2)
 fig1.show()
 
 # --- Hypervolume plot ---
@@ -241,5 +182,5 @@ fig2.update_layout(
         gridcolor="lightgrey", showgrid=True, tickfont=dict(size=20),
     ),
 )
-fig2.write_image(f"{output_dir}/hypervolume.pdf", scale=2)
+fig2.write_image(f"{output_dir}/hypervolume_zoom.pdf", scale=2)
 fig2.show()

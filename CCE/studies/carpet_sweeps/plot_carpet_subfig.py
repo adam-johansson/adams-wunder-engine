@@ -30,6 +30,10 @@ bore[bore == 0] = np.nan
 #F = 30.693*1e3
 #nox = nox*1e3 / F
 
+
+textsize1 = 32
+textsize2 = 40
+
 fig = go.Figure()
 
 # Carpet grid
@@ -55,7 +59,7 @@ fig.add_trace(go.Carpet(
     #            )
     #        ),
     tickfont=dict(
-    size=28
+    size=textsize1
     )
     ),
     baxis = dict(
@@ -78,7 +82,7 @@ fig.add_trace(go.Carpet(
     #            )
     #        ),
     tickfont=dict(
-    size=28
+    size=textsize1
     )
 )))
 
@@ -92,31 +96,16 @@ fig.add_trace(go.Contourcarpet(
         showlabels=False,
         start=48,
         end=54,
-        size=1.0,
+        size=0.5,
+        #size=1.0,
         labelformat=".0f%%",   # <-- adds % symbol after the value
     ),
     #line=dict(color="black"),
-    showscale=True,
+    showscale=False,
     line = dict(
     width = 2,
     smoothing = 0
     ),
-    colorbar=dict(
-        len=0.4,
-        x=0.75,        # horizontal position (0=left edge, 1=right edge of plot)
-        y=0.25,        # vertical position
-        xref="paper",
-        yref="paper",
-        bgcolor="white",      # white background so it doesn't blend with contours
-        bordercolor="black",
-        borderwidth=1,
-        thickness=15,         # thinner colorbar to save space
-        title=dict(
-            text="η<sub>th</sub> (%)",
-            side="top",
-            font=dict(size=26, family="Times New Roman"),
-        ),
-    )
 ))
 
 #pmax lim
@@ -157,7 +146,7 @@ fig.add_trace(go.Scatter(
         line=dict(width=3, color="black"),
     ),
     name="Baseline",
-    showlegend=True,
+    showlegend=False,
 ))
 
 
@@ -217,30 +206,13 @@ fig.add_trace(go.Contourcarpet(
 ))
 
 
-# add pmax text
-fig.add_annotation(
-    x=95,  # specifioc power
-    y=1.17,  # NOx
-    text="p<sub>max</sub> > 150 bar",
-    showarrow=False,
-    font=dict(
-        size=28,
-        family="Times New Roman",
-        color="black",
-    ),
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-    borderpad=4,
-    opacity=1.0,
-)
 
 # add pmax text
 fig.add_annotation(
     x=85,      # arrowhead x (pointing to the shaded region)
     y=1.12,     # arrowhead y
     ax=95,      # text box x (in data coordinates)
-    ay=1.17,    # text box y (in data coordinates)
+    ay=1.15,    # text box y (in data coordinates)
     text="p<sub>max</sub> > 150 bar",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -249,7 +221,7 @@ fig.add_annotation(
     arrowcolor="black",
     axref="x",      # ax is in data coordinates
     ayref="y",      # ay is in data coordinates
-    font=dict(size=28, family="Times New Roman", color="black"),
+    font=dict(size=textsize1, family="Times New Roman", color="black"),
     bgcolor="white",
     bordercolor="black",
     borderwidth=1,
@@ -261,7 +233,7 @@ fig.add_annotation(
     x=60,      # arrowhead x (pointing to the shaded region)
     y=0.81,     # arrowhead y
     ax=95,      # text box x (in data coordinates)
-    ay=0.925,    # text box y (in data coordinates)
+    ay=0.7,    # text box y (in data coordinates)
     text="d > 200 mm",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -270,33 +242,13 @@ fig.add_annotation(
     arrowcolor="black",
     axref="x",      # ax is in data coordinates
     ayref="y",      # ay is in data coordinates
-    font=dict(size=28, family="Times New Roman", color="black"),
+    font=dict(size=textsize1, family="Times New Roman", color="black"),
     bgcolor="white",
     bordercolor="black",
     borderwidth=1,
     borderpad=4,
 )
 
-
-#add thermal efficiency text
-"""
-fig.add_annotation(
-    x=90,  # position near one of the efficiency contours
-    y=0.9,
-    text="η<sub>th</sub> [%]",
-    showarrow=False,
-    font=dict(
-        size=24, 
-        family="Times New Roman", 
-        color="black"
-    ),
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-    borderpad=4,
-    opacity=1.0,
-)
-"""
 
 fig.add_annotation(
     x=60,        # negative x puts it outside the plot to the left
@@ -305,7 +257,7 @@ fig.add_annotation(
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
-    font=dict(size=28, family="Times New Roman", weight=700, color="black"),
+    font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
     textangle=-70,  # rotate to follow axis
 )
 
@@ -316,7 +268,7 @@ fig.add_annotation(
     #yref="paper",
     text="T<sub>4</sub> [K]",
     showarrow=False,
-    font=dict(size=28, family="Times New Roman", weight=700, color="black"),
+    font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
     textangle=35,  # rotate to follow axis
 )
 
@@ -326,7 +278,7 @@ fig.update_layout(
     autosize=False,
     width=550,
     height=650,
-    font=dict(family="Times New Roman", size=28),
+    font=dict(family="Times New Roman", size=textsize1),
     margin=dict(l=80, r=20, t=20, b=80),  # generous margins for saved file
     xaxis=dict(
         range=[51, 109],
@@ -334,11 +286,7 @@ fig.update_layout(
         gridwidth=1,
         showgrid=True,
         zeroline=False,
-        title=dict(
-            text="Ẇ<sub>core,V<sub>d</sub></sub> [kW/litre]",
-            font=dict(size=28, family="Times New Roman",color="black"),
-        ),
-        tickfont=dict(size=28),
+        tickfont=dict(size=textsize1),
         showline=True,
         linecolor="black",
         linewidth=2,
@@ -346,20 +294,20 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.62, 1.19],
+        range=[0.61, 1.19],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
         zeroline=False,
         title=dict(
             text="Thrust specific NO<sub>x</sub> [mg/Ns]",
-            font=dict(size=28, family="Times New Roman",color="black"),
+            font=dict(size=textsize2, family="Times New Roman",color="black"),
         ),
-        tickfont=dict(size=28),
+        tickfont=dict(size=textsize1),
         showline=True,
         linecolor="black",
         linewidth=2,
-        mirror="allticks", 
+        mirror=False, 
         ticks="outside",
     ),
 )
@@ -383,26 +331,17 @@ fig.add_trace(go.Scattercarpet(
     showlegend=False,
 ))
 
-# add legend
+#fig.update_layout(
+#    margin=dict(l=0, r=0, t=0, b=90, pad=10),
+#)
 fig.update_layout(
-    legend=dict(
-        x=0.025,           # position inside plot
-        y=0.975,
-        bgcolor="white",
-        bordercolor="black",
-        borderwidth=1,
-        font=dict(size=28, family="Times New Roman", color="black"),
-    )
+    margin=dict(l=0, r=0, t=0, b=0, pad=10),
 )
 
 fig.update_layout(
-    margin=dict(l=0, r=0, t=0, b=90, pad=10),
+    font=dict(family="Times New Roman", size=textsize1, color="black"),
 )
 
-fig.update_layout(
-    font=dict(family="Times New Roman", size=28, color="black"),
-)
-
-fig.write_image("OPR_T4_plot.pdf", width=550, height=850, scale=2)
+fig.write_image("OPR_T4_plot_subfig.pdf", width=550, height=800, scale=2)
 
 fig.show()

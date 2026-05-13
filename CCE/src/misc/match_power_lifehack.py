@@ -44,8 +44,16 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         
         piston_output = run_piston_engine(input, flags)
 
+        try:
+            T_out_mid = piston_output["T_out"]
+        except IndexError:
+            # piston simulation not converging
+            output_dict = {
+               "error": True
+            }
+            return output_dict
 
-        T_out_mid = piston_output["T_out"]
+
         heat_loss_mid = piston_output["heat_loss"]
         m_in = piston_output["air_flow"]
         p_max = piston_output["peak pressure"]

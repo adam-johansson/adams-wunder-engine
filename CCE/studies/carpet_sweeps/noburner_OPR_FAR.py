@@ -19,7 +19,7 @@ from timeit import default_timer as timer
 
 operating_point = "TOC"
 
-input_file = f"MR_{operating_point}_jetA"
+input_file = f"MR_{operating_point}_jetA_noburner"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -123,9 +123,9 @@ piston_input = {
 
 
 
-param_name = "PR_OPR"
-params_1 = np.arange(0.0,0.41,0.05)
-params_2 = np.arange(12,26.1,2)
+param_name = "noburner_OPR_FAR"
+params_1 = np.arange(18,26.1,2)
+params_2 = np.arange(3.0,4.1,0.25)
 
 
 num1 = np.size(params_1)
@@ -197,17 +197,16 @@ eta_lpt_0 = cce_input["eta_lpt"]
 
 start = timer()
 i = 0
-for pr in params_1:
+for opr in params_1:
     j = 0
-    for opr in params_2:
+    for far in params_2:
 
 
         lap1 = timer()
 
         cce_input["OPR"] = opr
-        cce_input["ratio IC"] = 1.0
-        cce_input["PR"] = pr
-        print(opr, pr)
+        cce_input["far piston"] = (far / 100) * (44 / 43)
+        print(opr, far)
 
         cce_input["eta_p_hpc"] = eta_p_hpc_0
         cce_input["eta_lpt"] = eta_lpt_0
@@ -383,17 +382,6 @@ Tout_piston = np.concatenate((params_2, Tout_piston), axis=0)
 bprs = np.concatenate((params_1.T, bprs), axis=1)
 bprs = np.concatenate((params_2, bprs), axis=0)
 
-
-piston_heatloss = np.concatenate((params_1.T, piston_heatloss), axis=1)
-piston_heatloss = np.concatenate((params_2, piston_heatloss), axis=0)
-
-
-
-heatloss_percentage = np.concatenate((params_1.T, heatloss_percentage), axis=1)
-heatloss_percentage = np.concatenate((params_2, heatloss_percentage), axis=0)
-
-
-
 #fuel_consumption = np.vstack((params, SFCs*1e6)).transpose()
 #bypass_ratios = np.vstack((params, bprs)).transpose()
 #eff_gg = np.vstack((params, gg_effs*100)).transpose()
@@ -414,5 +402,3 @@ np.savetxt(f"./results/{param_name}/peak_pressure.dat", peak_pressure, fmt="%.5f
 np.savetxt(f"./results/{param_name}/bore.dat", bore, fmt="%.5f")
 np.savetxt(f"./results/{param_name}/Tout_piston.dat", Tout_piston, fmt="%.5f")
 np.savetxt(f"./results/{param_name}/BPR.dat", bprs, fmt="%.5f")
-np.savetxt(f"./results/{param_name}/heatloss_percentage.dat", heatloss_percentage, fmt="%.5f")
-np.savetxt(f"./results/{param_name}/piston_heatloss.dat", piston_heatloss, fmt="%.5f")

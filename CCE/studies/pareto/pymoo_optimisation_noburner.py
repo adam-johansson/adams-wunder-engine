@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath("./../../../"))
 # Change to seed 1, 2 or 3 folder to be able to run in parallell
 # seed 1,2,,3 is for secondary burner
 # seed 7, 8, 9 for no secondary burner
-seed = 1  # change to 2, 3 for other runs
+seed = 7  # change to 2, 3 for other runs
 
 cea_work_dir = os.path.abspath(f"optimisation_data/seed_{seed}")
 #os.makedirs(cea_work_dir, exist_ok=True)
@@ -27,6 +27,9 @@ from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 
+from pymoo.operators.mutation.pm import PM
+from pymoo.operators.sampling.lhs import LHS
+
 
 from pymoo.indicators.hv import HV
 from pymoo.core.callback import Callback
@@ -40,7 +43,7 @@ import pandas as pd
 
 operating_point = "TOC"
 
-input_file = f"MR_{operating_point}_jetA"
+input_file = f"MR_{operating_point}_jetA_noburner"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -157,14 +160,12 @@ all_evaluations = []
 
 def evaluate_cce(x):
 
-    #print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}')
     opr = x[0]  # bypass ratio
-    T4 = x[1]
-    split = x[2]  # pressure ratio hpc
-    cr = x[3]
-    far = x[4]
-    pi_pe = x[5]  # piston engine pressure increase or drop
-    ic_ratio = x[6]  # intercooling ratio
+    split = x[1]  # pressure ratio hpc
+    cr = x[2]
+    far = x[3]
+    pi_pe = x[4]  # piston engine pressure increase or drop
+    ic_ratio = x[5]  # intercooling ratio
 
     EXTRA_KEYS = [
     "thrust", "bpr", "bore", "bpr piston", "m0",
@@ -183,7 +184,6 @@ def evaluate_cce(x):
 
     # the variables that are optimsed upon
     cce_input["OPR"] = opr
-    cce_input["T4"] = T4
     cce_input["PR"] = split
     cce_input["cr"] = cr
     cce_input["far piston"] = (far / 100) * (44/43)
@@ -315,7 +315,7 @@ def evaluate_cce(x):
         "error": error
         }
 
-        print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}, ic ratio: {x[6]}')
+        print(f'opr: {x[0]}, split: {x[1]}, cr: {x[2]}, far: {x[3]}, pi_pe: {x[4]}, ic ratio: {x[5]}')
         print(f"Point converged and: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns")
         print(f"Constraints: Pmax {pmax * 1e-5} bar, Tout piston {T_out_piston} K, bore: {bore*1000} mm, bpr around piston: {bpr_piston}")
         print(f"Core power per litre: {core_power_per_litre} kW/l and percentage fuel in piston: {piston_fuelsplit*100} %")
@@ -333,11 +333,11 @@ def evaluate_cce(x):
 
 class MyEngineProblem(Problem):
     def __init__(self):
-        super().__init__(n_var=7,  #OPR, T4, split, cr, far, pi_pe, ic ratio
+        super().__init__(n_var=6,  #OPR, split, cr, far, pi_pe, ic ratio
                             n_obj=2,
                             n_constr=4,  # Tout piston, pmax, circumventing flow, bore?
-                            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0]), #lower limit on variables
-                            xu=np.array([30, 1600, 0.5, 15, 5, 1.6, 1.0])) #upp limit on the variables
+                            xl=np.array([10, 0.0, 4, 2, 0.9, 0.0]), #lower limit on variables
+                            xu=np.array([30, 0.5, 15, 5, 1.6, 1.0])) #upp limit on the variables
 
     def _evaluate(self, x, out, *args, **kwargs):
         F = []
@@ -360,11 +360,11 @@ class MyEngineProblem(Problem):
             # Store all evaluated points
             evaluation_record = {
                 "opr": ind[0],
-                "T4": ind[1],
-                "split": ind[2],
-                "cr": ind[3],
-                "far": ind[4],
-                "p_ratio": ind[5],
+                "split": ind[1],
+                "cr": ind[2],
+                "far": ind[3],
+                "p_ratio": ind[4],
+                "ic_ratio": ind[5],
                 "eta_th": -obj[0],
                 "specific_nox": obj[1],
                 "thrust": extra["thrust"],
@@ -425,7 +425,7 @@ class OptimisationCallback(Callback):
         if algorithm.opt is not None:
             pareto_df = pd.DataFrame(
                 np.hstack([algorithm.opt.get("X"), algorithm.opt.get("F")]),
-                columns=['opr', 'T4', 'split', 'cr', 'far', 'pi_pe', 'ic_ratio', 'eta_th', 'specific_nox']
+                columns=['opr', 'split', 'cr', 'far', 'pi_pe', 'ic_ratio', 'eta_th', 'specific_nox']
             )
             pareto_df['eta_th'] = -pareto_df['eta_th']  # ← flip back to positive
             pareto_df.to_csv(f"{output_dir}/pareto_solutions.csv", index=False)
@@ -451,15 +451,17 @@ class OptimisationCallback(Callback):
 
 
 
-resume_optimisation = True
+resume_optimisation = False
 # number of generations first run
 n_gen = 50
 
 # number of new generations to run
-new_gens = 50
+new_gens = 40
 
 pop_size = 100
 
+# how much the algorithm mutates (smaller eta is more mutation)
+eta_mutation = 10
 
 # save in seed folder
 #output_dir = f"optimisation_data/seed_{seed}"
@@ -503,7 +505,11 @@ callback = OptimisationCallback(
 
 # kör 10 gen 50 pop (sen 100 pop och 50 gen) (testa att köra den på andra datorn kanske) (nej kör 100 pop och 25 gen)
 problem = MyEngineProblem()
-algorithm = NSGA2(pop_size=pop_size)
+algorithm = NSGA2(
+        pop_size=pop_size,
+        #mutation=PM(eta=eta_mutation)
+        #glöm ej LHS
+                      )
 
 
 
@@ -532,7 +538,10 @@ else:
     # Reconstruct population
     pop = Population.new("X", pop_X, "F", pop_F)
 
-    algorithm = NSGA2(pop_size=pop_size)
+    algorithm = NSGA2(
+        pop_size=pop_size,
+        #mutation=PM(eta=eta_mutation)
+                      )
     algorithm.initialization.sampling = pop
 
 
@@ -578,12 +587,12 @@ all_df.to_csv(f"{output_dir}/all_evaluations.csv", index=False)
 # res.X has the corresponding design variables
 pareto_df = pd.DataFrame(
     np.hstack([res.X, res.F]),
-    columns=['opr','T4','split','cr','far','pi_pe','ic_ratio','eta_th','specific_nox']
+    columns=['opr','split','cr','far','pi_pe','ic_ratio','eta_th','specific_nox']
 )
 pareto_df['eta_th'] = -pareto_df['eta_th']  # ← flip back to positive
 
 
-pareto_df.to_csv(f"{output_dir}/pareto_solutions.csv", index=False)
+pareto_df.to_csv(f"{output_dir}/pareto_solutions_noburner.csv", index=False)
 
 
 # save the hypervolume
@@ -593,7 +602,7 @@ hv_df = pd.DataFrame({
 })
 
 # save hypervolume and solutons
-hv_df.to_csv(f"{output_dir}/hypervolume.csv", index=False)
+hv_df.to_csv(f"{output_dir}/hypervolume_noburner.csv", index=False)
 
 # --- Print summary ---
 hours = int(t_total // 3600)

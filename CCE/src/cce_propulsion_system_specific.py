@@ -458,6 +458,7 @@ def run_cce(input, input_piston, flags, meta_model):
     p15, T15, m15, m_oil = components.hx_NASA(
         p13, T13, heating_bypass, oil_temp_1
     )
+    print(f"Mass flow of oil: {m_oil} kg/s")
 
     #print(f"Mass flow of engine oil: {m_oil} kg/s")
 

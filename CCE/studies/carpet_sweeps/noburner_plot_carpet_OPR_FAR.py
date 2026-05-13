@@ -4,19 +4,18 @@ import plotly.io as pio
 
 pio.renderers.default = "browser"
 
-data = np.loadtxt("./results/OPR_T4/thermal_eff.dat")
+data = np.loadtxt("./results/noburner_OPR_FAR/thermal_eff.dat")
 
 OPR = data[1:,0]
 T4 = data[0,1:]
 
 eff = data[1:,1:]
-nox = np.loadtxt("./results/OPR_T4/specific_nox.dat")[1:,1:]
-power = np.loadtxt("./results/OPR_T4/core_spec_power.dat")[1:,1:]
-pmax = np.loadtxt("./results/OPR_T4/peak_pressure.dat")[1:,1:]
-bore = np.loadtxt("./results/OPR_T4/bore.dat")[1:,1:]
-Tout = np.loadtxt("./results/OPR_T4/Tout_piston.dat")[1:,1:]
+nox = np.loadtxt("./results/noburner_OPR_FAR/specific_nox.dat")[1:,1:]
+power = np.loadtxt("./results/noburner_OPR_FAR/core_spec_power.dat")[1:,1:]
+pmax = np.loadtxt("./results/noburner_OPR_FAR/peak_pressure.dat")[1:,1:]
+bore = np.loadtxt("./results/noburner_OPR_FAR/bore.dat")[1:,1:]
+Tout = np.loadtxt("./results/noburner_OPR_FAR/Tout_piston.dat")[1:,1:]
 
-# detta hade nog funkat
 failed_mask = (eff == 0.0)
 
 eff[eff == 0] = np.nan
@@ -90,10 +89,11 @@ fig.add_trace(go.Contourcarpet(
     contours=dict(
         #coloring="lines",
         showlabels=False,
-        start=48,
+        start=51,
         end=54,
-        size=1.0,
+        size=0.5,
         labelformat=".0f%%",   # <-- adds % symbol after the value
+
     ),
     #line=dict(color="black"),
     showscale=True,
@@ -119,47 +119,6 @@ fig.add_trace(go.Contourcarpet(
     )
 ))
 
-#pmax lim
-fig.add_trace(go.Contourcarpet(
-    a=T4,
-    b=OPR,
-    z=pmax,
-    contours=dict(
-        start=150,
-        end=300,        # set this above your actual pmax maximum
-        size=200,       # large size so only one band is drawn
-        coloring="fill",
-        showlabels=False,
-    ),
-    colorscale=[
-        [0, "rgba(0,0,0,0)"],
-        [0.01, "rgba(0,0,0,0)"],
-        [0.01, "rgba(128,128,128,1.0)"],  # pink, semi-transparent
-        [1, "rgba(128,128,128,1.0)"],
-    ],
-    showscale=False,
-    # Keep the boundary line
-    line=dict(
-        width=3,
-        color="black",
-        dash="dot",
-    ),
-))
-
-fig.add_trace(go.Scatter(
-    x=[80.40],
-    y=[1.10],
-    mode="markers",
-    marker=dict(
-        symbol="cross",
-        size=16,
-        color="black",
-        line=dict(width=3, color="black"),
-    ),
-    name="Baseline",
-    showlegend=True,
-))
-
 
 #bore lim
 fig.add_trace(go.Contourcarpet(
@@ -168,8 +127,8 @@ fig.add_trace(go.Contourcarpet(
     z=bore,
     contours=dict(
         start=200,
-        end=300,        # set this above your actual pmax maximum
-        size=200,       # large size so only one band is drawn
+        end=300,
+        size=200,
         coloring="fill",
         showlabels=False,
     ),
@@ -180,14 +139,12 @@ fig.add_trace(go.Contourcarpet(
         [1, "rgba(128,128,128,1.0)"],
     ],
     showscale=False,
-    # Keep the boundary line
     line=dict(
         width=3,
         color="black",
-        dash="dot",
+        dash="dot",    
     ),
 ))
-
 
 #Tout lim
 fig.add_trace(go.Contourcarpet(
@@ -216,52 +173,40 @@ fig.add_trace(go.Contourcarpet(
     ),
 ))
 
-
-# add pmax text
-fig.add_annotation(
-    x=95,  # specifioc power
-    y=1.17,  # NOx
-    text="p<sub>max</sub> > 150 bar",
-    showarrow=False,
-    font=dict(
-        size=28,
-        family="Times New Roman",
-        color="black",
+#pmax lim
+fig.add_trace(go.Contourcarpet(
+    a=T4,
+    b=OPR,
+    z=pmax,
+    contours=dict(
+        start=150,
+        end=300,        # set this above your actual pmax maximum
+        size=200,       # large size so only one band is drawn
+        coloring="fill",
+        showlabels=False,
     ),
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-    borderpad=4,
-    opacity=1.0,
-)
+    colorscale=[
+        [0, "rgba(0,0,0,0)"],        # below 150: transparent
+        [0.01, "rgba(0,0,0,0)"],     # keep transparent up to threshold
+        [0.01, "rgba(128,128,128,1.0)"], # above 150: shaded red (adjust alpha as needed)
+        [1, "rgba(128,128,128,1.0)"],
+    ],
+    showscale=False,
+    # Keep the boundary line
+    line=dict(
+        width=3,
+        color="black",
+        dash="dot",
+    ),
+))
 
-# add pmax text
-fig.add_annotation(
-    x=85,      # arrowhead x (pointing to the shaded region)
-    y=1.12,     # arrowhead y
-    ax=95,      # text box x (in data coordinates)
-    ay=1.17,    # text box y (in data coordinates)
-    text="p<sub>max</sub> > 150 bar",
-    showarrow=True,
-    arrowhead=2,    # arrow head style 1-8
-    arrowsize=1,    # relative size of arrowhead
-    arrowwidth=2,   # line width
-    arrowcolor="black",
-    axref="x",      # ax is in data coordinates
-    ayref="y",      # ay is in data coordinates
-    font=dict(size=28, family="Times New Roman", color="black"),
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-    borderpad=4,
-)
 
 # add bore lim text
 fig.add_annotation(
     x=60,      # arrowhead x (pointing to the shaded region)
-    y=0.81,     # arrowhead y
-    ax=95,      # text box x (in data coordinates)
-    ay=0.925,    # text box y (in data coordinates)
+    y=0.8,     # arrowhead y
+    ax=54,      # text box x (in data coordinates)
+    ay=1.12,    # text box y (in data coordinates)
     text="d > 200 mm",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -277,6 +222,45 @@ fig.add_annotation(
     borderpad=4,
 )
 
+
+# add T out lim text
+fig.add_annotation(
+    x=85,      # arrowhead x (pointing to the shaded region)
+    y=0.9,     # arrowhead y
+    ax=80,      # text box x (in data coordinates)
+    ay=0.72,    # text box y (in data coordinates)
+    text="T34 > 1250 K",
+    showarrow=True,
+    arrowhead=2,    # arrow head style 1-8
+    arrowsize=1,    # relative size of arrowhead
+    arrowwidth=2,   # line width
+    arrowcolor="black",
+    axref="x",      # ax is in data coordinates
+    ayref="y",      # ay is in data coordinates
+    font=dict(size=28, family="Times New Roman", color="black"),
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    borderpad=4,
+)
+
+# add pmax text
+fig.add_annotation(
+    x=97,  # specifioc power
+    y=1.17,  # NOx
+    text="p<sub>max</sub> > 150 bar",
+    showarrow=False,
+    font=dict(
+        size=28,
+        family="Times New Roman",
+        color="black",
+    ),
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    borderpad=4,
+    opacity=1.0,
+)
 
 #add thermal efficiency text
 """
@@ -299,25 +283,25 @@ fig.add_annotation(
 """
 
 fig.add_annotation(
-    x=60,        # negative x puts it outside the plot to the left
-    y=1.05,
+    x=50,        # negative x puts it outside the plot to the left
+    y=0.95,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=28, family="Times New Roman", weight=700, color="black"),
-    textangle=-70,  # rotate to follow axis
+    textangle=-80,  # rotate to follow axis
 )
 
 fig.add_annotation(
-    x=60,        # negative x puts it outside the plot to the left
-    y=0.67,
+    x=76,        # negative x puts it outside the plot to the left
+    y=0.78,
     #xref="paper",
     #yref="paper",
-    text="T<sub>4</sub> [K]",
+    text="f [%]",
     showarrow=False,
     font=dict(size=28, family="Times New Roman", weight=700, color="black"),
-    textangle=35,  # rotate to follow axis
+    textangle=-50,  # rotate to follow axis
 )
 
 fig.update_layout(
@@ -329,7 +313,7 @@ fig.update_layout(
     font=dict(family="Times New Roman", size=28),
     margin=dict(l=80, r=20, t=20, b=80),  # generous margins for saved file
     xaxis=dict(
-        range=[51, 109],
+        range=[42, 117],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -346,7 +330,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.62, 1.19],
+        range=[0.67, 1.21],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -369,18 +353,53 @@ T4_grid, OPR_grid = np.meshgrid(T4, OPR)
 failed_a = T4_grid[failed_mask]
 failed_b = OPR_grid[failed_mask]
 
+
 fig.add_trace(go.Scattercarpet(
     a=failed_a,
     b=failed_b,
     mode="markers",
     marker=dict(
         symbol="x",
-        size=32,
+        size=16,
         color="black",
-        line=dict(width=3, color="black"),
+        line=dict(width=2, color="black"),
     ),
     name="No convergence",
     showlegend=False,
+))
+
+"""
+fig.add_annotation(
+    x=0.75,
+    y=0.10,
+    xref="paper",
+    yref="paper",
+    text="✕  T35 > T4",
+    showarrow=False,
+    font=dict(size=24, family="Times New Roman", color="black", weight=400),
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    borderpad=6,
+    align="left",
+    xanchor="right",
+    yanchor="bottom",
+)
+"""
+
+
+fig.add_trace(go.Scatter(
+    x=[80.40],
+    y=[1.10],
+    mode="markers",
+    marker=dict(
+        symbol="cross",
+        size=16,
+        color="black",
+        line=dict(width=3, color="black"),
+    ),
+    name="Baseline",
+    showlegend=True,
 ))
 
 # add legend
@@ -395,6 +414,8 @@ fig.update_layout(
     )
 )
 
+
+
 fig.update_layout(
     margin=dict(l=0, r=0, t=0, b=90, pad=10),
 )
@@ -403,6 +424,5 @@ fig.update_layout(
     font=dict(family="Times New Roman", size=28, color="black"),
 )
 
-fig.write_image("OPR_T4_plot.pdf", width=550, height=850, scale=2)
-
+fig.write_image("noburner_OPR_FAR_plot.pdf", width=550, height=850, scale=2)
 fig.show()
