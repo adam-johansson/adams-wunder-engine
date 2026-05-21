@@ -60,14 +60,14 @@ def hx_NASA(pc_i, tc_i, heating_power, th_i):
     # water mass flow
     m_water = heating_power / ((th_i - th_o_water) * cp_water)
 
-    print(f"Mass flow of water: {m_water} kg/s air mass flow: {m_c_water} kg/s")
-    print(f"temperature out water: {th_o_water} air temperature out: {tc_o_water}")
+    #print(f"Mass flow of water: {m_water} kg/s air mass flow: {m_c_water} kg/s")
+    #print(f"temperature out water: {th_o_water} air temperature out: {tc_o_water}")
 
 
 
-    print(f"Oil temperature in: {th_i} air temperature in: {tc_i}")
-    print(f"Oil temperature out: {th_o} air temperature out: {tc_o}")
-    print(f"Oil mass flow: {m_oil} air mass flow: {m_c}")
+    #print(f"Oil temperature in: {th_i} air temperature in: {tc_i}")
+    #print(f"Oil temperature out: {th_o} air temperature out: {tc_o}")
+    #print(f"Oil mass flow: {m_oil} air mass flow: {m_c}")
 
 
 

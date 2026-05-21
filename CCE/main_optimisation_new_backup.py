@@ -26,8 +26,8 @@ flags = ["life_hack", "cce", "print_output"]  # life hack version
 
 
 if "cce" in flags:
-    #input_file = "MR_TOC_jetA"
-    input_file = "MR_TOC_jetA_noburner_higheff"
+    input_file = "MR_TOC_jetA"
+    #input_file = "MR_TOC_jetA_noburner_higheff"
     #input_file = "MR_TOC_jetA_noburner"
     #input_file = "MR_TOC_jetA_HCCI"
     #input_file = "MR_TOC_jetA_optim"

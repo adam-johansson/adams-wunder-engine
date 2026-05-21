@@ -3,21 +3,14 @@ import numpy as np
 from CCE.src import cce_propulsion_system, cce_propulsion_system_specific
 from timeit import default_timer as timer
 
-from CCE.src.misc import thrust_requirement_function
-
 from mpmath.libmp import fzero
 from scipy.optimize import (
     fsolve, brentq
 )
 
 def run_cce_bpr(input, data_piston, meta_model):
-    # baseline thrust goal
-    F_goal = input["Fn"]  # net thrust for baseline engine
-
-
-
-    # trade factor interpolator
-    interpolator = input["trade_factor_interpolator"]
+    # baseline specific thrust goal
+    Fs_goal = input["Fs_req"]  # specific thrust
 
     if meta_model == "placeholder":
         flags = ["life_hack", "cce"]
@@ -31,11 +24,9 @@ def run_cce_bpr(input, data_piston, meta_model):
     # Store the last bore match
     last_outputs = {}
     def find_bpr(x):
-        nonlocal piston_error, error, error_type, F_goal  # Allow modification of outer scope variable
-        print(f"Thrust required: {F_goal*1e-3} kN")
+        nonlocal piston_error, error, error_type  # Allow modification of outer scope variable
 
         input["bpr"] = x[0]
-        input["Fn"] = F_goal
 
         output_dict = cce_propulsion_system_specific.run_cce(input, data_piston, flags, meta_model)
 
@@ -46,7 +37,7 @@ def run_cce_bpr(input, data_piston, meta_model):
                 #print(f"fel2")
                 # Too high BPR means LPT does not work
                 # Return very low thrust to guide brentq to lower BPR
-                F = 0.0
+                Fs = 0.0
                 bore = 999
                 error_type = output_dict["error_type"]
                 error = True
@@ -56,7 +47,7 @@ def run_cce_bpr(input, data_piston, meta_model):
                 # larger piston also means higher T35 wich could exceed T4
                 # return very high thrust to guide brentq to higher BPR
                 #print("hej")
-                F = 9999999
+                Fs = 999999
                 bore = 999
                 error_type = output_dict["error_type"]
                 error = True
@@ -66,34 +57,21 @@ def run_cce_bpr(input, data_piston, meta_model):
             else:
                 # Other error - return low thrust
                 #print(f"fel")
-                F = 0.0
+                Fs = 0.0
                 bore = 999
-
-            # this is used since the real F_goal changes 
-            F_goal_dummy = 27000
-            residual = np.array([F - F_goal_dummy])
-
-            return residual
-
         else:
-            F = output_dict["thrust"]
+            Fs = output_dict["specific thrust"]
             bore = output_dict["bore"]
-            sfc = output_dict["sfc"]
-            weight = output_dict["weight"]
             error = False
             error_type = False
 
-            # calculate new thrust requirement based on sfc and engine weight
-            F_goal = thrust_requirement_function(sfc,weight,interpolator)
+        last_outputs.update({
+            'bore_match': bore,
+        })
 
-            # denna var med även vid error förut så det kanske kan bli problem
-            last_outputs.update({
-                'bore_match': bore,
-            })
-
-            residual = np.array([F - F_goal])
-            print(f"Thrust residual {residual} bpr {x} bore: {bore}")
-            return residual
+        residual = np.array([Fs - Fs_goal])
+        #print(f"Thrust residual {residual} bpr {x} bore: {bore}")
+        return residual
 
 
     try:

@@ -458,7 +458,7 @@ def run_cce(input, input_piston, flags, meta_model):
     p15, T15, m15, m_oil = components.hx_NASA(
         p13, T13, heating_bypass, oil_temp_1
     )
-    print(f"Mass flow of oil: {m_oil} kg/s")
+    #print(f"Mass flow of oil: {m_oil} kg/s")
 
     #print(f"Mass flow of engine oil: {m_oil} kg/s")
 
@@ -654,7 +654,7 @@ def run_cce(input, input_piston, flags, meta_model):
         total_friction_loss_pe,
     )
 
-
+    # this SFC is NOT accounting for SAF higher LHV
     sfc = eff_dict["sfc"]
     eta_core = eff_dict["core eff"]
     eta_transfer = eff_dict["transfer eff"]
@@ -675,6 +675,16 @@ def run_cce(input, input_piston, flags, meta_model):
 
     core_power_per_m3 = P_core / displacement_tot
     #print(f"Vi kommer till print output")
+
+
+    # calculate the design mission block energy use (MJ/PAX/NM) using the trade factors
+    #block_energy = calc_block_energy(sfc)
+
+    # IF WE WANT TO CALCULATE WEIGHT
+    # so far just place holder 
+    # using baseline weight for MR engine
+    weight = 3606
+
 
     if "print_output" in flags:
 
@@ -902,6 +912,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     output_dict = {
         "sfc": sfc,
+        "weight": weight,
         "vel_ratio": vel_ratio,
         "thrust": F,
         "specific thrust": Fs,
