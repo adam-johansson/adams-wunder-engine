@@ -22,3 +22,4 @@ from .match_power_lifehack import match_power_lifehack
 from .calc_entropy_array import entropy_array
 from .EINOx_equiv_temp import equivalent_temperature
 from .trade_factors import thrust_requirement_function, load_trade_factors, get_block_energy
+from .weight import calculate_powerplant_weight

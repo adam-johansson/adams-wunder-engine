@@ -383,23 +383,23 @@ def run_cce(input, input_piston, flags, meta_model):
     # number 6 is just after 1% pressure loss after turbine duct
     equ35 = output_burner_turbine["equ35"]
     equ4 = output_burner_turbine["equ4"]
-    equ46 = output_burner_turbine["equ46"]
+    equ41 = output_burner_turbine["equ46"]
     equ5 = output_burner_turbine["equ5"]
     m35 = output_burner_turbine["m35"]
     m4 = output_burner_turbine["m4"]
-    m46 = output_burner_turbine["m46"]
-    m6 = output_burner_turbine["m5"]
+    m41 = output_burner_turbine["m46"]  #m41 is after ngv cooling added
+    m5 = output_burner_turbine["m5"]    #m5 is after rotor cooling added
     p35 = output_burner_turbine["p35"]
     p4 = output_burner_turbine["p4"]
-    p5 = output_burner_turbine["p5"]
-    p6 = output_burner_turbine["p6"]
+    p42 = output_burner_turbine["p5"]
+    p5 = output_burner_turbine["p6"]
     T35 = output_burner_turbine["T35"]
     T4 = output_burner_turbine["T4"]
-    # T46 is after ngv cooling
-    T46 = output_burner_turbine["T46"]
-    # T47 is after rotor cooling
-    T47 = output_burner_turbine["T47"]
-    T6 = output_burner_turbine["T5"]
+    # T41 is after ngv cooling
+    T41 = output_burner_turbine["T46"]
+    # T42 is after rotor 
+    T42 = output_burner_turbine["T47"]
+    T5 = output_burner_turbine["T5"]
     fuel_flow_burner = output_burner_turbine["fuel_flow_burner"]
     m_cool = output_burner_turbine["m_cool"]
     m_cool_ngv = output_burner_turbine["m_ngv"]
@@ -410,9 +410,9 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Hot nozzle
     loss_hotnozzle = 1 - 0.98507827788
-    m8 = m6
-    p8 = p6 * (1-loss_hotnozzle)
-    T8 = T6
+    m8 = m5
+    p8 = p5 * (1-loss_hotnozzle)
+    T8 = T5
     equ8 = equ5
 
     F8, v8_id, v8, error = components.nozzle(
@@ -425,7 +425,7 @@ def run_cce(input, input_piston, flags, meta_model):
             "sfc": 999,
             "error": error,
             "error_type": "Hot nozzle",
-            "error_info": pa-p6
+            "error_info": pa-p5
 
         }
         return output_dict
@@ -680,103 +680,115 @@ def run_cce(input, input_piston, flags, meta_model):
     # calculate the design mission block energy use (MJ/PAX/NM) using the trade factors
     #block_energy = calc_block_energy(sfc)
 
+ # Creating arrays for area calculations and output
+
+    p_array = (
+        np.array(
+            [   
+                pa,
+                p0,
+                p2,
+                p13,
+                p14,
+                p15,
+                p21,
+                p25,
+                p26,
+                p3,
+                p31,
+                p31,
+                p34,
+                p35,
+                p4,  #secondary burner outlet
+                p4, # after ngv cooling
+                p5, # after rotor expansion
+                p5, # after rotor cooling
+                p8,
+            ]
+        )
+        * 1e-3
+    )
+    T_array = (
+        Ta,
+        T0,
+        T2,
+        T13,
+        T14,
+        T15,
+        T21,
+        T25,
+        T26,
+        T3,
+        T31,
+        T31,
+        T34,
+        T35,
+        T4,     # after secondary burner
+        T41,    # after ngv cooling
+        T42,    # after rotor expansion
+        T5,  #after rotor cooling
+        T8,
+    )
+    m_array = (
+        m0,
+        m0,
+        m2,
+        m13,
+        m14,
+        m15,
+        m21,
+        m25,
+        m25,
+        m3,
+        m31,
+        m32,
+        m34,
+        m35,
+        m4,
+        m41,   #ngv cooling added
+        m41,   # after rotor (no mass difference)
+        m5,
+        m8,
+    )
+
+    far_array = (
+        np.array(
+            [   
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                far34,
+                equ35 * far_s,
+                equ4 * far_s,  #out of secondary burner
+                equ41 * far_s,  # afer ngv cooling
+                equ41 * far_s,  # after rotor expansion
+                equ5 * far_s,   #after rotor cooling
+                equ5 * far_s,
+                equ8 * far_s,
+            ]
+        )
+    )
+
+    s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
+
+
     # IF WE WANT TO CALCULATE WEIGHT
     # so far just place holder 
     # using baseline weight for MR engine
+    #weight = misc.calculate_powerplant_weight(p_array, T_array, far_array, m_array, fuel_type)
     weight = 3606
 
 
+
     if "print_output" in flags:
-
-        # Creating array for output
-        p_array = (
-            np.array(
-                [
-                    p2,
-                    p13,
-                    p14,
-                    p15,
-                    p21,
-                    p25,
-                    p26,
-                    p3,
-                    p31,
-                    p31,
-                    p34,
-                    p35,
-                    p4,
-                    p4,
-                    p5,
-                    p5,
-                    p8,
-                ]
-            )
-            * 1e-3
-        )
-        T_array = (
-            T2,
-            T13,
-            T14,
-            T15,
-            T21,
-            T25,
-            T26,
-            T3,
-            T31,
-            T31,
-            T34,
-            T35,
-            T4,
-            T4,
-            T46,
-            T6,
-            T8,
-        )
-        m_array = (
-            m2,
-            m13,
-            m14,
-            m15,
-            m21,
-            m25,
-            m25,
-            m3,
-            m31,
-            m32,
-            m34,
-            m35,
-            m4,
-            m4,
-            m46,
-            m6,
-            m8,
-        )
-
-        far_array = (
-            np.array(
-                [
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    far34,
-                    equ35 * far_s,
-                    equ4 * far_s,
-                    equ46 * far_s,
-                    equ46 * far_s,
-                    equ5 * far_s,
-                    equ5 * far_s,
-                    equ8 * far_s,
-                ]
-            )
-        )
-
-        s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
 
         misc.print_output(
             m32,

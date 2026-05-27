@@ -60,20 +60,15 @@ def thrust_requirement_function(sfc,weight,trade_factor_interpolator):
     # convert SFC to SAF from jet A
     sfc = sfc * (43/44)
 
-
     # this is ToC SFC
     ff_factor = sfc / (14.04920699 * 1e-6)
     wf_factor = weight / 3605.95223204919
-
     
-    print(f"SFC: {sfc*1e6} ff_factor: {ff_factor}")
-
-
-
+    #print(f"SFC: {sfc*1e6} ff_factor: {ff_factor}")
 
     F_goal = float(trade_factor_interpolator([[ff_factor, wf_factor]])[0])
 
-    print(f"F goal: {F_goal*1e-3} kN")
+    #print(f"F goal: {F_goal*1e-3} kN")
 
 
 
@@ -92,7 +87,7 @@ def get_block_energy(sfc,weight,trade_factor_interpolator):
     ff_factor = sfc / (14.04920699 * 1e-6)
     wf_factor = weight / 3605.95223204919
    
-    print(f"SFC: {sfc*1e6} ff_factor: {ff_factor}")
+    #print(f"SFC: {sfc*1e6} ff_factor: {ff_factor}")
 
     block_energy = float(trade_factor_interpolator([[ff_factor, wf_factor]])[0])
 

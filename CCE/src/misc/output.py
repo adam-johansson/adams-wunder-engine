@@ -115,6 +115,8 @@ def csv_output_cce(p, t, m, far, s):
     """
     headers = ("station", "m [kg/s]", "T [K]", "p [kPa]", "FAR []", "s [kJ /(kg * K) ]")
     stations = (
+        "a",
+        "0",
         "2",
         "13",
         "14",
@@ -212,9 +214,11 @@ def csv_output_jetA_geared(p, t, m, far, s):
 def plot_stations_cce(p_array, t_array):
     # plotting the different stations
 
-    stations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    stations = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
     labels = [
+        "a",
+        "0",
         "2",
         "13",
         "14",
@@ -229,7 +233,7 @@ def plot_stations_cce(p_array, t_array):
         "35",
         "4",
         "41",
-        "43",
+        "42",
         "5",
         "8",
     ]

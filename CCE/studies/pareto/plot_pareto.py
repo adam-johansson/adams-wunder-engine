@@ -5,7 +5,7 @@ import plotly.io as pio
 pio.renderers.default = "browser"
 
 
-seed = 9
+seed = 1
 output_dir = f"optimisation_data/seed_{seed}"
 
 all_df = pd.read_csv(f"{output_dir}/all_evaluations.csv")
@@ -40,9 +40,9 @@ fig1.add_trace(go.Scatter(
     mode='markers',
     marker=dict(
         size=10,
-        #color=feasible['piston_fuelsplit'],
+        color=feasible['piston_fuelsplit'],
         #color=feasible['core_power_per_litre'],
-        color=feasible['split'],
+        #color=feasible['split'],
         #color=feasible['far'],
         colorscale='Viridis',
         #cmin=feasible['piston_fuelsplit'].quantile(0.05),
@@ -126,7 +126,7 @@ fig1.add_annotation(
     ay=-160,
     text=(
         "OPR = 10.0<br>"
-        "T<sub>4</sub> = 1599.9 K<br>"
+        "T<sub>4</sub> = 1600 K<br>"
         "Λ = 0.50<br>"
         "Π<sub>pe</sub> = 0.98<br>"
         "ϵ = 4.14<br>"

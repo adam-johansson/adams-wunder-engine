@@ -32,7 +32,7 @@ def run_cce_bpr(input, data_piston, meta_model):
     last_outputs = {}
     def find_bpr(x):
         nonlocal piston_error, error, error_type, F_goal  # Allow modification of outer scope variable
-        print(f"Thrust required: {F_goal*1e-3} kN")
+        #print(f"Thrust required: {F_goal*1e-3} kN")
 
         input["bpr"] = x[0]
         input["Fn"] = F_goal
@@ -92,7 +92,7 @@ def run_cce_bpr(input, data_piston, meta_model):
             })
 
             residual = np.array([F - F_goal])
-            print(f"Thrust residual {residual} bpr {x} bore: {bore}")
+            #print(f"Thrust residual {residual} bpr {x} bore: {bore}")
             return residual
 
 
