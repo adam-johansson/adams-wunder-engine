@@ -27,6 +27,9 @@ lms = 1 / (
 # inlet and outlet conditions
 p_in = 912.02e3 * 0.99  # inlet pressure
 T_in = 708.827  # inlet temperature
+equ_in = 0.0
+
+
 p_ratio = (1170.14e3 / 0.99) / p_in  # pressure ratio after and before engine
 
 # Heat transfer

@@ -21,7 +21,6 @@ dPdphi_temp = 0
 def run_piston_engine(input, flags):
     p_in = input['p_in']
     T_in = input['T_in']
-    equ_ratio_in = input['equ_in']
     p_ratio = input['p_ratio']
     cycle = input['cycle']
     cooling = input['cooling']
@@ -101,9 +100,7 @@ def run_piston_engine(input, flags):
     far_s, LHV = thermo.fuel_props(fuel_type)
 
     # assuming pure air in intake for direct injection and a fuel-air mixture for external mixture formation
-
-    # Now we can specifiy the equivalence ratio of the intake air
-    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equivalence_ratio=equ_ratio_in, fuel_type=fuel_type, include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
+    h_in, _, _, _, R_in, _, _, _ = thermo.mixture(t=T_in, p=p_in, equivalence_ratio=0, fuel_type=fuel_type, include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
 
     rho_in = p_in / (R_in * T_in)
 
@@ -163,7 +160,6 @@ def run_piston_engine(input, flags):
         Qf = LHV * mf_tot
 
         # this is only used for initial value of equivalence ratio in exhaust port
-      
         m_air_theo = V1[np.argwhere(phi >= phi_close_out)[0][0]] * rho_in
         far_tot = mf_tot / m_air_theo
     else:
@@ -171,7 +167,6 @@ def run_piston_engine(input, flags):
         # this is just an initial guess
         if cycle == "4T":
             # 4 stroke starts at inlet closing, so first value is inlet closing volume
-            # mass of charge when using inlet density and displacement
             m_air_theo = V1[0] * rho_in
 
         if premixed:
@@ -183,15 +178,9 @@ def run_piston_engine(input, flags):
             # Calculate fuel mass needed for next cycle based on trapped mixture
             mf_tot = m0 * mass_fraction_fuel
         else:
-            # this should account for diluted intake air
-            mf_tot = m_air_theo * (far_goal - equ_ratio_in * far_s) / (1 + equ_ratio_in * far_s)
-            #mf_tot = far_goal * m_air_theo
-
-
-        # far_tot is used for init of exhaust port equivalance ratio
+            mf_tot = far_goal * m_air_theo
+        # far_tot is used for init
         far_tot = far_goal
-
-        # Qf is used in some cases but for single_mass Wiebe the mf_tot is used for the fuel addition 
         Qf = LHV * mf_tot  #hmmm eta_c or not
         #print(mf_tot)
 
@@ -376,26 +365,16 @@ def run_piston_engine(input, flags):
             equ_out_IP = equ
 
         h_in_IP = h_in
-        equ_in_IP = equ_ratio_in
 
         dellRdellequ_IP, delludellequ_IP = \
             thermo.equivalence_derivative(equ_IP, T_IP, p_in, fuel_type, premixed, far_goal/far_s)
 
-        #term1 = T_IP + h_out_IP / cv_IP + \
-        #    (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (cv_IP * (1 + equ_out_IP * far_s)) * delludellequ_IP - \
-        #    (T_IP / R_IP) * (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (1 + equ_out_IP * far_s)
+        term1 = T_IP + h_out_IP / cv_IP + \
+            (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (cv_IP * (1 + equ_out_IP * far_s)) * delludellequ_IP - \
+            (T_IP / R_IP) * (1 + equ_IP * far_s) * (equ_IP - equ_out_IP) / (1 + equ_out_IP * far_s)
 
-        #term2 = T_IP + h_in_IP / cv_IP + \
-        #    (equ_IP * (1 + equ_IP * far_s) / cv_IP) * delludellequ_IP - \
-        #    (T_IP * equ_IP / R_IP) * (1 + equ_IP * far_s) * dellRdellequ_IP
-
-        # NOTE: if simulations have become slower, make these equations simplified (h - u e.g.) look at the terms above
-        term1 = h_out_IP - u_IP + m_IP * cv_IP * R_IP * T_IP - \
-            (1 + equ_IP * far_s) * (delludellequ_IP - cv_IP * m_IP * T_IP * dellRdellequ_IP) * ((equ_out_IP - equ_IP)/(1 + equ_out_IP * far_s)) 
-        
-        term2 = h_in_IP - u_IP + m_IP * cv_IP * R_IP * T_IP - \
-            (1 + equ_IP * far_s) * (delludellequ_IP - cv_IP * m_IP * T_IP * dellRdellequ_IP) * ((equ_in_IP - equ_IP)/(1 + equ_in_IP * far_s)) 
-
+        term2 = h_in_IP / cv_IP + T_IP + (equ_IP * (1 + equ_IP * far_s) / cv_IP) * delludellequ_IP - \
+            (T_IP * equ_IP / R_IP) * (1 + equ_IP * far_s) * dellRdellequ_IP
 
         # mass inflow to intake port
         dmindphi_IP = dmindphi * term1 / term2
@@ -404,16 +383,8 @@ def run_piston_engine(input, flags):
         dmdphi_IP = dmindphi_IP - dmindphi
 
         # Change of equivalence ratio in the intake port
-        #dequdphi_IP = ((1 + equ_IP * far_s) / m_IP) * (
-        #        (equ_IP - equ_out_IP) * dmindphi / (1 + equ_out_IP * far_s) - equ_IP * dmindphi_IP)
-
-
-                        # Change in equivalence ratio in cylinder
-        dequdphi_IP = ((1 + equ_IP * far_s) / m_IP) * (((equ_in_IP - equ_IP) / (1 + equ_in_IP * far_s)) * dmindphi_IP
-                                                    - ((equ_out_IP - equ_IP) / (1 + equ_out_IP * far_s)) * dmindphi
-                    )
-        
-
+        dequdphi_IP = ((1 + equ_IP * far_s) / m_IP) * (
+                (equ_IP - equ_out_IP) * dmindphi / (1 + equ_out_IP * far_s) - equ_IP * dmindphi_IP)
 
         # Change of gas constant in intake port
         dRdphi_IP = dellRdellequ_IP * dequdphi_IP
@@ -513,7 +484,7 @@ def run_piston_engine(input, flags):
 
     # from initial guess of fuel air ratio
     equ_EP0 = far_tot / far_s
-    equ0 = equ_IP0 = equ_ratio_in
+    equ0 = equ_IP0 = 0.0
 
     # Init simulation
     x = np.array([T0, V1[0], 0.0, 0.0, m0, P0, 0.0, 0.0, 0.0, equ0, 0.0, 0.0, m0, T_in, equ_IP0, m0, T_in, equ_EP0, 0.0,
@@ -679,8 +650,6 @@ def run_piston_engine(input, flags):
         equ_avg = (mf[-1][-1] / m_in_air) / far_s
 
         # Simple way to calculate fuel-air ratio - works quite well
-        # This is to calculate how much fuel is to be injected each cycle
-        
         if 'fuel_mass' not in flags:
 
             mf_tot_old = mf_tot
@@ -710,9 +679,7 @@ def run_piston_engine(input, flags):
             else:
                 # Non-premixed: fuel flow based on actual exhaust fuel-air ratio
                 # fuel air ratio is based on the intake pure air flow
-
-                mf_tot = m_in_IP[-1][-1] * (far_goal - equ_ratio_in * far_s) / (1 + equ_ratio_in * far_s)
-                print(f"m_ftot{mf_tot}")
+                mf_tot = m_in_IP[-1][-1] * far_goal
 
             # Track convergence of fuel mass iteration
             mf_diff.append(np.abs(mf_tot - mf_tot_old))
@@ -904,12 +871,9 @@ def run_piston_engine(input, flags):
         volume_eff = (m_in_IP[-1][-1] / (1 + far_goal)) / (V_swept * rho_in_air)
 
     else:
-        # this is the mass flow of gas into the piston engine. it could either be pure air or a diluted mixture from EGR
         air_flow = m_in_IP[-1][-1] / t_cycle
         # air sucked in vs theoretical max
         volume_eff = m_in_IP[-1][-1] / (rho_in * V_swept)
-
-  
     fuel_flow = mf_tot / t_cycle
     #fuel_flow = mf[-1][-1] / t_cycle
     out_flow = m_out_EP[-1][-1] / t_cycle

@@ -26,7 +26,8 @@ from thermo import fuel_props
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
 #input_file = "4stroke_hydrogen_crashing_case"
-input_file = "4stroke_standard"
+#input_file = "4stroke_standard"
+input_file = "4stroke_EGR"
 #input_file = "paper1_nox.cr45"
 #input_file = "HCCI"
 
@@ -73,6 +74,7 @@ flags = ['single', 'plot_twozone', 'plot_essentials'] # to look at the nox and t
 piston_input = {
     'p_in': d.p_in,
     'T_in': d.T_in,
+    'equ_in': d.equ_in,
     'p_ratio': d.p_ratio,
     'cycle': d.cycle,
     'cooling': d.cooling,
