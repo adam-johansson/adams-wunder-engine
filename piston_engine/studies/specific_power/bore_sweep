@@ -1,0 +1,260 @@
+import matplotlib.pyplot as plt
+import importlib
+import numpy as np
+from timeit import default_timer as timer
+
+import sys
+sys.path.append("./../../../")
+
+
+
+from piston_engine.engine import run_piston_engine  # import the piston engine function
+from thermo import fuel_props
+
+# import all the input variables
+
+input_file = "4stroke_EGR"
+
+input_dir = "piston_engine.input"
+path = input_dir + "." + input_file
+
+d = importlib.import_module(path)
+
+
+flags = ['sweep'] # to make the function not plot anything
+
+
+piston_input = {
+    'p_in': d.p_in,
+    'T_in': d.T_in,
+    'equ_in': d.equ_in,
+    'p_ratio': d.p_ratio,
+    'cycle': d.cycle,
+    'cooling': d.cooling,
+    'opposed': d.opposed,
+    'cr': d.cr,
+    'bore': d.d,
+    'bsr': d.bsr,
+    'v_mean': d.v_mean,
+    'lms': d.lms,
+    'Twalls': d.Twalls,
+    'ch': d.ch,
+    'valve_timings': d.valve_timings,
+    'n_valve': d.n_valve,
+    'lv_max': d.lv_max,
+    'cd': d.cd,
+    'eta_c': d.eta_c,
+    'mf_tot': d.mf_tot,
+    'm_wiebe': d.m_wiebe,
+    'phi_sc': d.phi_sc,
+    'phi_cd': d.phi_cd,
+    'T_fuel': d.T_fuel,
+    'p_fuel': d.p_fuel,
+    'it': d.it,
+    'wiebe_type': d.wiebe_type,
+    'valve_type': d.valve_type,
+    'far_goal': d.far_goal,
+    'cylinders': d.cylinders,
+    'fuel': d.fuel,
+    'c1': d.c1,
+    'c4': d.c4,
+    'c5': d.c5,
+    'mode': d.mode,
+}
+
+
+num = 10
+param_name = "bore"
+params = np.linspace(0.10,0.20, num)
+
+indicated_power = np.zeros(num)
+no_concentration = np.zeros(num)
+thermal_eff = np.zeros(num)
+T_out = np.zeros(num)
+intake_massflow = np.zeros(num)
+peak_pressure = np.zeros(num)
+peak_temperature = np.zeros(num)
+far_avg = np.zeros(num) # fuel flow / air flow
+heat_loss = np.zeros(num)
+exhaust_massflow = np.zeros(num)
+hot_zone_peak_temperature = np.zeros(num)
+flame_temp = np.zeros(num)
+T_sc = np.zeros(num)
+p_sc = np.zeros(num)
+no_specific = np.zeros(num) # g / kWh
+fuel_flow = np.zeros(num) 
+
+
+fuel_type = "jetA"
+far_s, LHV = fuel_props(fuel_type)
+equ_in = piston_input["equ_in"]
+far_goal = piston_input["far_goal"]
+
+flags =  ["sweep"]
+
+i = 0
+
+
+for bore in params:
+    print(i)
+
+
+    piston_input["bore"] = bore
+    piston_input["lv_max"] = 0.1*bore
+
+    start = timer()
+    piston_output = run_piston_engine(piston_input, flags)
+    end = timer()
+    print(f"Time: {end - start}")
+
+    indicated_power[i] = piston_output["indicated power"]
+    no_concentration[i] = piston_output["no_ppm"]
+    thermal_eff[i] = piston_output["eta_th"]
+    T_out[i] = piston_output["T_out"]
+    intake_massflow[i] = piston_output["intake massflow"]
+    peak_pressure[i] = piston_output["peak pressure"]
+    peak_temperature[i] = piston_output["peak temperature"]
+    far_avg[i] = piston_output["far"] 
+    heat_loss[i] = piston_output["heat_loss"]
+    exhaust_massflow[i] = piston_output["out_flow"]
+    hot_zone_peak_temperature[i] = piston_output["peak temperature hot zone"]
+    flame_temp[i] = piston_output["flame temperature"]
+    T_sc[i] = piston_output["T start of combustion"]
+    p_sc[i] = piston_output["p start of combustion"]
+    no_specific[i] = piston_output["nox_spec"] # g/kWh of NO
+    fuel_flow[i] = piston_output["fuel flow"]
+
+    i = i + 1
+
+# this is to test if the same approximation works with EGR
+
+# get specific power and mass flow from mid bore
+spec_power = indicated_power[5] / intake_massflow[5]
+mass_flow = intake_massflow[5]
+T_out_mid = T_out[5]
+heat_loss_mid = heat_loss[5]
+bore_mid = params[5]
+
+# also get it from one more point
+T_out_low = T_out[0]
+heat_loss_low = heat_loss[0]
+bore_low = params[0]
+
+### assume mdot = k*bore**2
+k = mass_flow/bore_mid**2
+
+#approximate mass flow and power
+approx_m_ins = params*params*k
+approx_powers = approx_m_ins*spec_power
+
+approx_fuel_flow = approx_m_ins * (far_goal - equ_in * far_s) / (1 + equ_in * far_s)
+approx_eff = approx_powers / (approx_fuel_flow * LHV) * np.ones(num)
+
+# try to model heat loss and T out
+# assume T_out = c0 + c1*bore
+
+c1_T = (T_out_mid - T_out_low) / (bore_mid - bore_low)
+c0_T = T_out_mid - c1_T * bore_mid
+approx_T_out = c0_T + c1_T * params
+
+# assume heat_loss = k0 + k1*bore**2
+c1_T = (heat_loss_mid - heat_loss_low) / (bore_mid**2 - bore_low**2)
+c0_T = heat_loss_mid - c1_T * bore_mid**2
+approx_heat_loss = c0_T + c1_T * params**2
+
+_, ax1 = plt.subplots()
+
+ax1.plot(params, indicated_power*1e-3, label="simulation")
+ax1.plot(params, approx_powers*1e-3, label="approx")
+ax1.set_xlabel(f"{param_name}")
+ax1.set_ylabel(f"power [kW]")
+ax1.legend()
+
+_, ax2 = plt.subplots()
+ax2.plot(params, no_concentration)
+ax2.set_xlabel(f"{param_name}")
+ax2.set_ylabel(f"NO [ppm]")
+
+_, ax3 = plt.subplots()
+ax3.plot(params, thermal_eff, label="simulation")
+ax3.plot(params, approx_eff, label="approx")
+ax3.set_xlabel(f"{param_name}")
+ax3.set_ylabel(f"Thermal efficiency [%]")
+ax3.legend()
+
+_, ax4 = plt.subplots()
+ax4.plot(params, T_out, label="simulation")
+ax4.plot(params, approx_T_out, label="approx linear")
+ax4.set_xlabel(f"{param_name}")
+ax4.set_ylabel(f"Exhaust temperature [K]")
+ax4.legend()
+
+_, ax5 = plt.subplots()
+ax5.plot(params, intake_massflow, label="simulation")
+ax5.plot(params, approx_m_ins, label="approx")
+ax5.set_xlabel(f"{param_name}")
+ax5.set_ylabel(f"Intake massflow [kg/s]")
+ax5.legend()
+
+_, ax6 = plt.subplots()
+ax6.plot(params, peak_pressure*1e-5)
+ax6.set_xlabel(f"{param_name}")
+ax6.set_ylabel(f"Peak pressure [bar]")
+
+_, ax7 = plt.subplots()
+ax7.plot(params, peak_temperature)
+ax7.set_xlabel(f"{param_name}")
+ax7.set_ylabel(f"Peak temperature [K]")
+
+_, ax8 = plt.subplots()
+ax8.plot(params, far_avg*100)
+ax8.set_xlabel(f"{param_name}")
+ax8.set_ylabel(f"Average fuel air ratio [%]")
+
+_, ax9 = plt.subplots()
+ax9.plot(params, heat_loss*1e-3)
+ax9.set_xlabel(f"{param_name}")
+ax9.set_ylabel(f"Heat loss [kW]")
+
+_, ax10 = plt.subplots()
+ax10.plot(params, exhaust_massflow)
+ax10.set_xlabel(f"{param_name}")
+ax10.set_ylabel(f"Exhuast mass flow [kg/s]")
+
+_, ax11 = plt.subplots()
+ax11.plot(params, hot_zone_peak_temperature)
+ax11.set_xlabel(f"{param_name}")
+ax11.set_ylabel(f"Hot zone peak temperature [K]")
+
+_, ax12 = plt.subplots()
+ax12.plot(params, flame_temp)
+ax12.set_xlabel(f"{param_name}")
+ax12.set_ylabel(f"Flame temperature [K]")
+
+_, ax13 = plt.subplots()
+ax13.plot(params, T_sc)
+ax13.set_xlabel(f"{param_name}")
+ax13.set_ylabel(f"Temperature at start of combustion [K]")
+
+_, ax14 = plt.subplots()
+ax14.plot(params, p_sc*1e-5)
+ax14.set_xlabel(f"{param_name}")
+ax14.set_ylabel(f"Pressure at start of combustion [bar]")
+
+_, ax15 = plt.subplots()
+ax15.plot(params, no_specific)
+ax15.set_xlabel(f"{param_name}")
+ax15.set_ylabel(f"NO per indicated work [g/kWh]")
+
+_, ax16 = plt.subplots()
+ax16.plot(params, fuel_flow*1000, label="simulation")
+ax16.plot(params, approx_fuel_flow*1000, label="approx")
+ax16.set_xlabel(f"{param_name}")
+ax16.set_ylabel(f"Fuel flow [g/s]")
+ax16.legend()
+
+
+plt.show()
+
+
+

@@ -64,7 +64,7 @@ eta_c = 0.999
 far_goal = 999
 
 
-wiebe_type = "Single"
+wiebe_type = "Single_mass"
 #wiebe_type = "Double"
 # This is for Kaisers wiebe function (double)
 wa = 6.91  # funkar

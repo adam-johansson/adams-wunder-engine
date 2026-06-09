@@ -12,12 +12,11 @@ mode = "DI"
 
 cr = 14.0
 
-cylinders = 1  # V12
+cylinders = 1  
 
 # piston
 d = 0.15  # diameter
-#d = 0.1699  # diameter
-v_mean = 10  # mean velocity from Kaiser's thesis
+v_mean = 10  # mean velocity
 bsr = 1  # bore stroke ratio
 # rpm = 4000  # revolutions per minute
 lms = 1 / (2 * 1.7)  # connecting rod ratio (from Kaiser, cite 147 Handbuch Verbrennungsmotor)
@@ -28,7 +27,7 @@ T_in = 300  # inlet temperature (670 cruise 770 TO)
 p_ratio = 1.1  # pressure ratio after and before engine
 
 # EGR
-equ_in = 0.3
+equ_in = 0.5
 
 
 # Heat transfer
@@ -60,18 +59,9 @@ cd = 0.8
 # 99.9 should be used
 eta_c = 0.999
 
-throttle = 0.0294
 far_goal = 0.04
 
-
-wiebe_type = "Single"
-#wiebe_type = "Double"
-# This is for Kaisers wiebe function (double)
-wa = 6.91  # funkar
-wm = 1.40  # funkar
-#wa = 6.82  # matchar power
-#wm = 1.492  # matchar power
-
+wiebe_type = "Single_mass"
 
 
 # this if for single wiebe function

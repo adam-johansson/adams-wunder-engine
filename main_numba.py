@@ -92,8 +92,6 @@ piston_input = {
     'cd': d.cd,
     'eta_c': d.eta_c,
     'mf_tot': d.mf_tot,
-    'wa': d.wa,
-    'wm': d.wm,
     'm_wiebe': d.m_wiebe,
     'phi_sc': d.phi_sc,
     'phi_cd': d.phi_cd,

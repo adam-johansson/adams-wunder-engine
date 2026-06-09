@@ -39,8 +39,6 @@ def run_piston_engine(input, flags):
     cd = input['cd']
     eta_c = input['eta_c']
     mf_tot = input['mf_tot']
-    wa = input['wa']
-    wm = input['wm']
     m_wiebe = input['m_wiebe']
     phi_sc = input['phi_sc']
     phi_cd = input['phi_cd']
@@ -712,7 +710,6 @@ def run_piston_engine(input, flags):
                 # fuel air ratio is based on the intake pure air flow
 
                 mf_tot = m_in_IP[-1][-1] * (far_goal - equ_ratio_in * far_s) / (1 + equ_ratio_in * far_s)
-                print(f"m_ftot{mf_tot}")
 
             # Track convergence of fuel mass iteration
             mf_diff.append(np.abs(mf_tot - mf_tot_old))
@@ -905,7 +902,8 @@ def run_piston_engine(input, flags):
 
     else:
         # this is the mass flow of gas into the piston engine. it could either be pure air or a diluted mixture from EGR
-        air_flow = m_in_IP[-1][-1] / t_cycle
+        massflow_intake = m_in_IP[-1][-1] / t_cycle
+        air_flow = massflow_intake / (1 + equ_ratio_in * far_s)
         # air sucked in vs theoretical max
         volume_eff = m_in_IP[-1][-1] / (rho_in * V_swept)
 
@@ -943,6 +941,7 @@ def run_piston_engine(input, flags):
 
     air_flow_engine = air_flow * cylinders
     fuel_flow_engine = fuel_flow * cylinders
+    massflow_intake_engine = massflow_intake * cylinders
 
     heat_losses = heat_loss_single * cylinders
 
@@ -1039,7 +1038,7 @@ def run_piston_engine(input, flags):
         else:
             # when sampling data use nox_model
             # it is more stable for weird input parameters
-            # otheerwise use nox_model_alternative.nox_calculations
+            # otherwise use nox_model_alternative.nox_calculations 
             no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                         rpm,
                                                                         m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
@@ -1227,7 +1226,9 @@ def run_piston_engine(input, flags):
         "T_out": T_out[-1],
         "break power": break_power_engine,
         "eta_th": eta_th,
-        "air_flow": air_flow_engine,
+        "intake massflow": massflow_intake_engine, 
+        "intake airflow": air_flow_engine,
+        "fuel flow": fuel_flow_engine,
         "peak pressure": p_max,
         "peak temperature": T_max,
         "far": far_avg,
