@@ -15,9 +15,9 @@ def run_cce_bpr(input, data_piston, meta_model):
     F_goal = input["Fn"]  # net thrust for baseline engine
 
 
-
-    # trade factor interpolator
-    interpolator = input["trade_factor_interpolator"]
+    if input["trade_factors"] == True:
+        # trade factor interpolator
+        interpolator = input["trade_factor_interpolator"]
 
     if meta_model == "placeholder":
         flags = ["life_hack", "cce"]
@@ -29,7 +29,7 @@ def run_cce_bpr(input, data_piston, meta_model):
     error_type = False
 
     # Store the last bore match
-    last_outputs = {}
+    last_outputs = {'bore_match': None}
     def find_bpr(x):
         nonlocal piston_error, error, error_type, F_goal  # Allow modification of outer scope variable
         #print(f"Thrust required: {F_goal*1e-3} kN")
@@ -83,8 +83,11 @@ def run_cce_bpr(input, data_piston, meta_model):
             error = False
             error_type = False
 
-            # calculate new thrust requirement based on sfc and engine weight
-            F_goal = thrust_requirement_function(sfc,weight,interpolator)
+            #if we are using the trade factors
+            if input["trade_factors"] == True:
+                # calculate new thrust requirement based on sfc and engine weight
+                F_goal = thrust_requirement_function(sfc,weight,interpolator)
+     
 
             # denna var med även vid error förut så det kanske kan bli problem
             last_outputs.update({
@@ -95,15 +98,24 @@ def run_cce_bpr(input, data_piston, meta_model):
             #print(f"Thrust residual {residual} bpr {x} bore: {bore}")
             return residual
 
-
-    try:
-        #bpr = brentq(find_bpr, 12, 40)
-        bpr = fsolve(find_bpr, x0=15)
-    except ValueError:
+    
+    
+    bpr, info, ier, msg = fsolve(find_bpr, x0=15, full_output=True)
+    
+    
+    if ier != 1:  # ier=1 means solution found
         error = True
         bpr = None
-        last_outputs['bore_match'] = None
         error_type = "Can't match thrust"
+
+    #try:
+    #    #bpr = brentq(find_bpr, 12, 40)
+    #    bpr = fsolve(find_bpr, x0=15)
+    #except ValueError:
+    #    error = True
+    #    bpr = None
+    #    last_outputs['bore_match'] = None
+    #    error_type = "Can't match thrust"
 
     output = {
         "bpr": bpr,

@@ -38,14 +38,10 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.0  # multiplier to decrease heat transfer
 
 # Inlet valve
-#phi_open_in = (724/180)*np.pi  # working
-#phi_close_in = (920/180)*np.pi  # working
 phi_open_in = (719.0/180)*np.pi  # testar
 phi_close_in = (913.1/180)*np.pi  # testar
 
 # outlet valve
-#phi_open_out = (475/180)*np.pi  # working
-#phi_close_out = (727/180)*np.pi  # working
 phi_open_out = (512.5/180)*np.pi  # testar
 phi_close_out = (730.8/180)*np.pi  # testar
 

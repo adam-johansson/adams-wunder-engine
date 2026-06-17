@@ -16,7 +16,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     # first specific indicated power and thereafter remove auxiliary and friction losses
     # finally match how big mass flow is needed to match the power requirements
 
-    far34 = input["far_goal"]
+    far33 = input["far_goal"]
 
     if life_hack == "Simulate":
         # calculate stuff for bore between 10 and 20 cm
@@ -55,7 +55,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
 
         heat_loss_mid = piston_output["heat_loss"]
-        m_in = piston_output["air_flow"]
+        m_in = piston_output["intake massflow"]
         p_max = piston_output["peak pressure"]
         T_max = piston_output["peak temperature"]
         indicated_power = piston_output["indicated power"]
@@ -123,7 +123,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         indicated_power_check = piston_output["indicated power"]
         T_out_mid_check = piston_output["T_out"]
         heat_loss_mid_check = piston_output["heat_loss"]
-        m_in_check = piston_output["air_flow"]
+        m_in_check = piston_output["intake massflow"]
 
 
     else:
@@ -148,7 +148,10 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     T_fuel = input["T_fuel"]
     p_loss_in = input["p_loss_in"]
     p_loss_out = input["p_loss_out"]
-    far34 = input["far_goal"]
+    far33 = input["far_goal"]
+    equ_in = input["equ_in"]
+
+    EGR_rate = input["EGR_rate"]
 
     cycle = input["cycle"]
     bsr = input["bsr"]
@@ -175,12 +178,12 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         approx_m_in = bore * bore * k_m
         approx_power = approx_m_in * specific_power
 
-        approx_T34 = k0_T + k1_T * bore
+        approx_T33 = k0_T + k1_T * bore
 
 
-        #fuel flow (since fuel_flow_tot = far34 * m_in)
-        fuel_flow = far34 * approx_m_in
-
+        #fuel flow from calculations
+        #fuel_flow = far34 * approx_m_in
+        fuel_flow = approx_m_in * (far33 - equ_in * far_stoich) / (1 + equ_in * far_stoich)
 
         # power needed to pressurise the fuel
         P_fuel_pump = components.fuel_pump(p_tdc, fuel_type, fuel_flow)
@@ -200,8 +203,13 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         friction_loss = friction_loss / cylinders
         aux_loss = aux_loss / cylinders
 
+        # this is the massflow of core air into the piston engine (total piston intake mass flow can also consist of EGR mass flow)
+        core_air_in = approx_m_in * (1 - EGR_rate)
+
         # this is per cylinder
-        mdot_bypass = core_flow / (cylinders * nr_engines) - approx_m_in
+        # air bypassing the piston engine
+        # core air - core air mass flow into the piston engine
+        mdot_bypass = core_flow / (cylinders * nr_engines) - core_air_in
 
         # dont need compress negative pressure ratio
         if p_ratio * (1-p_loss_in) * (1-p_loss_out) <= 1:
@@ -223,8 +231,9 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         last_outputs.update({
             'bore': bore,
             'm_in': approx_m_in,
+            'core_air_in': core_air_in,
             'indicated_power': approx_power,
-            'T34': approx_T34,
+            'T33': approx_T33,
             'friction_loss': friction_loss,
             'aux_loss': aux_loss,
             'pressure_circ': pressure_circ,
@@ -252,8 +261,9 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
     # Now use the stored values from the last iteration
     mdot_in = last_outputs['m_in'] * nr_engines * cylinders
-    T34 = last_outputs['T34']
-    p34 = pin * p_ratio
+    core_air_in = last_outputs['core_air_in'] * nr_engines * cylinders
+    T33 = last_outputs['T33']
+    p33 = pin * p_ratio
 
 
     T_circumv = last_outputs["T_circumv"]
@@ -266,8 +276,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     indicated_power = last_outputs["indicated_power"] * nr_engines * cylinders
 
 
-
-    mdot_bypass = core_flow - mdot_in
+    mdot_bypass = core_flow - core_air_in
 
     fraction = mdot_in / core_flow
 
@@ -280,22 +289,22 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     else:
         _, h_fuel, _, _ = H2(T_fuel)
 
+    
+    # equ out of the piston engine
+    equ33 = far33 / far_stoich
+  
+    fuel_flow = mdot_in * (far33 - equ_in * far_stoich) / (1 + equ_in * far_stoich)
 
-    equ34 = far34 / far_stoich
-    # mix circumventing flow
-    fuel_flow = far34 * mdot_in
-
-    m34 = mdot_in + fuel_flow  # outflow of piston engine (air + fuel)
+    m33 = mdot_in + fuel_flow  # outflow of piston engine (intake flow + fuel) (BEFORE EGR IS EXTRACTED)
 
 
-
-    h_in, _, _, _, _, _, _, _ = mixture(Tin, pin)
-    h_out, _, _, _, _, _, _, _ = mixture(T34, p34, equ34, fuel_type=fuel_type)
+    h_in, _, _, _, _, _, _, _ = mixture(Tin, pin, equ_in, fuel_type=fuel_type)
+    h_out, _, _, _, _, _, _, _ = mixture(T33, p33, equ33, fuel_type=fuel_type)
 
     # Enthalpy in, out and fuel
     H_in = h_in * mdot_in
     H_fuel = h_fuel * fuel_flow
-    H_out = h_out * m34
+    H_out = h_out * m33
 
     # Conservation of energy gives heat_loss
     heat_loss = H_in + H_fuel - H_out - indicated_power
@@ -305,7 +314,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     term1 = H_in + H_fuel
     term2 = H_out + indicated_power + heat_loss_approx
 
-    #print(f"Energy conservation: {(term2 - term1)*1e-3} kW")
+    print(f"Energy conservation: {(term2 - term1)*1e-3} kW")
 
 
     #print(f"Fuel energy: {LHV * mdot_in * far34 * 1e-3} kW")
@@ -321,7 +330,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         # just to check
 
         power_diff = indicated_power / (nr_engines * cylinders) - indicated_power_check
-        T_out_diff = T34 - T_out_mid_check
+        T_out_diff = T33 - T_out_mid_check
         m_in_diff = mdot_in / (nr_engines * cylinders) - m_in_check
 
         #print(f"power diff: {power_diff*1e-3} kW fraction: {power_diff / indicated_power_check}")
@@ -341,26 +350,8 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     #print(f"Specific power: {(specific_power) * 1e-3} kW/kg/s")
     #print(f"mdot in: {mdot_in}")
 
-
-
-    m35 = m34 + mdot_bypass # flow after mixing
-    #print(m34, T34, equ34, mdot_bypass, T_circumv, fuel_type)
-    T35, equ35 = components.mix(
-        m34,
-        T34,
-        equ34,
-        mdot_bypass,
-        T_circumv,
-        equ2=0,
-        fuel_type=fuel_type,
-    )
-
-    far35 = equ35 * far_stoich
-
-    p35 = p34 * (1- p_loss_out)
-
     # output in kg
-    m_NOX = nox_ppm * m34 * 1e-6
+    m_NOX = nox_ppm * m33 * 1e-6
 
     # Calculate displacement for one cylinder
     stroke = bore_match / bsr  # using bore-to-stroke ratio
@@ -375,16 +366,18 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         "friction loss": friction_loss,
         "fuel pump": P_fuel_pump,
         "P comp circumvent air": P_circumv,
-        "T34": T34,
-        "T35": T35,
+        "T33": T33,
+        #"T35": T35,
         "T_circumv": T_circumv,
-        "p34": p34,
-        "p35": p35,
+        "p33": p33,
+        #"p35": p35,
+        "m31": core_air_in,
         "m32": mdot_in,
-        "m34": m34,
-        "m35": m35,
-        "far34": far34,
-        "far35": far35,
+        "m33": m33,
+        #"m35": m35,
+        "far33": far33,
+        #"far35": far35,
+        "fuel_flow": fuel_flow,
         "p max": p_max,
         "T max": T_max,
         "m NO": m_NOX,

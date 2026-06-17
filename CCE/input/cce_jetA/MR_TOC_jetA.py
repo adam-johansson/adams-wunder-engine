@@ -29,6 +29,7 @@ OPR = 24  # overall pressure ratio (including losses) (16 + far 03)
 PR = 0.25  # pressure split, with regard to the LPC
 eff_IC = 0.7
 ratio_IC = 0.0
+EGR_rate = 0.0
 
 T4 = 1250  # [K] Turbine entry temperature (1200)
 

@@ -17,6 +17,8 @@ path_pist = input_dir_pist + "." + input_file_pist
 
 d_p = importlib.import_module(path_pist)
 
+# WHEN RUNNING AST BASLEIN, DONT USE TRADE FACTORS IN FLAGS
+
 #flags = ["single", "print_output", "conventional"]  # geared turbofan case
 #flags = ["single", "print_output", "cce"]  # normal case
 flags = ["life_hack", "cce", "print_output"]  # life hack version
@@ -26,7 +28,8 @@ flags = ["life_hack", "cce", "print_output"]  # life hack version
 
 
 if "cce" in flags:
-    input_file = "MR_TOC_jetA"
+    #input_file = "MR_TOC_jetA_AST_baseline"
+    input_file = "MR_TOC_jetA_EGR"
     #input_file = "MR_TOC_jetA_noburner_higheff"
     #input_file = "MR_TOC_jetA_noburner"
     #input_file = "MR_TOC_jetA_HCCI"
@@ -138,6 +141,9 @@ elif "cce" in flags:
         "ratio IC": d.ratio_IC,
         "piston_mode": d.piston_mode,
         "LPT_eff_type": d.LPT_eff_type,
+        "EGR_rate": d.EGR_rate,
+        "oil_temp": d.oil_temp,
+        "trade_factors": d.trade_factors,
     }
 
     piston_input = {
@@ -300,13 +306,15 @@ elif "cce" in flags:
             sfc = output_dict["sfc"]
             weight = output_dict["weight"]
             thrust = output_dict["thrust"]
-            adjusted_thrust = misc.thrust_requirement_function(sfc,weight,interpolator_thrust)
-            block_energy = misc.get_block_energy(sfc,weight,interpolator_energy)
 
-            print(f"TO CHECK THAT THRUST CONVERGED: thrust from sim: {thrust*1e-3}, thrust from trade-factors: {adjusted_thrust*1e-3}")
-            print(f"Baseline: SFC: {14.04920699}, weight: {3606}, thrust: {27.141}, design mission block energy: {1.05932806297672} MJ/NM/PAX")
-            print(f"CCE: SFC: {sfc*1e6}, weight: {weight}, thrust: {thrust*1e-3}, design mission block energy: {block_energy}")
-            print(f"Relative improvement: SFC: {((sfc*1e6/14.04920699) - 1)*100}% block energy consumption (total mission fuel burn): {((block_energy/1.05932806297672) - 1)*100}%")
+            if "trade_factors" in flags:
+                adjusted_thrust = misc.thrust_requirement_function(sfc,weight,interpolator_thrust)
+                block_energy = misc.get_block_energy(sfc,weight,interpolator_energy)
+
+                print(f"TO CHECK THAT THRUST CONVERGED: thrust from sim: {thrust*1e-3}, thrust from trade-factors: {adjusted_thrust*1e-3}")
+                print(f"Baseline: SFC: {14.04920699}, weight: {3606}, thrust: {27.141}, design mission block energy: {1.05932806297672} MJ/NM/PAX")
+                print(f"CCE: SFC: {sfc*1e6}, weight: {weight}, thrust: {thrust*1e-3}, design mission block energy: {block_energy}")
+                print(f"Relative improvement: SFC: {((sfc*1e6/14.04920699) - 1)*100}% block energy consumption (total mission fuel burn): {((block_energy/1.05932806297672) - 1)*100}%")
 
     else:
         print("No known flags")

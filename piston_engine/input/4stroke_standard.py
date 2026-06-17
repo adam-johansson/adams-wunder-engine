@@ -27,6 +27,8 @@ p_in = 1.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
 T_in = 300  # inlet temperature (670 cruise 770 TO)
 p_ratio = 1.1  # pressure ratio after and before engine
 
+equ_in = 0.0
+
 # Heat transfer
 Twall = 400          # Liner temperature
 Tpiston = 400
@@ -64,7 +66,7 @@ throttle = 0.0294
 far_goal = 0.04
 
 
-wiebe_type = "Single"
+wiebe_type = "Single_mass"
 #wiebe_type = "Double"
 # This is for Kaisers wiebe function (double)
 wa = 6.91  # funkar

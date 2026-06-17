@@ -51,6 +51,8 @@ def run_cce(input, input_piston, flags, meta_model):
     # life hack can be either: "Not", "Simulate" or "Express"
     life_hack = input["life_hack"]
     LPT_eff_type = input['LPT_eff_type']
+    EGR_rate = input["EGR_rate"]
+    oil_temp = input["oil_temp"]
 
     error = False
     minor_error_mass = False
@@ -114,7 +116,6 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Intercooler
     if ratio_IC > 0:
-
         p26, T26, p_intercooler, T_intercooler, m_intercooler =\
             components.intercool(p255, T25, m25, p13, T13, effectiveness_IC, ratio_IC)
 
@@ -194,14 +195,41 @@ def run_cce(input, input_piston, flags, meta_model):
 
 
     #eta_p_hpc = eta_p_hpc + eta_p_hpc_correction
+    # CHANGE THIS FOR THE NEXT PAPER
     p_loss_piston_in = 0.0
     p_loss_piston_out = 0.0
 
 
     # Piston intake duct pressure loss
     p31 = (1-p_loss_piston_in) * p3
+    
+    # maybe att variable T31 from EGR later
+    # station 31 is after EGR mixing
     T31 = T3
-    m31 = m3
+
+    #m31 = m3
+
+    # equivalence ratio into the piston engine (MAYBE CHANGE THIS TO EGR RATE INSTEAD)
+    # EGR rate is the fraction of the intake that is exhaust gases
+    # far_piston is the fuel-air-ratio in the piston exhaust
+
+    # far32 is the fuel-air-ratio into the piston engine
+    far32 = (EGR_rate * far_piston) / (1 + far_piston * (1 - EGR_rate))
+    equ32 = far32 / far_s
+
+    # goal fuel-air-ratio is lower than the fuel-air ratio in the piston intake
+    if far32 > far_piston:
+        error = True
+        #print("problem with burner turbine")
+        output_dict = {
+            "sfc": 999,
+            "error": error,
+            "error_type": "EGR_rate"
+
+        }
+        return output_dict
+
+
 
 
     # Piston engine
@@ -218,9 +246,9 @@ def run_cce(input, input_piston, flags, meta_model):
     input_piston["p_loss_out"] = p_loss_piston_out
     input_piston["phi_sc"] = phi_sc
     input_piston["mode"] = input["piston_mode"]
+    input_piston["equ_in"] = equ32
+    input_piston["EGR_rate"] = EGR_rate
 
-
-    # add start of combustion here later
 
     power_req = P_hpc / eta_g + power_offtake
     # Piston engine powers the HPC + gearbox for hpc ( no shaft efficiency now) (circumv flow is within
@@ -232,7 +260,7 @@ def run_cce(input, input_piston, flags, meta_model):
             input_piston,
             meta_model,
             power_req,
-            core_flow=m31,
+            core_flow=m3,
         )
 
     elif life_hack == "Simulate" or life_hack == "Express" or life_hack == "Simulate_final":
@@ -243,7 +271,7 @@ def run_cce(input, input_piston, flags, meta_model):
         piston_output = misc.match_power_lifehack(
             input_piston,
             power_req,
-            core_flow=m31,
+            core_flow=m3,
             life_hack=life_hack
         )
 
@@ -276,15 +304,17 @@ def run_cce(input, input_piston, flags, meta_model):
 
 
     else:
+        # NOT MADE FOR EGR YET
         piston_output = misc.match_power_bore(
             input_piston,
             meta_model,
             power_req,
-            core_flow=m31,
+            core_flow=m3,
         )
 
 
     # if engine was not able to match power requirements, negative air flow or input outside surrogate limits, return error
+    # it does not return error for negative bypass flow. that is handled in the optimiser
     if piston_output["error"]:
         error = True
         #print("problem with piston engine matching")
@@ -296,19 +326,20 @@ def run_cce(input, input_piston, flags, meta_model):
         }
         return output_dict
 
-
-    p34 = piston_output["p34"]
-    p35 = piston_output["p35"]
+    #station 32 is just at the intake of the piston engine AFTER the EGR gas is added to the intake
+    #station 33 is the exhaust of the piston engine BEFORE any EGR is extracted
+    #station 34 is after EGR is extracted. This is the station into the burner
+    p33 = piston_output["p33"]
+    m31 = piston_output["m31"]
     m32 = piston_output["m32"]
-    m34 = piston_output["m34"]
-    #m35 = piston_output["m35"]
-    T34 = piston_output["T34"]
+    m33 = piston_output["m33"]
+    T33 = piston_output["T33"]
     T_cool = piston_output["T_circumv"]
-    #T35 = piston_output["T35"]
-    far34 = piston_output["far34"]
-    #far35 = piston_output["far35"]
+    far33 = piston_output["far33"]
+
     
-    # nox in kilogram
+    # nox in kilogram 
+    # HOW TO HANDLE NOX WITH EGR??
     m_nox_piston = piston_output["m NO"]
     friction_loss_pe = piston_output["friction loss"]
     P_circumv = piston_output["P comp circumvent air"]
@@ -328,12 +359,49 @@ def run_cce(input, input_piston, flags, meta_model):
     k1_H = piston_output["k1_H"]
     piston_specific_power = piston_output["specific_power"]
     T_max_twozone = piston_output["T_max_twozone"]
+    fuel_flow_piston = piston_output["fuel_flow"]
+
+
+    # massflow of EGR
+    m_EGR = m32 - m31
+
+
+    # EGR cooler using the intercooler cooling air
+    if m_EGR > 0:
+       p_EGR_out, p_EGR_cooler_out, T_EGR_cooler_out, effectiveness_EGR, EGR_cooling_power =\
+            components.egr_cool(p33, T33, m_EGR, far33/far_s, p_intercooler, T_intercooler, m_intercooler, T31)
+       m_EGR_cooler = m_intercooler
+       
+    else:
+        p_EGR_out = 0.0
+        p_EGR_cooler_out = p_intercooler
+        T_EGR_cooler_out = T_intercooler
+        m_EGR_cooler = m_intercooler
+
+    print(f"EGR cooling power: {EGR_cooling_power*1e-3} kW")
+    print(f"EGR cooler effectiveness: {effectiveness_EGR}")
+    print(f"EGR pressure out: {p_EGR_out*1e-5} bar")
+    print(f"piston engine pressure in: {p3*1e-5} bar")
+    print(f"EGR cooling air outlet: {T_EGR_cooler_out} K")
+    print(f"EGR cooling air inlet: {T_intercooler} K")
+    print(f"Temperature before intercooler: {T13} K")
+    print(f"Intercooler and EGR cooler massflow: {m_EGR_cooler} kg/s")
+    print(f"EGR massflow: {m_EGR} kg/s")
+    
+
+
+    #station 34 is AFTER EGR is extracted
+    m34 = m33 - m_EGR
+    T34 = T33
+    far34 = far33
+
+    p34 = p33 * (1- p_loss_piston_out)
 
     # pure air massflow to the engine (m32) is the basis for the fuel air ratio
-    fuel_flow_piston = m32 * far34
+    #fuel_flow_piston = m32 * far34
 
     # bypass ratio piston
-    bpr_piston = (m31 - m32) / m32
+    bpr_piston = (m3 - m31) / m31
 
     #power on piston engine shaft
     piston_power_shaft = piston_power_net + P_circumv
@@ -346,10 +414,10 @@ def run_cce(input, input_piston, flags, meta_model):
     power_required_LPT = (P_lpc + (P_inner_fan + P_outer_fan) / eta_g) / eta_s
 
     #print(f"power LPT:{power_required_LPT}")
-
+    
     input_burner_turbine = {
+        "m3": m3,
         "m31": m31,
-        "m32": m32,
         "m34": m34,
         "T_cooling": T_cool,
         "T34": T34,
@@ -385,7 +453,7 @@ def run_cce(input, input_piston, flags, meta_model):
     equ4 = output_burner_turbine["equ4"]
     equ41 = output_burner_turbine["equ46"]
     equ5 = output_burner_turbine["equ5"]
-    m35 = output_burner_turbine["m35"]
+    m35 = output_burner_turbine["m35"]  #mass flow into the secondary burner (after mixing piston exhaust with bypass)
     m4 = output_burner_turbine["m4"]
     m41 = output_burner_turbine["m46"]  #m41 is after ngv cooling added
     m5 = output_burner_turbine["m5"]    #m5 is after rotor cooling added
@@ -437,8 +505,9 @@ def run_cce(input, input_piston, flags, meta_model):
         )
     else:
         # add fuel heating here
+        # we assume the engine coolant outlet temperature is 400K
         heating_fuel = 0.0
-        oil_temp_1 = 500
+        oil_temp_1 = oil_temp
 
 
     # Bypass stream
@@ -495,9 +564,9 @@ def run_cce(input, input_piston, flags, meta_model):
         listofzeros[0] = cost
         return listofzeros
 
-    # Intercooler nozzle
+    # Intercooler and EGR nozzle (they are the same)
     F_ic_nozzle, v_ic_nozzle_id, v_ic_nozzle, error = components.nozzle(
-        p_intercooler*0.99, T_intercooler, pa, equ=0, m=m_intercooler, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
+        p_EGR_cooler_out*0.99, T_EGR_cooler_out, pa, equ=0, m=m_EGR_cooler, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
     if error:
@@ -932,7 +1001,9 @@ def run_cce(input, input_piston, flags, meta_model):
         "core power per m3": core_power_per_m3,
         "core power": P_core,
         "mass flow": m0,
-        "core mass flow": m31,
+        "core mass flow": m3,
+        "EGR mass flow": m_EGR,
+        "equ piston in": equ32,
         "p_max": p_max,
         "T_max": T_max,
         "m34": m34,
@@ -940,7 +1011,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "T34": T34,
         "T35": T35,
         "T4": T4,
-        "far_piston": far34,
+        "far_piston": far33,
         "m_NO_tot": m_nox_total,
         "EI_nox": EI_nox,
         "m_nox_PE": m_nox_piston,

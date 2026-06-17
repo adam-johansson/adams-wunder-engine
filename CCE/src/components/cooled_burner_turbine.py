@@ -5,12 +5,12 @@ import numpy as np
 
 def burner_turbine(input_dictionary):
 
-    # m31 is core flow before piston engine
-    # m32 is mass flow INTO the piston engine
-    # m34 is mass flow OUT of the piston engine
+    # m3 is core flow before piston engine
+    # m31 is mass flow INTO the piston engine (BEFORE ANY EGR ADDTION)
+    # m34 is mass flow OUT of the piston engine (AFTER EGR EXTRACTION), so the mass flow into the burner
 
+    m3 = input_dictionary["m3"]
     m31 = input_dictionary["m31"]
-    m32 = input_dictionary["m32"]
     m34 = input_dictionary["m34"]
     T_cooling = input_dictionary["T_cooling"]
     T34 = input_dictionary["T34"]
@@ -38,7 +38,7 @@ def burner_turbine(input_dictionary):
     T_rotor = 1201
 
     #flow bypassing the piston engine
-    m_bypass = m31 - m32
+    m_bypass = m3 - m31
     T_bypass = T_cooling
 
     # equivalence ratio at piston engine exhaust
@@ -103,7 +103,7 @@ def burner_turbine(input_dictionary):
             )
 
             # pure air going into second burner
-            m_air_burner = (m32 + m_bypass)
+            m_air_burner = (m31 + m_bypass)
 
             # fuel air ratio of added fuel
             m_fuel_burner = (far_4 - far35) * m_air_burner
@@ -199,7 +199,7 @@ def burner_turbine(input_dictionary):
             m35 = m34 + m_mix_burner
 
             # pure air going into second burner
-            m_air_burner = (m32 + m_mix_burner)
+            m_air_burner = (m31 + m_mix_burner)
 
             p35 = p34
             far35 = equ35 * far_s
