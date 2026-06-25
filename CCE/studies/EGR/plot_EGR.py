@@ -119,86 +119,61 @@ fig.add_trace(go.Contourcarpet(
     )
 ))
 
+# ── helper ────────────────────────────────────────────────────────────────────
+def limit_line(a, b, z, threshold, color="black", dash="dot", width=3):
+    """Returns (fill_trace, line_trace) for a carpet limit."""
+    # Transparent fill — keeps the contour machinery but hides the shading
+    fill = go.Contourcarpet(
+        a=a, b=b, z=z,
+        contours=dict(
+            start=threshold,
+            end=threshold * 10,   # well above any real value
+            size=threshold * 10,
+            coloring="fill",
+            showlabels=False,
+        ),
+        colorscale=[
+            [0,    "rgba(0,0,0,0)"],
+            [1,    "rgba(0,0,0,0)"],   # fully transparent everywhere
+        ],
+        showscale=False,
+        line=dict(width=0),            # hide the line on this trace
+    )
 
-#bore lim
-fig.add_trace(go.Contourcarpet(
-    a=T4,
-    b=OPR,
-    z=bore,
-    contours=dict(
-        start=200,
-        end=300,
-        size=200,
-        coloring="fill",
-        showlabels=False,
-    ),
-    colorscale=[
-        [0, "rgba(0,0,0,0)"],
-        [0.01, "rgba(0,0,0,0)"],
-        [0.01, "rgba(128,128,128,1.0)"],  # pink, semi-transparent
-        [1, "rgba(128,128,128,1.0)"],
-    ],
-    showscale=False,
-    line=dict(
-        width=3,
-        color="black",
-        dash="dot",    
-    ),
-))
+    # Line-only trace at exactly the threshold
+    line = go.Contourcarpet(
+        a=a, b=b, z=z,
+        contours=dict(
+            start=threshold,
+            end=threshold,
+            size=0,                    # single contour level
+            coloring="none",           # no fill at all
+            showlabels=False,
+        ),
+        showscale=False,
+        line=dict(
+            width=width,
+            color=color,
+            dash=dash,
+        ),
+    )
+    return fill, line
 
-#Tout lim
-fig.add_trace(go.Contourcarpet(
-    a=T4,
-    b=OPR,
-    z=Tout,
-    contours=dict(
-        start=1250,
-        end=2000,        # set this above your actual pmax maximum
-        size=2000,       # large size so only one band is drawn
-        coloring="fill",
-        showlabels=False,
-    ),
-    colorscale=[
-        [0, "rgba(0,0,0,0)"],        # below 150: transparent
-        [0.01, "rgba(0,0,0,0)"],     # keep transparent up to threshold
-        [0.01, "rgba(128,128,128,1.0)"], # above 150: shaded red (adjust alpha as needed)
-        [1, "rgba(128,128,128,1.0)"],
-    ],
-    showscale=False,
-    # Keep the boundary line
-    line=dict(
-        width=3,
-        color="black",
-        dash="dot",
-    ),
-))
 
-#pmax lim
-fig.add_trace(go.Contourcarpet(
-    a=T4,
-    b=OPR,
-    z=pmax,
-    contours=dict(
-        start=150,
-        end=300,        # set this above your actual pmax maximum
-        size=200,       # large size so only one band is drawn
-        coloring="fill",
-        showlabels=False,
-    ),
-    colorscale=[
-        [0, "rgba(0,0,0,0)"],        # below 150: transparent
-        [0.01, "rgba(0,0,0,0)"],     # keep transparent up to threshold
-        [0.01, "rgba(128,128,128,1.0)"], # above 150: shaded red (adjust alpha as needed)
-        [1, "rgba(128,128,128,1.0)"],
-    ],
-    showscale=False,
-    # Keep the boundary line
-    line=dict(
-        width=3,
-        color="black",
-        dash="dot",
-    ),
-))
+# ── bore limit ────────────────────────────────────────────────────────────────
+bore_fill, bore_line = limit_line(T4, OPR, bore, threshold=200)
+fig.add_trace(bore_fill)
+fig.add_trace(bore_line)
+
+# ── Tout limit ────────────────────────────────────────────────────────────────
+tout_fill, tout_line = limit_line(T4, OPR, Tout, threshold=1250)
+fig.add_trace(tout_fill)
+fig.add_trace(tout_line)
+
+# ── pmax limit ────────────────────────────────────────────────────────────────
+pmax_fill, pmax_line = limit_line(T4, OPR, pmax, threshold=150)
+fig.add_trace(pmax_fill)
+fig.add_trace(pmax_line)
 
 """
 # add bore lim text
@@ -277,7 +252,7 @@ fig.update_layout(
     font=dict(family="Times New Roman", size=28),
     margin=dict(l=80, r=20, t=20, b=80),  # generous margins for saved file
     xaxis=dict(
-        #range=[37, 150],
+        #pythrange=[37, 150],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,

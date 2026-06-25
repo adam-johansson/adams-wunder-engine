@@ -116,7 +116,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Intercooler
     if ratio_IC > 0:
-        p26, T26, p_intercooler, T_intercooler, m_intercooler =\
+        p26, T26, p_intercooler, T_intercooler, m_intercooler, intercooler_power =\
             components.intercool(p255, T25, m25, p13, T13, effectiveness_IC, ratio_IC)
 
         #print(f"Delta T intercooler: {T25 - T26}")
@@ -132,6 +132,7 @@ def run_cce(input, input_piston, flags, meta_model):
         m_intercooler = 0.0
         deltaT_intercooler_hot = 0.0
         deltaT_intercooler_cold = 0.0
+        intercooler_power = 0.0
 
 
     if life_hack == "Simulate":
@@ -377,16 +378,18 @@ def run_cce(input, input_piston, flags, meta_model):
         p_EGR_cooler_out = p_intercooler
         T_EGR_cooler_out = T_intercooler
         m_EGR_cooler = m_intercooler
+        EGR_cooling_power = 0.0
+        effectiveness_EGR = 0.0
 
-    print(f"EGR cooling power: {EGR_cooling_power*1e-3} kW")
-    print(f"EGR cooler effectiveness: {effectiveness_EGR}")
-    print(f"EGR pressure out: {p_EGR_out*1e-5} bar")
-    print(f"piston engine pressure in: {p3*1e-5} bar")
-    print(f"EGR cooling air outlet: {T_EGR_cooler_out} K")
-    print(f"EGR cooling air inlet: {T_intercooler} K")
-    print(f"Temperature before intercooler: {T13} K")
-    print(f"Intercooler and EGR cooler massflow: {m_EGR_cooler} kg/s")
-    print(f"EGR massflow: {m_EGR} kg/s")
+    #print(f"EGR cooling power: {EGR_cooling_power*1e-3} kW")
+    #print(f"EGR cooler effectiveness: {effectiveness_EGR}")
+    #print(f"EGR pressure out: {p_EGR_out*1e-5} bar")
+    #print(f"piston engine pressure in: {p3*1e-5} bar")
+    #print(f"EGR cooling air outlet: {T_EGR_cooler_out} K")
+    #rint(f"EGR cooling air inlet: {T_intercooler} K")
+    #print(f"Temperature before intercooler: {T13} K")
+    #print(f"Intercooler and EGR cooler massflow: {m_EGR_cooler} kg/s")
+    #print(f"EGR massflow: {m_EGR} kg/s")
     
 
 
@@ -394,6 +397,8 @@ def run_cce(input, input_piston, flags, meta_model):
     m34 = m33 - m_EGR
     T34 = T33
     far34 = far33
+
+    # probably reduce NOx by the mass flow of EGR
 
     p34 = p33 * (1- p_loss_piston_out)
 
@@ -1006,11 +1011,16 @@ def run_cce(input, input_piston, flags, meta_model):
         "equ piston in": equ32,
         "p_max": p_max,
         "T_max": T_max,
+        "piston mass flow": m32,
+        "equ32": equ32,
         "m34": m34,
+        "T25": T25,
+        "T26": T26,
         "T31": T31,
         "T34": T34,
         "T35": T35,
         "T4": T4,
+        "p31": p31,
         "far_piston": far33,
         "m_NO_tot": m_nox_total,
         "EI_nox": EI_nox,
@@ -1048,12 +1058,20 @@ def run_cce(input, input_piston, flags, meta_model):
         "piston_power": piston_power_shaft,
         "piston_heatloss": piston_heat_loss,
         "heatloss_percentage": eta_heatloss,
+        "fan power": P_inner_fan + P_outer_fan,
+        "turbine power": power_required_LPT / eta_s,
         "friction_percentage": eta_friction,
         "piston_power_indicated": piston_indicated_p,
         "T_max_twozone": T_max_twozone,
+        "EGR cooling power": EGR_cooling_power,
+        "EGR cooler effectiveness": effectiveness_EGR,
+        "intercooler power": intercooler_power,
+        "intercooler T_in": T13,
+        "intercooler T_out": T_intercooler,
+        "EGR cooler T_out": T_EGR_cooler_out,
+        "EGR cooler massflow": m_EGR_cooler,
         "error": error
     }
-
 
     if p_max > 250*1e5:
         #print(f"Warning: pmax {p_max*1e-5} bar larger than 250 bar")

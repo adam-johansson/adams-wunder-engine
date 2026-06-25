@@ -58,6 +58,7 @@ def calc_efficiencies_cce(
     P_thrust = F * v_0
 
     # Gas generator power
+    #print(f"before error: {T26}, {p26}, {pa}, {fuel_type}")
     WP_before_hpc = thermo.work_potential(T26, p26, 0.0, pa, fuel_type)
 
     WP_after_pe = thermo.work_potential(T35, p35, equ35, pa, fuel_type)

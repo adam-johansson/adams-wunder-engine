@@ -89,18 +89,27 @@ def turbine(
     except ValueError:
         # print('trubbel')
         error = True
-        return (
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            float("nan"),
-            error,
-        )
+        if cooling:
+            return (
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                error,
+            )
+        else:
+            return (
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                error,
+            )
 
     # entropy function before work extraction over the rotor
     psi1 = entropy_func(
@@ -128,18 +137,26 @@ def turbine(
             t2_s = brentq(find_t2_s, 200, 2500)
         except ValueError:
             error = True
-            # print('trubbel')
-            return (
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                float("nan"),
-                error,
+            if cooling:
+                return (
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    error,
+                )
+            else:
+                return (
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    float("nan"),
+                    error,
             )
 
         psi2_s = entropy_func(t2_s, p1_main, equ2, fuel_type)  # after rotor

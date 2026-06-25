@@ -314,7 +314,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     term1 = H_in + H_fuel
     term2 = H_out + indicated_power + heat_loss_approx
 
-    print(f"Energy conservation: {(term2 - term1)*1e-3} kW")
+    #print(f"Energy conservation: {(term2 - term1)*1e-3} kW")
 
 
     #print(f"Fuel energy: {LHV * mdot_in * far34 * 1e-3} kW")

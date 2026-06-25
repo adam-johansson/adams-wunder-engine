@@ -26,8 +26,11 @@ def work_potential(t1, p1, equ1, p0, fuel_type):
     def find_t0(t):
         return psi0_isen - entropy_func(t, p1, equ1, fuel_type)  # p1 or p0 here?
 
-    t0_isen = brentq(find_t0, 200, 6000)
-
+    try:
+        t0_isen = brentq(find_t0, 200, 6000)
+    except ValueError:
+        t0_isen = 200
+        
     h0_isen, _, _, _, _, _, _, _ = mixture(
         t0_isen, p0, equ1, fuel_type
     )  # get thermo_outdated properties for the fluid

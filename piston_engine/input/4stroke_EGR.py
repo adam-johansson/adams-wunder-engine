@@ -59,7 +59,7 @@ cd = 0.8
 # 99.9 should be used
 eta_c = 0.999
 
-far_goal = 0.04
+far_goal = 0.03
 
 wiebe_type = "Single_mass"
 

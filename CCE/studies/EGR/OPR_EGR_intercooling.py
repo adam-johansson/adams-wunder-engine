@@ -126,7 +126,7 @@ piston_input = {
 
 param_name = "EGR"
 params_1 = np.arange(0.0,0.31,0.1)
-params_2 = np.arange(3.0,4.1,0.5)
+params_2 = np.arange(6,12.1,2.0)
 
 
 num1 = np.size(params_1)
@@ -203,20 +203,30 @@ meta_model = "placeholder"
 eta_p_hpc_0 = cce_input["eta_p_hpc"] 
 eta_lpt_0 = cce_input["eta_lpt"]
 
+# fuel air ratio for no EGR
+far_0 = cce_input["far piston"]
+
 start = timer()
 i = 0
 for EGR_rate in params_1:
     j = 0
-    for far in params_2:
+    for cr in params_2:
 
 
         lap1 = timer()
 
         #cce_input["OPR"] = opr
-        cce_input["far piston"] = (far / 100) * (44 / 43)
+        cce_input["cr"] = cr
         cce_input["ratio IC"] = 1.0
         cce_input["EGR_rate"] = EGR_rate
-        print(far, EGR_rate)
+
+        # adjust goal fuel-air-ratio based on EGR to inject same amount of fuel
+        far_piston = -(1 - EGR_rate - far_0)/(2*(1-EGR_rate)) + np.sqrt(( (1 - EGR_rate - far_0)**2 / (4 * (1-EGR_rate)**2     )   )   + far_0/(1-EGR_rate)   )
+
+        cce_input["far piston"]
+
+
+        print(cr, EGR_rate)
 
         cce_input["eta_p_hpc"] = eta_p_hpc_0
         cce_input["eta_lpt"] = eta_lpt_0
@@ -307,7 +317,7 @@ for EGR_rate in params_1:
 
             cool_ngv[i,j] = output_dict["m_cool_ngv"]
             cool_rotor[i,j] = output_dict["m_cool_rotor"]
-            m_core[i,j] = output_dict["core mass flow"]
+            #m_core[i,j] = output_dict["core mass flow"]
 
             bores[i,j] = output_dict["bore"]
             piston_bprs[i,j] = output_dict["bpr_piston"]
@@ -321,8 +331,8 @@ for EGR_rate in params_1:
 
             EGR_massflow[i,j] = output_dict["EGR mass flow"]
             equ_piston_in[i,j] = output_dict["equ piston in"]
-            piston_massflow[i,j] = output_dict["core mass flow"]
-            core_massflow[i,j] = output_dict["EGR mass flow"]
+            piston_massflow[i,j] = output_dict["piston mass flow"]
+            core_massflow[i,j] = output_dict["core mass flow"]
 
             #intercooling_power
             #EGR_power

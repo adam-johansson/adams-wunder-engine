@@ -85,4 +85,4 @@ def intercool(ph_i, th_i, mh, pc_i, tc_i,  effectiveness, c_ratio):
     ph_o = ph_i * (1 - dp_hot)
     pc_o = pc_i * (1 - dp_cold)
 
-    return ph_o, th_o, pc_o, tc_o, mc
+    return ph_o, th_o, pc_o, tc_o, mc, Q_actual

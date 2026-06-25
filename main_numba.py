@@ -26,8 +26,8 @@ from thermo import fuel_props
 # input_file = "validation_twozone.newcastle_h2_CI"
 # input_file = "validation_twozone.newcastle_h2_HCCI"
 #input_file = "4stroke_hydrogen_crashing_case"
-#input_file = "4stroke_standard"
-input_file = "4stroke_EGR"
+input_file = "4stroke_standard"
+#input_file = "4stroke_EGR"
 #input_file = "paper1_nox.cr45"
 #input_file = "HCCI"
 
@@ -119,7 +119,8 @@ if "single" in flags:
 
     imep = pist_output["imep"]
     far = pist_output["far"]
-    air_flow = pist_output["air_flow"]
+    air_flow = pist_output["intake airflow"]
+    intake_flow = pist_output["intake massflow"]
     T4 = pist_output["T_out"]
     eta_th = pist_output["eta_th"]
     p_max = pist_output["peak pressure"]
@@ -127,6 +128,7 @@ if "single" in flags:
     no = pist_output["no_ppm"]
     EI_nox = pist_output["EI_NO"]
     indicated_power = pist_output["indicated power"]
+    fuel_flow = pist_output["fuel flow"]
 
     print(f"IMEP: {imep * 1e-5} bar")
 
@@ -146,8 +148,9 @@ if "single" in flags:
     far_stoch, lhv = fuel_props(d.fuel)
     #print(f"Lambda trapped: {1 / equ_trapped} ")  # for H2
     print(f'Lambda: {far_stoch/far}')
-    # print(f'airflow: {air_flow}')
-    print(f"Fuel flow: {air_flow * far * 1e3} g/s")
+    print(f'airflow: {air_flow * 1e3} g/s')
+    print(f'total intake mass flow: {intake_flow * 1e3} g/s')
+    print(f"Fuel flow: {fuel_flow * 1e3} g/s")
     # print(f'mass flow out: {air_flow * (1 + far)}')
     # print(p_max)
     print(f"Outlet temperature: {T4}")

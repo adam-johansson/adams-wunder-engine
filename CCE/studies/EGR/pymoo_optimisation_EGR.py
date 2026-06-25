@@ -161,24 +161,32 @@ all_evaluations = []
 def evaluate_cce(x):
 
     #print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}')
-    opr = x[0]  # bypass ratio
-    T4 = x[1]
+    opr = x[0]  # overall pressure raio
+    T4 = x[1]  # T4 lite onödig men aja. Skulle kunna göra på något smart sätt att T4 alltid sätts till lägsta möjliga
     split = x[2]  # pressure ratio hpc
-    cr = x[3]
-    far = x[4]
+    cr = x[3]  # compression ratio of the piston engine
+    far = x[4]   # fuel air ratio of the piston engine
     pi_pe = x[5]  # piston engine pressure increase or drop
-    ic_ratio = x[6]  # intercooling ratio
+    egr_rate = x[6]  # exhaust gas recirculation rate
+    #print(f"before error: {opr}, {T4}, {split}, {cr}, {far}, {pi_pe}, {egr_rate}")
 
     EXTRA_KEYS = [
-    "thrust", "bpr", "bore", "bpr piston", "m0",
+    "thrust", "bpr", "bore", "bpr piston", "m0", "p_in_piston",
     "T_in_piston", "T_out_piston", "T35", "P max (bar)",
     "T max", "T_max_twozone", "piston_shaft_power",
     "piston_indicated_power", "piston_heatloss",
     "m_nox_pe", "m_nox_burner", "core_power",
     "core_power_per_litre", "cooling_ratio",
-    "piston_fuelflow", "burner_fuelflow", "piston_fuelsplit", "error"
+    "piston_fuelflow", "burner_fuelflow", "piston_fuelsplit", 
+    "egr_massflow", "equ_piston_in", "piston_massflow", "core_massflow",
+    "intercooling_power", "egr_cooling_power", "egr_cooler_effectiveness",
+    "T25", "T26", "intercooling_T_in", "intercooling_T_out", "egr_cooling_T_out",
+    "m_intercooling", "fan_power", "turbine power",
+    "error"
     ]  # the names of the extras
-    
+
+
+
     # error is false at the start of each evaluation
     error = False
 
@@ -189,9 +197,9 @@ def evaluate_cce(x):
     cce_input["T4"] = T4
     cce_input["PR"] = split
     cce_input["cr"] = cr
-    cce_input["far piston"] = (far / 100) * (44/43)
+    cce_input["far piston"] = (far / 100) * (44/43)  
     cce_input["pi_pe"] = pi_pe
-    cce_input["ratio IC"] = ic_ratio
+    cce_input["EGR_rate"] = egr_rate
 
     # use the OG efficiencies for assessing size effect
     cce_input["eta_p_hpc"] = eta_p_hpc_0
@@ -275,6 +283,7 @@ def evaluate_cce(x):
         m0 = output_dict["mass flow"]
         T_out_piston = output_dict["T34"]
         T_in_piston = output_dict["T31"]
+        p_in_piston = output_dict["p31"]
         pmax = output_dict["p_max"]
         bpr_piston = output_dict["bpr_piston"]
         T35 = output_dict["T35"]
@@ -292,12 +301,34 @@ def evaluate_cce(x):
         piston_fuelflow = output_dict["piston fuelflow"]
         burner_fuelflow = output_dict["burner fuelflow"] 
         piston_fuelsplit = piston_fuelflow / (piston_fuelflow + burner_fuelflow)
+
+        egr_massflow = output_dict["EGR mass flow"]
+        egr_cooler_effectiveness = output_dict["EGR cooler effectiveness"]
+        equ_piston_in = output_dict["equ32"]
+        piston_massflow = output_dict["piston mass flow"]
+        core_massflow = output_dict["core mass flow"]
+        intercooling_power = output_dict["intercooler power"]
+        egr_cooling_power = output_dict["EGR cooling power"]
+        T25 = output_dict["T25"]
+        T26 = output_dict["T26"]
+        intercooling_T_in = output_dict["intercooler T_in"]
+        intercooling_T_out = output_dict["intercooler T_out"]
+        egr_T_out = output_dict["EGR cooler T_out"]
+        m_intercooling = output_dict["EGR cooler massflow"]
+        fan_power = output_dict["fan power"]
+        turbine_power = output_dict["turbine power"]
+
+
+
+
+
         extras = {
         "thrust": thrust,
         "bpr": bpr,
         "bore": bore,
         "bpr piston": bpr_piston,
         "m0": m0,
+        "p_in_piston": p_in_piston * 1e-5,
         "T_in_piston": T_in_piston,
         "T_out_piston": T_out_piston,
         "T35": T35,
@@ -315,10 +346,25 @@ def evaluate_cce(x):
         "piston_fuelflow":piston_fuelflow,
         "burner_fuelflow":burner_fuelflow,
         "piston_fuelsplit":piston_fuelsplit,
+        "egr_massflow": egr_massflow,
+        "equ_piston_in": equ_piston_in,
+        "piston_massflow": piston_massflow,
+        "core_massflow": core_massflow,
+        "intercooling_power": intercooling_power,
+        "egr_cooling_power": egr_cooling_power,
+        "egr_cooler_effectiveness": egr_cooler_effectiveness,
+        "T25": T25,
+        "T26":  T26,
+        "intercooling_T_in": intercooling_T_in, 
+        "intercooling_T_out": intercooling_T_out,
+        "egr_cooling_T_out": egr_T_out,
+        "m_intercooling": m_intercooling,
+        "fan_power": fan_power,
+        "turbine power": turbine_power,
         "error": error
         }
 
-        print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}, ic ratio: {x[6]}')
+        print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}, EGR_rate: {x[6]}')
         print(f"Point converged and: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns")
         print(f"Constraints: Pmax {pmax * 1e-5} bar, Tout piston {T_out_piston} K, bore: {bore*1000} mm, bpr around piston: {bpr_piston}")
         print(f"Core power per litre: {core_power_per_litre} kW/l and percentage fuel in piston: {piston_fuelsplit*100} %")
@@ -339,11 +385,11 @@ def evaluate_cce(x):
 
 class MyEngineProblem(Problem):
     def __init__(self):
-        super().__init__(n_var=7,  #OPR, T4, split, cr, far, pi_pe, ic ratio, EGR
+        super().__init__(n_var=7,  #OPR, T4, split, cr, far, pi_pe, EGR
                             n_obj=2,
                             n_constr=4,  # Tout piston, pmax, circumventing flow, bore?
-                            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0]), #lower limit on variables
-                            xu=np.array([30, 1600, 0.5, 15, 5, 1.6, 1.0])) #upp limit on the variables
+                            xl=np.array([10, 900, 0.0, 4, 2, 1.1, 0.0]), #lower limit on variables
+                            xu=np.array([30, 1400, 0.5, 15, 5, 1.6, 0.5])) #upp limit on the variables
 
     def _evaluate(self, x, out, *args, **kwargs):
         F = []
@@ -353,6 +399,7 @@ class MyEngineProblem(Problem):
         for ind in x:
             obj, extra = evaluate_cce(ind)
 
+            # maybe add constraints regarding fuel air ratio and EGR or T4 or something
             constraints = [
                 extra["T_out_piston"] - 1250,  # T_out_piston ≤ 1250
                 extra["P max (bar)"] - 150,  # P_max ≤ 50 bar
@@ -371,13 +418,15 @@ class MyEngineProblem(Problem):
                 "cr": ind[3],
                 "far": ind[4],
                 "p_ratio": ind[5],
+                "egr_rate": ind[6],
                 "eta_th": -obj[0],
                 "specific_nox": obj[1],
                 "thrust": extra["thrust"],
                 "bpr": extra["bpr"],
                 "bore": extra["bore"],
-                "bpr piston": extra["bpr piston"],
+                "bpr piston (bar)": extra["bpr piston"],
                 "m0": extra["m0"],
+                "p_in_piston": extra["p_in_piston"],
                 "T_in_piston": extra["T_in_piston"],
                 "T_out_piston": extra["T_out_piston"],
                 "T35": extra["T35"],
@@ -395,6 +444,21 @@ class MyEngineProblem(Problem):
                 "piston_fuelflow": extra["piston_fuelflow"],
                 "burner_fuelflow": extra["burner_fuelflow"],
                 "piston_fuelsplit": extra["piston_fuelsplit"],
+                "egr massflow": extra["egr_massflow"],
+                "equ_piston_in": extra["equ_piston_in"],
+                "piston massflow": extra["piston_massflow"],
+                "core massflow": extra["core_massflow"],
+                "intercooling power": extra["intercooling_power"],
+                "egr_cooling_power": extra["egr_cooling_power"],
+                "egr_cooler_effectiveness": extra["egr_cooler_effectiveness"],
+                "T25": extra["T25"],
+                "T26": extra["T26"],
+                "intercooling_T_in": extra["intercooling_T_in"],
+                "intercooling_T_out": extra["intercooling_T_out"],
+                "egr_cooling_T_out": extra["egr_cooling_T_out"],
+                "m intercooling": extra["m_intercooling"],
+                "fan power": extra["fan_power"],
+                "turbine power": extra["turbine power"],
                 "error": extra["error"],
                 "constraint_violation": max(0, extra["T_out_piston"] - 1250) + max(0, extra["P max (bar)"] - 150) +  max(0, extra["bore"] - 0.2) +  max(0, -extra["bpr piston"]),
                 "is_feasible": (extra["T_out_piston"] <= 1250 and
@@ -404,8 +468,6 @@ class MyEngineProblem(Problem):
 
         out["F"] = np.array(F)
         out["G"] = np.array(G)  # Constraint violations: ≤ 0 is feasible
-
-
 
 
 
@@ -431,7 +493,7 @@ class OptimisationCallback(Callback):
         if algorithm.opt is not None:
             pareto_df = pd.DataFrame(
                 np.hstack([algorithm.opt.get("X"), algorithm.opt.get("F")]),
-                columns=['opr', 'T4', 'split', 'cr', 'far', 'pi_pe', 'ic_ratio', 'eta_th', 'specific_nox']
+                columns=['opr', 'T4', 'split', 'cr', 'far', 'pi_pe', 'egr_rate', 'eta_th', 'specific_nox']
             )
             pareto_df['eta_th'] = -pareto_df['eta_th']  # ← flip back to positive
             pareto_df.to_csv(f"{output_dir}/pareto_solutions.csv", index=False)
@@ -457,14 +519,14 @@ class OptimisationCallback(Callback):
 
 
 
-resume_optimisation = True
+resume_optimisation = False
 # number of generations first run
 n_gen = 50
 
 # number of new generations to run
-new_gens = 50
+new_gens = 10
 
-pop_size = 100
+pop_size = 50
 
 
 # save in seed folder
@@ -584,7 +646,7 @@ all_df.to_csv(f"{output_dir}/all_evaluations.csv", index=False)
 # res.X has the corresponding design variables
 pareto_df = pd.DataFrame(
     np.hstack([res.X, res.F]),
-    columns=['opr','T4','split','cr','far','pi_pe','ic_ratio','eta_th','specific_nox']
+    columns=['opr','T4','split','cr','far','pi_pe','egr_rate','eta_th','specific_nox']
 )
 pareto_df['eta_th'] = -pareto_df['eta_th']  # ← flip back to positive
 

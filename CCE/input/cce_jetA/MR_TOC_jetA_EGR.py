@@ -19,18 +19,18 @@ power_offtake = 150e3
 ## OBS: OPR 18 and CR 10 worked
 
 # piston engine stuff
-pi_pe = 1.1
+pi_pe = 1.075 # to overcome pressure loss in EGR cooler
 cr = 7  # 8
-far_piston = 0.05  * (44 / 43)  # adjust for difference in LHV between JETA and SAF
+far_piston = 0.03  * (44 / 43)  # adjust for difference in LHV between JETA and SAF
 v_mean = 14
 start_of_combustion = 355
 
-OPR = 28  # overall pressure ratio (including losses) (16 + far 03)
+OPR = 26  # overall pressure ratio (including losses) (16 + far 03)
 PR = 0.25  # pressure split, with regard to the LPC
 ratio_IC = 1.0
-EGR_rate = 0.3 
+EGR_rate = 0.35 
 
-T4 = 1000  # [K] Turbine entry temperature (1200)
+T4 = 1100  # [K] Turbine entry temperature (1200)
 
 oil_temp = 500
 eff_IC = 0.7
