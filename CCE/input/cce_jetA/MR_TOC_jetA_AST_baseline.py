@@ -59,7 +59,7 @@ cfg_core = 99.0 / 100  # core thrust coefficient
 cfg_bypass = 99.0 / 100  # bypass thrust coefficient
 cd_nozzle = 95.0 / 100  # nozzle discharge coefficient
 
-
+trade_factors = False
 second_burner = True
 surrogate = False
 intercooler = True

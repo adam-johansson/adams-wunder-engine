@@ -362,6 +362,16 @@ def run_cce(input, input_piston, flags, meta_model):
     T_max_twozone = piston_output["T_max_twozone"]
     fuel_flow_piston = piston_output["fuel_flow"]
 
+    print(f"p_in: {p31}")
+    print(f"T_in :{T31}")
+    print(f"mass flow: {m31}")
+    print(f"indicated power: {piston_indicated_p}")
+    print(f"power required: {piston_power_net}")
+    print(f"power compressing bpr: {P_circumv}")
+    print(f"bpr piston: {(m3 - m31) / m31}")
+    print(f"core flow: {m3}")
+    print(f"mass flow out piston: {m33}")
+
 
     # massflow of EGR
     m_EGR = m32 - m31

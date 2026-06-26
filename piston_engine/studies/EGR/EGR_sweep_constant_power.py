@@ -71,7 +71,8 @@ indicated_power = np.zeros(num)
 no_concentration = np.zeros(num)
 thermal_eff = np.zeros(num)
 T_out = np.zeros(num)
-intake_massflow = np.zeros(num)
+intake_massflow = np.zeros(num)  #total intake massflow
+intake_airflow = np.zeros(num) #inflow of pure air
 peak_pressure = np.zeros(num)
 peak_temperature = np.zeros(num)
 far_avg = np.zeros(num) # fuel flow / air flow
@@ -112,6 +113,7 @@ for equ_in in params:
     thermal_eff[i] = piston_output["eta_th"]
     T_out[i] = piston_output["T_out"]
     intake_massflow[i] = piston_output["intake massflow"]
+    intake_airflow[i] = piston_output["intake airflow"]
     fuel_flow[i] = piston_output["fuel flow"]
     peak_pressure[i] = piston_output["peak pressure"]
     peak_temperature[i] = piston_output["peak temperature"]
@@ -152,9 +154,9 @@ ax4.set_ylabel(f"Exhaust temperature [K]")
 
 
 _, ax5 = plt.subplots()
-ax5.plot(params, intake_massflow)
+ax5.plot(params, intake_massflow * 1e3)
 ax5.set_xlabel(f"{param_name}")
-ax5.set_ylabel(f"Intake massflow [kg/s]")
+ax5.set_ylabel(f"Intake massflow [g/s]")
 
 _, ax6 = plt.subplots()
 ax6.plot(params, peak_pressure*1e-5)
@@ -177,9 +179,9 @@ ax9.set_xlabel(f"{param_name}")
 ax9.set_ylabel(f"Heat loss [kW]")
 
 _, ax10 = plt.subplots()
-ax10.plot(params, exhaust_massflow)
+ax10.plot(params, exhaust_massflow * 1e3)
 ax10.set_xlabel(f"{param_name}")
-ax10.set_ylabel(f"Exhuast mass flow [kg/s]")
+ax10.set_ylabel(f"Exhuast mass flow [g/s]")
 
 _, ax11 = plt.subplots()
 ax11.plot(params, hot_zone_peak_temperature)
@@ -211,6 +213,12 @@ _, ax16 = plt.subplots()
 ax16.plot(params, fuel_flow*1000)
 ax16.set_xlabel(f"{param_name}")
 ax16.set_ylabel(f"Fuel flow [g/s]")
+
+
+_, ax17 = plt.subplots()
+ax17.plot(params, intake_airflow * 1e3)
+ax17.set_xlabel(f"{param_name}")
+ax17.set_ylabel(f"Air flow [g/s]")
 
 
 plt.show()

@@ -1,0 +1,129 @@
+import matplotlib.pyplot as plt
+import importlib
+import numpy as np
+from timeit import default_timer as timer
+
+import sys
+sys.path.append("./../../../")
+
+
+
+from piston_engine.engine import run_piston_engine  # import the piston engine function
+from thermo import fuel_props
+
+# import all the input variables
+input_file = "75_load"
+
+input_dir = "piston_engine.input.EGR_validation"
+path = input_dir + "." + input_file
+
+d = importlib.import_module(path)
+
+
+flags = ['sweep'] # to make the function not plot anything
+
+
+piston_input = {
+    'p_in': d.p_in,
+    'T_in': d.T_in,
+    'equ_in': d.equ_in,
+    'p_ratio': d.p_ratio,
+    'cycle': d.cycle,
+    'cooling': d.cooling,
+    'opposed': d.opposed,
+    'cr': d.cr,
+    'bore': d.d,
+    'bsr': d.bsr,
+    'v_mean': d.v_mean,
+    'lms': d.lms,
+    'Twalls': d.Twalls,
+    'ch': d.ch,
+    'valve_timings': d.valve_timings,
+    'n_valve': d.n_valve,
+    'lv_max': d.lv_max,
+    'cd': d.cd,
+    'eta_c': d.eta_c,
+    'mf_tot': d.mf_tot,
+    'm_wiebe': d.m_wiebe,
+    'phi_sc': d.phi_sc,
+    'phi_cd': d.phi_cd,
+    'T_fuel': d.T_fuel,
+    'p_fuel': d.p_fuel,
+    'it': d.it,
+    'wiebe_type': d.wiebe_type,
+    'valve_type': d.valve_type,
+    'far_goal': d.far_goal,
+    'cylinders': d.cylinders,
+    'fuel': d.fuel,
+    'c1': d.c1,
+    'c4': d.c4,
+    'c5': d.c5,
+    'mode': d.mode,
+}
+
+
+num = 10
+param_name = "equ_in"
+params = np.linspace(0.0,0.5, num)
+
+indicated_power = np.zeros(num)
+no_concentration = np.zeros(num)
+thermal_eff = np.zeros(num)
+T_out = np.zeros(num)
+intake_massflow = np.zeros(num)  #total intake massflow
+intake_airflow = np.zeros(num) #inflow of pure air
+peak_pressure = np.zeros(num)
+peak_temperature = np.zeros(num)
+far_avg = np.zeros(num) # fuel flow / air flow
+heat_loss = np.zeros(num)
+exhaust_massflow = np.zeros(num)
+hot_zone_peak_temperature = np.zeros(num)
+flame_temp = np.zeros(num)
+T_sc = np.zeros(num)
+p_sc = np.zeros(num)
+no_specific = np.zeros(num) # g / kWh
+fuel_flow = np.zeros(num)
+
+
+fuel_type = "jetA"
+far_s, LHV = fuel_props(fuel_type)
+
+flags =  ["sweep"]
+
+i = 0
+
+# fuel-air-ratio for no EGR
+f_0 = piston_input["far_goal"]
+
+
+
+
+#piston_input["equ_in"] = equ_in
+#piston_input["far_goal"] = equ_in * far_s + f_0 * ( 1 + equ_in * far_s)
+
+start = timer()
+piston_output = run_piston_engine(piston_input, flags)
+end = timer()
+print(f"Time: {end - start}")
+
+indicated_power[i] = piston_output["indicated power"]
+no_concentration[i] = piston_output["no_ppm"]
+thermal_eff[i] = piston_output["eta_th"]
+T_out[i] = piston_output["T_out"]
+intake_massflow[i] = piston_output["intake massflow"]
+intake_airflow[i] = piston_output["intake airflow"]
+fuel_flow[i] = piston_output["fuel flow"]
+peak_pressure[i] = piston_output["peak pressure"]
+peak_temperature[i] = piston_output["peak temperature"]
+far_avg[i] = piston_output["far"]
+heat_loss[i] = piston_output["heat_loss"]
+exhaust_massflow[i] = piston_output["out_flow"]
+hot_zone_peak_temperature[i] = piston_output["peak temperature hot zone"]
+flame_temp[i] = piston_output["flame temperature"]
+T_sc[i] = piston_output["T start of combustion"]
+p_sc[i] = piston_output["p start of combustion"]
+no_specific[i] = piston_output["nox_spec"] # g/kWh of NO
+
+
+
+
