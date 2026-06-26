@@ -12,15 +12,16 @@ from piston_engine.engine import run_piston_engine  # import the piston engine f
 from thermo import fuel_props
 
 # import all the input variables
-input_file = "75_load"
+input_file = "load75"
 
 input_dir = "piston_engine.input.EGR_validation"
 path = input_dir + "." + input_file
 
 d = importlib.import_module(path)
 
+print(f"hej")
 
-flags = ['sweep'] # to make the function not plot anything
+flags = ['single'] # to make the function not plot anything
 
 
 piston_input = {
@@ -62,35 +63,9 @@ piston_input = {
 }
 
 
-num = 10
-param_name = "equ_in"
-params = np.linspace(0.0,0.5, num)
-
-indicated_power = np.zeros(num)
-no_concentration = np.zeros(num)
-thermal_eff = np.zeros(num)
-T_out = np.zeros(num)
-intake_massflow = np.zeros(num)  #total intake massflow
-intake_airflow = np.zeros(num) #inflow of pure air
-peak_pressure = np.zeros(num)
-peak_temperature = np.zeros(num)
-far_avg = np.zeros(num) # fuel flow / air flow
-heat_loss = np.zeros(num)
-exhaust_massflow = np.zeros(num)
-hot_zone_peak_temperature = np.zeros(num)
-flame_temp = np.zeros(num)
-T_sc = np.zeros(num)
-p_sc = np.zeros(num)
-no_specific = np.zeros(num) # g / kWh
-fuel_flow = np.zeros(num)
-
-
 fuel_type = "jetA"
 far_s, LHV = fuel_props(fuel_type)
 
-flags =  ["sweep"]
-
-i = 0
 
 # fuel-air-ratio for no EGR
 f_0 = piston_input["far_goal"]
@@ -106,24 +81,35 @@ piston_output = run_piston_engine(piston_input, flags)
 end = timer()
 print(f"Time: {end - start}")
 
-indicated_power[i] = piston_output["indicated power"]
-no_concentration[i] = piston_output["no_ppm"]
-thermal_eff[i] = piston_output["eta_th"]
-T_out[i] = piston_output["T_out"]
-intake_massflow[i] = piston_output["intake massflow"]
-intake_airflow[i] = piston_output["intake airflow"]
-fuel_flow[i] = piston_output["fuel flow"]
-peak_pressure[i] = piston_output["peak pressure"]
-peak_temperature[i] = piston_output["peak temperature"]
-far_avg[i] = piston_output["far"]
-heat_loss[i] = piston_output["heat_loss"]
-exhaust_massflow[i] = piston_output["out_flow"]
-hot_zone_peak_temperature[i] = piston_output["peak temperature hot zone"]
-flame_temp[i] = piston_output["flame temperature"]
-T_sc[i] = piston_output["T start of combustion"]
-p_sc[i] = piston_output["p start of combustion"]
-no_specific[i] = piston_output["nox_spec"] # g/kWh of NO
+p_trace = piston_output["pressure trace"]
+T_trace = piston_output["temperature trace"]
+ca = piston_output["crank angle trace"]
+m_trace = piston_output["mass trace"]
+V_trace = piston_output["volume trace"]
 
+_, ax1 = plt.subplots()
+
+ax1.plot(ca, p_trace*1e-5)
+ax1.set_xlabel(f"ca")
+ax1.set_ylabel(f"pressure [bar]")
+
+
+_, ax2 = plt.subplots()
+ax2.plot(ca, T_trace)
+ax2.set_xlabel(f"ca")
+ax2.set_ylabel(f"T [K]")
+
+_, ax3 = plt.subplots()
+ax3.plot(ca, m_trace)
+ax3.set_xlabel(f"va")
+ax3.set_ylabel(f"mass [kg]")
+
+_, ax4 = plt.subplots()
+ax4.plot(ca, V_trace*1e3)
+ax4.set_xlabel(f"ca")
+ax4.set_ylabel(f"volume [litre]")
+
+plt.show()
 
 
 

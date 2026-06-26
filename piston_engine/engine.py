@@ -634,14 +634,24 @@ def run_piston_engine(input, flags):
         results = scaled_results * inv_scaler[:, np.newaxis]
 
         if i > 0:
-            mdiff.append((results[4][-1] - m[-1][-1]))
-            pdiff.append(results[5][-1] - P[-1][-1])
-            Tdiff.append(results[0][-1] - T[-1][-1])
-            equdiff.append(results[9][-1] - equ[-1][-1])
-            mEP_diff.append(results[15][-1] - m_EP[-1][-1])
-            mIP_diff.append(results[12][-1] - m_IP[-1][-1])
-            T_EP_diff.append(results[16][-1] - T_EP[-1][-1])
-            T_IP_diff.append(results[13][-1] - T_IP[-1][-1])
+            #mdiff.append((results[4][-1] - m[-1][-1]))
+            #diff.append(results[5][-1] - P[-1][-1])
+            #diff.append(results[0][-1] - T[-1][-1])
+            #equdiff.append(results[9][-1] - equ[-1][-1])
+            #mEP_diff.append(results[15][-1] - m_EP[-1][-1])
+            #mIP_diff.append(results[12][-1] - m_IP[-1][-1])
+            #T_EP_diff.append(results[16][-1] - T_EP[-1][-1])
+            #T_IP_diff.append(results[13][-1] - T_IP[-1][-1])
+
+            # relative limits
+            mdiff.append((results[4][-1] - m[-1][-1]) / results[4][-1]  )
+            pdiff.append((results[5][-1] - P[-1][-1]) / results[5][-1])
+            Tdiff.append((results[0][-1] - T[-1][-1]) / results[0][-1])
+            equdiff.append((results[9][-1] - equ[-1][-1]) / results[9][-1])
+            mEP_diff.append((results[15][-1] - m_EP[-1][-1]) / results[15][-1])
+            mIP_diff.append((results[12][-1] - m_IP[-1][-1]) / results[12][-1])
+            T_EP_diff.append((results[16][-1] - T_EP[-1][-1]) / results[16][-1])
+            T_IP_diff.append((results[13][-1] - T_IP[-1][-1]) / results[13][-1])
 
         T.append(results[0])
         V.append(results[1])
@@ -764,14 +774,25 @@ def run_piston_engine(input, flags):
             else:
 
                 # p_lim normally 1e-1
-                p_lim = 1e-2
-                m_lim = 1e-7
+                #these values are for the absolute limits
+                #p_lim = 1e-2
+                #m_lim = 1e-7
+                #T_lim = 1e-3
+                #T_out_lim = 1e-3
+                #equ_lim = 1e-5
+                #mf_lim = 1e-8
+                #mEP_lim = 1e-6
+                #mIP_lim = 1e-6
+
+                # these values are for relative limits
+                p_lim = 1e-3
+                m_lim = 1e-3
                 T_lim = 1e-3
                 T_out_lim = 1e-3
-                equ_lim = 1e-5
-                mf_lim = 1e-8
-                mEP_lim = 1e-6
-                mIP_lim = 1e-6
+                equ_lim = 1e-3
+                mf_lim = 1e-3
+                mEP_lim = 1e-3
+                mIP_lim = 1e-3
 
             convergence = True
             non_converged_params = []
@@ -1248,6 +1269,11 @@ def run_piston_engine(input, flags):
         "flame temperature": T_flame,
         "T start of combustion": T_sc,
         "p start of combustion": p_sc,
+        "pressure trace": P[-1],
+        "temperature trace": T[-1],
+        "crank angle trace": phi,
+        "mass trace": m[-1],
+        "volume trace": V[-1],
     }
 
 
