@@ -1,0 +1,338 @@
+import matplotlib.pyplot as plt
+import importlib
+import numpy as np
+from timeit import default_timer as timer
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+from scipy.optimize import minimize
+import os
+
+import sys
+sys.path.append("./../../../")
+
+from piston_engine.engine import run_piston_engine
+from thermo import fuel_props
+
+# --- Load input file ---
+input_file = "load75"
+input_dir = "piston_engine.input.EGR_validation"
+path = input_dir + "." + input_file
+d = importlib.import_module(path)
+
+flags = ['single', 'fuel_mass']
+
+piston_input = {
+    'p_in': d.p_in,
+    'T_in': d.T_in,
+    'equ_in': d.equ_in,
+    'p_ratio': d.p_ratio,
+    'cycle': d.cycle,
+    'cooling': d.cooling,
+    'opposed': d.opposed,
+    'cr': d.cr,
+    'bore': d.d,
+    'bsr': d.bsr,
+    'v_mean': d.v_mean,
+    'lms': d.lms,
+    'Twalls': d.Twalls,
+    'ch': d.ch,
+    'valve_timings': d.valve_timings,
+    'n_valve': d.n_valve,
+    'lv_max': d.lv_max,
+    'cd': d.cd,
+    'eta_c': d.eta_c,
+    'mf_tot': d.mf_tot,
+    'm_wiebe': d.m_wiebe,
+    'phi_sc': d.phi_sc,
+    'phi_cd': d.phi_cd,
+    'T_fuel': d.T_fuel,
+    'p_fuel': d.p_fuel,
+    'it': d.it,
+    'wiebe_type': d.wiebe_type,
+    'valve_type': d.valve_type,
+    'far_goal': d.far_goal,
+    'cylinders': d.cylinders,
+    'fuel': d.fuel,
+    'c1': d.c1,
+    'c4': d.c4,
+    'c5': d.c5,
+    'mode': d.mode,
+}
+
+fuel_type = "jetA"
+far_s, LHV = fuel_props(fuel_type)
+
+# --- Engine geometry (fixed) ---
+bore = 0.500        # [m]
+bsr  = 500 / 2200
+stroke = bore / bsr # [m]
+
+def rpm_to_vmean(rpm):
+    return rpm * 2 * stroke / 60
+
+load_percents = [25, 50, 75, 100]
+rpms = {25: 78, 50: 98, 75: 112, 100: 123}
+
+# --- Load experimental data (needed for the objective function) ---
+exp_pressure = {}
+exp_heat = {}
+for lp in load_percents:
+    exp_pressure[lp] = np.loadtxt(os.path.join("p_val",    f"{lp}load.txt"), delimiter=",")
+    exp_heat[lp]     = np.loadtxt(os.path.join("heat_val", f"{lp}load.txt"), delimiter=",")
+
+# =========================================================
+# INITIAL GUESSES  (your previous manually-tuned values)
+# Parameter order: [mf_tot, p_in, T_in, m_wiebe, phi_sc, phi_cd, Twall]
+# =========================================================
+x0_guess = {
+    25:  [0.0172,  1.80e5, 315.0, 2.0, (362.5/180)*np.pi, (20/180)*np.pi, 360.0],
+    50:  [0.02558, 2.60e5, 315.0, 2.0, (362.0/180)*np.pi, (24/180)*np.pi, 370.0],
+    75:  [0.03255, 3.75e5, 315.0, 2.0, (360.0/180)*np.pi, (28/180)*np.pi, 380.0],
+    100: [0.0410,  4.55e5, 315.0, 2.0, (361.0/180)*np.pi, (30/180)*np.pi, 390.0],
+}
+
+# Bounds: (min, max) per parameter — used to clip/scale, Nelder-Mead has no native bounds
+# so we use a soft-penalty approach instead of hard constraints.
+bounds = {
+    "mf_tot": (0.005, 0.06),
+    "p_in":   (1.0e5, 6.0e5),
+    "T_in":   (290.0, 360.0),
+    "m_wiebe":(0.5, 5.0),
+    "phi_sc": ((340/180)*np.pi, (380/180)*np.pi),
+    "phi_cd": ((5/180)*np.pi,  (60/180)*np.pi),
+    "Twall":  (320.0, 480.0),
+}
+param_names = ["mf_tot", "p_in", "T_in", "m_wiebe", "phi_sc", "phi_cd", "Twall"]
+
+
+def unpack(x):
+    """x -> dict of named params, clipped to bounds (soft penalty handled separately)"""
+    return dict(zip(param_names, x))
+
+
+def penalty(x):
+    """Large penalty if outside bounds, to keep Nelder-Mead in a sane region."""
+    pen = 0.0
+    for name, val in zip(param_names, x):
+        lo, hi = bounds[name]
+        if val < lo:
+            pen += 1e6 * (lo - val) ** 2
+        elif val > hi:
+            pen += 1e6 * (val - hi) ** 2
+    return pen
+
+
+def run_case(x, rpm):
+    """Run the engine model for one parameter vector, return (ca, p_trace) or None on failure."""
+    p = unpack(x)
+    piston_input["mf_tot"]  = p["mf_tot"]
+    piston_input["v_mean"]  = rpm_to_vmean(rpm)
+    piston_input["p_in"]    = p["p_in"]
+    piston_input["T_in"]    = p["T_in"]
+    piston_input["m_wiebe"] = p["m_wiebe"]
+    piston_input["phi_sc"]  = p["phi_sc"]
+    piston_input["phi_cd"]  = p["phi_cd"]
+    piston_input["Twalls"]  = [p["Twall"]] * 3
+
+    try:
+        out = run_piston_engine(piston_input, flags)
+    except Exception as e:
+        return None
+
+    ca = out["crank angle trace"] * 360 / (2 * np.pi) - 180
+    return ca, out["pressure trace"], out
+
+
+def pressure_objective(x, lp, rpm, exp_data):
+    """
+    Weighted SSE between calculated and experimental pressure curve.
+    Weight increases near the experimental peak pressure location.
+    """
+    pen = penalty(x)
+    if pen > 0:
+        # Don't even bother running the (possibly unstable) simulation outside bounds
+        return pen
+
+    result = run_case(x, rpm)
+    if result is None:
+        return 1e12  # simulation failed -> heavy penalty
+
+    ca_calc, p_calc, _ = result
+    p_calc_bar = p_calc * 1e-5
+
+    ca_exp = exp_data[:, 0]
+    p_exp  = exp_data[:, 1]
+
+    # Interpolate calculated curve onto experimental CA points
+    # (only within calculated CA range to avoid extrapolation)
+    valid = (ca_exp >= ca_calc.min()) & (ca_exp <= ca_calc.max())
+    if valid.sum() < 5:
+        return 1e12
+
+    ca_exp_v = ca_exp[valid]
+    p_exp_v  = p_exp[valid]
+    p_interp = np.interp(ca_exp_v, ca_calc, p_calc_bar)
+
+    # Weight: higher near experimental peak pressure CA location
+    ca_peak = ca_exp_v[np.argmax(p_exp_v)]
+    sigma = 15.0  # degrees, controls how localized the peak weighting is
+    weight = 1.0 + 4.0 * np.exp(-0.5 * ((ca_exp_v - ca_peak) / sigma) ** 2)
+
+    sse = np.sum(weight * (p_interp - p_exp_v) ** 2)
+    return sse + pen
+
+
+# =========================================================
+# RUN OPTIMIZATION PER LOAD CASE
+# =========================================================
+fitted_params = {}
+opt_results = {}
+
+for lp in load_percents:
+    print(f"\n{'='*60}\nOptimizing {lp}% load\n{'='*60}")
+    x0 = x0_guess[lp]
+    rpm = rpms[lp]
+
+    start = timer()
+    res = minimize(
+        pressure_objective,
+        x0=x0,
+        args=(lp, rpm, exp_pressure[lp]),
+        method="Nelder-Mead",
+        options={
+            "maxiter": 300,
+            "xatol": 1e-6,
+            "fatol": 1e-3,
+            "adaptive": True,   # better for parameters of very different scales
+        },
+    )
+    end = timer()
+
+    fitted_params[lp] = unpack(res.x)
+    opt_results[lp] = res
+
+    print(f"  Converged: {res.success} | Final SSE: {res.fun:.2f} | Time: {end-start:.1f} s | nfev: {res.nfev}")
+    for name, val in fitted_params[lp].items():
+        if name in ("phi_sc", "phi_cd"):
+            print(f"    {name:10s}: {val:.4f} rad ({np.degrees(val):.2f} deg)")
+        else:
+            print(f"    {name:10s}: {val:.5g}")
+
+
+# =========================================================
+# RUN FINAL SIMULATIONS WITH FITTED PARAMETERS
+# =========================================================
+results = {}
+
+for lp in load_percents:
+    p = fitted_params[lp]
+    rpm = rpms[lp]
+    print(f"\n--- Final run {lp}% load (fitted) ---")
+
+    ca, p_trace, piston_output = run_case(list(p.values()), rpm)
+
+    fuel_flow   = piston_output["fuel flow"]
+    break_power = piston_output["break power"]
+    bsfc        = (fuel_flow / break_power) * (1000 * 1000 * 3600)
+
+    results[lp] = {
+        "ca":          ca,
+        "p_trace":     p_trace,
+        "gross_heat":  piston_output["gross heat release"],
+        "T_out":       piston_output["T_out"] - 272.15,
+        "p_tdc":       piston_output["p_tdc"],
+        "p_max":       piston_output["peak pressure"],
+        "break_power": break_power,
+        "bsfc":        bsfc,
+        "nox_spec":    piston_output["nox_spec"],
+    }
+
+    print(f"  T_out        : {results[lp]['T_out']:.1f} C")
+    print(f"  p_tdc        : {results[lp]['p_tdc']*1e-5:.2f} bar")
+    print(f"  p_max        : {results[lp]['p_max']*1e-5:.2f} bar")
+    print(f"  Break power  : {break_power*1e-3:.2f} kW")
+    print(f"  BSFC         : {bsfc:.1f} g/kWh")
+    print(f"  NOx          : {results[lp]['nox_spec']:.4f} g/kWh")
+
+
+# --- Helpers ---
+def apply_minor(ax):
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# --- Fig 1: Pressure traces (fitted vs experimental) ---
+fig1, axes1 = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+fig1.suptitle("Cylinder Pressure Traces (Fitted)")
+for ax, lp in zip(axes1.flat, load_percents):
+    r = results[lp]
+    ax.plot(r["ca"], r["p_trace"] * 1e-5, label="Calculated (fitted)")
+    ax.plot(exp_pressure[lp][:, 0], exp_pressure[lp][:, 1], "k--", label="Experimental")
+    ax.set_title(f"{lp}% Load  |  SSE={opt_results[lp].fun:.1f}")
+    ax.set_xlim(120, 280)
+    ax.set_ylim(0, 200)
+    ax.yaxis.set_major_locator(MultipleLocator(20))
+    apply_minor(ax)
+    ax.legend(fontsize=8)
+for ax in axes1[1, :]: ax.set_xlabel("Crank Angle Degrees")
+for ax in axes1[:, 0]: ax.set_ylabel("Cylinder Pressure [bar]")
+fig1.tight_layout()
+
+# --- Fig 2: Gross heat release ---
+fig2, axes2 = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+fig2.suptitle("Cumulative Gross Heat Release (Fitted)")
+for ax, lp in zip(axes2.flat, load_percents):
+    r = results[lp]
+    ax.plot(r["ca"], r["gross_heat"] * 1e-3, label="Calculated (fitted)")
+    ax.plot(exp_heat[lp][:, 0], exp_heat[lp][:, 1], "k--", label="Experimental")
+    ax.set_title(f"{lp}% Load")
+    ax.set_xlim(180, 240)
+    ax.set_ylim(0, 2000)
+    ax.yaxis.set_major_locator(MultipleLocator(400))
+    apply_minor(ax)
+    ax.legend(fontsize=8)
+for ax in axes2[1, :]: ax.set_xlabel("Crank Angle Degrees")
+for ax in axes2[:, 0]: ax.set_ylabel("Gross Heat Release [kJ]")
+fig2.tight_layout()
+
+# --- Load experimental KPI data ---
+exp_kpi = {}
+for name in ["bsfc", "nox", "p_max", "p_tdc", "power", "t_out"]:
+    exp_kpi[name] = np.loadtxt(os.path.join("kpi_val", f"{name}.txt"), delimiter=",")
+
+# --- Fig 3: Scalar outputs vs load ---
+scalar_keys   = ["T_out",                  "p_tdc",      "p_max",      "break_power",     "bsfc",        "nox_spec"]
+scalar_labels = ["Outlet Temperature [C]", "p_tdc [bar]","p_max [bar]","Break Power [kW]","BSFC [g/kWh]","NOx [g/kWh]"]
+scalar_scales = [1,                         1e-5,         1e-5,         1e-3,              1,             1]
+exp_keys      = ["t_out",                  "p_tdc",      "p_max",      "power",           "bsfc",        "nox"]
+
+rpms_list = [rpms[lp] for lp in load_percents]
+
+fig3, axes3 = plt.subplots(2, 3, figsize=(14, 8))
+fig3.suptitle("Engine Performance vs Load (Fitted)")
+for ax, key, label, scale, exp_key in zip(axes3.flat, scalar_keys, scalar_labels, scalar_scales, exp_keys):
+    values = [results[lp][key] * scale for lp in load_percents]
+
+    if exp_key == "power":
+        x_calc, x_label = rpms_list, "Engine Speed [rpm]"
+    else:
+        x_calc, x_label = load_percents, "Load [%]"
+
+    ax.plot(x_calc, values, marker="o", label="Calculated (fitted)")
+    ax.plot(exp_kpi[exp_key][:, 0], exp_kpi[exp_key][:, 1], "k--", marker="^", label="Experimental")
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(label)
+    ax.set_xticks(x_calc)
+    ax.legend(fontsize=8)
+    apply_minor(ax)
+fig3.tight_layout()
+
+plt.show()
+
+# --- Print fitted load_cases dict, ready to paste back in for reuse ---
+print("\n\n# === FITTED PARAMETERS (paste into load_cases) ===")
+print("load_cases = {")
+for lp in load_percents:
+    p = fitted_params[lp]
+    print(f"    {lp}:  dict(rpm={rpms[lp]}, mf_tot={p['mf_tot']:.5f}, p_in={p['p_in']:.0f}, T_in={p['T_in']:.1f},")
+    print(f"          m_wiebe={p['m_wiebe']:.3f}, phi_sc={p['phi_sc']:.4f}, phi_cd={p['phi_cd']:.4f},")
+    print(f"          Twalls=[{p['Twall']:.1f}]*3),")
+print("}")

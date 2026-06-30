@@ -171,6 +171,9 @@ def run_piston_engine(input, flags):
             # 4 stroke starts at inlet closing, so first value is inlet closing volume
             # mass of charge when using inlet density and displacement
             m_air_theo = V1[0] * rho_in
+        else:
+            # for two-stroke
+            m_air_theo = V1[np.argwhere(phi >= phi_close_out)[0][0]] * rho_in
 
         if premixed:
             # Get fuel mass fraction from thermodynamic properties
@@ -338,12 +341,12 @@ def run_piston_engine(input, flags):
         dqdphi = ch * dqdphi
 
         # Continuity equation
-        if cycle == "4T":
+        if valve_type == "valve":
             dmindphi = valve_isentrop.dmvdphi(phi, phi_open_in, phi_close_in, n_valve, lv_max, cd, d, P, T, gamma, R,
                                               p_in, T_IP, gamma_IP, R_IP, "in", cycle_phi)
             dmoutdphi = valve_isentrop.dmvdphi(phi, phi_open_out, phi_close_out, n_valve, lv_max, cd, d, P, T, gamma, R,
                                                p_out, T_EP, gamma_EP, R_EP, "out", cycle_phi)
-        elif cycle == "2T":
+        elif valve_type == "port":
             height = V / (np.pi * 0.25 * d ** 2)
             dmindphi = port_isentrop.dmvdphi(height, height_open_in, n_valve, cd, d_port, P, T, gamma, R, p_in, T_IP,
                                              gamma_IP, R_IP, "in")
@@ -609,8 +612,16 @@ def run_piston_engine(input, flags):
         if cycle == "2T":
             print(i)
 
-            sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
-                            rtol=1e-9, atol=1e-9)  # standard is rtol 1e-7 and atol 1e-10 (no scaling)
+            if "validation" in flags:
+
+                sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
+                                rtol=1e-9, atol=1e-9)  # standard is rtol 1e-7 and atol 1e-10 (no scaling)
+
+            else:
+ 
+                sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
+                                rtol=1e-8, atol=1e-8)                
+
 
             # Radau/LSODA (if LSODA you dont see mdotin and mdotout)
         elif cycle == "4T":
@@ -718,7 +729,7 @@ def run_piston_engine(input, flags):
             else:
                 # Non-premixed: fuel flow based on actual exhaust fuel-air ratio
                 # fuel air ratio is based on the intake pure air flow
-
+        
                 mf_tot = m_in_IP[-1][-1] * (far_goal - equ_ratio_in * far_s) / (1 + equ_ratio_in * far_s)
 
             # Track convergence of fuel mass iteration
@@ -734,6 +745,7 @@ def run_piston_engine(input, flags):
 
         if "fuel_mass" in flags:
             # avg far
+            # change this for EGR
             far_avg = mf_tot / m_in_IP[-1][-1]
             def find_tout(t):
                 h, _, _, _, _, _, _, _ = thermo.mixture(t, p_out, far_avg / far_s, fuel_type,
@@ -1274,6 +1286,8 @@ def run_piston_engine(input, flags):
         "crank angle trace": phi,
         "mass trace": m[-1],
         "volume trace": V[-1],
+        "gross heat release": Q_in[-1],
+        "net heat release": Q_in[-1] - Q[-1],
     }
 
 

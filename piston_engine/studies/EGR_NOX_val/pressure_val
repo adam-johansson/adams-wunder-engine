@@ -2,27 +2,24 @@ import matplotlib.pyplot as plt
 import importlib
 import numpy as np
 from timeit import default_timer as timer
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+import os
+
+
 
 import sys
 sys.path.append("./../../../")
 
-
-
-from piston_engine.engine import run_piston_engine  # import the piston engine function
+from piston_engine.engine import run_piston_engine
 from thermo import fuel_props
 
-# import all the input variables
+# --- Load input file ---
 input_file = "load75"
-
 input_dir = "piston_engine.input.EGR_validation"
 path = input_dir + "." + input_file
-
 d = importlib.import_module(path)
 
-print(f"hej")
-
-flags = ['single'] # to make the function not plot anything
-
+flags = ['single', 'fuel_mass']
 
 piston_input = {
     'p_in': d.p_in,
@@ -62,54 +59,166 @@ piston_input = {
     'mode': d.mode,
 }
 
-
 fuel_type = "jetA"
 far_s, LHV = fuel_props(fuel_type)
 
+# --- Engine geometry (fixed) ---
+bore = 0.500        # [m]
+bsr  = 500 / 2200
+stroke = bore / bsr # [m]
 
-# fuel-air-ratio for no EGR
-f_0 = piston_input["far_goal"]
+def rpm_to_vmean(rpm):
+    return rpm * 2 * stroke / 60
+
+# =========================================================
+# MANUAL LOAD POINT SETTINGS  ← adjust these as needed
+# =========================================================
+load_cases = {
+    25:  dict(rpm=78,  mf_tot=0.017, p_in=1.8e5, T_in=360.0,  #0.173 351
+              m_wiebe=1.2, phi_sc=(364/180)*np.pi, phi_cd=(21/180)*np.pi,
+              Twalls=[415,415,415]),
+    50:  dict(rpm=98,  mf_tot=0.02558, p_in=2.6e5, T_in=380.0, #395
+              m_wiebe=1.2, phi_sc=(364/180)*np.pi, phi_cd=(24/180)*np.pi,
+              Twalls = [430,430,430]),
+    75:  dict(rpm=112, mf_tot=0.034, p_in=3.65e5, T_in=390.0, #443
+              m_wiebe=1.2, phi_sc=(363/180)*np.pi, phi_cd=(29/180)*np.pi,
+              Twalls = [450,450,450]),
+    100: dict(rpm=123, mf_tot=0.042, p_in=4.5e5, T_in=410.0,  #0.40 #360
+              m_wiebe=1.33, phi_sc=(363/180)*np.pi, phi_cd=(32/180)*np.pi,
+              Twalls = [480,480,480]),
+}
+# =========================================================
+
+mf_base = d.mf_tot
+load_percents = [25, 50, 75, 100]
+results = {}
+
+# --- Run simulations ---
+for lp in load_percents:
+    lc = load_cases[lp]
+    print(f"\n--- Running {lp}% load | rpm={lc['rpm']} | p_in={lc['p_in']*1e-5:.2f} bar | T_in={lc['T_in']} K ---")
+
+    piston_input["mf_tot"]  = lc["mf_tot"]
+    piston_input["v_mean"]  = rpm_to_vmean(lc["rpm"])
+    piston_input["p_in"]    = lc["p_in"]
+    piston_input["T_in"]    = lc["T_in"]
+    piston_input["m_wiebe"] = lc["m_wiebe"]
+    piston_input["phi_sc"]  = lc["phi_sc"]
+    piston_input["phi_cd"]  = lc["phi_cd"]
+    piston_input["Twalls"] = lc["Twalls"]
+
+    start = timer()
+    piston_output = run_piston_engine(piston_input, flags)
+    end = timer()
+    print(f"  Time: {end - start:.2f} s")
+
+    ca         = piston_output["crank angle trace"] * 360 / (2 * np.pi) - 180
+    fuel_flow  = piston_output["fuel flow"]
+    break_power = piston_output["break power"]
+    bsfc       = (fuel_flow / break_power) * (1000 * 1000 * 3600)
+
+    results[lp] = {
+        "ca":          ca,
+        "p_trace":     piston_output["pressure trace"],
+        "gross_heat":  piston_output["gross heat release"],
+        "T_out":       piston_output["T_out"] - 272.15,
+        "p_tdc":       piston_output["p_tdc"],
+        "p_max":       piston_output["peak pressure"],
+        "break_power": break_power,
+        "bsfc":        bsfc,
+        "nox_spec":    piston_output["nox_spec"],
+    }
+
+    print(f"  T_out        : {results[lp]['T_out']:.1f} C")
+    print(f"  p_tdc        : {results[lp]['p_tdc']*1e-5:.2f} bar")
+    print(f"  p_max        : {results[lp]['p_max']*1e-5:.2f} bar")
+    print(f"  Break power  : {break_power*1e-3:.2f} kW")
+    print(f"  BSFC         : {bsfc:.1f} g/kWh")
+    print(f"  NOx          : {results[lp]['nox_spec']:.4f} g/kWh")
 
 
+# --- Helpers ---
+def apply_minor(ax):
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
+# --- Load experimental data ---
+exp_pressure = {}
+exp_heat = {}
+for lp in load_percents:
+    exp_pressure[lp] = np.loadtxt(os.path.join("p_val",    f"{lp}load.txt"), delimiter=",")
+    exp_heat[lp]     = np.loadtxt(os.path.join("heat_val", f"{lp}load.txt"), delimiter=",")
 
-#piston_input["equ_in"] = equ_in
-#piston_input["far_goal"] = equ_in * far_s + f_0 * ( 1 + equ_in * far_s)
+# --- Fig 1: Pressure traces ---
+fig1, axes1 = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+fig1.suptitle("Cylinder Pressure Traces")
+for ax, lp in zip(axes1.flat, load_percents):
+    r = results[lp]
+    ax.plot(r["ca"], r["p_trace"] * 1e-5, label="Calculated")
+    ax.plot(exp_pressure[lp][:, 0], exp_pressure[lp][:, 1], "k--", label="Experimental")
+    ax.set_title(f"{lp}% Load")
+    ax.set_xlim(120, 280)
+    ax.set_ylim(0, 200)
+    ax.yaxis.set_major_locator(MultipleLocator(20))
+    apply_minor(ax)
+    ax.legend(fontsize=8)
+for ax in axes1[1, :]: ax.set_xlabel("Crank Angle Degrees")
+for ax in axes1[:, 0]: ax.set_ylabel("Cylinder Pressure [bar]")
+fig1.tight_layout()
 
-start = timer()
-piston_output = run_piston_engine(piston_input, flags)
-end = timer()
-print(f"Time: {end - start}")
+# --- Fig 2: Gross heat release ---
+fig2, axes2 = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+fig2.suptitle("Cumulative Gross Heat Release")
+for ax, lp in zip(axes2.flat, load_percents):
+    r = results[lp]
+    ax.plot(r["ca"], r["gross_heat"] * 1e-3, label="Calculated")
+    ax.plot(exp_heat[lp][:, 0], exp_heat[lp][:, 1], "k--", label="Experimental")
+    ax.set_title(f"{lp}% Load")
+    ax.set_xlim(180, 240)
+    ax.set_ylim(0, 2000)
+    ax.yaxis.set_major_locator(MultipleLocator(400))
+    apply_minor(ax)
+    ax.legend(fontsize=8)
+for ax in axes2[1, :]: ax.set_xlabel("Crank Angle Degrees")
+for ax in axes2[:, 0]: ax.set_ylabel("Gross Heat Release [kJ]")
+fig2.tight_layout()
 
-p_trace = piston_output["pressure trace"]
-T_trace = piston_output["temperature trace"]
-ca = piston_output["crank angle trace"]
-m_trace = piston_output["mass trace"]
-V_trace = piston_output["volume trace"]
+# --- Load experimental KPI data ---
+exp_kpi = {}
+for name in ["bsfc", "nox", "p_max", "p_tdc", "power", "t_out"]:
+    exp_kpi[name] = np.loadtxt(os.path.join("kpi_val", f"{name}.txt"), delimiter=",")
 
-_, ax1 = plt.subplots()
+# --- Fig 3: Scalar outputs vs load ---
+scalar_keys   = ["T_out",                  "p_tdc",      "p_max",      "break_power",     "bsfc",        "nox_spec"]
+scalar_labels = ["Outlet Temperature [C]", "p_tdc [bar]","p_max [bar]","Break Power [kW]","BSFC [g/kWh]","NOx [g/kWh]"]
+scalar_scales = [1,                         1e-5,         1e-5,         1e-3,              1,             1]
+exp_keys      = ["t_out",                  "p_tdc",      "p_max",      "power",           "bsfc",        "nox"]
 
-ax1.plot(ca, p_trace*1e-5)
-ax1.set_xlabel(f"ca")
-ax1.set_ylabel(f"pressure [bar]")
+# x-axis for calculated: load % except for power which uses rpm
+rpms = [load_cases[lp]["rpm"] for lp in load_percents]
 
+fig3, axes3 = plt.subplots(2, 3, figsize=(14, 8))
+fig3.suptitle("Engine Performance vs Load")
+for ax, key, label, scale, exp_key in zip(axes3.flat, scalar_keys, scalar_labels, scalar_scales, exp_keys):
+    values = [results[lp][key] * scale for lp in load_percents]
 
-_, ax2 = plt.subplots()
-ax2.plot(ca, T_trace)
-ax2.set_xlabel(f"ca")
-ax2.set_ylabel(f"T [K]")
+    if exp_key == "power":
+        x_calc = rpms
+        x_label = "Engine Speed [rpm]"
+    else:
+        x_calc = load_percents
+        x_label = "Load [%]"
 
-_, ax3 = plt.subplots()
-ax3.plot(ca, m_trace)
-ax3.set_xlabel(f"va")
-ax3.set_ylabel(f"mass [kg]")
+    ax.plot(x_calc, values, marker="o", label="Calculated")
+    ax.plot(exp_kpi[exp_key][:, 0], exp_kpi[exp_key][:, 1], "k--", marker="^", label="Experimental")
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(label)
+    ax.set_xticks(x_calc)
+    ax.legend(fontsize=8)
+    apply_minor(ax)
 
-_, ax4 = plt.subplots()
-ax4.plot(ca, V_trace*1e3)
-ax4.set_xlabel(f"ca")
-ax4.set_ylabel(f"volume [litre]")
+fig3.tight_layout()
 
 plt.show()
 
-
-
+plt.show()

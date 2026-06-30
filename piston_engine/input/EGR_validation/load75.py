@@ -1,6 +1,6 @@
 import numpy as np
 
-cycle = "4T"
+cycle = "2T"
 
 fuel = 'jetA'
 
@@ -19,15 +19,17 @@ d = 0.500  # diameter
 bsr = 500 / 2200  # bore stroke ratio
 rpm = 123 #rpm (this is not loaded to the model)
 s = d/bsr #stroke (2200 mm)
-v_mean = rpm * 2 * s /60 # mean velocity (input to the model)
+v_mean = rpm * 2 * s /60 # mean velocity (input to the model)   approx 9 m/s
 
 l_con = 2.885  #connecting rod length
 lms = s/(2*l_con)  #connecting rod ratio
 
 # inlet and outlet conditions
-p_in = 1.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
-T_in = 300  # inlet temperature (670 cruise 770 TO)
-p_ratio = 1.1  # pressure ratio after and before engine
+p_in = 4.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
+T_in = 400  # inlet temperature (670 cruise 770 TO)
+p_ratio = 0.95  # pressure ratio after and before engine
+
+mf_tot = 3.255e-2
 
 # EGR
 equ_in = 0.0
@@ -43,17 +45,17 @@ Twalls = [Twall, Tpiston, Thead]
 ch = 1.0  # multiplier to decrease heat transfer
 
 # Inlet valve
-phi_open_in = (719.0/180)*np.pi  # testar
-phi_close_in = (913.1/180)*np.pi  # testar
+phi_open_in = (125 / 180) * np.pi
+phi_close_in = (235 / 180) * np.pi
 
 # outlet valve
-phi_open_out = (512.5/180)*np.pi  # testar
-phi_close_out = (730.8/180)*np.pi  # testar
+phi_open_out = (100 / 180) * np.pi
+phi_close_out = (260 / 180) * np.pi
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
 
 n_valve = 2
-valve_type = "valve"
+valve_type = "valve"   # or change to port??
 
 lv_max = 0.070 # from some power point online
 
@@ -67,19 +69,17 @@ far_goal = 0.03
 wiebe_type = "Single_mass"
 
 
-# this if for single wiebe function
+# this is for single wiebe function
 m_wiebe = 2.0
 
-phi_sc = (355/180)*np.pi  # angle at combustion start  THIS WORKED WITH SINGLE #345
-phi_cd = (55/180)*np.pi  # angle related to combustion duration WORKED WITH SINGLE #55
-
+phi_sc = (365/180)*np.pi  # angle at combustion start  
+phi_cd = (20/180)*np.pi  # angle related to combustion duration 
 
 T_fuel = 300
 p_fuel = 2500e5
 
 it = 300
 
-mf_tot = 1.5e-4
 
 # double wiebe function
 c1 = 2.0  # shape factor for diffusion burning
