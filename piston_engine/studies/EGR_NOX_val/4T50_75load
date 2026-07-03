@@ -78,9 +78,9 @@ piston_input["p_in"]    = 2.9e5
 piston_input["T_in"]    = 272.15 + 30.6
 
 #fitted
-piston_input["m_wiebe"] = 2.0
-piston_input["phi_sc"]  = phi_sc = (363/180)*np.pi  # angle at combustion start  
-piston_input["phi_cd"]  = phi_cd = (29/180)*np.pi  # angle related to combustion duration
+piston_input["m_wiebe"] = 1.0
+piston_input["phi_sc"]  = phi_sc = (362/180)*np.pi  # angle at combustion start  
+piston_input["phi_cd"]  = phi_cd = (40/180)*np.pi  # angle related to combustion duration
 
 
 Twall = 450          # Liner temperature
@@ -167,7 +167,9 @@ apply_minor(ax)
 ax.legend(fontsize=8)
 
 ax = axes1[1, 0]
-heat_release_rate = np.gradient(results["gross_heat"], results["ca"])
+heat_release_rate = np.gradient(results["gross_heat"], results["ca"])   #joule per crank angle
+heat_release_rate = heat_release_rate * (111.8 / 60) * 360  # joule per second
+heat_release_rate = heat_release_rate * 1e-6 # convert from W to MW
 ax.plot(results["ca"], heat_release_rate, label="Calculated")
 ax.set_title("Heat Release Rate")
 ax.set_xlim(160, 240)
