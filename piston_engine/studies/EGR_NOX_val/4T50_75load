@@ -1,0 +1,190 @@
+import matplotlib.pyplot as plt
+import importlib
+import numpy as np
+from timeit import default_timer as timer
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+import os
+
+
+
+import sys
+sys.path.append("./../../../")
+
+from piston_engine.engine import run_piston_engine
+from thermo import fuel_props
+
+# --- Load input file ---
+input_file = "4T50ME"
+input_dir = "piston_engine.input.EGR_validation"
+path = input_dir + "." + input_file
+d = importlib.import_module(path)
+
+flags = ['single', 'fuel_mass']
+
+piston_input = {
+    'p_in': d.p_in,
+    'T_in': d.T_in,
+    'equ_in': d.equ_in,
+    'p_ratio': d.p_ratio,
+    'cycle': d.cycle,
+    'cooling': d.cooling,
+    'opposed': d.opposed,
+    'cr': d.cr,
+    'bore': d.d,
+    'bsr': d.bsr,
+    'v_mean': d.v_mean,
+    'lms': d.lms,
+    'Twalls': d.Twalls,
+    'ch': d.ch,
+    'valve_timings': d.valve_timings,
+    'n_valve': d.n_valve,
+    'lv_max': d.lv_max,
+    'cd': d.cd,
+    'eta_c': d.eta_c,
+    'mf_tot': d.mf_tot,
+    'm_wiebe': d.m_wiebe,
+    'phi_sc': d.phi_sc,
+    'phi_cd': d.phi_cd,
+    'T_fuel': d.T_fuel,
+    'p_fuel': d.p_fuel,
+    'it': d.it,
+    'wiebe_type': d.wiebe_type,
+    'valve_type': d.valve_type,
+    'far_goal': d.far_goal,
+    'cylinders': d.cylinders,
+    'fuel': d.fuel,
+    'c1': d.c1,
+    'c4': d.c4,
+    'c5': d.c5,
+    'mode': d.mode,
+}
+
+fuel_type = "jetA"
+far_s, LHV = fuel_props(fuel_type)
+
+# this file tries to replicate the 75% load case at 112 rpm. Data from Scappin et al. 2012.
+# Validation for zero-dimensional model for prediction of NOx and engine performace
+
+#given
+#fuel per cylinder [kg/s] = 0.06199
+# revolutions per second 111.8/60 = cycle / second
+# second / cycle = 60 / 111.8
+
+
+# fuel per cycle kg/s * s/cycle = 0.06199 * 60 / 111.8 = 0.33268336314
+
+piston_input["mf_tot"]  = 0.03326833631 * (42.7 / 43)  #adjust since the fuel in the paper has 42.7 MJ/kg heating value and we have 43
+piston_input["p_in"]    = 2.9e5
+piston_input["T_in"]    = 272.15 + 30.6
+
+#fitted
+piston_input["m_wiebe"] = 2.0
+piston_input["phi_sc"]  = phi_sc = (363/180)*np.pi  # angle at combustion start  
+piston_input["phi_cd"]  = phi_cd = (29/180)*np.pi  # angle related to combustion duration
+
+
+Twall = 450          # Liner temperature
+Tpiston = 450
+Thead = 450
+piston_input["Twalls"] = [Twall, Tpiston, Thead]
+
+start = timer()
+piston_output = run_piston_engine(piston_input, flags)
+end = timer()
+print(f"  Time: {end - start:.2f} s")
+
+ca         = piston_output["crank angle trace"] * 360 / (2 * np.pi) - 180
+fuel_flow  = piston_output["fuel flow"] * (43 / 42.7) # convert back to the higher fuel flow
+break_power = piston_output["break power"]
+bsfc       = (fuel_flow / break_power) * (1000 * 1000 * 3600)
+
+results = {
+    "ca":          ca,
+    "p_trace":     piston_output["pressure trace"],
+    "T_trace":     piston_output["temperature trace"],
+    "gross_heat":  piston_output["gross heat release"],
+    "nox_rate":    piston_output["NO mass trace"],  
+    "nox_times":   piston_output["NO times"],  
+    "nox_angles":  piston_output["NO angles"] * 360 / (2 * np.pi) - 180,  
+    "T_out":       piston_output["T_out"] - 272.15,
+    "p_tdc":       piston_output["p_tdc"],
+    "p_max":       piston_output["peak pressure"],
+    "break_power": break_power,
+    "bsfc":        bsfc,
+    "nox_spec":    piston_output["nox_spec"] * 1.53,
+}
+
+print(f"  T_out        : {results['T_out']:.1f} C. ")
+print(f"  p_tdc        : {results['p_tdc']*1e-5:.2f} bar. Validation should be 141 bar.")
+print(f"  p_max        : {results['p_max']*1e-5:.2f} bar. Validation should be 160 bar.")
+print(f"  Break power  : {break_power*1e-3:.2f} kW")
+print(f"  BSFC         : {bsfc:.1f} g/kWh")
+print(f"  NOx          : {results['nox_spec']:.4f} g/kWh")
+
+
+# --- Helpers ---
+def apply_minor(ax):
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# --- Load experimental data ---
+#exp_pressure = np.loadtxt(os.path.join("75_load_4T50E", "p.txt"), delimiter=",")
+#exp_heat     = np.loadtxt(os.path.join("75_load_4T50E", "heat.txt"), delimiter=",")
+
+# --- Fig 1: Pressure, Temperature, Gross Heat Release, Heat Release Rate, NOx rate ---
+fig1, axes1 = plt.subplots(2, 3, figsize=(16, 8))
+#fig1.suptitle("75% Load - Model vs Experiment")
+
+ax = axes1[0, 0]
+ax.plot(results["ca"], results["p_trace"] * 1e-5, label="Calculated")
+#ax.plot(exp_pressure[:, 0], exp_pressure[:, 1], "k--", label="Experimental")
+ax.set_title("Cylinder Pressure")
+ax.set_xlim(120, 280)
+ax.set_ylim(0, 200)
+ax.yaxis.set_major_locator(MultipleLocator(20))
+ax.set_xlabel("Crank Angle Degrees")
+ax.set_ylabel("Cylinder Pressure [bar]")
+apply_minor(ax)
+ax.legend(fontsize=8)
+
+ax = axes1[0, 1]
+ax.plot(results["ca"], results["T_trace"], label="Calculated")
+ax.set_title("Cylinder Temperature")
+ax.set_xlim(120, 280)
+ax.set_xlabel("Crank Angle Degrees")
+ax.set_ylabel("Temperature [K]")
+apply_minor(ax)
+ax.legend(fontsize=8)
+
+ax = axes1[0, 2]
+ax.plot(results["ca"], results["gross_heat"], label="Calculated")
+#ax.plot(exp_heat[:, 0], exp_heat[:, 1], "k--", label="Experimental")
+ax.set_title("Gross Heat Release")
+ax.set_xlim(160, 240)
+ax.set_xlabel("Crank Angle Degrees")
+ax.set_ylabel("Gross Heat Release")
+apply_minor(ax)
+ax.legend(fontsize=8)
+
+ax = axes1[1, 0]
+heat_release_rate = np.gradient(results["gross_heat"], results["ca"])
+ax.plot(results["ca"], heat_release_rate, label="Calculated")
+ax.set_title("Heat Release Rate")
+ax.set_xlim(160, 240)
+ax.set_xlabel("Crank Angle Degrees")
+ax.set_ylabel("Heat Release Rate [/deg]")
+apply_minor(ax)
+ax.legend(fontsize=8)
+
+ax = axes1[1, 1]
+ax.plot(results["nox_times"], results["nox_rate"], label="Calculated")
+ax.set_title("NOx Formation Rate")
+ax.set_xlabel("Time [s]")
+ax.set_ylabel("NO mass rate")
+apply_minor(ax)
+ax.legend(fontsize=8)
+
+axes1[1, 2].axis("off")
+
+fig1.tight_layout()
+plt.show()

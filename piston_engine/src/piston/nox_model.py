@@ -135,7 +135,7 @@ def nox_calculations(
 
     # Calculate concentrations and emission index
     results = _process_nox_results(
-        NO_mol, times, m_tot, mf_tot, equ_global, m_global, fuel_type
+        NO_mol, times, phi, m_tot, mf_tot, equ_global, m_global, fuel_type
     )
 
     return results
@@ -336,7 +336,7 @@ def _calculate_rate_constants(T):
 
 
 @njit()
-def _process_nox_results(NO_mol, times, m_tot, mf_tot, equ_global, m_global, fuel_type):
+def _process_nox_results(NO_mol, times, angles, m_tot, mf_tot, equ_global, m_global, fuel_type):
     """Process NOx calculation results and calculate concentrations."""
 
     # Calculate gradient
@@ -361,7 +361,7 @@ def _process_nox_results(NO_mol, times, m_tot, mf_tot, equ_global, m_global, fue
     EI_nox = (m_NO[-1] / mf_tot) * G_PER_KG_FACTOR
 
     #return (no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO[-1])
-    return (no_concentration_mass, dNOdt_mol, times, EI_nox, m_NO)
+    return (no_concentration_mass, dNOdt_mol, times, angles, EI_nox, m_NO)
 
 
 @njit

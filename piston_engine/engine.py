@@ -163,7 +163,7 @@ def run_piston_engine(input, flags):
         # this is only used for initial value of equivalence ratio in exhaust port
       
         m_air_theo = V1[np.argwhere(phi >= phi_close_out)[0][0]] * rho_in
-        far_tot = mf_tot / m_air_theo
+        far_exhaust = mf_tot / m_air_theo
     else:
         # Calculating fuel mass based on desired fuel air ratio (based on total flow)
         # this is just an initial guess
@@ -189,8 +189,8 @@ def run_piston_engine(input, flags):
             #mf_tot = far_goal * m_air_theo
 
 
-        # far_tot is used for init of exhaust port equivalance ratio
-        far_tot = far_goal
+        # far_exhaust is used for init of exhaust port equivalance ratio
+        far_exhaust = far_goal
 
         # Qf is used in some cases but for single_mass Wiebe the mf_tot is used for the fuel addition 
         Qf = LHV * mf_tot  #hmmm eta_c or not
@@ -513,7 +513,7 @@ def run_piston_engine(input, flags):
 
 
     # from initial guess of fuel air ratio
-    equ_EP0 = far_tot / far_s
+    equ_EP0 = far_exhaust / far_s
     equ0 = equ_IP0 = equ_ratio_in
 
     # Init simulation
@@ -610,7 +610,7 @@ def run_piston_engine(input, flags):
 
         woschni_args = (Pref, Tref, Vref, Pmotor, Vmotor)
         if cycle == "2T":
-            print(i)
+            #print(i)
 
             if "validation" in flags:
 
@@ -618,7 +618,7 @@ def run_piston_engine(input, flags):
                                 rtol=1e-9, atol=1e-9)  # standard is rtol 1e-7 and atol 1e-10 (no scaling)
 
             else:
- 
+                #print(f"här borde jag vara")
                 sol = solve_ivp(dxdphi, args=woschni_args, t_span=(min(phi), max(phi)), method='LSODA', y0=x_scaled, t_eval=phi,
                                 rtol=1e-8, atol=1e-8)                
 
@@ -692,9 +692,12 @@ def run_piston_engine(input, flags):
 
         # inflow of pure air
         if premixed:
+            # dont think this works for EGR
             m_in_air = (m_in_IP[-1][-1] / (1 + far_goal))
         else:
-            m_in_air = m_in_IP[-1][-1]
+            m_in_air = m_in_IP[-1][-1] / (1 + equ_ratio_in * far_s)
+
+        # unclear what this is for
         equ_avg = (mf[-1][-1] / m_in_air) / far_s
 
         # Simple way to calculate fuel-air ratio - works quite well
@@ -744,11 +747,19 @@ def run_piston_engine(input, flags):
             mf_diff.append(0.0)
 
         if "fuel_mass" in flags:
-            # avg far
-            # change this for EGR
-            far_avg = mf_tot / m_in_IP[-1][-1]
+            # avg far (exhaus fuel air ratio)
+            # mass of air in the intake
+            air_in = m_in_IP[-1][-1] / (1 + equ_ratio_in * far_s)
+            # mass of combusted fuel in the intake
+            mf_intake = air_in * equ_ratio_in * far_s
+            # mass of combusted fuel in the exhaust
+            mf_exhaust  = mf_intake + mf_tot
+
+            #exhaust fuel air ratio
+            far_exhaust = mf_exhaust / air_in
+
             def find_tout(t):
-                h, _, _, _, _, _, _, _ = thermo.mixture(t, p_out, far_avg / far_s, fuel_type,
+                h, _, _, _, _, _, _, _ = thermo.mixture(t, p_out, far_exhaust / far_s, fuel_type,
                                                         include_fuel_in_reactants=premixed, fuel_air_equ_ratio=far_goal/far_s)
                 return h - energy_out[-1][-1] / m_out_EP[-1][-1]
 
@@ -1019,7 +1030,8 @@ def run_piston_engine(input, flags):
             print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
             return np.zeros(nr_output)
 
-    if (cycle == "4T" and far_goal > 0.0):
+    if "sweep" not in flags:
+    
         ## NOX calculations
         # get the heat addition from fuel curve
         dmfdphi = wiebe.dmfdphi_single_mass_vector(phi, m_wiebe, phi_sc, phi_cd, mf_tot)
@@ -1035,7 +1047,10 @@ def run_piston_engine(input, flags):
         # factor 0.84 and lambda = 1.03 SÅDÄR
         # factor 0.83 and lambda = 1.02 GÅR EJ
         # factor 0.845 and lambda = 1.0 
-        factor = 0.845
+        if cycle == "4T":
+            factor = 0.845
+        else:
+            factor = 1.0
 
         start = timer()
         # get temperature and mass from reaction zone (zone 1 is hot zone)
@@ -1045,7 +1060,7 @@ def run_piston_engine(input, flags):
                                                                                                     phi_open_out, phi_sc,
                                                                                                     LHV, far_s,
                                                                                                     equ[-1], fuel_type,
-                                                                                                    factor, premixed)
+                                                                                                    factor, premixed, cycle)
         end = timer()
         #print(f'Runtime of twozone calculations: {end - start} [s]')
         T_max_twozone = np.max(T_z1)
@@ -1054,7 +1069,10 @@ def run_piston_engine(input, flags):
         ## FOR HCCI we use single zone for NOX
         if HCCI:
                 # use single zone values for the nox calculations
-                hp_mask = (phi > phi_sc) & (phi < phi_open_out)
+                if cycle == "4T":
+                    hp_mask = (phi > phi_sc) & (phi < phi_open_out)
+                else:
+                    hp_mask = (phi > phi_sc)
                 phi_z1 = phi[hp_mask]
                 p_z1 = P[-1][hp_mask]
                 T_z1 = T[-1][hp_mask]
@@ -1072,9 +1090,13 @@ def run_piston_engine(input, flags):
             # when sampling data use nox_model
             # it is more stable for weird input parameters
             # otherwise use nox_model_alternative.nox_calculations 
-            no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+            #no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+            #                                                            rpm,
+            #                                                           m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+            no_ppm, dNOdt, no_times, no_angles, EI_nox, m_NO = nox_model_alternative.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                         rpm,
-                                                                        m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+                                                                    m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
         end = timer()
 
@@ -1088,11 +1110,11 @@ def run_piston_engine(input, flags):
             else:
                 no_ppm_equi = nox_model_equi.nox(T_z1, p_z1, m_z1, lambda_z1, equ_trapped, m_out_EP[-1][-1])
 
-            plot_output.plot_no_with_equi(phi,phi_open_out,phi_sc,no_ppm, no_ppm_equi)
+            plot_output.plot_no_with_equi(phi,phi_open_out,phi_sc,no_ppm, no_ppm_equi, cycle)
             plt.show()
 
 
-            save_nox_equ.save_nox(phi, phi_open_out,phi_sc,no_ppm, no_ppm_equi, p_z1, T_z1)
+            #save_nox_equ.save_nox(phi, phi_open_out,phi_sc,no_ppm, no_ppm_equi, p_z1, T_z1)
 
 
 
@@ -1105,8 +1127,8 @@ def run_piston_engine(input, flags):
         # convert from J to kwH and from kg to g
         nox_spec = (m_NO[-1] / W[-1][-1]) * (3600 * 1e3) * 1e3
 
-
-    elif cycle == "2T":
+    else:
+        # this is when we dont want to calculate not to save
         EI_nox = 999
         no_ppm = np.array([999])
         nox_spec = 999
@@ -1114,6 +1136,11 @@ def run_piston_engine(input, flags):
         T_flame = 0
         T_sc = 0
         p_sc = 0
+        m_NO = None
+        no_times = None
+        no_angles = None
+
+
 
 
     # post processing
@@ -1253,7 +1280,8 @@ def run_piston_engine(input, flags):
             from piston_engine.src.misc.output import output_power
             output_power(power_engine, imep, friction_power_engine, fmep, break_power_engine, bmep, heat_loss_single,
                          equ_avg)
-            
+    
+
 
     output_dict = {
         "T_out": T_out[-1],
@@ -1273,6 +1301,9 @@ def run_piston_engine(input, flags):
         "p_tdc": p_tdc,
         "out_flow": out_flow,
         "no_ppm": no_ppm[-1],
+        "NO mass trace": m_NO,
+        "NO times": no_times, 
+        "NO angles": no_angles,
         "imep": imep,
         "EI_NO": EI_nox,
         "volume_eff": volume_eff,
@@ -1288,6 +1319,7 @@ def run_piston_engine(input, flags):
         "volume trace": V[-1],
         "gross heat release": Q_in[-1],
         "net heat release": Q_in[-1] - Q[-1],
+        "far exhaust": far_exhaust,
     }
 
 

@@ -1586,10 +1586,13 @@ def plot_no(phi, evo, sc, no):
 
     return
 
-def plot_no_with_equi(phi, evo, sc, no, no_equ):
+def plot_no_with_equi(phi, evo, sc, no, no_equ, cycle):
 
     # high pressure crank angles
-    phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+    if cycle == "4T":
+        phi_hp = np.array(phi[np.argwhere((phi > sc) & (phi < evo))])
+    else:
+        phi_hp = np.array(phi[np.argwhere((phi > sc))])
 
     fs = 18
 

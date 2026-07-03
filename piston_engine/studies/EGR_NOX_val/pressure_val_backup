@@ -14,7 +14,7 @@ from piston_engine.engine import run_piston_engine
 from thermo import fuel_props
 
 # --- Load input file ---
-input_file = "4T50ME"
+input_file = "load75"
 input_dir = "piston_engine.input.EGR_validation"
 path = input_dir + "." + input_file
 d = importlib.import_module(path)
@@ -113,7 +113,7 @@ for lp in load_percents:
     print(f"  Time: {end - start:.2f} s")
 
     ca         = piston_output["crank angle trace"] * 360 / (2 * np.pi) - 180
-    fuel_flow  = piston_output["fuel flow"] * (43/42.7) 
+    fuel_flow  = piston_output["fuel flow"]
     break_power = piston_output["break power"]
     bsfc       = (fuel_flow / break_power) * (1000 * 1000 * 3600)
 

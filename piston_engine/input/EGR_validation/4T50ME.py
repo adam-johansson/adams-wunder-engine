@@ -17,7 +17,7 @@ cylinders = 4
 # piston
 d = 0.500  # diameter
 bsr = 500 / 2200  # bore stroke ratio
-rpm = 123 #rpm (this is not loaded to the model)
+rpm = 111.8 #rpm (this is not loaded to the model)
 s = d/bsr #stroke (2200 mm)
 v_mean = rpm * 2 * s /60 # mean velocity (input to the model)   approx 9 m/s
 
@@ -25,32 +25,35 @@ l_con = 2.885  #connecting rod length
 lms = s/(2*l_con)  #connecting rod ratio
 
 # inlet and outlet conditions
-p_in = 4.0e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
-T_in = 400  # inlet temperature (670 cruise 770 TO)
+p_in = 3.65e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
+T_in = 390  # inlet temperature (670 cruise 770 TO)
 p_ratio = 0.95  # pressure ratio after and before engine
 
-mf_tot = 3.255e-2
+mf_tot = 0.034
 
 # EGR
 equ_in = 0.0
 
 
 # Heat transfer
-Twall = 400          # Liner temperature
-Tpiston = 400
-Thead = 400
+Twall = 450          # Liner temperature
+Tpiston = 450
+Thead = 450
 Twalls = [Twall, Tpiston, Thead]
 
 
 ch = 1.0  # multiplier to decrease heat transfer
 
+
+# TIMINGS FROM LAMARIS PAPER 2009 this is for the
 # Inlet valve
-phi_open_in = (125 / 180) * np.pi
-phi_close_in = (235 / 180) * np.pi
+phi_open_in = (140 / 180) * np.pi
+phi_close_in = (220 / 180) * np.pi
 
 # outlet valve
-phi_open_out = (100 / 180) * np.pi
-phi_close_out = (260 / 180) * np.pi
+phi_open_out = (113 / 180) * np.pi 
+phi_close_out = (220 / 180) * np.pi
+
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
 
@@ -70,10 +73,10 @@ wiebe_type = "Single_mass"
 
 
 # this is for single wiebe function
-m_wiebe = 2.0
+m_wiebe = 1.2
 
-phi_sc = (365/180)*np.pi  # angle at combustion start  
-phi_cd = (20/180)*np.pi  # angle related to combustion duration 
+phi_sc = (363/180)*np.pi  # angle at combustion start  
+phi_cd = (29/180)*np.pi  # angle related to combustion duration 
 
 T_fuel = 300
 p_fuel = 2500e5

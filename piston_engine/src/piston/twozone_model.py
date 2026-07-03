@@ -4,13 +4,11 @@ from thermo import flame_temp_inhouse, flame_temp_cea, mixture, flame_temp_cante
 from numba import njit
 
 # Constants 
-DEFAULT_LAMBDA_0_DIESEL = 1.0 #normally 1.0
-DEFAULT_LAMBDA_0_H2 = 1.01
 DEFAULT_C_FACTOR = 0.15  # for 4 valves and central injection
 DEFAULT_POLYTROPE_AVERAGING_DEGREES = 10
 
 
-def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, premixed):
+def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, premixed, cycle):
     """
     Divides the cylinder volume into two zones for more accurate NOx calculations.
 
@@ -47,6 +45,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
         Temperature adjustment factor [-]
     premixed : bool
         Whether the combustion is premixed
+    cycle: str
+        2T for two-strokr or 4T for four-stroke
 
     Returns
     -------
@@ -59,7 +59,11 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     """
 
     # Extract high pressure region (between start of combustion and exhaust valve opening)
-    hp_mask = (phi > sc) & (phi < evo)
+    # 4T cycle starts at IVC and 2T cycle starts at EVO
+    if cycle == "4T":
+        hp_mask = (phi > sc) & (phi < evo)
+    else:
+        hp_mask = (phi > sc)
 
     phi_hp = phi[hp_mask]
     p_hp = P[hp_mask]
@@ -79,7 +83,18 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     lambda_gl = 1.0 / equ_hp[-1]  # This is now a scalar
 
     # Determine lambda_0 (air-fuel ratio in reaction zone)
-    lambda_0 = _determine_lambda_0(premixed, fuel_type, lambda_gl)
+    if premixed:
+        # for premixed combustion the stochiometry is uniform
+        lambda_0 = lambda_gl
+    elif fuel_type == "H2":
+        lambda_0 = 1.01
+    else:
+        if cycle == "4T":
+            # 4T is for the normal small engine
+            lambda_0 = 1.0
+        else:
+            # this is used for the validation of the EGR NOX (big ship diesel)
+            lambda_0 = 1.03
 
     # Calculate minimum air requirement
     equ_sc = _get_equivalence_ratio_at_start_of_combustion(phi, equ, sc)
@@ -116,12 +131,23 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
 
     # Calculate adiabatic flame temperature
     t_flame = flame_temp_cea(T_sc, equ_sc, fuel_type, p_sc, 1.0 / lambda_0, premixed=premixed)
-
+    
+    #if cycle == "4T":
+    #    A = (t_flame - T_sc) * factor
+    #else:
+    #    # this is for the EGR validtion on the big twostroke engine. Then A is not dependent on the load conditions
+    #    A = 1700
     A = (t_flame - T_sc) * factor
-    #print(f"Flame temp: {t_flame}")
+
+    print(f"Flame temp: {t_flame} K")
+    print(f"A: {A} K")
     #print(f"Sc temp: {T_sc}")
     #print(f"A: {A}. 1595 in Heider validation")
-    Astar = _calculate_astar(A, lambda_gl, lambda_0, premixed, DEFAULT_C_FACTOR)
+    if cycle == "2T":
+        # this is for big engines (such as the 2stroke engine in the EGR validation)
+        Astar = A
+    else:
+        Astar = _calculate_astar(A, lambda_gl, lambda_0, premixed, DEFAULT_C_FACTOR)
 
 
     #print(Astar)
@@ -138,15 +164,6 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
 
     return T1, m1, p_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc, t_flame, T_sc, p_sc
 
-
-def _determine_lambda_0(premixed, fuel_type, lambda_gl):
-    """Determine the air-fuel ratio in the reaction zone."""
-    if premixed:
-        return lambda_gl
-    elif fuel_type == "H2":
-        return DEFAULT_LAMBDA_0_H2
-    else:
-        return DEFAULT_LAMBDA_0_DIESEL
 
 
 def _get_equivalence_ratio_at_start_of_combustion(phi, equ, sc):
