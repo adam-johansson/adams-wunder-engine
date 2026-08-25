@@ -6,7 +6,7 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 7  # change to 2, 3 for other runs
+seed = 3  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:
@@ -355,7 +355,7 @@ class OptimisationCallback(Callback):
 # minimize(...) itself, causing runaway recursive process spawning.
 if __name__ == "__main__":
 
-    resume_optimisation = True
+    resume_optimisation = False
     n_gen = 5
     new_gens = 5
     pop_size = 150
