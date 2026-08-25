@@ -80,6 +80,7 @@ piston_input["T_in"]    = 272.15 + 30.6
 piston_input["cylinders"] = 5
 
 #fitted
+<<<<<<< HEAD
 piston_input["cr"] = 18.14
 piston_input["m_wiebe"] = 0.8
 piston_input["phi_sc"]  = phi_sc = (362/180)*np.pi  # angle at combustion start  
@@ -93,6 +94,11 @@ phi_close_in = (220 / 180) * np.pi
 # outlet valve
 phi_open_out = (113 / 180) * np.pi 
 phi_close_out = (266 / 180) * np.pi
+=======
+piston_input["m_wiebe"] = 1.0
+piston_input["phi_sc"]  = phi_sc = (362/180)*np.pi  # angle at combustion start  
+piston_input["phi_cd"]  = phi_cd = (40/180)*np.pi  # angle related to combustion duration
+>>>>>>> a32811990431e3e815016ef4a010eb19da919cde
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]

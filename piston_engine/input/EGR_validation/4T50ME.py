@@ -27,7 +27,11 @@ lms = s/(2*l_con)  #connecting rod ratio
 # inlet and outlet conditions
 p_in = 3.65e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
 T_in = 390  # inlet temperature (670 cruise 770 TO)
+<<<<<<< HEAD
 p_ratio = 0.97  # pressure ratio after and before engine
+=======
+p_ratio = 0.90  # pressure ratio after and before engine
+>>>>>>> a32811990431e3e815016ef4a010eb19da919cde
 
 mf_tot = 0.034
 
