@@ -164,7 +164,7 @@ fig.add_trace(go.Contourcarpet(
 # bore lim text
 fig.add_annotation(
     x=57,  # specifioc power
-    y=0.90,  # NOx
+    y=0.96,  # NOx
     text="d > 200 mm",
     showarrow=False,
     font=dict(
@@ -182,10 +182,10 @@ fig.add_annotation(
 
 # add pmax text
 fig.add_annotation(
-    x=80,
-    y=0.875,
+    x=78.5,
+    y=1.0,
     ax=82,  # specifioc power
-    ay=0.7,  # NOx
+    ay=0.72,  # NOx
     text="p<sub>max</sub> > 150 bar",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -209,25 +209,25 @@ fig.add_annotation(
 
 
 fig.add_annotation(
-    x=57,        # negative x puts it outside the plot to the left
-    y=1.1,
+    x=56,        # negative x puts it outside the plot to the left
+    y=1.25,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=-65,  # rotate to follow axis
+    textangle=-60,  # rotate to follow axis
 )
 
 fig.add_annotation(
     x=57,        # negative x puts it outside the plot to the left
-    y=0.7,
+    y=0.75,
     #xref="paper",
     #yref="paper",
     text="ϵ [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=60,  # rotate to follow axis
+    textangle=45,  # rotate to follow axis
 )
 
 fig.update_layout(
@@ -252,7 +252,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.61, 1.26],
+        range=[0.65, 1.39],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -292,7 +292,7 @@ fig.add_trace(go.Scattercarpet(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",

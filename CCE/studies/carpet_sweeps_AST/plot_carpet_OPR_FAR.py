@@ -330,7 +330,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.67, 1.21],
+        range=[0.71, 1.31],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -390,7 +390,7 @@ fig.add_annotation(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",

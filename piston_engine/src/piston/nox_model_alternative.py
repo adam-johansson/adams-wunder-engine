@@ -126,7 +126,7 @@ def nox_calculations(
         y0=np.array([0.0]),
         t_eval=times,
         rtol=1e-6,
-        atol=1e-12
+        atol=1e-8
     )
 
     if not sol.success:

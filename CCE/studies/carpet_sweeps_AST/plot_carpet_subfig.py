@@ -137,7 +137,7 @@ fig.add_trace(go.Contourcarpet(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",
@@ -209,10 +209,10 @@ fig.add_trace(go.Contourcarpet(
 
 # add pmax text
 fig.add_annotation(
-    x=85,      # arrowhead x (pointing to the shaded region)
-    y=1.12,     # arrowhead y
+    x=88,      # arrowhead x (pointing to the shaded region)
+    y=1.18,     # arrowhead y
     ax=95,      # text box x (in data coordinates)
-    ay=1.15,    # text box y (in data coordinates)
+    ay=1.25,    # text box y (in data coordinates)
     text="p<sub>max</sub> > 150 bar",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -231,7 +231,7 @@ fig.add_annotation(
 # add bore lim text
 fig.add_annotation(
     x=60,      # arrowhead x (pointing to the shaded region)
-    y=0.81,     # arrowhead y
+    y=0.85,     # arrowhead y
     ax=95,      # text box x (in data coordinates)
     ay=0.7,    # text box y (in data coordinates)
     text="d > 200 mm",
@@ -251,14 +251,14 @@ fig.add_annotation(
 
 
 fig.add_annotation(
-    x=60,        # negative x puts it outside the plot to the left
-    y=1.05,
+    x=57,        # negative x puts it outside the plot to the left
+    y=1.10,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=-70,  # rotate to follow axis
+    textangle=-67,  # rotate to follow axis
 )
 
 fig.add_annotation(
@@ -294,7 +294,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.61, 1.19],
+        range=[0.62, 1.29],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,

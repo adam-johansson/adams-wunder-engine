@@ -361,16 +361,19 @@ def run_cce(input, input_piston, flags, meta_model):
     piston_specific_power = piston_output["specific_power"]
     T_max_twozone = piston_output["T_max_twozone"]
     fuel_flow_piston = piston_output["fuel_flow"]
+    rpm_piston = piston_output["rpm"]
 
-    print(f"p_in: {p31}")
-    print(f"T_in :{T31}")
-    print(f"mass flow: {m31}")
-    print(f"indicated power: {piston_indicated_p}")
-    print(f"power required: {piston_power_net}")
-    print(f"power compressing bpr: {P_circumv}")
-    print(f"bpr piston: {(m3 - m31) / m31}")
-    print(f"core flow: {m3}")
-    print(f"mass flow out piston: {m33}")
+
+    #print(f"mnox piston: {m_nox_piston}")
+    #print(f"p_in: {p31}")
+    #print(f"T_in :{T31}")
+    #print(f"mass flow: {m31}")
+    #print(f"indicated power: {piston_indicated_p}")
+    #print(f"power required: {piston_power_net}")
+    #print(f"power compressing bpr: {P_circumv}")
+    #print(f"bpr piston: {(m3 - m31) / m31}")
+    #print(f"core flow: {m3}")
+    #print(f"mass flow out piston: {m33}")
 
 
     # massflow of EGR
@@ -628,7 +631,7 @@ def run_cce(input, input_piston, flags, meta_model):
     m_nox_piston = m_nox_piston * 1.53
 
     # mass concentration of nox in the piston exhaust
-    #nox_piston_ppm = (m_nox_piston / m34) *1e6
+    nox_piston_ppm = (m_nox_piston / m34) *1e6
 
     
     m_nox_total = m_nox_burner + m_nox_piston
@@ -902,8 +905,11 @@ def run_cce(input, input_piston, flags, meta_model):
             piston_indicated_p,
             fuel_flow_piston,
             fuel_flow_burner,
+            m_nox_piston,
+            m_nox_burner,
             displacement_tot,
             bore,
+            rpm_piston,
             friction_loss_pe,
             piston_aux_loss,
             piston_heat_loss,
@@ -1033,6 +1039,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "p31": p31,
         "far_piston": far33,
         "m_NO_tot": m_nox_total,
+        "NO ppm piston": nox_piston_ppm,
         "EI_nox": EI_nox,
         "m_nox_PE": m_nox_piston,
         "m_nox_burner": m_nox_burner,
@@ -1064,6 +1071,7 @@ def run_cce(input, input_piston, flags, meta_model):
         "gg_disp_specific_power": gg_spec_power_disp,
         "cooling_ratio": cooling_ratio,
         "bore": bore,
+        "rpm_piston": rpm_piston,
         "bpr_piston": bpr_piston,
         "piston_power": piston_power_shaft,
         "piston_heatloss": piston_heat_loss,

@@ -64,6 +64,7 @@ far_s, LHV = fuel_props(fuel_type)
 
 # this file tries to replicate the 75% load case at 112 rpm. Data from Scappin et al. 2012.
 # Validation for zero-dimensional model for prediction of NOx and engine performace
+# Used to fit valve timings since they are unknown
 
 #given
 #fuel per cylinder [kg/s] = 0.06199
@@ -76,13 +77,33 @@ far_s, LHV = fuel_props(fuel_type)
 piston_input["mf_tot"]  = 0.03326833631 * (42.7 / 43)  #adjust since the fuel in the paper has 42.7 MJ/kg heating value and we have 43
 piston_input["p_in"]    = 2.9e5
 piston_input["T_in"]    = 272.15 + 30.6
+piston_input["cylinders"] = 5
 
 #fitted
-piston_input["m_wiebe"] = 2.0
-piston_input["phi_sc"]  = phi_sc = (363/180)*np.pi  # angle at combustion start  
-piston_input["phi_cd"]  = phi_cd = (29/180)*np.pi  # angle related to combustion duration
+piston_input["cr"] = 18.14
+piston_input["m_wiebe"] = 0.8
+piston_input["phi_sc"]  = phi_sc = (362/180)*np.pi  # angle at combustion start  
+piston_input["phi_cd"]  = phi_cd = (40/180)*np.pi  # angle related to combustion duration
+
+# TIMINGS FROM LAMARIS PAPER 2009 this is for the
+# intake port (symmetric around 180 by definition)
+phi_open_in = (140 / 180) * np.pi
+phi_close_in = (220 / 180) * np.pi
+
+# outlet valve
+phi_open_out = (113 / 180) * np.pi 
+phi_close_out = (266 / 180) * np.pi
 
 
+valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
+
+piston_input["valve_timings"] = valve_timings
+
+
+piston_input["p_ratio"] = 0.9
+
+
+# does not effect mass flow much
 Twall = 450          # Liner temperature
 Tpiston = 450
 Thead = 450
@@ -97,6 +118,7 @@ ca         = piston_output["crank angle trace"] * 360 / (2 * np.pi) - 180
 fuel_flow  = piston_output["fuel flow"] * (43 / 42.7) # convert back to the higher fuel flow
 break_power = piston_output["break power"]
 bsfc       = (fuel_flow / break_power) * (1000 * 1000 * 3600)
+cr_eff = piston_output["effective compression ratio"]
 
 results = {
     "ca":          ca,
@@ -112,14 +134,18 @@ results = {
     "break_power": break_power,
     "bsfc":        bsfc,
     "nox_spec":    piston_output["nox_spec"] * 1.53,
+    "mdot_in":     piston_output["intake massflow"] ,
 }
 
 print(f"  T_out        : {results['T_out']:.1f} C. ")
 print(f"  p_tdc        : {results['p_tdc']*1e-5:.2f} bar. Validation should be 141 bar.")
 print(f"  p_max        : {results['p_max']*1e-5:.2f} bar. Validation should be 160 bar.")
+print(f"  air_flow per cylinder        : {(results['mdot_in'] / piston_input["cylinders"]):.4f} kg/s. Validation should be 3.26 kg/s.")
+print(f"  fuel flow per cylinder        : {(fuel_flow / piston_input["cylinders"]):.4f} kg/s. Validation should be 0.06199 kg/s.")
 print(f"  Break power  : {break_power*1e-3:.2f} kW")
 print(f"  BSFC         : {bsfc:.1f} g/kWh")
 print(f"  NOx          : {results['nox_spec']:.4f} g/kWh")
+print(f"  Effective compression ratio         : {cr_eff:.2f}. Should be 18.2")
 
 
 # --- Helpers ---
@@ -129,7 +155,8 @@ def apply_minor(ax):
 
 # --- Load experimental data ---
 #exp_pressure = np.loadtxt(os.path.join("75_load_4T50E", "p.txt"), delimiter=",")
-#exp_heat     = np.loadtxt(os.path.join("75_load_4T50E", "heat.txt"), delimiter=",")
+exp_burnfraction     = np.loadtxt(os.path.join("75_load_4T50E", "burnfraction.txt"), delimiter=",")
+exp_heat     = np.loadtxt(os.path.join("75_load_4T50E", "heat_release.txt"), delimiter=",")
 
 # --- Fig 1: Pressure, Temperature, Gross Heat Release, Heat Release Rate, NOx rate ---
 fig1, axes1 = plt.subplots(2, 3, figsize=(16, 8))
@@ -157,18 +184,21 @@ apply_minor(ax)
 ax.legend(fontsize=8)
 
 ax = axes1[0, 2]
-ax.plot(results["ca"], results["gross_heat"], label="Calculated")
-#ax.plot(exp_heat[:, 0], exp_heat[:, 1], "k--", label="Experimental")
+ax.plot(results["ca"], results["gross_heat"] / results["gross_heat"][-1], label="Calculated")
+ax.plot(exp_burnfraction[:, 0], exp_burnfraction[:, 1], "k--", label="Experimental")
 ax.set_title("Gross Heat Release")
 ax.set_xlim(160, 240)
 ax.set_xlabel("Crank Angle Degrees")
-ax.set_ylabel("Gross Heat Release")
+ax.set_ylabel("Burn fraction")
 apply_minor(ax)
 ax.legend(fontsize=8)
 
 ax = axes1[1, 0]
-heat_release_rate = np.gradient(results["gross_heat"], results["ca"])
+heat_release_rate = np.gradient(results["gross_heat"], results["ca"])   #joule per crank angle
+heat_release_rate = heat_release_rate * (111.8 / 60) * 360  # joule per second
+heat_release_rate = heat_release_rate * 1e-6 # convert from W to MW
 ax.plot(results["ca"], heat_release_rate, label="Calculated")
+ax.plot(exp_heat[:, 0], exp_heat[:, 1], "k--", label="Experimental")
 ax.set_title("Heat Release Rate")
 ax.set_xlim(160, 240)
 ax.set_xlabel("Crank Angle Degrees")

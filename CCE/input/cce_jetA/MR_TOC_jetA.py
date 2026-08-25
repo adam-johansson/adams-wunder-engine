@@ -56,6 +56,7 @@ cfg_core = 99.0 / 100  # core thrust coefficient
 cfg_bypass = 99.0 / 100  # bypass thrust coefficient
 cd_nozzle = 95.0 / 100  # nozzle discharge coefficient
 
+oil_temp = 500
 
 second_burner = True
 surrogate = False

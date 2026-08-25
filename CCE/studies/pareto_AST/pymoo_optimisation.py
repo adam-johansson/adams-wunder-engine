@@ -40,7 +40,7 @@ import pandas as pd
 
 operating_point = "TOC"
 
-input_file = f"MR_{operating_point}_jetA"
+input_file = f"MR_{operating_point}_jetA_AST_optimisation"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -58,7 +58,7 @@ flags = ["life_hack", "cce"]  # life hack version
 constant_F = False
 
 
-cce_input = {
+base_cce_input = {
     "Fn": d.Fn,
     "dTisa": d.dTisa,
     "bpr": d.bpr,
@@ -101,9 +101,11 @@ cce_input = {
     "ratio IC": d.ratio_IC,
     "piston_mode": d.piston_mode,
     "LPT_eff_type": d.LPT_eff_type,
+    "EGR_rate": d.EGR_rate,
+    "oil_temp": d.oil_temp,
 }
 
-piston_input = {
+base_piston_input = {
     'p_in': d_p.p_in,
     'T_in': d_p.T_in,
     'p_ratio': d_p.p_ratio,
@@ -147,8 +149,8 @@ meta_model = "placeholder"
  
 
 # save orignal efficiency values
-eta_p_hpc_0 = cce_input["eta_p_hpc"] 
-eta_lpt_0 = cce_input["eta_lpt"]
+eta_p_hpc_0 = base_cce_input["eta_p_hpc"] 
+eta_lpt_0 = base_cce_input["eta_lpt"]
 
 # Global storage for all evaluated points
 all_evaluations = []
@@ -156,6 +158,8 @@ all_evaluations = []
 # function for evaluating the CCE system
 
 def evaluate_cce(x):
+    cce_input = dict(base_cce_input)
+    piston_input = dict(base_piston_input)
 
     #print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}')
     opr = x[0]  # bypass ratio
@@ -165,6 +169,9 @@ def evaluate_cce(x):
     far = x[4]
     pi_pe = x[5]  # piston engine pressure increase or drop
     ic_ratio = x[6]  # intercooling ratio
+    phi_sc = x[7]
+    m_wiebe = x[8]
+    phi_cd = x[9]
 
     EXTRA_KEYS = [
     "thrust", "bpr", "bore", "bpr piston", "m0",
@@ -189,6 +196,9 @@ def evaluate_cce(x):
     cce_input["far piston"] = (far / 100) * (44/43)
     cce_input["pi_pe"] = pi_pe
     cce_input["ratio IC"] = ic_ratio
+    cce_input["start_of_combustion"] = phi_sc
+    piston_input["m_wiebe"] = m_wiebe
+    piston_input["phi_cd"] = (phi_cd/180)*np.pi #convert to radians
 
     # use the OG efficiencies for assessing size effect
     cce_input["eta_p_hpc"] = eta_p_hpc_0
@@ -220,18 +230,21 @@ def evaluate_cce(x):
         # no simulation just quick evaluations to find BPR to match thrust
         cce_input["life_hack"] = "Express"
 
-        dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
+
+        # NOTE: NO TRADE FACTORS ATM
+        cce_input["trade_factors"] = False
+        output_dict_temp = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
 
 
-        if dict["error"]:
+        if output_dict_temp["error"]:
             # if no BPR is found that matches thrust (OR any other error)
             error = True
 
         else:
 
             # Use the found bore and BPR for the final evaluation
-            cce_input["bpr"] = dict["bpr"][0]
-            cce_input["bore"] = dict["bore_match"]
+            cce_input["bpr"] = output_dict_temp["bpr"][0]
+            cce_input["bore"] = output_dict_temp["bore_match"]
 
 
             # final simulation with known bore and BPR to get all info and especially NOX
@@ -267,7 +280,7 @@ def evaluate_cce(x):
 
         #extras
         bore = output_dict["bore"]
-        bpr = dict["bpr"][0]
+        bpr = output_dict_temp["bpr"][0]
         thrust = output_dict["thrust"]
         m0 = output_dict["mass flow"]
         T_out_piston = output_dict["T34"]
@@ -316,6 +329,7 @@ def evaluate_cce(x):
         }
 
         print(f'opr: {x[0]}, T4: {x[1]}, split: {x[2]}, cr: {x[3]}, far: {x[4]}, pi_pe: {x[5]}, ic ratio: {x[6]}')
+        print(f"start of combustion: {x[7]}, m_wiebe: {x[8]}, combustion duration: {x[9]}")
         print(f"Point converged and: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns")
         print(f"Constraints: Pmax {pmax * 1e-5} bar, Tout piston {T_out_piston} K, bore: {bore*1000} mm, bpr around piston: {bpr_piston}")
         print(f"Core power per litre: {core_power_per_litre} kW/l and percentage fuel in piston: {piston_fuelsplit*100} %")
@@ -333,11 +347,11 @@ def evaluate_cce(x):
 
 class MyEngineProblem(Problem):
     def __init__(self):
-        super().__init__(n_var=7,  #OPR, T4, split, cr, far, pi_pe, ic ratio
+        super().__init__(n_var=10,  #OPR, T4, split, cr, far, pi_pe, ic ratio, phi_sc, m_wiebe, phi_cd
                             n_obj=2,
-                            n_constr=4,  # Tout piston, pmax, circumventing flow, bore?
-                            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0]), #lower limit on variables
-                            xu=np.array([30, 1600, 0.5, 15, 5, 1.6, 1.0])) #upp limit on the variables
+                            n_constr=5,  # Tout piston, pmax, circumventing flow, bore?
+                            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]), #lower limit on variables
+                            xu=np.array([30, 1600, 0.5, 15, 5, 1.8, 1.0, 370, 5.0, 70])) #upp limit on the variables
 
     def _evaluate(self, x, out, *args, **kwargs):
         F = []
@@ -352,6 +366,7 @@ class MyEngineProblem(Problem):
                 extra["P max (bar)"] - 150,  # P_max ≤ 50 bar
                 extra["bore"] - 0.2, #bore < 200mm
                 -extra["bpr piston"], #flow in piston must be equal or smaller than core flow
+                1 if extra["error"] else -1,  # failed simulation -> infeasible
             ]
 
             F.append(obj)
@@ -365,6 +380,10 @@ class MyEngineProblem(Problem):
                 "cr": ind[3],
                 "far": ind[4],
                 "p_ratio": ind[5],
+                "IC_ratio": ind[6],
+                "phi_sc": ind[7],
+                "m_wiebe": ind[8],
+                "phi_cd": ind[9],
                 "eta_th": -obj[0],
                 "specific_nox": obj[1],
                 "thrust": extra["thrust"],
@@ -390,9 +409,8 @@ class MyEngineProblem(Problem):
                 "burner_fuelflow": extra["burner_fuelflow"],
                 "piston_fuelsplit": extra["piston_fuelsplit"],
                 "error": extra["error"],
-                "constraint_violation": max(0, extra["T_out_piston"] - 1250) + max(0, extra["P max (bar)"] - 150) +  max(0, extra["bore"] - 0.2) +  max(0, -extra["bpr piston"]),
-                "is_feasible": (extra["T_out_piston"] <= 1250 and
-                extra["P max (bar)"] <= 150 and extra["bore"] <= 0.2 and extra["bpr piston"] > 0)
+                "constraint_violation": max(0, extra["T_out_piston"] - 1250) + max(0, extra["P max (bar)"] - 150) + max(0, extra["bore"] - 0.2) + max(0, -extra["bpr piston"]) + max(0, 1 if extra["error"] else -1),
+                "is_feasible": (extra["T_out_piston"] <= 1250 and extra["P max (bar)"] <= 150 and extra["bore"] <= 0.2 and extra["bpr piston"] > 0 and not extra["error"]),
             }
             all_evaluations.append(evaluation_record)
 
@@ -425,7 +443,7 @@ class OptimisationCallback(Callback):
         if algorithm.opt is not None:
             pareto_df = pd.DataFrame(
                 np.hstack([algorithm.opt.get("X"), algorithm.opt.get("F")]),
-                columns=['opr', 'T4', 'split', 'cr', 'far', 'pi_pe', 'ic_ratio', 'eta_th', 'specific_nox']
+                columns=['opr', 'T4', 'split', 'cr', 'far', 'pi_pe', 'ic_ratio', 'phi_sc', 'm_wiebe', 'phi_cd', 'eta_th', 'specific_nox']
             )
             pareto_df['eta_th'] = -pareto_df['eta_th']  # ← flip back to positive
             pareto_df.to_csv(f"{output_dir}/pareto_solutions.csv", index=False)
@@ -451,14 +469,14 @@ class OptimisationCallback(Callback):
 
 
 
-resume_optimisation = True
+resume_optimisation = False
 # number of generations first run
-n_gen = 50
+n_gen = 5
 
 # number of new generations to run
 new_gens = 50
 
-pop_size = 100
+pop_size = 5
 
 
 # save in seed folder
@@ -492,7 +510,7 @@ else:
 # specific_nox ref should be above your worst expected value
 
 # all points below -0.4 eff (remember its negative) and 1.5 nox
-ref_point = np.array([-0.4, 1.5])  # adjust nox ref based on your data range
+ref_point = np.array([-0.35, 1.5])  # adjust nox ref based on your data range
 
 callback = OptimisationCallback(
     ref_point=ref_point,
@@ -505,7 +523,10 @@ callback = OptimisationCallback(
 problem = MyEngineProblem()
 algorithm = NSGA2(pop_size=pop_size)
 
-
+print(algorithm.mating.crossover.eta.value)
+print(algorithm.mating.mutation.eta.value)
+print(algorithm.mating.crossover.prob.value)
+print(algorithm.mating.mutation.prob.value)
 
 if resume_optimisation == False:
     # --- Run optimisation ---
@@ -578,7 +599,7 @@ all_df.to_csv(f"{output_dir}/all_evaluations.csv", index=False)
 # res.X has the corresponding design variables
 pareto_df = pd.DataFrame(
     np.hstack([res.X, res.F]),
-    columns=['opr','T4','split','cr','far','pi_pe','ic_ratio','eta_th','specific_nox']
+    columns=['opr','T4','split','cr','far','pi_pe','ic_ratio', 'phi_sc', 'm_wiebe', 'phi_cd', 'eta_th','specific_nox']
 )
 pareto_df['eta_th'] = -pareto_df['eta_th']  # ← flip back to positive
 

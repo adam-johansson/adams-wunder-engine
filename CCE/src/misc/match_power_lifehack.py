@@ -90,7 +90,8 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
 
     elif life_hack == "Simulate_final":
         # calculate NOX for bore that was matching
-        flags = ["sweep"]
+        #flags = ["sweep"]
+        flags = ["nox", "sweep"]
         piston_output = run_piston_engine(input, flags)
        
        
@@ -218,6 +219,10 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
             pressure_circ, T_circumv, P_circumv = components.compressor(
                 Tin, pin / (1-p_loss_in), mdot_bypass, 0.85, p_ratio * (1 - p_loss_out) * (1-p_loss_in)
             )
+
+        # scaling friction losses for the sensitivity study
+        friction_loss = friction_loss * 1.0
+        aux_loss = aux_loss * 1.0
 
         # piston output power
         shaft_power = approx_power - aux_loss - friction_loss - P_fuel_pump
@@ -350,12 +355,13 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
     #print(f"Specific power: {(specific_power) * 1e-3} kW/kg/s")
     #print(f"mdot in: {mdot_in}")
 
-    # output in kg
+    # output in kg/s
     m_NOX = nox_ppm * m33 * 1e-6
 
     # Calculate displacement for one cylinder
     stroke = bore_match / bsr  # using bore-to-stroke ratio
-    displacement = np.pi / 4 * (bore_match ** 2 ) * stroke  # m³
+    displacement = np.pi / 4 * (bore_match ** 2 ) * stroke  # m3
+    rpm = v_mean / (2 * stroke) * 60
 
 
     output_dict={
@@ -383,6 +389,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         "m NO": m_NOX,
         "bore": bore_match,
         "displacement": displacement,
+        "rpm": rpm,
         "k_m": k_m,
         "k0_T": k0_T,
         "k1_T": k1_T,

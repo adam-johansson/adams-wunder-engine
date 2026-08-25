@@ -17,7 +17,7 @@ path_pist = input_dir_pist + "." + input_file_pist
 
 d_p = importlib.import_module(path_pist)
 
-# WHEN RUNNING AST BASLEIN, DONT USE TRADE FACTORS IN FLAGS
+# WHEN RUNNING AST BASELINE, DONT USE TRADE FACTORS IN FLAGS
 
 #flags = ["single", "print_output", "conventional"]  # geared turbofan case
 #flags = ["single", "print_output", "cce"]  # normal case
@@ -29,6 +29,8 @@ flags = ["life_hack", "cce", "print_output"]  # life hack version
 
 if "cce" in flags:
     input_file = "MR_TOC_jetA_AST_baseline"
+    #input_file = "MR_TOC_jetA_AST_higheff"
+    #input_file = "MR_TOC_jetA_AST_middlepoint"
     #input_file = "MR_TOC_jetA_EGR"
     #input_file = "MR_TOC_jetA_noburner_higheff"
     #input_file = "MR_TOC_jetA_noburner"

@@ -41,6 +41,7 @@ def sweep_no_diesel_greek_validation_lambda1(d, flags):
         piston_input = {
             'p_in': d.p_in,
             'T_in': d.T_in,
+            'equ_in': d.equ_in,
             'p_ratio': d.p_ratio,
             'cycle': d.cycle,
             'cooling': d.cooling,
@@ -74,7 +75,7 @@ def sweep_no_diesel_greek_validation_lambda1(d, flags):
             'c1': d.c1,
             'c4': d.c4,
             'c5': d.c5,
-            'premixed': d.premixed,
+            'mode': d.mode,
         }
 
         if far_goal > 0.041:
@@ -127,6 +128,7 @@ def sweep_no_diesel_greek_validation_lambda1(d, flags):
         piston_input = {
             'p_in': d.p_in,
             'T_in': d.T_in,
+            'equ_in': d.equ_in,
             'p_ratio': d.p_ratio,
             'cycle': d.cycle,
             'cooling': d.cooling,
@@ -160,7 +162,7 @@ def sweep_no_diesel_greek_validation_lambda1(d, flags):
             'c1': d.c1,
             'c4': d.c4,
             'c5': d.c5,
-            'premixed': d.premixed,
+            'mode': d.mode,
         }
 
         if far_goal > 0.041:

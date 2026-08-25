@@ -8,7 +8,7 @@ DEFAULT_C_FACTOR = 0.15  # for 4 valves and central injection
 DEFAULT_POLYTROPE_AVERAGING_DEGREES = 10
 
 
-def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, premixed, cycle):
+def twozone(phi, P, T, V, m, mf, evo, ivc, sc, lhv, far_s, equ, fuel_type, factor, premixed, cycle):
     """
     Divides the cylinder volume into two zones for more accurate NOx calculations.
 
@@ -92,6 +92,7 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
         if cycle == "4T":
             # 4T is for the normal small engine
             lambda_0 = 1.0
+            #lambda_0 = 1.10
         else:
             # this is used for the validation of the EGR NOX (big ship diesel)
             lambda_0 = 1.03
@@ -115,7 +116,9 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
 
     # Calculate motoring pressure and related quantities
     p_sc, V_sc, T_sc = _get_start_of_combustion_conditions(phi, P, V, T, sc)
-    n_poly = _calculate_polytrope_exponent(phi, P, V, sc, DEFAULT_POLYTROPE_AVERAGING_DEGREES)
+
+    # NOTE THIS MAY BE A PROBLEM FOR 2stroke engine where EVC is after IVC
+    n_poly = _calculate_polytrope_exponent(phi, P, V, ivc)
     p_motor = p_sc * (V_sc / V_hp) ** n_poly
     p_diff = p_hp - p_motor
 
@@ -139,8 +142,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
     #    A = 1700
     A = (t_flame - T_sc) * factor
 
-    print(f"Flame temp: {t_flame} K")
-    print(f"A: {A} K")
+    #print(f"Flame temp: {t_flame} K")
+    #print(f"A: {A} K")
     #print(f"Sc temp: {T_sc}")
     #print(f"A: {A}. 1595 in Heider validation")
     if cycle == "2T":
@@ -161,6 +164,8 @@ def twozone(phi, P, T, V, m, mf, evo, sc, lhv, far_s, equ, fuel_type, factor, pr
 
     if max_relative_error > 0.01:  # 1% tolerance
         print(f"Warning: Volume conservation error exceeds 1%. Max relative error: {max_relative_error:.3f}")
+
+    #print(f"Phi_sc: {sc*180/np.pi}, T_flame: {t_flame} K, T_sc: {T_sc} K, p_sc: {p_sc*1e-5} bar, equ_sc: {equ_sc}, Astar: {Astar}, n_poly: {n_poly}, L_min: {L_min}")
 
     return T1, m1, p_hp, V1, lambda_0, phi_hp, equ_hp, T2, m2, T_hp, equ_sc, t_flame, T_sc, p_sc
 
@@ -212,9 +217,9 @@ def _get_start_of_combustion_conditions(phi, P, V, T, sc):
     T_sc = T[soc_mask][0]
     return p_sc, V_sc, T_sc
 
-
+"""
 def _calculate_polytrope_exponent(phi, P, V, sc, ca_avg_degrees):
-    """Calculate polytrope exponent from data before start of combustion."""
+    #Calculate polytrope exponent from data before start of combustion.
     ca_avg_rad = ca_avg_degrees * np.pi / 180
     poly_mask = (phi > sc - ca_avg_rad) & (phi < sc)
 
@@ -235,7 +240,26 @@ def _calculate_polytrope_exponent(phi, P, V, sc, ca_avg_degrees):
 
     n_values = log_P_ratios[valid_ratios] / log_V_ratios[valid_ratios]
     return np.mean(n_values)
+"""
 
+
+def _calculate_polytrope_exponent(phi, P, V, ivc):
+    """Calculate polytrope exponent over a fixed crank-angle window (IVC to end_angle_deg),
+    via least-squares regression of ln(P) vs ln(V). Independent of start of combustion (sc)."""
+
+    end_angle_deg = 340  
+    end_angle = end_angle_deg * np.pi / 180
+    poly_mask = (phi > ivc) & (phi < end_angle)
+    #print(f"phi_ivc: {ivc*180/np.pi}")
+
+    if np.sum(poly_mask) < 2:
+        raise ValueError("Insufficient data points for polytrope exponent calculation")
+
+    P_poly = P[poly_mask]
+    V_poly = V[poly_mask]
+
+    slope, _ = np.polyfit(np.log(V_poly), np.log(P_poly), 1)
+    return -slope
 
 def _calculate_astar(A, lambda_gl, lambda_0, premixed, C):
     """Calculate the Astar parameter according to Heider's model."""

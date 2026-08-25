@@ -513,6 +513,7 @@ algorithm = NSGA2(
 
 
 
+
 if resume_optimisation == False:
     # --- Run optimisation ---
     t_start = timer()

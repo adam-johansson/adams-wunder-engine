@@ -194,10 +194,10 @@ fig.add_trace(go.Contourcarpet(
 
 # add bore lim text
 fig.add_annotation(
-    x=57,      # arrowhead x (pointing to the shaded region)
-    y=1.07,     # arrowhead y
-    ax=58,      # text box x (in data coordinates)
-    ay=0.93,    # text box y (in data coordinates)
+    x=59,      # arrowhead x (pointing to the shaded region)
+    y=1.15,     # arrowhead y
+    ax=65,      # text box x (in data coordinates)
+    ay=0.97,    # text box y (in data coordinates)
     text="d > 200 mm",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -216,10 +216,10 @@ fig.add_annotation(
 
 # add T out lim text
 fig.add_annotation(
-    x=65,      # arrowhead x (pointing to the shaded region)
-    y=1.155,     # arrowhead y
-    ax=58,      # text box x (in data coordinates)
-    ay=1.17,    # text box y (in data coordinates)
+    x=61,      # arrowhead x (pointing to the shaded region)
+    y=1.245,     # arrowhead y
+    ax=59,      # text box x (in data coordinates)
+    ay=1.27,    # text box y (in data coordinates)
     text="T<sub>34</sub> > 1250 K",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -238,9 +238,9 @@ fig.add_annotation(
 # add pmax text
 fig.add_annotation(
     x=85,
-    y=1.10,
+    y=1.18,
     ax=85,  # specifioc power
-    ay=1.17,  # NOx
+    ay=1.25,  # NOx
     text="p<sub>max</sub> > 150 bar",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -263,25 +263,25 @@ fig.add_annotation(
 
 
 fig.add_annotation(
-    x=91,        # negative x puts it outside the plot to the left
-    y=0.98,
+    x=89,        # negative x puts it outside the plot to the left
+    y=1.02,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=-75,  # rotate to follow axis
+    textangle=-67,  # rotate to follow axis
 )
 
 fig.add_annotation(
-    x=62,        # negative x puts it outside the plot to the left
-    y=0.97,
+    x=57,        # negative x puts it outside the plot to the left
+    y=1.05,
     #xref="paper",
     #yref="paper",
     text="Π<sub>p</sub> [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=50,  # rotate to follow axis
+    textangle=45,  # rotate to follow axis
 )
 
 fig.update_layout(
@@ -310,7 +310,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.905, 1.19],
+        range=[0.95, 1.29],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -347,7 +347,7 @@ fig.add_trace(go.Scattercarpet(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",

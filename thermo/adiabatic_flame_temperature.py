@@ -80,7 +80,7 @@ def flame_temp_cea(t_soc, equ_sc, fuel_type, p_sc, equ_combustion, premixed=Fals
         if premixed:
             jetA = cea.Fuel("Jet-A(g)", temp=fueltemp, mols=x_fuel)
         else:
-            jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_fuel)
+            jetA = cea.Fuel("Jet-A(L)", temp=fueltemp, mols=x_fuel)  #change this to C12H23
         fuel = jetA
     elif fuel_type == "H2":
         h2 = cea.Fuel("H2", temp=fueltemp, mols=x_fuel)

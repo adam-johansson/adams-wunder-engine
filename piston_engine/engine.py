@@ -574,6 +574,9 @@ def run_piston_engine(input, flags):
     mIP_diff = []
     T_EP_diff = []
     T_IP_diff = []
+    powerdiff = []
+    heatlossdiff = []
+    massflowdiff = []
 
     Pref = p_in
     Tref = T_in
@@ -663,6 +666,9 @@ def run_piston_engine(input, flags):
             mIP_diff.append((results[12][-1] - m_IP[-1][-1]) / results[12][-1])
             T_EP_diff.append((results[16][-1] - T_EP[-1][-1]) / results[16][-1])
             T_IP_diff.append((results[13][-1] - T_IP[-1][-1]) / results[13][-1])
+            powerdiff.append((results[6][-1] - W[-1][-1]) / results[6][-1])
+            heatlossdiff.append((results[2][-1] - Q[-1][-1]) / results[2][-1])
+            massflowdiff.append((results[7][-1] - m_in[-1][-1]) / results[7][-1])
 
         T.append(results[0])
         V.append(results[1])
@@ -777,7 +783,7 @@ def run_piston_engine(input, flags):
             return np.zeros(nr_output)
 
         if i > 0:
-            T_out_diff.append(np.abs(T_out[-1] - T_out[-2]))
+            T_out_diff.append(np.abs((T_out[-1] - T_out[-2])/(T_out[-1])))
 
         # Checking if simulation has converged (minimum 5 iterations and lest three diffs should be smaller than limits)
         if i > 4:
@@ -793,6 +799,9 @@ def run_piston_engine(input, flags):
                 mf_lim = 1e-4
                 mEP_lim = 1e-4
                 mIP_lim = 1e-4
+                power_lim = 1e-3
+                heatloss_lim = 1e-3
+                massflow_lim = 1e-3
 
             else:
 
@@ -808,14 +817,17 @@ def run_piston_engine(input, flags):
                 #mIP_lim = 1e-6
 
                 # these values are for relative limits
-                p_lim = 1e-3
-                m_lim = 1e-3
-                T_lim = 1e-3
-                T_out_lim = 1e-3
-                equ_lim = 1e-3
-                mf_lim = 1e-3
-                mEP_lim = 1e-3
-                mIP_lim = 1e-3
+                p_lim = 1e-5
+                m_lim = 1e-5
+                T_lim = 1e-5
+                T_out_lim = 1e-5
+                equ_lim = 1e-5
+                mf_lim = 1e-5
+                mEP_lim = 1e-5
+                mIP_lim = 1e-5
+                power_lim = 1e-5
+                heatloss_lim = 1e-5
+                massflow_lim = 1e-5
 
             convergence = True
             non_converged_params = []
@@ -862,9 +874,24 @@ def run_piston_engine(input, flags):
                     if f'mIP_diff[-{j}]' not in [param[0] for param in non_converged_params]:
                         non_converged_params.append((f'mIP_diff[-{j}]', np.abs(mIP_diff[-j]), mIP_lim))
 
+                if np.abs(powerdiff[-j]) > power_lim:
+                    convergence = False
+                    if f'powerdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'powerdiff[-{j}]', np.abs(powerdiff[-j]), power_lim))
+
+                if np.abs(heatlossdiff[-j]) > heatloss_lim:
+                    convergence = False
+                    if f'heatlossdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'heatlossdiff[-{j}]', np.abs(heatlossdiff[-j]), heatloss_lim))
+
+                if np.abs(massflowdiff[-j]) > massflow_lim:
+                    convergence = False
+                    if f'massflowdiff[-{j}]' not in [param[0] for param in non_converged_params]:
+                        non_converged_params.append((f'massflowdiff[-{j}]', np.abs(massflowdiff[-j]), massflow_lim))
+
             if convergence:
                 end = timer()
-                # print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
+                #print(f'Simulation has converged after {i + 1} iterations. Runtime of script: {end - start} [s]')
                 # print(i, pdiff[-1], mdiff[-1], Tdiff[-1], T_out_diff[-1], mf_diff[-1], equdiff[-1])
                 break
 
@@ -924,6 +951,13 @@ def run_piston_engine(input, flags):
             # Calculate some scavenging things
             purity, residual_fraction, eta_trapping, eta_charging, delivery_ratio, eta_sc = \
                 post_processing.scavenging(equ, phi, phi_close_out, phi_open_out, far_s, m_in_IP, rho_in, V_d, m)
+            
+            print(f"Purity: {purity}")
+            print(f"Residual fraction: {residual_fraction}")
+            print(f"trapping efficiency: {eta_trapping}")
+            print(f"charging efficeny: {eta_charging}")
+            print(f"Delivery ratio: {delivery_ratio}")
+            print(f"Scavenging efficiency: {eta_sc}")
 
     heat_loss_single = Q[-1][-1] / t_cycle
 
@@ -962,6 +996,18 @@ def run_piston_engine(input, flags):
 
     # mass of cylinder gasses just before exhaust opening
     m_trapped = m[-1][np.argwhere(phi <= phi_open_out)[-1][0]]
+
+    #volume when all the cylinder valves close:
+    if cycle == "2T":
+        V_trapped = V[-1][np.argwhere(phi <= phi_close_out)[-1][0]]
+    else:
+        # twostroke simulation starts when intake closes
+        V_trapped = V[-1][0]
+    
+
+    # effective compression ratio
+    cr_effective =  V_trapped / V_clearance
+    #print(f"Clearance volume: {V_clearance} m3")
 
     #eta_th = W[-1][-1] / Q_in[-1][-1]
     #hl = Q[-1][-1] / Q_in[-1][-1]  # heat loss
@@ -1030,7 +1076,7 @@ def run_piston_engine(input, flags):
             print(f"ENERGY NOT CONSERVED!!!!!!: {diff / heat_ins[-1]}")
             return np.zeros(nr_output)
 
-    if "sweep" not in flags:
+    if "nox" in flags:
     
         ## NOX calculations
         # get the heat addition from fuel curve
@@ -1048,7 +1094,15 @@ def run_piston_engine(input, flags):
         # factor 0.83 and lambda = 1.02 GÅR EJ
         # factor 0.845 and lambda = 1.0 
         if cycle == "4T":
-            factor = 0.845
+            #factor = 0.845
+            factor = 0.84
+            #print(f"hej")
+            #factor = 0.5915
+            #factor = 0.676
+            #factor = 0.7605
+            #factor = 0.9295
+            #factor = 1.014
+            #factor = 1.0985
         else:
             factor = 1.0
 
@@ -1057,7 +1111,7 @@ def run_piston_engine(input, flags):
         # if premixed, lambda_z1 = lambda_gl
         T_z1, m_z1, p_z1, V_z1, lambda_z1, phi_z1, equ_hp, T_z2, m_z2, T_hp, equ_sc, T_flame, T_sc, p_sc = twozone_model.twozone(phi, P[-1], T[-1],
                                                                                                     V[-1], m[-1], dmfdphi,
-                                                                                                    phi_open_out, phi_sc,
+                                                                                                    phi_open_out, phi_close_in- cycle_phi, phi_sc,
                                                                                                     LHV, far_s,
                                                                                                     equ[-1], fuel_type,
                                                                                                     factor, premixed, cycle)
@@ -1089,14 +1143,16 @@ def run_piston_engine(input, flags):
         else:
             # when sampling data use nox_model
             # it is more stable for weird input parameters
-            # otherwise use nox_model_alternative.nox_calculations 
-            #no_ppm, dNOdt, no_times, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
-            #                                                            rpm,
-            #                                                           m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
-            no_ppm, dNOdt, no_times, no_angles, EI_nox, m_NO = nox_model_alternative.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+            # nox_model_alternative.nox_calculations is when you want to compare equilibirum concentration with actual concentration
+            
+            no_ppm, dNOdt, no_times, no_angles, EI_nox, m_NO = nox_model.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
                                                                         rpm,
-                                                                    m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+                                                                       m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
+
+            #no_ppm, dNOdt, no_times, no_angles, EI_nox, m_NO = nox_model_alternative.nox_calculations(T_z1, p_z1, V_z1, fuel_type, lambda_z1, phi_z1,
+            #                                                            rpm,
+            #                                                        m_out_EP[-1][-1], mf_tot, equ_trapped, m_trapped, equ_sc)
 
         end = timer()
 
@@ -1320,6 +1376,7 @@ def run_piston_engine(input, flags):
         "gross heat release": Q_in[-1],
         "net heat release": Q_in[-1] - Q[-1],
         "far exhaust": far_exhaust,
+        "effective compression ratio": cr_effective,
     }
 
 

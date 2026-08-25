@@ -12,6 +12,7 @@ cooling = "Hohenberg"
 
 opposed = False
 premixed = False
+mode = "DI"
 
 # given in the paper
 #cr = 19.81
@@ -88,6 +89,7 @@ cd = 0.8
 # 99.9 should be used
 eta_c = 0.999
 
+equ_in = 0.0
 
 ### PARAMETERS BELOW ARE OBSOLETE ###
 # This is for Kaisers wiebe function (double)

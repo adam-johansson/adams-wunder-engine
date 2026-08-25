@@ -103,7 +103,8 @@ fig1.add_annotation(
         "Π<sub>pe</sub> = 1.58<br>"
         "ϵ = 10.48<br>"
         "<i>f</i> = 3.90%<br>"
-        "IC = 0.987"
+        "IC = 0.987<br>"
+        "χ<sub>PM</sub> = 0.999"
         #"Ẇ<sub>core,V<sub>d</sub></sub> = 65.39kW/litre"
     ),
     showarrow=True,
@@ -123,7 +124,7 @@ fig1.add_annotation(
     x=40.78,
     y=0.138,
     ax=90,   # adjust these to position the text box
-    ay=-160,
+    ay=-140,
     text=(
         "OPR = 10.0<br>"
         "T<sub>4</sub> = 1600 K<br>"
@@ -131,7 +132,8 @@ fig1.add_annotation(
         "Π<sub>pe</sub> = 0.98<br>"
         "ϵ = 4.14<br>"
         "<i>f</i> = 2.00%<br>"
-        "IC = 0.996"
+        "IC = 0.996<br>"
+        "χ<sub>PM</sub> = 0.745"
         #"Ẇ<sub>core,V<sub>d</sub></sub> = 63.43kW/litre"
     ),
     showarrow=True,
@@ -160,7 +162,8 @@ fig1.add_annotation(
         "Π<sub>pe</sub> = 1.58<br>"
         "ϵ = 11.32<br>"
         "<i>f</i> = 2.78%<br>"
-        "IC = 0.994"
+        "IC = 0.994<br>"
+        "χ<sub>PM</sub> = 0.936"
         #"Ẇ<sub>core,V<sub>d</sub></sub> = 69.46kW/litre"
     ),
     showarrow=True,

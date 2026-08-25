@@ -27,7 +27,7 @@ lms = s/(2*l_con)  #connecting rod ratio
 # inlet and outlet conditions
 p_in = 3.65e5  # inlet pressure (kaiser had 8 bar cruise 26 bar take off)
 T_in = 390  # inlet temperature (670 cruise 770 TO)
-p_ratio = 0.95  # pressure ratio after and before engine
+p_ratio = 0.97  # pressure ratio after and before engine
 
 mf_tot = 0.034
 
@@ -52,7 +52,8 @@ phi_close_in = (220 / 180) * np.pi
 
 # outlet valve
 phi_open_out = (113 / 180) * np.pi 
-phi_close_out = (220 / 180) * np.pi
+#phi_close_out = (220 / 180) * np.pi
+phi_close_out = (266 / 180) * np.pi  #266
 
 
 valve_timings = [phi_open_in, phi_close_in, phi_open_out, phi_close_out]
@@ -61,6 +62,7 @@ n_valve = 2
 valve_type = "valve"   # or change to port??
 
 lv_max = 0.070 # from some power point online
+#lv_max = 0.1
 
 cd = 0.8
 

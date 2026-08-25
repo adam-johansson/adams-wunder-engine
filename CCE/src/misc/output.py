@@ -32,8 +32,11 @@ def print_output(
     induced_power,
     fuel_flow_piston,
     fuel_flow_burner,
+    nox_piston,
+    nox_burner,
     V_d_tot,
     bore,
+    rpm_piston,
     friction_loss,
     aux_loss,
     heat_loss,
@@ -56,6 +59,7 @@ def print_output(
 
     print(f"Total displacement of the piston engine: {V_d_tot * 1000} [liter]")
     print(f"Piston bore: {bore * 1000} [mm]")
+    print(f"RPM piston engine: {rpm_piston} rpm")
 
 
     print(f"Thrust specific fuel consumption (TSFC): {sfc * 1e6} [mg/Ns]")
@@ -101,10 +105,15 @@ def print_output(
     # calculate emission index
     EI_nox = m_nox / (fuel_flow_piston + fuel_flow_burner) * 1e3
     print(f"Emission index NOx: {EI_nox} [g/kg]")
+    print(f"NOx mass flow from piston: {nox_piston} [kg/s]")
+    print(f"NOx mass flow from burner: {nox_burner} [kg/s]")
+    #print(f"Thrust specific NOx emissions: {} [mg/Ns]")
 
     print(f"Cooling ratio (HPC inlet reference): {cooling_ratio}")
     print(f"Intercooler delta T hot: {deltaT_IC_hot}")
     print(f"Intercooler delta T cold: {deltaT_IC_cold}")
+
+    #print(f"HPC last stage blade height: {last_stage_blade} mm")
 
     return
 

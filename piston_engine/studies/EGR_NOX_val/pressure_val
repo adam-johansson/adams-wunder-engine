@@ -74,18 +74,18 @@ def rpm_to_vmean(rpm):
 # MANUAL LOAD POINT SETTINGS  ← adjust these as needed
 # =========================================================
 load_cases = {
-    25:  dict(rpm=78,  mf_tot=0.017, p_in=1.8e5, T_in=360.0,  #0.173 351
-              m_wiebe=1.2, phi_sc=(364/180)*np.pi, phi_cd=(21/180)*np.pi,
-              Twalls=[415,415,415]),
-    50:  dict(rpm=98,  mf_tot=0.02558, p_in=2.6e5, T_in=380.0, #395
-              m_wiebe=1.2, phi_sc=(364/180)*np.pi, phi_cd=(24/180)*np.pi,
-              Twalls = [430,430,430]),
-    75:  dict(rpm=112, mf_tot=0.034, p_in=3.65e5, T_in=390.0, #443
-              m_wiebe=1.2, phi_sc=(363/180)*np.pi, phi_cd=(29/180)*np.pi,
+    25:  dict(rpm=78,  mf_tot=0.016, p_in=2.0e5, T_in=272.15 + 30,  #0.173 351
+              m_wiebe=1.0, phi_sc=(365/180)*np.pi, phi_cd=(20/180)*np.pi,
+              Twalls=[450,450,450]),
+    50:  dict(rpm=98,  mf_tot=0.02558, p_in=2.8e5, T_in=272.15 + 30, #395
+              m_wiebe=1.0, phi_sc=(365/180)*np.pi, phi_cd=(25/180)*np.pi,
               Twalls = [450,450,450]),
-    100: dict(rpm=123, mf_tot=0.042, p_in=4.5e5, T_in=410.0,  #0.40 #360
-              m_wiebe=1.33, phi_sc=(363/180)*np.pi, phi_cd=(32/180)*np.pi,
-              Twalls = [480,480,480]),
+    75:  dict(rpm=112, mf_tot=0.034, p_in=3.9e5, T_in=272.15 + 30, #443
+              m_wiebe=1.0, phi_sc=(364/180)*np.pi, phi_cd=(30/180)*np.pi,
+              Twalls = [450,450,450]),
+    100: dict(rpm=123, mf_tot=0.042, p_in=4.75e5, T_in=272.15 + 30,  #0.40 #360
+              m_wiebe=1.0, phi_sc=(364/180)*np.pi, phi_cd=(35/180)*np.pi,
+              Twalls = [450,450,450]),
 }
 # =========================================================
 
@@ -120,6 +120,7 @@ for lp in load_percents:
     results[lp] = {
         "ca":          ca,
         "p_trace":     piston_output["pressure trace"],
+        "T_trace":     piston_output["temperature trace"],
         "gross_heat":  piston_output["gross heat release"],
         "T_out":       piston_output["T_out"] - 272.15,
         "p_tdc":       piston_output["p_tdc"],
@@ -135,6 +136,8 @@ for lp in load_percents:
     print(f"  Break power  : {break_power*1e-3:.2f} kW")
     print(f"  BSFC         : {bsfc:.1f} g/kWh")
     print(f"  NOx          : {results[lp]['nox_spec']:.4f} g/kWh")
+    print(f"  Airflow per cylinder          : {( piston_output["intake massflow"] / piston_input["cylinders"]):.4f} kg/s")
+    print(f"  Fuelflow per cylinder          : {( piston_output["fuel flow"] / piston_input["cylinders"]):.4f} kg/s")
 
 
 # --- Helpers ---
@@ -148,6 +151,15 @@ exp_heat = {}
 for lp in load_percents:
     exp_pressure[lp] = np.loadtxt(os.path.join("p_val",    f"{lp}load.txt"), delimiter=",")
     exp_heat[lp]     = np.loadtxt(os.path.join("heat_val", f"{lp}load.txt"), delimiter=",")
+
+# --- Load experimental temperature trace data ---
+
+fpath = os.path.join("T_val", f"0egr.txt")
+
+if os.path.exists(fpath):
+    exp_temp = np.loadtxt(fpath, delimiter=",")
+else:
+    exp_temp = None
 
 # --- Fig 1: Pressure traces ---
 fig1, axes1 = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
@@ -165,6 +177,8 @@ for ax, lp in zip(axes1.flat, load_percents):
 for ax in axes1[1, :]: ax.set_xlabel("Crank Angle Degrees")
 for ax in axes1[:, 0]: ax.set_ylabel("Cylinder Pressure [bar]")
 fig1.tight_layout()
+
+
 
 # --- Fig 2: Gross heat release ---
 fig2, axes2 = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
@@ -214,10 +228,32 @@ for ax, key, label, scale, exp_key in zip(axes3.flat, scalar_keys, scalar_labels
     ax.set_xlabel(x_label)
     ax.set_ylabel(label)
     ax.set_xticks(x_calc)
+
+    if exp_key == "nox":
+        ax.set_ylim(0, 40) 
+
     ax.legend(fontsize=8)
     apply_minor(ax)
 
 fig3.tight_layout()
+
+# --- Fig 4: Temperature trace comparison (75% load) ---
+fig4, ax4 = plt.subplots(figsize=(8, 6))
+fig4.suptitle("Cylinder Temperature Trace - 75% Load")
+
+r75 = results[75]
+ax4.plot(r75["ca"], r75["T_trace"], label="Calculated")
+
+if exp_temp is not None:
+    ax4.plot(exp_temp[:, 0], exp_temp[:, 1], "k--", marker="^", markersize=3, label="Experimental")
+else:
+    print("Warning: exp_temp data not found, skipping experimental overlay in Fig 4.")
+
+ax4.set_xlabel("Crank Angle Degrees")
+ax4.set_ylabel("Temperature [K]")
+apply_minor(ax4)
+ax4.legend(fontsize=8)
+fig4.tight_layout()
 
 plt.show()
 
