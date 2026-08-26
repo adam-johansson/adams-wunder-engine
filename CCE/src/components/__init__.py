@@ -1,5 +1,5 @@
 from .compressor import compressor, compressor_isentropic
-from .hx import hx
+#from .hx import hx
 from .inlet import inlet
 from .nozzle import nozzle
 from .nozzle_old import nozzle_old
