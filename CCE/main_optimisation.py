@@ -292,7 +292,7 @@ elif "cce" in flags:
         dict = auxiliaries.run_cce_bpr(cce_input, piston_input, meta_model)
         #print(dict["bpr"], dict["bore_match"])
         if dict["error"] == True:
-            print(f"No match because: {dict["error_type"]}")
+            print(f"No match because: {dict['error_type']}")
         
         else:
 
