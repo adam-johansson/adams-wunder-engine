@@ -2,7 +2,7 @@ from piston_engine.src.misc import post_processing
 from scipy.optimize import brentq
 from CCE.src import components
 from thermo import fuel_props, JETA_L, H2, mixture
-from neural_network.src import input_outside_limits
+#from neural_network.src import input_outside_limits
 from piston_engine.engine import run_piston_engine
 
 
