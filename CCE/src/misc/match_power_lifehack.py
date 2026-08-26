@@ -194,7 +194,6 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         lv_max = bore * 0.1
         rpm = v_mean / (2 * stroke) * 60
 
-
         # auxiliary losses and friction losses (for 12 cylinders)
         friction_loss, aux_loss, _ = post_processing.friction_patton(
             bore, rpm, stroke, v_mean, pin, cr, cylinders, lv_max, cycle
@@ -250,7 +249,7 @@ def match_power_lifehack(input, power_req, core_flow, life_hack):
         })
 
         # power out should match power required
-        residual = np.array([power_piston - power_req / (nr_engines * cylinders)])
+        residual = power_piston - power_req / (nr_engines * cylinders)
         #print(residual)
         return residual
 
