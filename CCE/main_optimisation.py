@@ -6,7 +6,7 @@ sys.path.append("./../")
 from CCE.src import cce_propulsion_system_specific, geared_turbofan_h2_recuperated, geared_turbofan_jetA, cce_propulsion_system_h2
 from CCE.src import auxiliaries, misc
 import importlib
-from neural_network.src import load_ANN
+
 
 from timeit import default_timer as timer
 
@@ -189,9 +189,11 @@ elif "cce" in flags:
 
 
     if "single" in flags:
+        from neural_network.src import load_ANN
         start = timer()
 
-        if d.fuel == "jetA":
+        if d.fuel == "jetA":    
+
 
             # Load the trained model
             meta_model = load_ANN("meta_models/jetA_256_2.pth")
