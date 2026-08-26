@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 
 from CCE.src.misc import thrust_requirement_function
 
-from mpmath.libmp import fzero
+#from mpmath.libmp import fzero
 from scipy.optimize import (
     fsolve, brentq
 )
