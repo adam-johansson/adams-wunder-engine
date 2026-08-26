@@ -11,7 +11,7 @@ plt.rcParams['font.size'] = textsize
 
 
 def load(filename):
-    data = np.loadtxt(f"{output_dir}/{filename}", skiprows=1)
+    data = np.loadtxt(f"{output_dir}/{filename}", skiprows=1, max_rows=44)
     return data[:, 0], data[:, 1]
 
 

@@ -4,6 +4,8 @@ import os
 import tempfile
 import shutil
 
+from multiprocessing import Pool
+
 import sys
 sys.path.append("./../../../")
 
@@ -60,8 +62,8 @@ piston_input = {
     'c1': d_p.c1, 'c4': d_p.c4, 'c5': d_p.c5, 'premixed': d_p.premixed,
 }
 
-param_name = "SC"
-params_1 = np.arange(340, 383.1, 1.0)
+param_name = "SC"  # start of combustion only
+params_1 = np.arange(340, 390.1, 1.0)  # phi_sc sweep -- everything else fixed
 
 num1 = np.size(params_1)
 
@@ -115,13 +117,19 @@ meta_model = "placeholder"
 eta_p_hpc_0 = cce_input["eta_p_hpc"]
 eta_lpt_0 = cce_input["eta_lpt"]
 
-root_dir = os.path.abspath(os.getcwd())
-
 
 def evaluate_grid_point(i, phi_sc, root_dir):
+    lap1 = timer()
+    result = _evaluate_grid_point_inner(i, phi_sc, root_dir)
+    lap2 = timer()
+    status = "FAILED" if result["error"] else "ok"
+    print(f"[{status}] phi_sc={phi_sc:.2f}  (point {i})  --  {lap2 - lap1:.2f} s")
+    return result
+
+
+def _evaluate_grid_point_inner(i, phi_sc, root_dir):
     old_cwd = os.getcwd()
     result = {"i": i, "error": False}
-    lap1 = timer()
 
     with tempfile.TemporaryDirectory(dir=root_dir, prefix="worker_") as run_dir:
         try:
@@ -134,7 +142,10 @@ def evaluate_grid_point(i, phi_sc, root_dir):
             cce_input_local = dict(cce_input)
             piston_input_local = dict(piston_input)
 
+            # phi_cd untouched -- stays at whatever piston_input already has (d_p.phi_cd)
             cce_input_local["start_of_combustion"] = phi_sc
+
+
             cce_input_local["eta_p_hpc"] = eta_p_hpc_0
             cce_input_local["eta_lpt"] = eta_lpt_0
 
@@ -198,101 +209,106 @@ def evaluate_grid_point(i, phi_sc, root_dir):
                 "m_core": "core mass flow", "bore": "bore", "piston_bpr": "bpr_piston",
                 "piston_power_spec": "piston_specific_power", "piston_power": "piston_power",
                 "piston_heatloss": "piston_heatloss", "piston_power_indicated": "piston_power_indicated",
-                "heatloss_percentage": "heatloss_percentage", "friction_percentage": "friction_percentage",
-                "NO ppm piston": "NO ppm piston",
+                "heatloss_percentage": "heatloss_percentage", "friction_percentage": "friction_percentage", "NO ppm piston": "NO ppm piston",
             }
             for result_key, output_key in key_map.items():
                 result[result_key] = output_dict[output_key]
         finally:
             os.chdir(old_cwd)
 
-    lap2 = timer()
-    status = "FAILED" if result["error"] else "ok"
-    print(f"[{status}] phi_sc={phi_sc:.2f}  (point {i})  --  {lap2 - lap1:.2f} s")
     return result
 
 
-start = timer()
-for i, phi_sc in enumerate(params_1):
-    r = evaluate_grid_point(i, phi_sc, root_dir)
-    if r["error"]:
-        bprs[i] = r.get("bpr_fallback", 0)
-        continue
-    SFCs[i] = r["SFC"]
-    pmaxs[i] = r["pmax"]
-    EI_noxs[i] = r["EI_nox"]
-    m_noxs_pe[i] = r["m_nox_pe"]
-    m_noxs_burner[i] = r["m_nox_burner"]
-    m_NO_tot[i] = r["m_NO_tot"]
-    NO_ppm_piston[i] = r["NO ppm piston"]
-    specific_nox[i] = r["specific_nox"]
-    core_effs[i] = r["core_eff"]
-    transmission_effs[i] = r["transmission_eff"]
-    thermal_effs[i] = r["thermal_eff"]
-    propulsive_effs[i] = r["propulsive_eff"]
-    overall_effs[i] = r["overall_eff"]
-    gg_effs[i] = r["gg_eff"]
-    gg_powers[i] = r["gg_power"]
-    gg_mass_spec_powers[i] = r["gg_mass_spec_power"]
-    gg_disp_spec_powers[i] = r["gg_disp_spec_power"]
-    cooling_ratios[i] = r["cooling_ratio"]
-    specific_thrusts[i] = r["specific_thrust"]
-    specific_powers[i] = r["specific_power"]
-    core_powers[i] = r["core_power"]
-    dT_intercoolers[i] = r["dT_intercooler"]
-    Tmaxs[i] = r["Tmax"]
-    T_max_twozone[i] = r["T_max_twozone"]
-    T34s[i] = r["T34"]
-    T35s[i] = r["T35"]
-    T4s[i] = r["T4_out"]
-    hot_bypass_thrusts[i] = r["hot_bypass_thrust"]
-    cold_bypass_thrusts[i] = r["cold_bypass_thrust"]
-    core_thrusts[i] = r["core_thrust"]
-    piston_fuelflow[i] = r["piston_fuelflow"]
-    burner_fuelflow[i] = r["burner_fuelflow"]
-    cool_ngv[i] = r["cool_ngv"]
-    cool_rotor[i] = r["cool_rotor"]
-    m_core[i] = r["m_core"]
-    bores[i] = r["bore"]
-    piston_bprs[i] = r["piston_bpr"]
-    piston_power_spec[i] = r["piston_power_spec"]
-    piston_powers[i] = r["piston_power"]
-    piston_heatloss[i] = r["piston_heatloss"]
-    piston_powers_indicated[i] = r["piston_power_indicated"]
-    heatloss_percentage[i] = r["heatloss_percentage"]
-    friction_percentage[i] = r["friction_percentage"]
-    bprs[i] = r["bpr"]
-end = timer()
-print(f"Total simulation time for {num1} evaluation points: {end - start} seconds")
+if __name__ == "__main__":
+    root_dir = os.path.abspath(os.getcwd())
 
-# --- post processing ---
-disp = 24 * bores*bores*bores*np.pi/4
-core_spec_power = core_powers / disp
-NO_per_power = (1000 * m_NO_tot * 3600) / (core_powers * 1e-3)
-pe_fuel_percentage = piston_fuelflow / (piston_fuelflow + burner_fuelflow)
-burner_fuel_percentage = burner_fuelflow / (piston_fuelflow + burner_fuelflow)
+    n_processes = max(os.cpu_count() - 2, 2)
+    print(f"Spawning pool with {n_processes} worker processes...")
 
-os.makedirs(f"./results/{param_name}", exist_ok=True)
+    tasks = [(i, phi_sc, root_dir) for i, phi_sc in enumerate(params_1)]
 
+    start = timer()
+    with Pool(n_processes) as pool:
+        results = pool.starmap(evaluate_grid_point, tasks)
+    end = timer()
+    print(f"Total simulation time for {len(tasks)} evaluation points: {end - start} seconds")
 
-def save_1d(filename, values):
-    table = np.column_stack((params_1, values))
-    np.savetxt(f"./results/{param_name}/{filename}", table, fmt="%.5f",
-               header="phi_sc  value", comments="")
+    for r in results:
+        i = r["i"]
+        if r["error"]:
+            bprs[i] = r.get("bpr_fallback", 0)
+            continue
+        SFCs[i] = r["SFC"]
+        pmaxs[i] = r["pmax"]
+        EI_noxs[i] = r["EI_nox"]
+        m_noxs_pe[i] = r["m_nox_pe"]
+        m_noxs_burner[i] = r["m_nox_burner"]
+        m_NO_tot[i] = r["m_NO_tot"]
+        NO_ppm_piston[i] = r["NO ppm piston"]
+        specific_nox[i] = r["specific_nox"]
+        core_effs[i] = r["core_eff"]
+        transmission_effs[i] = r["transmission_eff"]
+        thermal_effs[i] = r["thermal_eff"]
+        propulsive_effs[i] = r["propulsive_eff"]
+        overall_effs[i] = r["overall_eff"]
+        gg_effs[i] = r["gg_eff"]
+        gg_powers[i] = r["gg_power"]
+        gg_mass_spec_powers[i] = r["gg_mass_spec_power"]
+        gg_disp_spec_powers[i] = r["gg_disp_spec_power"]
+        cooling_ratios[i] = r["cooling_ratio"]
+        specific_thrusts[i] = r["specific_thrust"]
+        specific_powers[i] = r["specific_power"]
+        core_powers[i] = r["core_power"]
+        dT_intercoolers[i] = r["dT_intercooler"]
+        Tmaxs[i] = r["Tmax"]
+        T_max_twozone[i] = r["T_max_twozone"]
+        T34s[i] = r["T34"]
+        T35s[i] = r["T35"]
+        T4s[i] = r["T4_out"]
+        hot_bypass_thrusts[i] = r["hot_bypass_thrust"]
+        cold_bypass_thrusts[i] = r["cold_bypass_thrust"]
+        core_thrusts[i] = r["core_thrust"]
+        piston_fuelflow[i] = r["piston_fuelflow"]
+        burner_fuelflow[i] = r["burner_fuelflow"]
+        cool_ngv[i] = r["cool_ngv"]
+        cool_rotor[i] = r["cool_rotor"]
+        m_core[i] = r["m_core"]
+        bores[i] = r["bore"]
+        piston_bprs[i] = r["piston_bpr"]
+        piston_power_spec[i] = r["piston_power_spec"]
+        piston_powers[i] = r["piston_power"]
+        piston_heatloss[i] = r["piston_heatloss"]
+        piston_powers_indicated[i] = r["piston_power_indicated"]
+        heatloss_percentage[i] = r["heatloss_percentage"]
+        friction_percentage[i] = r["friction_percentage"]
+        bprs[i] = r["bpr"]
 
+    # --- post processing ---
+    disp = 24 * bores*bores*bores*np.pi/4
+    core_spec_power = core_powers / disp
+    NO_per_power = (1000 * m_NO_tot * 3600) / (core_powers * 1e-3)
+    pe_fuel_percentage = piston_fuelflow / (piston_fuelflow + burner_fuelflow)
+    burner_fuel_percentage = burner_fuelflow / (piston_fuelflow + burner_fuelflow)
 
-save_1d("thermal_eff.dat", thermal_effs*100)
-save_1d("m_NOx.dat", m_NO_tot*1000)
-save_1d("specific_nox.dat", specific_nox*1e6)
-save_1d("gg_spec_power.dat", gg_disp_spec_powers*1e-6)
-save_1d("core_spec_power.dat", core_spec_power*1e-6)
-save_1d("peak_pressure.dat", pmaxs*1e-5)
-save_1d("Tmax.dat", Tmaxs)
-save_1d("Tmax2zone.dat", T_max_twozone)
-save_1d("T34.dat", T34s)
-save_1d("T35.dat", T35s)
-save_1d("NO_ppm_piston.dat", NO_ppm_piston)
-save_1d("bore.dat", bores*1000)
-save_1d("Tout_piston.dat", T34s)
-save_1d("BPR.dat", bprs)
-save_1d("piston_BPRS.dat", piston_bprs)
+    # simple two-column (phi_sc, value) tables -- no carpet-grid header needed for a 1D sweep
+    os.makedirs(f"./results/{param_name}", exist_ok=True)
+
+    def save_1d(filename, values):
+        table = np.column_stack((params_1, values))
+        np.savetxt(f"./results/{param_name}/{filename}", table, fmt="%.5f",
+                   header="phi_sc  value", comments="")
+
+    save_1d("thermal_eff.dat", thermal_effs*100)
+    save_1d("m_NOx.dat", m_NO_tot*1000)
+    save_1d("specific_nox.dat", specific_nox*1e6)
+    save_1d("gg_spec_power.dat", gg_disp_spec_powers*1e-6)
+    save_1d("core_spec_power.dat", core_spec_power*1e-6)
+    save_1d("peak_pressure.dat", pmaxs*1e-5)
+    save_1d("Tmax.dat", Tmaxs)
+    save_1d("Tmax2zone.dat", T_max_twozone)
+    save_1d("T34.dat", T34s)
+    save_1d("T35.dat", T35s)
+    save_1d("NO_ppm_piston.dat", NO_ppm_piston)
+    save_1d("bore.dat", bores*1000)
+    save_1d("Tout_piston.dat", T34s)
+    save_1d("BPR.dat", bprs)

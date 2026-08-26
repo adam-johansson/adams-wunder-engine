@@ -356,7 +356,7 @@ class OptimisationCallback(Callback):
 if __name__ == "__main__":
 
     resume_optimisation = False
-    n_gen = 5
+    n_gen = 100
     new_gens = 5
     pop_size = 150
     output_dir = "."

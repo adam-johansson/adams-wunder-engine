@@ -60,8 +60,8 @@ piston_input = {
     'c1': d_p.c1, 'c4': d_p.c4, 'c5': d_p.c5, 'premixed': d_p.premixed,
 }
 
-param_name = "SC"
-params_1 = np.arange(340, 383.1, 1.0)
+param_name = "CD"
+params_1 = np.arange(20, 80.1, 5.0)
 
 num1 = np.size(params_1)
 
@@ -118,7 +118,7 @@ eta_lpt_0 = cce_input["eta_lpt"]
 root_dir = os.path.abspath(os.getcwd())
 
 
-def evaluate_grid_point(i, phi_sc, root_dir):
+def evaluate_grid_point(i, phi_cd, root_dir):
     old_cwd = os.getcwd()
     result = {"i": i, "error": False}
     lap1 = timer()
@@ -134,7 +134,7 @@ def evaluate_grid_point(i, phi_sc, root_dir):
             cce_input_local = dict(cce_input)
             piston_input_local = dict(piston_input)
 
-            cce_input_local["start_of_combustion"] = phi_sc
+            piston_input_local["phi_cd"] = (phi_cd/180)*np.pi
             cce_input_local["eta_p_hpc"] = eta_p_hpc_0
             cce_input_local["eta_lpt"] = eta_lpt_0
 
@@ -208,13 +208,13 @@ def evaluate_grid_point(i, phi_sc, root_dir):
 
     lap2 = timer()
     status = "FAILED" if result["error"] else "ok"
-    print(f"[{status}] phi_sc={phi_sc:.2f}  (point {i})  --  {lap2 - lap1:.2f} s")
+    print(f"[{status}] phi_cd={phi_cd:.2f}  (point {i})  --  {lap2 - lap1:.2f} s")
     return result
 
 
 start = timer()
-for i, phi_sc in enumerate(params_1):
-    r = evaluate_grid_point(i, phi_sc, root_dir)
+for i, phi_cd in enumerate(params_1):
+    r = evaluate_grid_point(i, phi_cd, root_dir)
     if r["error"]:
         bprs[i] = r.get("bpr_fallback", 0)
         continue
@@ -278,7 +278,7 @@ os.makedirs(f"./results/{param_name}", exist_ok=True)
 def save_1d(filename, values):
     table = np.column_stack((params_1, values))
     np.savetxt(f"./results/{param_name}/{filename}", table, fmt="%.5f",
-               header="phi_sc  value", comments="")
+               header="phi_cd  value", comments="")
 
 
 save_1d("thermal_eff.dat", thermal_effs*100)
