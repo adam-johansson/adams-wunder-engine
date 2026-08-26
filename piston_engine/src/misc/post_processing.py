@@ -190,7 +190,7 @@ def friction_patton(d_meter, rpm, s_meter, v_mean, p_in, cr, n_cyl, lv_max, cycl
     # fmep = (fmep_crankshaft + fmep_piston) * 1e3  # for two-stroke
 
     # multiply by 1000 so that the unit is Pa for output
-    fmep = (fmep * 1e3,)
+    fmep = fmep * 1e3
     fmep_aux = fmep_aux * 1e3
     fmep_pe_loss = fmep_pe_loss * 1e3
 
