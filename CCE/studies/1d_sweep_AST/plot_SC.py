@@ -24,7 +24,8 @@ _, Tmax2zone = load("Tmax2zone.dat")
 _, T34 = load("T34.dat")
 _, T35 = load("T35.dat")
 _, NO_ppm_piston = load("NO_ppm_piston.dat")
-
+_, piston_bprs = load("piston_BPRS.dat")
+_, bores = load("bore.dat")
 
 def make_sweep_plot(x, y, ylabel, filename):
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -58,5 +59,7 @@ fig6 = make_sweep_plot(phi_sc, Tmax2zone, r"$T_{max,2zone}$ [K]", "Tmax2zone_vs_
 fig7 = make_sweep_plot(phi_sc, T34, r"$T_{34}$ [K]", "T34_vs_phi_sc.pdf")
 fig8 = make_sweep_plot(phi_sc, T35, r"$T_{35}$ [K]", "T35_vs_phi_sc.pdf")
 fig9 = make_sweep_plot(phi_sc, NO_ppm_piston, "NO PM exhaust [ppm]", "NO_ppm_vs_phi_sc.pdf")
+fig10 = make_sweep_plot(phi_sc, 1/(1+piston_bprs), "PM flow fraction [-]", "piston_ff_vs_phi_sc.pdf")
+fig11 = make_sweep_plot(phi_sc, bores, "bore [mm]", "bore_vs_phi_sc.pdf")
 
 plt.show()

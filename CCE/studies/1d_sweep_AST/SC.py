@@ -61,7 +61,7 @@ piston_input = {
 }
 
 param_name = "SC"
-params_1 = np.arange(340, 383.1, 1.0)
+params_1 = np.arange(300, 380.1, 5.0)
 
 num1 = np.size(params_1)
 

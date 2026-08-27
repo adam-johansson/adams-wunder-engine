@@ -18,7 +18,7 @@ print(f"Data loaded")
 
 
 # add pareto front for pmax = 200 bar
-pareto_df_200bar = pd.read_csv(f"optimisation_data/seed_4/pareto_solutions.csv")
+pareto_df_200bar = pd.read_csv(f"optimisation_data/seed_5/pareto_solutions.csv")
 pareto_200bar_sorted = pareto_df_200bar.sort_values('eta_th')
 
 
@@ -33,21 +33,22 @@ infeasible = all_df[~all_df['is_feasible'] & (all_df['eta_th'] != 0.0)]
 pareto_sorted = pareto_df.sort_values('eta_th')
 
 
+# Point a: lowest NOx
+point_a = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
 
-# Point a: highest thermal efficiency
-point_a = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
+# Point b: point closest to eta_th = 0.54
+point_b = pareto_sorted.iloc[(pareto_sorted['eta_th'] - 0.54).abs().argmin()]
 
-# Point b: lowest NOx
-point_b = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
+# Point c: highest thermal efficiency
+point_c = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
 
-# Point c: point closest to eta_th = 0.54
-point_c = pareto_sorted.iloc[(pareto_sorted['eta_th'] - 0.54).abs().argmin()]
+
 
 # Add all three labelled annotations
 labelled_points = [
-    (point_a, "A", 40, -80),
-    (point_b, "B", 90, -140),
-    (point_c, "C", 60, 40),
+    (point_a, "A", 90, -140),
+    (point_b, "B", 60, 40),
+    (point_c, "C", 40, -80),
 ]
 
 

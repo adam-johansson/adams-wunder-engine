@@ -6,7 +6,7 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 3  # change to 2, 3 for other runs
+seed = 6  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:
@@ -43,6 +43,9 @@ from multiprocessing import Pool
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.problem import ElementwiseProblem, StarmapParallelization
 from pymoo.optimize import minimize
+
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PM
 
 from pymoo.indicators.hv import HV
 from pymoo.core.callback import Callback
@@ -255,8 +258,8 @@ class MyEngineProblem(ElementwiseProblem):
             n_var=10,
             n_obj=2,
             n_constr=5,
-            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]),
-            xu=np.array([30, 1600, 0.5, 15, 5, 1.8, 1.0, 380, 5.0, 80]),
+            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 320, 0.5, 20]),
+            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 400, 5.0, 80]),
             **kwargs,
         )
 
@@ -356,9 +359,22 @@ class OptimisationCallback(Callback):
 if __name__ == "__main__":
 
     resume_optimisation = False
-    n_gen = 100
-    new_gens = 5
+    n_gen = 1
+    new_gens = 60
     pop_size = 150
+
+
+    # --- NSGA-II algorithm parameters (edit these to experiment) ---
+    crossover_eta = 15       # pymoo default: 15. Lower = more exploratory crossover.
+    crossover_prob = 0.9     # pymoo default: 0.9.
+    mutation_eta = 8        # pymoo default: 20. Lower = stronger, more exploratory mutation.
+    mutation_prob_var = 0.25 # pymoo default: 1/n_var. Set e.g. 0.3 to mutate more variables per event.
+
+    mutation_kwargs = {"eta": mutation_eta}
+    if mutation_prob_var is not None:
+        mutation_kwargs["prob_var"] = mutation_prob_var
+
+
     output_dir = "."
     
     all_evaluations = []
@@ -393,12 +409,18 @@ if __name__ == "__main__":
     runner = StarmapParallelization(pool.starmap)
 
     problem = MyEngineProblem(root_dir=root_dir, elementwise_runner=runner)
-    algorithm = NSGA2(pop_size=pop_size) #testa variera sen
+    algorithm = NSGA2(pop_size=pop_size,
+                    crossover=SBX(eta=crossover_eta, prob=crossover_prob),
+                    mutation=PM(**mutation_kwargs),
+                      ) #testa variera sen
 
-    print(algorithm.mating.crossover.eta.value)
-    print(algorithm.mating.mutation.eta.value)
-    print(algorithm.mating.crossover.prob.value)
-    print(algorithm.mating.mutation.prob.value)
+    #algorithm = NSGA2(pop_size=pop_size)
+
+    #print(algorithm.mating.crossover.eta.value)
+    #print(algorithm.mating.mutation.eta.value)
+    #print(algorithm.mating.crossover.prob.value)
+    #print(algorithm.mating.mutation.prob.value)
+    #print(algorithm.mating.mutation.prob_var.value)
 
     t_start = timer()
 

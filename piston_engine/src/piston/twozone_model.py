@@ -247,7 +247,7 @@ def _calculate_polytrope_exponent(phi, P, V, ivc):
     """Calculate polytrope exponent over a fixed crank-angle window (IVC to end_angle_deg),
     via least-squares regression of ln(P) vs ln(V). Independent of start of combustion (sc)."""
 
-    end_angle_deg = 340  
+    end_angle_deg = 320 #340  
     end_angle = end_angle_deg * np.pi / 180
     poly_mask = (phi > ivc) & (phi < end_angle)
     #print(f"phi_ivc: {ivc*180/np.pi}")
