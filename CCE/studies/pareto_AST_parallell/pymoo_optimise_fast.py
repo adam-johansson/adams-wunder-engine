@@ -6,7 +6,7 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 6  # change to 2, 3 for other runs
+seed = 1  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:
@@ -259,7 +259,7 @@ class MyEngineProblem(ElementwiseProblem):
             n_obj=2,
             n_constr=5,
             xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 320, 0.5, 20]),
-            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 400, 5.0, 80]),
+            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 400, 5.0, 100]),
             **kwargs,
         )
 
@@ -359,7 +359,7 @@ class OptimisationCallback(Callback):
 if __name__ == "__main__":
 
     resume_optimisation = False
-    n_gen = 1
+    n_gen = 50
     new_gens = 60
     pop_size = 150
 

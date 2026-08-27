@@ -193,9 +193,9 @@ fig.add_trace(go.Contourcarpet(
 # add bore lim text
 fig.add_annotation(
     x=60,      # arrowhead x (pointing to the shaded region)
-    y=0.76,     # arrowhead y
-    ax=80,      # text box x (in data coordinates)
-    ay=0.72,    # text box y (in data coordinates)
+    y=0.83,     # arrowhead y
+    ax=97,      # text box x (in data coordinates)
+    ay=0.8,    # text box y (in data coordinates)
     text="d > 200 mm",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -214,9 +214,9 @@ fig.add_annotation(
 # add T out lim text
 fig.add_annotation(
     x=87,       # arrowhead x (pointing to the shaded region)
-    y=0.95,      # arrowhead y
+    y=1.05,      # arrowhead y
     ax=100,      # text box x (in data coordinates)
-    ay=0.8,    # text box y (in data coordinates)
+    ay=0.95,    # text box y (in data coordinates)
     text="T<sub>34</sub> > 1250 K",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -234,8 +234,8 @@ fig.add_annotation(
 
 # add pmax text
 fig.add_annotation(
-    x=97,  # specifioc power
-    y=1.17,  # NOx
+    x=85,  # specifioc power
+    y=1.27,  # NOx
     text="p<sub>max</sub> > 150 bar",
     showarrow=False,
     font=dict(
@@ -254,13 +254,13 @@ fig.add_annotation(
 
 fig.add_annotation(
     x=50,        # negative x puts it outside the plot to the left
-    y=0.95,
+    y=1.5,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=-80,  # rotate to follow axis
+    textangle=-70,  # rotate to follow axis
 )
 
 fig.add_annotation(
@@ -271,7 +271,7 @@ fig.add_annotation(
     text="f [%]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=-50,  # rotate to follow axis
+    textangle=-45,  # rotate to follow axis
 )
 
 fig.update_layout(
@@ -296,7 +296,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.67, 1.21],
+        range=[0.71, 1.31],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -338,7 +338,7 @@ fig.add_trace(go.Scattercarpet(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",

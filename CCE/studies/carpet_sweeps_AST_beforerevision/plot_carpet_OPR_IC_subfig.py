@@ -192,10 +192,10 @@ fig.add_trace(go.Contourcarpet(
 
 # add pmax text
 fig.add_annotation(
-    x=90,      # arrowhead x (pointing to the shaded region)
-    y=1.05,     # arrowhead y
-    ax=101,  # specifioc power
-    ay=1.12,  # NOx
+    x=95,      # arrowhead x (pointing to the shaded region)
+    y=1.10,     # arrowhead y
+    ax=99,  # specifioc power
+    ay=1.20,  # NOx
     text="p<sub>max</sub> > 150 bar",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
@@ -218,14 +218,14 @@ fig.add_annotation(
 
 
 fig.add_annotation(
-    x=64,        # negative x puts it outside the plot to the left
-    y=1.0,
+    x=60,        # negative x puts it outside the plot to the left
+    y=1.1,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=-75,  # rotate to follow axis
+    textangle=-65,  # rotate to follow axis
 )
 
 fig.add_annotation(
@@ -236,7 +236,7 @@ fig.add_annotation(
     text="IC ratio [-]",
     showarrow=False,
     font=dict(size=textsize2, family="Times New Roman", weight=700, color="black"),
-    textangle=68,  # rotate to follow axis
+    textangle=60,  # rotate to follow axis
 )
 
 fig.update_layout(
@@ -248,7 +248,7 @@ fig.update_layout(
     font=dict(family="Times New Roman", size=textsize1),
     margin=dict(l=80, r=20, t=20, b=80),  # generous margins for saved file
     xaxis=dict(
-        range=[51, 114],
+        range=[50, 114],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -265,7 +265,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.56, 1.17],
+        range=[0.54, 1.29],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -307,7 +307,7 @@ fig.add_trace(go.Scattercarpet(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",

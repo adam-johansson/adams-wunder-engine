@@ -10,7 +10,7 @@ from thermo import fuel_props
 # import all the input variables
 
 # input_file = "4T_HP"
-#input_file = "4stroke"
+input_file = "4stroke"
 #input_file = "4stroke_kaiser"
 # input_file = "4stroke_hydrogen"
 # input_file = "4stroke_hydrogen_bad_point"
@@ -19,7 +19,7 @@ from thermo import fuel_props
 #input_file = "4stroke_hydrogen_sampling"
 #input_file = "4stroke_sampling"
 #input_file = "validation_twozone.two_zone_heider_alt"
-input_file = "validation_twozone.nox_diesel_rakopolous_lambda1"
+#input_file = "validation_twozone.nox_diesel_rakopolous_lambda1"
 # input_file = "validation_twozone.scania_d12"
 #input_file = "validation_chalmers.case3"
 #input_file = "validation_twozone.water_hydrogen"
@@ -49,13 +49,13 @@ d = importlib.import_module(path)
 #flags = ['validation_h2_performance']  # H2 performance validation
 #flags = ['load']
 #flags = ['validation', 'fuel_mass', 'output_all', 'single']  # NASA validation case no plots
-#flags = ['plot_essentials', 'output', 'output_all', 'single', 'save']  # normal case
+flags = ['plot_essentials', 'output', 'output_all', 'single', 'nox']  # normal case
 # flags = ['single', 'output_all', 'save']  # normal case no plots
 # flags = ['single', 'output_all']  # normal case no plots
 # flags = ['sweep']  # parametric study
 # flags = ['optimise']  # optimisation
 #flags = ['output', 'output_all', 'validate_twozone', 'save', 'single']  # validate two zone model (from book, Heider)
-flags = ['sweep_no_greek', "nox"]  # NO validation Rakoplpous
+#flags = ['sweep_no_greek', "nox"]  # NO validation Rakoplpous
 #flags = ["single", "validate_nox_diesel_late"]
 # flags = ['sweep_no_kth']  # Scania validation
 # flags = ['sweep_wiebe']

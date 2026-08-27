@@ -21,6 +21,10 @@ print(f"Data loaded")
 pareto_df_200bar = pd.read_csv(f"optimisation_data/seed_5/pareto_solutions.csv")
 pareto_200bar_sorted = pareto_df_200bar.sort_values('eta_th')
 
+# add pareto front for T34 = 1350 K
+pareto_df_1350K = pd.read_csv(f"optimisation_data/seed_8/pareto_solutions.csv")
+pareto_1350K_sorted = pareto_df_1350K.sort_values('eta_th')
+
 
 
 # Filter data points with negative NOx 
@@ -146,6 +150,15 @@ fig1.add_trace(go.Scatter(
     mode='lines',
     line=dict(color='black', width=2),
     name='Pareto front 200 bar',
+))
+
+# Pareto front for 1350 K
+fig1.add_trace(go.Scatter(
+    x=pareto_1350K_sorted['eta_th'] * 100,
+    y=pareto_1350K_sorted['specific_nox'],
+    mode='lines',
+    line=dict(color='blue', width=2),
+    name='Pareto front 1350 K',
 ))
 
 # Reference point

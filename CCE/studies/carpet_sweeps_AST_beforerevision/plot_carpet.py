@@ -119,7 +119,8 @@ fig.add_trace(go.Contourcarpet(
     )
 ))
 
-#pmax lim
+
+#pmax lim 200 bar
 fig.add_trace(go.Contourcarpet(
     a=T4,
     b=OPR,
@@ -140,7 +141,7 @@ fig.add_trace(go.Contourcarpet(
     showscale=False,
     # Keep the boundary line
     line=dict(
-        width=3,
+        width=5,
         color="black",
         dash="dot",
     ),
@@ -148,7 +149,7 @@ fig.add_trace(go.Contourcarpet(
 
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",
@@ -182,7 +183,7 @@ fig.add_trace(go.Contourcarpet(
     showscale=False,
     # Keep the boundary line
     line=dict(
-        width=3,
+        width=5,
         color="black",
         dash="dot",
     ),
@@ -346,7 +347,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.62, 1.19],
+        range=[0.62, 1.29],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,

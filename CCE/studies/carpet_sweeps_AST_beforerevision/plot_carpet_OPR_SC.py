@@ -4,17 +4,17 @@ import plotly.io as pio
 
 pio.renderers.default = "browser"
 
-data = np.loadtxt("./results/PR_OPR/thermal_eff.dat")
+data = np.loadtxt("./results/OPR_SC/thermal_eff.dat")
 
-OPR = data[1:-1,0]
+OPR = data[1:,0]
 T4 = data[0,1:]
 
-eff = data[1:-1,1:]
-nox = np.loadtxt("./results/PR_OPR/specific_nox.dat")[1:-1,1:]
-power = np.loadtxt("./results/PR_OPR/core_spec_power.dat")[1:-1,1:]
-pmax = np.loadtxt("./results/PR_OPR/peak_pressure.dat")[1:-1,1:]
-bore = np.loadtxt("./results/PR_OPR/bore.dat")[1:-1,1:]
-Tout = np.loadtxt("./results/PR_OPR/Tout_piston.dat")[1:-1,1:]
+eff = data[1:,1:]
+nox = np.loadtxt("./results/OPR_SC/specific_nox.dat")[1:,1:]
+power = np.loadtxt("./results/OPR_SC/core_spec_power.dat")[1:,1:]
+pmax = np.loadtxt("./results/OPR_SC/peak_pressure.dat")[1:,1:]
+bore = np.loadtxt("./results/OPR_SC/bore.dat")[1:,1:]
+Tout = np.loadtxt("./results/OPR_SC/Tout_piston.dat")[1:,1:]
 
 failed_mask = (eff == 0.0)
 
@@ -89,8 +89,8 @@ fig.add_trace(go.Contourcarpet(
     contours=dict(
         #coloring="lines",
         showlabels=False,
-        start=48.5,
-        end=53.5,
+        start=51.5,
+        end=54.5,
         size=0.5,
         labelformat=".0f%%",   # <-- adds % symbol after the value
 
@@ -103,8 +103,8 @@ fig.add_trace(go.Contourcarpet(
     ),
     colorbar=dict(
         len=0.4,
-        x=0.75,        # horizontal position (0=left edge, 1=right edge of plot)
-        y=0.80,        # vertical position
+        x=0.05,        # horizontal position (0=left edge, 1=right edge of plot)
+        y=0.2,        # vertical position
         xref="paper",
         yref="paper",
         bgcolor="white",      # white background so it doesn't blend with contours
@@ -119,7 +119,7 @@ fig.add_trace(go.Contourcarpet(
     )
 ))
 
-
+"""
 #bore lim
 fig.add_trace(go.Contourcarpet(
     a=T4,
@@ -145,6 +145,7 @@ fig.add_trace(go.Contourcarpet(
         dash="dot",    
     ),
 ))
+
 
 #Tout lim
 fig.add_trace(go.Contourcarpet(
@@ -201,13 +202,55 @@ fig.add_trace(go.Contourcarpet(
 ))
 
 
+# bore lim text
+fig.add_annotation(
+    x=55,  # specifioc power
+    y=1.20,  # NOx
+    text="d > 200 mm",
+    showarrow=False,
+    font=dict(
+        size=28,
+        family="Times New Roman",
+        color="black",
+    ),
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    borderpad=4,
+    opacity=1.0,
+)
+
+
+
 # add bore lim text
 fig.add_annotation(
-    x=60,      # arrowhead x (pointing to the shaded region)
-    y=1.15,     # arrowhead y
-    ax=100,      # text box x (in data coordinates)
-    ay=1.2,    # text box y (in data coordinates)
+    x=58,      # arrowhead x (pointing to the shaded region)
+    y=1.07,     # arrowhead y
+    ax=72,      # text box x (in data coordinates)
+    ay=0.88,    # text box y (in data coordinates)
     text="d > 200 mm",
+    showarrow=True,
+    arrowhead=2,    # arrow head style 1-8
+    arrowsize=1,    # relative size of arrowhead
+    arrowwidth=2,   # line width
+    arrowcolor="black",
+    axref="x",      # ax is in data coordinates
+    ayref="y",      # ay is in data coordinates
+    font=dict(size=28, family="Times New Roman", color="black"),
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    borderpad=4,
+)
+
+
+# add T out lim text
+fig.add_annotation(
+    x=65,      # arrowhead x (pointing to the shaded region)
+    y=1.155,     # arrowhead y
+    ax=85,      # text box x (in data coordinates)
+    ay=1.17,    # text box y (in data coordinates)
+    text="T<sub>34</sub> > 1250 K",
     showarrow=True,
     arrowhead=2,    # arrow head style 1-8
     arrowsize=1,    # relative size of arrowhead
@@ -224,48 +267,62 @@ fig.add_annotation(
 
 # add pmax text
 fig.add_annotation(
-    x=130,      # arrowhead x (pointing to the shaded region)
-    y=0.8,     # arrowhead y
-    ax=130,      # text box x (in data coordinates)
-    ay=0.45,    # text box y (in data coordinates)
+    x=85,  # specifioc power
+    y=1.125,  # NOx
     text="p<sub>max</sub> > 150 bar",
-    showarrow=True,
-    arrowhead=2,    # arrow head style 1-8
-    arrowsize=1,    # relative size of arrowhead
-    arrowwidth=2,   # line width
-    arrowcolor="black",
-    axref="x",      # ax is in data coordinates
-    ayref="y",      # ay is in data coordinates
-    font=dict(size=28, family="Times New Roman", color="black"),
+    showarrow=False,
+    font=dict(
+        size=28,
+        family="Times New Roman",
+        color="black",
+    ),
     bgcolor="white",
     bordercolor="black",
     borderwidth=1,
     borderpad=4,
+    opacity=1.0,
 )
 
-
-
+#add thermal efficiency text
 
 fig.add_annotation(
-    x=57,        # negative x puts it outside the plot to the left
-    y=0.57,
-    #xref="paper",
-    #yref="paper",
-    text="Λ [-]",
+    x=90,  # position near one of the efficiency contours
+    y=0.9,
+    text="η<sub>th</sub> [%]",
     showarrow=False,
-    font=dict(size=28, family="Times New Roman", weight=700, color="black"),
-    textangle=57,  # rotate to follow axis
+    font=dict(
+        size=24, 
+        family="Times New Roman", 
+        color="black"
+    ),
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    borderpad=4,
+    opacity=1.0,
 )
+"""
 
 fig.add_annotation(
-    x=45,        # negative x puts it outside the plot to the left
-    y=1.2,
+    x=91,        # negative x puts it outside the plot to the left
+    y=0.98,
     #xref="paper",
     #yref="paper",
     text="OPR [-]",
     showarrow=False,
     font=dict(size=28, family="Times New Roman", weight=700, color="black"),
-    textangle=-70,  # rotate to follow axis
+    textangle=-75,  # rotate to follow axis
+)
+
+fig.add_annotation(
+    x=55,        # negative x puts it outside the plot to the left
+    y=1.025,
+    #xref="paper",
+    #yref="paper",
+    text="θ<sub>SC</sub> [°]",
+    showarrow=False,
+    font=dict(size=28, family="Times New Roman", weight=700, color="black"),
+    textangle=50,  # rotate to follow axis
 )
 
 fig.update_layout(
@@ -277,7 +334,7 @@ fig.update_layout(
     font=dict(family="Times New Roman", size=28),
     margin=dict(l=80, r=20, t=20, b=80),  # generous margins for saved file
     xaxis=dict(
-        range=[37, 150],
+        #range=[50, 95],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -294,7 +351,7 @@ fig.update_layout(
         ticks="outside",
     ),
     yaxis=dict(
-        range=[0.401, 1.27],
+        #range=[0.95, 1.29],
         gridcolor="lightgrey",
         gridwidth=1,
         showgrid=True,
@@ -312,7 +369,6 @@ fig.update_layout(
     ),
 )
 
-"""
 # Then after building the figure, add the crosses
 T4_grid, OPR_grid = np.meshgrid(T4, OPR)
 failed_a = T4_grid[failed_mask]
@@ -332,7 +388,7 @@ fig.add_trace(go.Scattercarpet(
     name="No convergence",
     showlegend=False,
 ))
-"""
+
 """
 fig.add_annotation(
     x=0.75,
@@ -352,10 +408,9 @@ fig.add_annotation(
 )
 """
 
-"""
 fig.add_trace(go.Scatter(
     x=[80.40],
-    y=[1.10],
+    y=[1.20],
     mode="markers",
     marker=dict(
         symbol="cross",
@@ -378,7 +433,7 @@ fig.update_layout(
         font=dict(size=28, family="Times New Roman", color="black"),
     )
 )
-"""
+
 
 
 fig.update_layout(
@@ -389,5 +444,5 @@ fig.update_layout(
     font=dict(family="Times New Roman", size=28, color="black"),
 )
 
-fig.write_image("PR_OPR_plot.pdf", width=550, height=850, scale=2)
+fig.write_image("OPR_PI_plot.pdf", width=550, height=850, scale=2)
 fig.show()
