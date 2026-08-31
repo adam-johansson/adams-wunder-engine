@@ -7,7 +7,7 @@ import numpy as np
 pio.renderers.default = "browser"
 
 print(f"hej")
-seed = 3
+seed = 7
 output_dir = f"optimisation_data/seed_{seed}"
 
 all_df = pd.read_csv(f"{output_dir}/all_evaluations.csv", delimiter=",")

@@ -492,6 +492,17 @@ def run_cce(input, input_piston, flags, meta_model):
     m_cool_rotor = output_burner_turbine["m_rotor"]
     q_ngv = output_burner_turbine["q_ngv"]
 
+        # if T35 > T4
+    if T35 > T4:
+        error = True
+        #print("problem with burner turbine")
+        output_dict = {
+            "sfc": 999,
+            "error": error,
+            "error_type": "T35>T4"
+
+        }
+        return output_dict
 
 
     # Hot nozzle

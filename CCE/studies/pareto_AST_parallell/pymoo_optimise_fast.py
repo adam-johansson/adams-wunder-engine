@@ -6,17 +6,17 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 1  # change to 2, 3 for other runs
+seed = 18  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:
-if seed in [1, 2, 3]:
+if seed in [1, 2, 3, 11, 12, 13]:
     pmax_lim = 150
     T_out_lim = 1250
-elif seed in [4, 5, 6]:
+elif seed in [4, 5, 6, 14, 15, 16]:
     pmax_lim = 200
     T_out_lim = 1250
-elif seed in [7, 8, 9]:
+elif seed in [7, 8, 9, 17, 18, 19]:
     pmax_lim = 150
     T_out_lim = 1350
 elif seed in [10, 11, 12]:
@@ -258,8 +258,8 @@ class MyEngineProblem(ElementwiseProblem):
             n_var=10,
             n_obj=2,
             n_constr=5,
-            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 320, 0.5, 20]),
-            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 400, 5.0, 100]),
+            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]),
+            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 390, 5.0, 100]),
             **kwargs,
         )
 
@@ -361,14 +361,14 @@ if __name__ == "__main__":
     resume_optimisation = False
     n_gen = 50
     new_gens = 60
-    pop_size = 150
+    pop_size = 200
 
 
     # --- NSGA-II algorithm parameters (edit these to experiment) ---
     crossover_eta = 15       # pymoo default: 15. Lower = more exploratory crossover.
     crossover_prob = 0.9     # pymoo default: 0.9.
-    mutation_eta = 8        # pymoo default: 20. Lower = stronger, more exploratory mutation.
-    mutation_prob_var = 0.25 # pymoo default: 1/n_var. Set e.g. 0.3 to mutate more variables per event.
+    mutation_eta = 20       # pymoo default: 20. Lower = stronger, more exploratory mutation.
+    mutation_prob_var = None # pymoo default: 1/n_var. Set e.g. 0.3 to mutate more variables per event.
 
     mutation_kwargs = {"eta": mutation_eta}
     if mutation_prob_var is not None:

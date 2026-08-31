@@ -63,7 +63,7 @@ piston_input = {
 }
 
 param_name = "SC"  # start of combustion only
-params_1 = np.arange(340, 390.1, 1.0)  # phi_sc sweep -- everything else fixed
+params_1 = np.arange(320, 380.1, 5.0)  # phi_sc sweep -- everything else fixed
 
 num1 = np.size(params_1)
 
@@ -298,6 +298,7 @@ if __name__ == "__main__":
         np.savetxt(f"./results/{param_name}/{filename}", table, fmt="%.5f",
                    header="phi_sc  value", comments="")
 
+
     save_1d("thermal_eff.dat", thermal_effs*100)
     save_1d("m_NOx.dat", m_NO_tot*1000)
     save_1d("specific_nox.dat", specific_nox*1e6)
@@ -312,3 +313,4 @@ if __name__ == "__main__":
     save_1d("bore.dat", bores*1000)
     save_1d("Tout_piston.dat", T34s)
     save_1d("BPR.dat", bprs)
+    save_1d("piston_BPRS.dat", piston_bprs)
