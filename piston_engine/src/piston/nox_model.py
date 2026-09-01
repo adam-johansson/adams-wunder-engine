@@ -123,7 +123,7 @@ def nox_calculations(
         method="LSODA",
         y0=np.array([0.0]),
         t_eval=times,
-        rtol=1e-6, #what tolerance to have?
+        rtol=1e-12, #what tolerance to have?
         atol=1e-10
     )
 

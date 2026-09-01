@@ -6,7 +6,7 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 18  # change to 2, 3 for other runs
+seed = 13  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:

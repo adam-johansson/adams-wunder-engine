@@ -6,6 +6,8 @@ sys.path.append("./../")
 from CCE.src import cce_propulsion_system_specific, geared_turbofan_h2_recuperated, geared_turbofan_jetA, cce_propulsion_system_h2
 from CCE.src import auxiliaries, misc
 import importlib
+import pandas as pd
+import numpy as np
 
 
 from timeit import default_timer as timer
@@ -21,14 +23,16 @@ d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # geared turbofan case
 #flags = ["single", "print_output", "cce"]  # normal case
-flags = ["life_hack", "cce", "print_output"]  # life hack version
+#flags = ["life_hack", "cce", "print_output"]  # life hack version
+flags = ["life_hack", "cce", "print_output", "load_pareto", "plot_nox"]  # load cycle from Pareto front
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
 
 if "cce" in flags:
-    input_file = "MR_TOC_jetA_AST_baseline"
+    #input_file = "MR_TOC_jetA_AST_baseline"
+    input_file = "MR_TOC_jetA_AST_optimisation"
     #input_file = "MR_TOC_jetA_AST_higheff"
     #input_file = "MR_TOC_jetA_AST_middlepoint"
     #input_file = "MR_TOC_jetA_EGR"
@@ -261,6 +265,43 @@ elif "cce" in flags:
 
     elif "life_hack" in flags:
         meta_model = "placeholder"
+
+        # if you want to load a cycle from the Pareto front
+        if "load_pareto" in flags:
+
+            seed = 6
+            output_dir = f"studies/pareto_AST_parallell/optimisation_data/seed_{seed}"
+
+            pareto_df = pd.read_csv(f"{output_dir}/pareto_solutions.csv")
+            pareto_sorted = pareto_df.sort_values('eta_th')
+
+            # Point a: lowest NOx
+            point = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
+
+            # Point b: point closest to eta_th = 0.54
+            #point = pareto_sorted.iloc[(pareto_sorted['eta_th'] - 0.54).abs().argmin()]
+
+            # Point c: highest thermal efficiency
+            #point = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
+
+
+
+
+            cce_input["OPR"] = point["opr"]
+            cce_input["T4"] = point["T4"]
+            cce_input["PR"] = point["split"]
+            cce_input["cr"] = point["cr"]
+            cce_input["far piston"] = (point["far"] / 100) * (44 / 43)
+            cce_input["pi_pe"] = point["p_ratio"]
+            cce_input["ratio_IC"] = point["IC_ratio"]
+
+            cce_input["start_of_combustion"] = point["phi_sc"]
+            piston_input["m_wiebe"] = point["m_wiebe"]
+            piston_input["phi_cd"] = (point["phi_cd"] / 180) * np.pi
+
+            print(f"Pareto values. eta_th: {point["eta_th"]}. Specific NOx:{point["specific_nox"]}")
+
+
 
         # trade factor interpolator
         interpolator_thrust, interpolator_energy = misc.load_trade_factors()

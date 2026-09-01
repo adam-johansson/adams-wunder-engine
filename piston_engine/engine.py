@@ -1174,7 +1174,7 @@ def run_piston_engine(input, flags):
 
 
 
-        #print(f'Runtime of NOx calculations: {end - start} [s]')
+        print(f'Runtime of NOx calculations: {end - start} [s]')
 
 
 
@@ -1197,7 +1197,12 @@ def run_piston_engine(input, flags):
         no_angles = None
 
 
-
+    if "plot_twozone" in flags:
+        from piston_engine.src.misc.plot_output import plot_twozone_full, plot_twozone_only, plot_no, plot_addedfuel
+        plot_no(phi, phi_open_out, phi_sc, no_ppm)
+        plot_addedfuel(phi, dmfdphi)
+        plot_twozone_full(phi, T_z1, T_z2, T[-1], phi_open_out, phi_sc)
+        plot_twozone_only(phi_z1, T_z1, T_z2, T_hp, m_z1, m_z2)
 
     # post processing
     if "sweep" not in flags:

@@ -7,7 +7,7 @@ import numpy as np
 pio.renderers.default = "browser"
 
 print(f"hej")
-seed = 7
+seed = 12
 output_dir = f"optimisation_data/seed_{seed}"
 
 all_df = pd.read_csv(f"{output_dir}/all_evaluations.csv", delimiter=",")
@@ -18,12 +18,12 @@ print(f"Data loaded")
 
 
 # add pareto front for pmax = 200 bar
-pareto_df_200bar = pd.read_csv(f"optimisation_data/seed_5/pareto_solutions.csv")
-pareto_200bar_sorted = pareto_df_200bar.sort_values('eta_th')
+#pareto_df_200bar = pd.read_csv(f"optimisation_data/seed_14/pareto_solutions.csv")
+#pareto_200bar_sorted = pareto_df_200bar.sort_values('eta_th')
 
 # add pareto front for T34 = 1350 K
-pareto_df_1350K = pd.read_csv(f"optimisation_data/seed_8/pareto_solutions.csv")
-pareto_1350K_sorted = pareto_df_1350K.sort_values('eta_th')
+#pareto_df_1350K = pd.read_csv(f"optimisation_data/seed_8/pareto_solutions.csv")
+#pareto_1350K_sorted = pareto_df_1350K.sort_values('eta_th')
 
 
 
@@ -144,22 +144,22 @@ fig1.add_trace(go.Scatter(
 ))
 
 # Pareto front for 200 bar
-fig1.add_trace(go.Scatter(
-    x=pareto_200bar_sorted['eta_th'] * 100,
-    y=pareto_200bar_sorted['specific_nox'],
-    mode='lines',
-    line=dict(color='black', width=2),
-    name='Pareto front 200 bar',
-))
+#fig1.add_trace(go.Scatter(
+#    x=pareto_200bar_sorted['eta_th'] * 100,
+#    y=pareto_200bar_sorted['specific_nox'],
+#    mode='lines',
+#    line=dict(color='black', width=2),
+#    name='Pareto front 200 bar',
+#))
 
 # Pareto front for 1350 K
-fig1.add_trace(go.Scatter(
-    x=pareto_1350K_sorted['eta_th'] * 100,
-    y=pareto_1350K_sorted['specific_nox'],
-    mode='lines',
-    line=dict(color='blue', width=2),
-    name='Pareto front 1350 K',
-))
+#fig1.add_trace(go.Scatter(
+#    x=pareto_1350K_sorted['eta_th'] * 100,
+#    y=pareto_1350K_sorted['specific_nox'],
+#    mode='lines',
+#    line=dict(color='blue', width=2),
+#    name='Pareto front 1350 K',
+#))
 
 # Reference point
 fig1.add_trace(go.Scatter(

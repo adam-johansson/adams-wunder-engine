@@ -58,6 +58,7 @@ cd_nozzle = 95.0 / 100  # nozzle discharge coefficient
 
 oil_temp = 500
 
+trade_factors = False
 second_burner = True
 surrogate = False
 intercooler = True
