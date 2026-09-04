@@ -16,6 +16,7 @@ CCE/studies/param_sweeps_old
 CCE/studies/results_old
 CCE/studies/pareto/optimisation_data
 CCE/studies/carpet_sweeps/results 
+CCE/studies/pareto_AST_parallell/optimisation_data
 .idea/
 __pycache__/
 *.pyc

@@ -40,8 +40,8 @@ pareto_sorted = pareto_df.sort_values('eta_th')
 # Point a: lowest NOx
 point_a = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
 
-# Point b: point closest to eta_th = 0.54
-point_b = pareto_sorted.iloc[(pareto_sorted['eta_th'] - 0.54).abs().argmin()]
+# Point b: point closest to NOx = 1.20 (same as reference)
+point_b = pareto_sorted.iloc[(pareto_sorted['specific_nox'] - 0.188).abs().argmin()]
 
 # Point c: highest thermal efficiency
 point_c = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
@@ -166,7 +166,7 @@ fig1.add_trace(go.Scatter(
     x=[49.4],
     y=[0.188],
     mode='markers',
-    marker=dict(symbol='cross', size=16, color='blue', line=dict(width=1, color='black')),
+    marker=dict(symbol='cross', size=16, color='yellow', line=dict(width=1, color='black')),
     name='Reference',
 ))
 

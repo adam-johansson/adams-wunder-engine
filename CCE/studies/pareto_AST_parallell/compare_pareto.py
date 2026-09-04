@@ -7,7 +7,7 @@ pio.renderers.default = "browser"
 
 seed1 = 11
 seed2 = 2
-seed3 = 3
+seed3 = 13
 
 output_dir1 = f"optimisation_data/seed_{seed1}"
 output_dir2 = f"optimisation_data/seed_{seed2}"

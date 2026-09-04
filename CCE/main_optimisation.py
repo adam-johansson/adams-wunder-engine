@@ -269,17 +269,17 @@ elif "cce" in flags:
         # if you want to load a cycle from the Pareto front
         if "load_pareto" in flags:
 
-            seed = 6
+            seed = 13
             output_dir = f"studies/pareto_AST_parallell/optimisation_data/seed_{seed}"
 
             pareto_df = pd.read_csv(f"{output_dir}/pareto_solutions.csv")
             pareto_sorted = pareto_df.sort_values('eta_th')
 
             # Point a: lowest NOx
-            point = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
+            #point = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
 
-            # Point b: point closest to eta_th = 0.54
-            #point = pareto_sorted.iloc[(pareto_sorted['eta_th'] - 0.54).abs().argmin()]
+            # Point b: point with same NOx as reference
+            point = pareto_sorted.iloc[(pareto_sorted['specific_nox'] - 0.188).abs().argmin()]
 
             # Point c: highest thermal efficiency
             #point = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
@@ -300,6 +300,9 @@ elif "cce" in flags:
             piston_input["phi_cd"] = (point["phi_cd"] / 180) * np.pi
 
             print(f"Pareto values. eta_th: {point["eta_th"]}. Specific NOx:{point["specific_nox"]}")
+            
+            print(f"Design variables: OPR: {point["opr"]}, T4: {point["T4"]}, Lambda: {point["split"]}, CR: {point["cr"]}, FAR:{point["far"]}, PI_P:{point["p_ratio"]} ")
+            print(f"Design variables: IC ratio: {point["IC_ratio"]}, phiSC: {point["phi_sc"]}, wiebe: {point["m_wiebe"]}, phiCD: {point["phi_cd"]} ")
 
 
 
