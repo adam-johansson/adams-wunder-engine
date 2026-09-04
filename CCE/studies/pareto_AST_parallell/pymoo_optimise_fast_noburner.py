@@ -55,7 +55,7 @@ import pandas as pd
 
 operating_point = "TOC"
 
-input_file = f"MR_{operating_point}_jetA_AST_optimisation"
+input_file = f"MR_{operating_point}_jetA_AST_optimisation_noburner"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -86,9 +86,6 @@ cce_input = {
     "EGR_rate": d.EGR_rate, "oil_temp": d.oil_temp,
 }
 
-if seed in [21, 22, 23]:
-    cce_input["second_burner"] = False
-
 
 piston_input = {
     'p_in': d_p.p_in, 'T_in': d_p.T_in, 'p_ratio': d_p.p_ratio, 'cycle': d_p.cycle,
@@ -110,7 +107,7 @@ eta_lpt_0 = cce_input["eta_lpt"]
 
 EXTRA_KEYS = [
     "thrust", "bpr", "bore", "bpr piston", "m0",
-    "T_in_piston", "T_out_piston", "T35", "P max (bar)",
+    "T_in_piston", "T_out_piston", "T35", "T4", "P max (bar)",
     "T max", "T_max_twozone", "piston_shaft_power",
     "piston_indicated_power", "piston_heatloss",
     "m_nox_pe", "m_nox_burner", "core_power",
@@ -218,6 +215,7 @@ def evaluate_cce(x, root_dir):
         pmax = output_dict["p_max"]
         bpr_piston = output_dict["bpr_piston"]
         T35 = output_dict["T35"]
+        T4 = output_dict["T4"]
         piston_shaft_power = output_dict["piston_power"]
         piston_indicated_power = output_dict["piston_power_indicated"]
         piston_heatloss = output_dict["piston_heatloss"]
@@ -236,7 +234,7 @@ def evaluate_cce(x, root_dir):
         extras = {
             "thrust": thrust, "bpr": bpr, "bore": bore, "bpr piston": bpr_piston,
             "m0": m0, "T_in_piston": T_in_piston, "T_out_piston": T_out_piston,
-            "T35": T35, "P max (bar)": pmax * 1e-5, "T max": T_max,
+            "T35": T35, "T4": T4, "P max (bar)": pmax * 1e-5, "T max": T_max,
             "T_max_twozone": T_max_twozone, "piston_shaft_power": piston_shaft_power,
             "piston_indicated_power": piston_indicated_power, "piston_heatloss": piston_heatloss,
             "m_nox_pe": m_nox_pe, "m_nox_burner": m_nox_burner, "core_power": core_power,
@@ -247,7 +245,7 @@ def evaluate_cce(x, root_dir):
 
         print(f'opr: {opr}, split: {split}, cr: {cr}, far: {far}, pi_pe: {pi_pe}, ic ratio: {ic_ratio}')
         print(f"start of combustion: {phi_sc}, m_wiebe: {m_wiebe}, combustion duration: {phi_cd}")
-        print(f"Point converged and: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns")
+        print(f"Point converged: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns, T4: {extras["T4"]}")
 
     objectives = np.array([-eta_th, specific_nox])
     return objectives, extras
@@ -364,7 +362,7 @@ class OptimisationCallback(Callback):
 if __name__ == "__main__":
 
     resume_optimisation = False
-    n_gen = 50
+    n_gen = 2
     new_gens = 60
     pop_size = 200
 
