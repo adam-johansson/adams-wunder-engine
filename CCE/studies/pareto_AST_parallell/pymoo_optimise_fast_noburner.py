@@ -122,7 +122,7 @@ EXTRA_KEYS = [
 
 
 def evaluate_cce(x, root_dir):
-    opr, T4, split, cr, far, pi_pe, ic_ratio, phi_sc, m_wiebe, phi_cd = x
+    opr, split, cr, far, pi_pe, ic_ratio, phi_sc, m_wiebe, phi_cd = x
 
     error = False
     lap1 = timer()
@@ -144,7 +144,6 @@ def evaluate_cce(x, root_dir):
             piston_input_local = dict(piston_input)
 
             cce_input_local["OPR"] = opr
-            cce_input_local["T4"] = T4
             cce_input_local["PR"] = split
             cce_input_local["cr"] = cr
             cce_input_local["far piston"] = (far / 100) * (44 / 43)
@@ -246,7 +245,7 @@ def evaluate_cce(x, root_dir):
             "piston_fuelsplit": piston_fuelsplit, "error": error,
         }
 
-        print(f'opr: {opr}, T4: {T4}, split: {split}, cr: {cr}, far: {far}, pi_pe: {pi_pe}, ic ratio: {ic_ratio}')
+        print(f'opr: {opr}, split: {split}, cr: {cr}, far: {far}, pi_pe: {pi_pe}, ic ratio: {ic_ratio}')
         print(f"start of combustion: {phi_sc}, m_wiebe: {m_wiebe}, combustion duration: {phi_cd}")
         print(f"Point converged and: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns")
 
@@ -261,11 +260,11 @@ class MyEngineProblem(ElementwiseProblem):
     def __init__(self, root_dir, **kwargs):
         self.root_dir = root_dir
         super().__init__(
-            n_var=10,
+            n_var=9,
             n_obj=2,
             n_constr=5,
-            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]),
-            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 390, 5.0, 100]),
+            xl=np.array([10, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]),
+            xu=np.array([30, 0.5, 15, 5, 2.0, 1.0, 390, 5.0, 100]),
             **kwargs,
         )
 
@@ -311,7 +310,7 @@ class OptimisationCallback(Callback):
         F = algorithm.pop.get("F")
         extras = algorithm.pop.get("extra")
 
-        var_names = ["opr", "T4", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
+        var_names = ["opr", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
 
         for xi, fi, exi in zip(X, F, extras):
             record = {name: val for name, val in zip(var_names, xi)}
@@ -454,7 +453,7 @@ if __name__ == "__main__":
     gen_offset = gen_done if resume_optimisation else 0
     np.savetxt(f"{output_dir}/last_generation.csv", [res.algorithm.n_gen + gen_offset], delimiter=",")
 
-    var_names = ["opr", "T4", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
+    var_names = ["opr", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
     pareto_df = pd.DataFrame(
         np.hstack([res.X, res.F]),
         columns=var_names + ['eta_th', 'specific_nox']
