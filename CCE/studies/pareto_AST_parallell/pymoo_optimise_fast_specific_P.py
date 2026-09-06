@@ -31,7 +31,7 @@ elif seed in [32]:
 elif seed in [33]:
     power_lim = 90
 
-print(f"pmax lim {pmax_lim}, Toutlim: {T_out_lim}")
+print(f"pmax lim {pmax_lim}, Toutlim: {T_out_lim}", power_lim: {power_lim}")
 
 
 
