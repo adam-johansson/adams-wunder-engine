@@ -6,11 +6,11 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 31  # change to 2, 3 for other runs
+seed = 13  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:
-if seed in [1, 2, 3, 11, 12, 13, 21, 31, 32, 33]:
+if seed in [1, 2, 3, 11, 12, 13, 31, 32, 33]:
     pmax_lim = 150
     T_out_lim = 1250
 elif seed in [4, 5, 6, 14, 15, 16]:
@@ -23,6 +23,7 @@ elif seed in [10, 11, 12]:
     pmax_lim = 200
     T_out_lim = 1350
 
+
 if seed in [31]:
     power_lim = 70
 elif seed in [32]:
@@ -31,6 +32,7 @@ elif seed in [33]:
     power_lim = 90
 
 print(f"pmax lim {pmax_lim}, Toutlim: {T_out_lim}", power_lim: {power_lim}")
+
 
 
 cea_work_dir = os.path.abspath(f"optimisation_data/seed_{seed}")
@@ -61,7 +63,7 @@ import pandas as pd
 
 operating_point = "TOC"
 
-input_file = f"MR_{operating_point}_jetA_AST_optimisation_noburner"
+input_file = f"MR_{operating_point}_jetA_AST_optimisation"
 input_dir = "CCE.input.cce_jetA"
 path = input_dir + "." + input_file
 
@@ -92,7 +94,6 @@ cce_input = {
     "EGR_rate": d.EGR_rate, "oil_temp": d.oil_temp,
 }
 
-
 piston_input = {
     'p_in': d_p.p_in, 'T_in': d_p.T_in, 'p_ratio': d_p.p_ratio, 'cycle': d_p.cycle,
     'cooling': d_p.cooling, 'opposed': d_p.opposed, 'cr': d_p.cr, 'bore': d_p.d,
@@ -113,7 +114,7 @@ eta_lpt_0 = cce_input["eta_lpt"]
 
 EXTRA_KEYS = [
     "thrust", "bpr", "bore", "bpr piston", "m0",
-    "T_in_piston", "T_out_piston", "T35", "T4", "P max (bar)",
+    "T_in_piston", "T_out_piston", "T35", "P max (bar)",
     "T max", "T_max_twozone", "piston_shaft_power",
     "piston_indicated_power", "piston_heatloss",
     "m_nox_pe", "m_nox_burner", "core_power",
@@ -122,10 +123,8 @@ EXTRA_KEYS = [
 ]
 
 
-
-
 def evaluate_cce(x, root_dir):
-    opr, split, cr, far, pi_pe, ic_ratio, phi_sc, m_wiebe, phi_cd = x
+    opr, T4, split, cr, far, pi_pe, ic_ratio, phi_sc, m_wiebe, phi_cd = x
 
     error = False
     lap1 = timer()
@@ -147,6 +146,7 @@ def evaluate_cce(x, root_dir):
             piston_input_local = dict(piston_input)
 
             cce_input_local["OPR"] = opr
+            cce_input_local["T4"] = T4
             cce_input_local["PR"] = split
             cce_input_local["cr"] = cr
             cce_input_local["far piston"] = (far / 100) * (44 / 43)
@@ -221,7 +221,6 @@ def evaluate_cce(x, root_dir):
         pmax = output_dict["p_max"]
         bpr_piston = output_dict["bpr_piston"]
         T35 = output_dict["T35"]
-        T4 = output_dict["T4"]
         piston_shaft_power = output_dict["piston_power"]
         piston_indicated_power = output_dict["piston_power_indicated"]
         piston_heatloss = output_dict["piston_heatloss"]
@@ -240,7 +239,7 @@ def evaluate_cce(x, root_dir):
         extras = {
             "thrust": thrust, "bpr": bpr, "bore": bore, "bpr piston": bpr_piston,
             "m0": m0, "T_in_piston": T_in_piston, "T_out_piston": T_out_piston,
-            "T35": T35, "T4": T4, "P max (bar)": pmax * 1e-5, "T max": T_max,
+            "T35": T35, "P max (bar)": pmax * 1e-5, "T max": T_max,
             "T_max_twozone": T_max_twozone, "piston_shaft_power": piston_shaft_power,
             "piston_indicated_power": piston_indicated_power, "piston_heatloss": piston_heatloss,
             "m_nox_pe": m_nox_pe, "m_nox_burner": m_nox_burner, "core_power": core_power,
@@ -249,9 +248,9 @@ def evaluate_cce(x, root_dir):
             "piston_fuelsplit": piston_fuelsplit, "error": error,
         }
 
-        print(f'opr: {opr}, split: {split}, cr: {cr}, far: {far}, pi_pe: {pi_pe}, ic ratio: {ic_ratio}')
+        print(f'opr: {opr}, T4: {T4}, split: {split}, cr: {cr}, far: {far}, pi_pe: {pi_pe}, ic ratio: {ic_ratio}')
         print(f"start of combustion: {phi_sc}, m_wiebe: {m_wiebe}, combustion duration: {phi_cd}")
-        print(f"Point converged: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns, T4: {extras["T4"]}")
+        print(f"Point converged and: thermal efficiency {eta_th*100} % and specific nox: {specific_nox} mg/Ns")
 
     objectives = np.array([-eta_th, specific_nox])
     return objectives, extras
@@ -264,11 +263,11 @@ class MyEngineProblem(ElementwiseProblem):
     def __init__(self, root_dir, **kwargs):
         self.root_dir = root_dir
         super().__init__(
-            n_var=9,
+            n_var=10,
             n_obj=2,
             n_constr=6,
-            xl=np.array([10, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]),
-            xu=np.array([30, 0.5, 15, 5, 2.0, 1.0, 390, 5.0, 100]),
+            xl=np.array([10, 1000, 0.0, 4, 2, 0.9, 0.0, 340, 0.5, 20]),
+            xu=np.array([30, 1600, 0.5, 15, 5, 2.0, 1.0, 390, 5.0, 100]),
             **kwargs,
         )
 
@@ -315,7 +314,7 @@ class OptimisationCallback(Callback):
         F = algorithm.pop.get("F")
         extras = algorithm.pop.get("extra")
 
-        var_names = ["opr", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
+        var_names = ["opr", "T4", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
 
         for xi, fi, exi in zip(X, F, extras):
             record = {name: val for name, val in zip(var_names, xi)}
@@ -460,7 +459,7 @@ if __name__ == "__main__":
     gen_offset = gen_done if resume_optimisation else 0
     np.savetxt(f"{output_dir}/last_generation.csv", [res.algorithm.n_gen + gen_offset], delimiter=",")
 
-    var_names = ["opr", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
+    var_names = ["opr", "T4", "split", "cr", "far", "p_ratio", "IC_ratio", "phi_sc", "m_wiebe", "phi_cd"]
     pareto_df = pd.DataFrame(
         np.hstack([res.X, res.F]),
         columns=var_names + ['eta_th', 'specific_nox']

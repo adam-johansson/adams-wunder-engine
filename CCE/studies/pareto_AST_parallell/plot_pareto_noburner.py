@@ -114,7 +114,7 @@ fig1.add_trace(go.Scatter(
         showscale=True,
         colorbar=dict(
             title=dict(
-                text="Piston fuel fraction [-]",
+                text="Ẇ<sub>core,V<sub>d</sub></sub> [kW/litre]",
                 font=dict(size=textsize, family="Times New Roman"),
                 side="right",
             ),
