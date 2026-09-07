@@ -6,7 +6,7 @@ import tempfile
 
 sys.path.append(os.path.abspath("./../../../"))
 
-seed = 31  # change to 2, 3 for other runs
+seed = 32  # change to 2, 3 for other runs
 # seed 4 is for higher peak pressure = 200 bar
 
 # limits:
@@ -30,7 +30,7 @@ elif seed in [32]:
 elif seed in [33]:
     power_lim = 90
 
-print(f"pmax lim {pmax_lim}, Toutlim: {T_out_lim}", power_lim: {power_lim}")
+print(f"pmax lim {pmax_lim}, Toutlim: {T_out_lim}, power_lim: {power_lim}")
 
 
 cea_work_dir = os.path.abspath(f"optimisation_data/seed_{seed}")
@@ -279,7 +279,7 @@ class MyEngineProblem(ElementwiseProblem):
             extra["T_out_piston"] - T_out_lim,
             extra["P max (bar)"] - pmax_lim,
             extra["bore"] - 0.2,
-            extra["core_power_per_litre"] - power_lim,
+            power_lim - extra["core_power_per_litre"],
             -extra["bpr piston"],
             1 if extra["error"] else -1,  # failed simulation -> infeasible
         ]
@@ -326,7 +326,7 @@ class OptimisationCallback(Callback):
                 max(0, exi["T_out_piston"] - T_out_lim)
                 + max(0, exi["P max (bar)"] - pmax_lim)
                 + max(0, exi["bore"] - 0.2)
-                + max(0, exi["core_power_per_litre"] - power_lim)
+                + max(0, power_lim - exi["core_power_per_litre"])
                 + max(0, -exi["bpr piston"])
                 + max(0, 1 if exi["error"] else -1)
             )
@@ -334,7 +334,7 @@ class OptimisationCallback(Callback):
                 exi["T_out_piston"] <= T_out_lim
                 and exi["P max (bar)"] <= pmax_lim
                 and exi["bore"] <= 0.2
-                and exi["core_power_per_litre"] <= power_lim
+                and power_lim <= exi["core_power_per_litre"]
                 and exi["bpr piston"] > 0
                 and not exi["error"]
             )
@@ -371,7 +371,7 @@ class OptimisationCallback(Callback):
 if __name__ == "__main__":
 
     resume_optimisation = False
-    n_gen = 200
+    n_gen = 50
     new_gens = 60
     pop_size = 200
 
