@@ -51,6 +51,7 @@ markersize3=16
 
 textsize = 28
 
+"""
 for point, label, ax_off, ay_off in labelled_points:
     fig1.add_annotation(
         x=point['eta_th'] * 100,
@@ -69,7 +70,7 @@ for point, label, ax_off, ay_off in labelled_points:
         #bordercolor="black",
         #borderwidth=1,
     )
-
+"""
 
 
 # Infeasible points
@@ -151,31 +152,31 @@ fig1.update_layout(
     plot_bgcolor="white",
     paper_bgcolor="white",
     font=dict(family="Times New Roman", size=textsize, color="black"),
-    showlegend=False,
+    showlegend=True,
     xaxis=dict(
-        #range=[54.5, 56.3],
+        range=[48.5, 57.0],
         title=dict(text="η<sub>th</sub> [%]", font=dict(size=textsize, family="Times New Roman")),
         showline=True, linecolor="black", linewidth=2,
         mirror="allticks", ticks="outside", tickcolor="black",
         gridcolor="lightgrey", showgrid=True, tickfont=dict(size=textsize),
     ),
     yaxis=dict(
-        #range=[0.9, 1.25],
+        range=[0.0, 1.6],
         title=dict(text="Thrust specific NO<sub>x</sub> [mg/Ns]", font=dict(size=textsize, family="Times New Roman")),
         showline=True, linecolor="black", linewidth=2,
         mirror="allticks", ticks="outside", tickcolor="black",
         gridcolor="lightgrey", showgrid=True, tickfont=dict(size=textsize),
     ),
-    #legend=dict(
-    #x=0.53,
-    #y=0.98,
-    #xanchor="left",
-    #yanchor="top",
-    #font=dict(size=textsize, family="Times New Roman"),
-    #bordercolor="black",
-    #borderwidth=1,
-    #bgcolor="white",
-#),
+    legend=dict(
+    x=0.20,
+    y=0.7,
+    xanchor="left",
+    yanchor="top",
+    font=dict(size=textsize, family="Times New Roman"),
+    bordercolor="black",
+    borderwidth=1,
+    bgcolor="white",
+),
 )
 
 fig1.update_layout(
@@ -187,7 +188,7 @@ fig1.update_layout(
     margin=dict(l=0, r=0, t=0, b=0),
     #margin=dict(l=120, r=0, t=40, b=20),
 )
-fig1.write_image(f"{output_dir}/pareto_plot_noburner1.pdf", width=600, height=800, scale=2)
+fig1.write_image(f"{output_dir}/pareto_plot_noburner1_{seed}.png", width=600, height=800, scale=3)
 fig1.show()
 
 """

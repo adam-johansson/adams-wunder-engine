@@ -172,6 +172,6 @@ fig1.update_layout(
     margin=dict(l=0, r=0, t=0, b=0),
     #margin=dict(l=120, r=0, t=40, b=20),
 )
-fig1.write_image(f"{output_dir}/pareto_plot_noburner2.pdf", width=600, height=800, scale=2)
+fig1.write_image(f"{output_dir}/pareto_plot_noburner2.png", width=600, height=800, scale=3)
 fig1.show()
 

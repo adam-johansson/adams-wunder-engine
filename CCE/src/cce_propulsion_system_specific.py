@@ -631,7 +631,7 @@ def run_cce(input, input_piston, flags, meta_model):
         # NOx emission index from burner
         EI_nox_burner = 0.007549 * T4 * (p35*1e-3 /3027)**0.37 * np.exp((1.8*T35_equivalent - 1471)/345)
         # m_nox in kg
-        m_nox_burner = EI_nox_burner * fuel_flow_burner * 1e-3
+        m_nox_burner = EI_nox_burner * fuel_flow_burner * 1e-3 * 1.5
     else:
         EI_nox_burner = 0.0
         m_nox_burner = 0.0
@@ -1101,6 +1101,8 @@ def run_cce(input, input_piston, flags, meta_model):
         "EGR cooler massflow": m_EGR_cooler,
         "error": error
     }
+
+    print(1/(1+bpr_piston))
 
     if p_max > 250*1e5:
         #print(f"Warning: pmax {p_max*1e-5} bar larger than 250 bar")

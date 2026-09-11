@@ -34,14 +34,17 @@ plt.rcParams.update({
     "legend.title_fontsize": BASE_FONTSIZE - 2,
 })
 
-seeds = [13, 15, 19]
+seeds = [13, 50, 15, 51, 19]
 labels = {
-    13: "Default limits",
+    13: r"Default: $p_{max} < 150$ bar, $T_{34} < 1250$ K",
+    50: r"$p_{max} < 100$ bar",
     15: r"$p_{max} < 200$ bar",
+    51: r"$T_{34} < 1150$ K",
     19: r"$T_{34} < 1350$ K",
+
 }
-markers = {13: 'o', 15: 's', 19: '^'}
-colors = {13: 'black', 15: 'tab:red', 19: 'tab:blue'}
+markers = {13: 'o', 50:'D', 15: 's', 51: 'v', 19: '^'}
+colors = {13: 'black', 50: 'tab:green', 15: 'tab:red', 51: 'orange', 19: 'tab:blue'}
 
 
 def load_pareto(seed):
@@ -50,6 +53,17 @@ def load_pareto(seed):
     x = df['eta_th'].values * 100
     y = df['specific_nox'].values
     return x, y
+
+# --- Print max efficiency per seed and % change relative to baseline (seed 13) ---
+baseline_x, _ = load_pareto(13)
+baseline_max_eta = baseline_x.max()
+
+for seed in seeds:
+    x, _ = load_pareto(seed)
+    max_eta = x.max()
+    pct_change = (max_eta - baseline_max_eta) / baseline_max_eta * 100
+    print(f"seed {seed} ({labels[seed]}): max eta_th = {max_eta:.2f}%, change vs baseline = {pct_change:+.2f}%")
+
 
 
 fig, ax = plt.subplots(figsize=set_size(TEXTWIDTH_PT, FRACTION, RATIO))

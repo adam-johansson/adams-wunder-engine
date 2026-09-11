@@ -29,7 +29,7 @@ T_in = 0  # inlet temperature (670 cruise 770 TO)
 p_ratio = 0  # pressure ratio after and before engine
 
 # Heat transfer
-Twall = 500          # Liner temperature
+Twall = 500           # Liner temperature
 Tpiston = 600
 Thead = 600
 Twalls = [Twall, Tpiston, Thead]

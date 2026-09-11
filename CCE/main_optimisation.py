@@ -23,16 +23,16 @@ d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # geared turbofan case
 #flags = ["single", "print_output", "cce"]  # normal case
-#flags = ["life_hack", "cce", "print_output"]  # life hack version
-flags = ["life_hack", "cce", "print_output", "load_pareto", "plot_nox"]  # load cycle from Pareto front
+flags = ["life_hack", "cce", "print_output"]  # life hack version
+#flags = ["life_hack", "cce", "print_output", "load_pareto", "plot_nox"]  # load cycle from Pareto front
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
 
 if "cce" in flags:
-    #input_file = "MR_TOC_jetA_AST_baseline"
-    input_file = "MR_TOC_jetA_AST_optimisation"
+    input_file = "MR_TOC_jetA_AST_baseline"
+    #input_file = "MR_TOC_jetA_AST_optimisation"
     #input_file = "MR_TOC_jetA_AST_higheff"
     #input_file = "MR_TOC_jetA_AST_middlepoint"
     #input_file = "MR_TOC_jetA_EGR"
@@ -92,8 +92,13 @@ if "conventional" in flags:
         ) = geared_turbofan_h2_recuperated.run_turbofan(data_dict, flags)
     else:
         (
-            sfc, vel_ratio, F, m0
+            output
         ) = geared_turbofan_jetA.run_turbofan(data_dict, flags)
+
+    sfc = output["sfc"]
+    m0 = output["m0"]
+    F = output["thrust"]
+    vel_ratio = output["vel_ratio"]
 
     print(f"mass flow: {m0} [kg/s]")
     print(f"SFC: {sfc*1e6} [mg/Ns]")
@@ -279,10 +284,10 @@ elif "cce" in flags:
             #point = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
 
             # Point b: point with same NOx as reference
-            point = pareto_sorted.iloc[(pareto_sorted['specific_nox'] - 0.188).abs().argmin()]
+            #point = pareto_sorted.iloc[(pareto_sorted['specific_nox'] - 0.188).abs().argmin()]
 
             # Point c: highest thermal efficiency
-            #point = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
+            point = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
 
 
 

@@ -133,12 +133,12 @@ def run_turbofan(input, flags):
 
     eta_p_hpc_0 = eta_p_hpc - eta_p_hpc_correction
 
-    print(f"HPC outlet area:{A3}. Last blade height: {last_blade_height_mm} mm. Original HPC efficiency: {eta_p_hpc_0}")
+    #print(f"HPC outlet area:{A3}. Last blade height: {last_blade_height_mm} mm. Original HPC efficiency: {eta_p_hpc_0}")
     
 
     input_burner_turbine = {
-        "m31": m3,
-        "m32": 0.0,
+        "m3": m3,
+        "m31": 0.0,
         "m34": 0.0,
         "T_cooling": T3,
         "T34": T3,
@@ -195,7 +195,7 @@ def run_turbofan(input, flags):
     eta_HPT_poly = output_burner_turbine["eta_p_turbine"]
 
 
-    print(f"Cooling ratio: {m_cool / m3}")
+    #print(f"Cooling ratio: {m_cool / m3}")
 
     far_burner = equ4 * far_s
 
@@ -217,12 +217,13 @@ def run_turbofan(input, flags):
         q_ngv=1.0
     )
 
-    print(f"Polytropic HPT efficiency: {eta_HPT_poly}")
-    print(f"Polytropic LPT efficiency: {eta_LPT_poly}")
+    #print(f"Polytropic HPT efficiency: {eta_HPT_poly}")
+    #print(f"Polytropic LPT efficiency: {eta_LPT_poly}")
+    #print(f"Power LPT: {power_lpt*1e-6} MW. Specific: {(power_lpt/m45)*1e-3} kJ/kg")
 
 
 
-    print(f"p45: {p45*1e-5}, p5: {p5*1e-5}, T45: {T45} T5: {T5}, equ5{equ5}, equ45:{equ45}")
+    #print(f"p45: {p45*1e-5}, p5: {p5*1e-5}, T45: {T45} T5: {T5}, equ5{equ5}, equ45:{equ45}")
 
 
     # Hot nozzle
@@ -256,10 +257,10 @@ def run_turbofan(input, flags):
 
     # NOx
     EI_nox= 0.007549 * T4 * (p3*1e-3 /3027)**0.37 * np.exp((1.8*T3- 1471)/345)
-    print(f"EI_nox: {EI_nox} g/kg")
+    #print(f"EI_nox: {EI_nox} g/kg")
 
     # Mass flow of NOX (kg/s)
-    m_nox = EI_nox * fuel_flow_burner * 1e-3
+    m_nox = EI_nox * fuel_flow_burner * 1e-3 * 43/44
 
     # Ideal jet velocity ratio NOT VALID ANYMORE
     vel_ratio = v18_id / v8_id
@@ -399,16 +400,28 @@ def run_turbofan(input, flags):
         # Thrust specific NOX emissions (kg/s/N)
         ts_nox = m_nox / F
 
-        print(f"Core power: {P_core*1e-3} kW")
-        print(f"Specific core power: {P_core/m22*1e-3} kJ/kg")
-        print(f"Outer fan power: {P_outer_fan*1e-3} kW")
-        print(f"Core thrust power: {F8 * v_0 *1e-3} kW")
-        print(f"Thrust specific NOX emissions: {ts_nox*1e6} mg/Ns")
+        #print(f"Core power: {P_core*1e-3} kW")
+        #print(f"Specific core power: {P_core/m22*1e-3} kJ/kg")
+        #print(f"Outer fan power: {P_outer_fan*1e-3} kW")
+        #print(f"Core thrust power: {F8 * v_0 *1e-3} kW")
+        #print(f"Thrust specific NOX emissions: {ts_nox*1e6} mg/Ns")
 
         misc.plot_stations_jetA_geared(p_array, T_array)
 
         misc.csv_output_jetA_geared(p_array, T_array, m_array, far_array, s_array)
 
-        print(f"cooling fraction: {m_cool / m3}")
+        #print(f"cooling fraction: {m_cool / m3}")
 
-    return sfc, vel_ratio, F, m0
+
+    output_dict = {
+    "sfc": sfc,
+    "vel_ratio": vel_ratio,
+    "thrust": F,
+    "eta_th": eta_th,
+    "m0": m0,
+    "thrust_nox": m_nox / F,
+    "error": error,
+    }
+
+
+    return output_dict

@@ -27,7 +27,7 @@ start_of_combustion = 355
 
 OPR = 24  # overall pressure ratio (including losses) (16 + far 03)
 PR = 0.25  # pressure split, with regard to the LPC
-eff_IC = 0.7
+eff_IC = 0.7 
 ratio_IC = 1.0
 EGR_rate = 0.0
 

@@ -92,7 +92,7 @@ def twozone(phi, P, T, V, m, mf, evo, ivc, sc, lhv, far_s, equ, fuel_type, facto
         if cycle == "4T":
             # 4T is for the normal small engine
             lambda_0 = 1.0
-            #lambda_0 = 1.10
+            #lambda_0 = 1.1
         else:
             # this is used for the validation of the EGR NOX (big ship diesel)
             lambda_0 = 1.03

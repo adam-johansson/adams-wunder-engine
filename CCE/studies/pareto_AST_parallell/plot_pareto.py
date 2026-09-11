@@ -7,7 +7,7 @@ import numpy as np
 pio.renderers.default = "browser"
 
 print(f"hej")
-seed = 15
+seed = 51
 output_dir = f"optimisation_data/seed_{seed}"
 
 all_df = pd.read_csv(f"{output_dir}/all_evaluations.csv", delimiter=",")
@@ -208,7 +208,9 @@ fig1.update_layout(
 
     margin=dict(l=20, r=20, t=20, b=20),
 )
-fig1.write_image(f"{output_dir}/pareto_plot.pdf", scale=2)
+#fig1.write_image(f"{output_dir}/pareto_plot.pdf", scale=2)
+fig1.write_image(f"{output_dir}/pareto_plot.png", scale=4)
+
 fig1.show()
 
 # --- Hypervolume plot ---

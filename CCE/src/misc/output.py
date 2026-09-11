@@ -83,6 +83,7 @@ def print_output(
     print(f"Power required by the fuel pump: {power_fuel_pump* 1e-3} [kW]")
     print(f"Power offtake on HP spool: {offtake* 1e-3} [kW]")
     print(f"Power extracted in LPT: {power_lpt * 1e-3} [kW]")
+    print(f"LPT specific power: {(power_lpt/m2 )* 1e-3} [kJ/kg]")
     print(f"Power required by fan: {power_fan * 1e-3} [kW]")
     print(f"Power required by LPC: {power_lpc * 1e-3} [kW]")
     print(f"Max pressure in piston engine: {p_max * 1e-5} [bar]")

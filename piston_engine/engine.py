@@ -1094,15 +1094,13 @@ def run_piston_engine(input, flags):
         # factor 0.83 and lambda = 1.02 GÅR EJ
         # factor 0.845 and lambda = 1.0 
         if cycle == "4T":
-            #factor = 0.845
             factor = 0.84
-            #print(f"hej")
-            #factor = 0.5915
-            #factor = 0.676
-            #factor = 0.7605
-            #factor = 0.9295
-            #factor = 1.014
-            #factor = 1.0985
+            #factor = 0.756
+            #factor = 0.672
+            #factor = 0.588
+            #factor = 0.924
+            #factor = 1.008
+            #factor = 1.092
         else:
             factor = 1.0
 
