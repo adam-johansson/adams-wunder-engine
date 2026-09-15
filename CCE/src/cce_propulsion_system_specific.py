@@ -1103,6 +1103,7 @@ def run_cce(input, input_piston, flags, meta_model):
     }
 
     print(1/(1+bpr_piston))
+    print(f"testar")
 
     if p_max > 250*1e5:
         #print(f"Warning: pmax {p_max*1e-5} bar larger than 250 bar")
