@@ -1,0 +1,328 @@
+!
+! Dimensions for baselr - Trent 772B
+!
+! print_level: set the amout of printing performed. either nothing
+! selected or dump_all. 
+print_level: dump_all
+cost_interface_type: integrated
+!
+!
+! Public information: Fan tip radius: 1.237 m. 
+!                     26 wide chord fan blades
+!                     8 stage ip compressor
+!                     6 stage hp compressor
+!                     24 burners in combustor
+!                     nickel-alloy liner with thermal barrier coatings
+!                     hpt: single stage
+!                     ipt: single stage
+!                     lpt: four stages
+!                     engine weight 4748 kg (dry)
+!
+module Fan
+ !
+ fan_type: large
+ design_type: constant_tip
+ !
+ rtip: 1.237 
+ rhre: 0.472
+ !
+ n_rotor_blades: 26
+ n_ogv_blades: 56
+ !
+ hub_tip_ratio: 0.30
+ taper_ratio_rotor: 0.588
+ aspect_ratio_rotor: 2.6
+ aspect_ratio_ogv: 3.400
+ radial_factor: 0.98
+ splitter_radius: 0.690
+ !
+ rotor_spacing_to_rotor_chord_length_ratio: 0.454
+ bypass_duct_spacing_to_rotor_chord_length_ratio: 0.390
+ ogv_spacing_to_rotor_chord_length_ratio: 0.703
+ !
+ corrected_tip_speed: 457.57
+ !
+ !
+ rotor_blade_material: 'Ti64'
+ ogv_blade_material: 'Ti64'
+ containment_material: 'Ti64'
+ case_material: 'Ti64'
+ disc_material: 'Ti17'
+ !
+ text_pos: -0.5 1.20
+ ! 
+end module Fan
+!
+!
+!
+module Imc
+ n_imc_struts: 56
+ material: 'Ti64'
+ support_material_thickness: 0.008
+ volume_factor: 0.12
+ outer_radius_ratio_mss: 0.96
+ radial_drive_shaft: false
+end module Imc
+!
+! 
+!
+module Ipc
+! design_type: constant_hub
+ disc_type: conventional
+ number_of_stages: 8
+ rt: 0.627711 0.599712 0.577497 0.559636 0.545104 0.533151 0.523223 0.510903 0.48000
+ rh: 0.451952 0.451952 0.451952 0.451952 0.451952 0.451952 0.441952 0.430000 0.391952  
+ rotor_blade_materials: 'Ti64'
+ disc_materials: 'Ti17'
+ case_materials: 'Ti64'
+ disc_scale_factor: 1.0
+ disc_1_radius:    0.1686  0.2281  0.2589  0.4100  0.4209  0.4519
+ disc_1_thickness: 0.0425  0.0425  0.0133  0.0133  0.0460  0.0460
+ disc_2_radius:    0.1652  0.1819  0.2128  0.4372  0.4409  0.4519
+ disc_2_thickness: 0.0555  0.0555  0.0115  0.0115  0.0405  0.0405
+ disc_3_radius:    0.1582  0.1869  0.2128  0.4372  0.4409  0.4519
+ disc_3_thickness: 0.0500  0.0500  0.0086  0.0086  0.0362  0.0362
+ disc_4_radius:    0.1652  0.1790  0.2113  0.4343  0.4409  0.4519
+ disc_4_thickness: 0.0575  0.0575  0.0086  0.0086  0.0325  0.0325
+ disc_5_radius:    0.1582  0.1869  0.2013  0.4343  0.4409  0.4519
+ disc_5_thickness: 0.0431  0.0431  0.0100  0.0100  0.0296  0.0296
+ disc_6_radius:    0.2215  0.2646  0.2790  0.4343  0.4409  0.4519
+ disc_6_thickness: 0.0431  0.0431  0.0158  0.0158  0.0273  0.0273
+ disc_7_radius:    0.2445  0.2732  0.2790  0.4228  0.4303  0.4418
+ disc_7_thickness: 0.0431  0.0431  0.0086  0.0086  0.0253  0.0253
+ disc_8_radius:    0.2445  0.2732  0.2790  0.4182  0.4211  0.4297
+ disc_8_thickness: 0.0431  0.0431  0.0086  0.0086  0.0235  0.0235
+ stator_blade_material: 'Ti64'
+ aspect_ratio_rotor_in: 3.500
+ aspect_ratio_rotor_out: 2.500
+ aspect_ratio_stator_in: 4.500
+ aspect_ratio_stator_out: 3.000
+ number_of_rotor_blades: 45 49 54 59 63 68 73 78
+ number_of_stator_blades: 90 78 84 89 95 100 106 112 117
+ clearance: 0.60
+ corrected_tip_speed: 380.0
+ igv: true
+ text_pos: 0.70 0.80
+end module Ipc
+!
+!
+!
+module Imc2
+ n_imc_struts: 12
+ material: 'Ti64'
+ aspect_ratio_bps: 3.00
+ aspect_ratio_mss: 0.50
+ support_material_thickness: 0.006096
+ outer_radius_ratio_mss: 0.78
+ radial_drive_shaft: false
+ area_factor_mss: 0.7
+end module Imc2
+!
+!
+!
+module Hpc
+ design_type: constant_tip
+ disc_type: conventional
+ number_of_stages: 6 
+ rotor_blade_materials: 1-4 'Ti64' 5-6 'Inco718'      
+ disc_materials: 1-4 'Ti17' 5-6 'Inco718'	      
+ case_materials: 1-4 'Ti64' 5-6 'Inco718'	      
+ stator_blade_material: 1-4 'Ti64' 5-6 'Inco718'      
+ entrance_geometry_from: IMC			      
+ disc_scale_factor: 1.0				      
+ disc_1_radius:    0.185 0.212 0.225 0.281 0.283 0.293
+ disc_1_thickness: 0.040 0.040 0.011 0.011 0.040 0.040
+ disc_2_radius:    0.185 0.212 0.225 0.288 0.290 0.310
+ disc_2_thickness: 0.040 0.040 0.007 0.007 0.033 0.033
+ disc_3_radius:    0.130 0.158 0.172 0.300 0.302 0.322
+ disc_3_thickness: 0.040 0.040 0.007 0.007 0.029 0.029
+ disc_4_radius:    0.115 0.132 0.148 0.308 0.310 0.330
+ disc_4_thickness: 0.032 0.032 0.006 0.006 0.025 0.025
+ disc_5_radius:    0.102 0.121 0.130 0.315 0.317 0.337
+ disc_5_thickness: 0.032 0.032 0.006 0.006 0.023 0.023
+ disc_6_radius:    0.098 0.130 0.142 0.320 0.322 0.342
+ disc_6_thickness: 0.028 0.028 0.007 0.007 0.021 0.021
+ exit_Mach_number: 0.30
+ aspect_ratio_rotor_in: 2.0
+ aspect_ratio_rotor_out: 1.5
+ aspect_ratio_stator_in: 3.0
+ aspect_ratio_stator_out: 1.0
+ number_of_rotor_blades: 45 51 58 64 71 78
+ number_of_stator_blades: 78 86 94 101 109 117
+ utip_corr: 350.0000
+ structural_case: 4
+ outlet_guide_vane: true
+ clearance: 0.125
+ text_pos: 1.75 0.5
+end module Hpc
+!
+!
+!
+module Comb
+ through_flow_velocity: 40.31
+ residence_time: 0.00535
+ gap_factor: 4.0
+ diffuser_struts: false
+end module Comb
+!
+! 
+!
+module Hpt
+ disc_type: conventional
+ aspect_ratio_rotor_in: 2.5
+ aspect_ratio_rotor_out: 2.5
+ aspect_ratio_stator_in: 2.0
+ aspect_ratio_stator_out: 2.0
+! design_type: constant_mean
+! entrance_Mach_number: 0.12
+! exit_Mach_number: 0.25
+! temperature_drop_coefficient: iterate2rhub = 0.37
+ rt: 0.434 0.444 0.463
+ rh: 0.358 0.375 0.385
+ !
+ disc_scale_factor: 1.0
+ disc_1_thickness: 0.0994 0.0994 0.0871 0.0774 0.0603 0.0468 0.0300 0.0258 0.0232 0.0219 0.0187 0.0155 0.0177 0.0316 0.0316 0.0316 0.0316
+ disc_1_radius:    0.0952 0.1129 0.1290 0.1413 0.1619 0.1816 0.2032 0.2203 0.2397 0.2571 0.2774 0.2945 0.3155 0.3316 0.3468 0.3620 0.3790
+ !
+ number_of_stages: 1
+ number_of_rotor_blades: 80
+ taper_ratio: 0.6
+ rotor_blade_material: 'ReneN5'
+ stator_vane_material: 'MarM002'
+ disc_material: 'Waspalloy'
+ spacing: 0.212
+ text_pos: 2.1 0.60 
+ inducer_disc: true
+end module Hpt
+!
+!
+!
+module Tcf
+ aspect_ratio: 0.72
+ area_factor: 1.6
+end module Tcf
+!
+!
+!
+module Ipt
+ disc_type: conventional
+ aspect_ratio_rotor_in: 4.000
+ aspect_ratio_rotor_out: 4.000
+ aspect_ratio_stator_in: 2.340
+ aspect_ratio_stator_out: 3.386
+ rt: 0.5352 0.575
+ rh: 0.4189 0.435
+ !
+ disc_scale_factor: 1.0
+ disc_1_radius:    0.170  0.215  0.230  0.395 0.402 0.431
+ disc_1_thickness: 0.090  0.040  0.025  0.014 0.030 0.030
+ !
+ number_of_stages: 1
+ stator_solidity: 1.5
+ rotor_solidity: 1.0
+ text_pos: 2.25 0.70 
+ spacing: 0.474
+end module Ipt
+!
+!
+!
+module Lpt
+ disc_type: conventional
+ aspect_ratio_rotor_in: 6.000
+ aspect_ratio_rotor_out: 8.600
+ aspect_ratio_stator_in: 4.800
+ aspect_ratio_stator_out: 8.600
+  number_of_rotor_blades: 98 102 104 106
+ number_of_stator_blades: 83 93 102 112
+ rt: 0.575 0.633 0.690 0.734 0.739
+ rh: 0.440 0.408 0.394 0.374 0.374
+ number_of_stages: 4
+ case_material: 'Inco718'
+ disc_scale_factor: 1.0
+ disc_1_radius:     0.2733 0.3021 0.3049 0.3625 0.4080
+ disc_1_thickness:  0.0374 0.0374 0.0151 0.0151	0.0151
+ disc_2_radius:     0.2589 0.2934 0.2992 0.3567	0.3940
+ disc_2_thickness:  0.0374 0.0518 0.0150 0.0150	0.0150
+ disc_3_radius:     0.2158 0.2733 0.2790 0.3510	0.3740
+ disc_3_thickness:  0.0316 0.0316 0.0160 0.0160	0.0160
+ disc_4_radius:     0.2071 0.2503 0.2531 0.3107	0.3740
+ disc_4_thickness:  0.0518 0.0316 0.0228 0.0228	0.0228
+ spacing: 0.40
+ text_pos: 2.9 0.85
+ use_acc: true
+end module Lpt
+!
+!
+!
+module Lp_shaft
+ conc_shaft_start: 0.467
+ material: '4130Steel'
+ diameter_ratio: 0.846
+end module Lp_shaft
+!
+!
+!
+module Tec
+ n_tec_struts: 16
+ material: 'Inco718'
+ aspect_ratio: 1.40
+end module Tec
+!
+!
+!
+module hot_nozzle
+ entrance_Mach_number: matcharea
+ length_to_diameter_ratio: 1.14
+end module hot_nozzle
+!
+!
+!
+module bypass_duct
+ entrance_Mach_number: matcharea
+ ratio_of_length_to_height: 0.3
+ outer_radius_ratio: 1.0
+ material: 'Ti64'
+end module bypass_duct
+!
+!
+!
+module cold_nozzle
+ entrance_Mach_number: matcharea
+ length_to_diameter_ratio: 1.20
+end module cold_nozzle
+!
+!
+!
+module Nacelle
+ use_thrust_reverser: true
+end module Nacelle
+!
+!
+!
+module Accessories
+ acc_w_fact: 0.06
+end module Accessories
+!
+!
+!
+module Weight Factors
+ Fan: 1.0
+ Imc: 1.0
+ Ipc: 1.0
+ Imc2: 1.0
+ Hpc: 1.0
+ Comb: 1.0
+ Hpt: 1.0
+ Tcf: 1.0
+ Ipt: 1.0
+ Lpt: 1.0
+ Tec: 1.0
+ hot_nozzle: 1.0
+ bypass_duct: 1.0
+ cold_nozzle: 1.0
+ Lp_shaft: 1.0
+ Ip_shaft: 1.0
+ Hp_shaft: 1.0
+ Accessories: 1.0
+ Nacelle: 1.0
+end module Weight Factors

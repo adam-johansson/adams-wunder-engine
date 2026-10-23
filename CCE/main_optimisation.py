@@ -23,17 +23,18 @@ d_p = importlib.import_module(path_pist)
 
 #flags = ["single", "print_output", "conventional"]  # geared turbofan case
 #flags = ["single", "print_output", "cce"]  # normal case
-flags = ["life_hack", "cce", "print_output"]  # life hack version
-#flags = ["life_hack", "cce", "print_output", "load_pareto", "plot_nox"]  # load cycle from Pareto front
+#flags = ["life_hack", "cce", "print_output"]  # life hack version
+flags = ["life_hack", "cce", "print_output", "load_pareto", "plot_nox"]  # load cycle from Pareto front
 #flags = ['single', "cce"] # for matching thrust
 #flags = ['sweep']
 #flags = ['optim', "cce"]
 
 
 if "cce" in flags:
-    input_file = "MR_TOC_jetA_AST_baseline"
+    #input_file = "MR_TOC_jetA"
     #input_file = "MR_TOC_jetA_AST_optimisation"
-    #input_file = "MR_TOC_jetA_AST_higheff"
+    input_file = "MR_TOC_jetA_AST_optimisation_noburner"
+    #input_file = "MR_TOC_jetA_AST_high_eff"
     #input_file = "MR_TOC_jetA_AST_middlepoint"
     #input_file = "MR_TOC_jetA_EGR"
     #input_file = "MR_TOC_jetA_noburner_higheff"
@@ -155,6 +156,7 @@ elif "cce" in flags:
         "EGR_rate": d.EGR_rate,
         "oil_temp": d.oil_temp,
         "trade_factors": d.trade_factors,
+        "calc_weight": d.calc_weight
     }
 
     piston_input = {
@@ -274,8 +276,8 @@ elif "cce" in flags:
         # if you want to load a cycle from the Pareto front
         if "load_pareto" in flags:
 
-            seed = 13
-            output_dir = f"studies/pareto_AST_parallell/optimisation_data/seed_{seed}"
+            #output_dir = f"studies/pareto_AST_parallell/optimisation_data/seed_13"
+            output_dir = f"studies/pareto_AST_parallell/optimisation_data/seed_21_noburner"
 
             pareto_df = pd.read_csv(f"{output_dir}/pareto_solutions.csv")
             pareto_sorted = pareto_df.sort_values('eta_th')
@@ -284,10 +286,12 @@ elif "cce" in flags:
             #point = pareto_sorted.loc[pareto_sorted['specific_nox'].idxmin()]
 
             # Point b: point with same NOx as reference
-            #point = pareto_sorted.iloc[(pareto_sorted['specific_nox'] - 0.188).abs().argmin()]
+            point = pareto_sorted.iloc[(pareto_sorted['specific_nox'] - 0.188).abs().argmin()]
 
             # Point c: highest thermal efficiency
             point = pareto_sorted.loc[pareto_sorted['eta_th'].idxmax()]
+            point["T4"] = 0
+
 
 
 
@@ -314,6 +318,7 @@ elif "cce" in flags:
         # trade factor interpolator
         interpolator_thrust, interpolator_energy = misc.load_trade_factors()
 
+        # only the varying thrust is needed for the iteration
         cce_input["trade_factor_interpolator"] = interpolator_thrust
 
         # run once to get specific power and linear output temperature from piston engine
@@ -353,6 +358,7 @@ elif "cce" in flags:
 
             flags.append("print_output")
             cce_input["life_hack"] = "Simulate_final"
+            cce_input["calc_weight"] = True 
             print("Final simulation")
             output_dict = cce_propulsion_system_specific.run_cce(cce_input, piston_input, flags, meta_model)
 
@@ -366,7 +372,7 @@ elif "cce" in flags:
 
                 print(f"TO CHECK THAT THRUST CONVERGED: thrust from sim: {thrust*1e-3}, thrust from trade-factors: {adjusted_thrust*1e-3}")
                 print(f"Baseline: SFC: {14.04920699}, weight: {3606}, thrust: {27.141}, design mission block energy: {1.05932806297672} MJ/NM/PAX")
-                print(f"CCE: SFC: {sfc*1e6}, weight: {weight}, thrust: {thrust*1e-3}, design mission block energy: {block_energy}")
+                print(f"CCE: SFC: {sfc*1e6} mg/Ns, weight: {weight} kg, thrust: {thrust*1e-3} N, design mission block energy: {block_energy} MJ/NM")
                 print(f"Relative improvement: SFC: {((sfc*1e6/14.04920699) - 1)*100}% block energy consumption (total mission fuel burn): {((block_energy/1.05932806297672) - 1)*100}%")
 
     else:

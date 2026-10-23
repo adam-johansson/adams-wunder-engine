@@ -5,6 +5,7 @@ from timeit import default_timer as timer
 from CCE.input.cce_jetA.MR_TOC_jetA import life_hack
 from CCE.src import components, compressible, misc
 from CCE.src.gas_props.air_properties import isa
+from CCE.src.compressible import calc_area_q
 
 from thermo import fuel_props, work_potential, mixture
 
@@ -87,10 +88,14 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Total properties
     p0, T0 = compressible.stagnation(pa, Ta, Mach)
+    A0 = calc_area_q(m0, Mach, p0, T0)
 
     # Inlet
     p2, T2 = components.inlet(p0, T0, dp_intake)
+    A2 = calc_area_q(m0, 0.7, p2, T2)
+    print(f"Fan area from q: {A2} m2")
     m2 = m0
+
 
     # Split core and bypass mass flow
     m21 = m2 / (1 + bpr)  # core flow
@@ -512,10 +517,11 @@ def run_cce(input, input_piston, flags, meta_model):
     T8 = T5
     equ8 = equ5
 
-    F8, v8_id, v8, error = components.nozzle(
+    F8, v8_id, v8, A8, M8, error = components.nozzle(
         p8, T8, pa, equ8, m8, cfg_core, cd_nozzle, fuel_type
     )
     #print(f"hot nozzle thrust: {F8}")
+    #print(f"Hot nozzle area A8: {A8}")
     if error:
         print('Hot nozzle fails. Prob too low pressure.')
         output_dict={
@@ -566,10 +572,11 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Cold nozzle ( no heat exchanger)
     m18 = m14
-    F18, v18_id, v18, error = components.nozzle(
+    F18, v18_id, v18, A18, M18, error = components.nozzle(
         p14, T14, pa, equ=0, m=m18, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
+    #print(f"Cold nozzle area A18: {A18}")
 
     if error:
         #print('Prob too low pressure and temperature in cold nozzle')
@@ -581,10 +588,12 @@ def run_cce(input, input_piston, flags, meta_model):
 
     # Cooling flow nozzle
     m17 = m15
-    F17, v17_id, v17, error = components.nozzle(
+    F17, v17_id, v17, A17, M17, error = components.nozzle(
         p15*0.99, T15, pa, equ=0, m=m17, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
+    #print(f"Cooling nozzle area A17: {A17}")
+    
     if error:
         #print('Prob too low pressure and temperature in cooling nozzle')
         cost = 999 + (pa - p15)
@@ -594,10 +603,11 @@ def run_cce(input, input_piston, flags, meta_model):
         return listofzeros
 
     # Intercooler and EGR nozzle (they are the same)
-    F_ic_nozzle, v_ic_nozzle_id, v_ic_nozzle, error = components.nozzle(
+    F_ic_nozzle, v_ic_nozzle_id, v_ic_nozzle, A_ic_nozzle, M_ic_nozzle, error = components.nozzle(
         p_EGR_cooler_out*0.99, T_EGR_cooler_out, pa, equ=0, m=m_EGR_cooler, cfg=cfg_bypass, cd=cd_nozzle, fuel_type=fuel_type
     )
 
+    #print(f"Area IC nozzle: {A_ic_nozzle}")
     if error:
         #print('Prob too low pressure and temperature in cooling nozzle')
         cost = 999 + (pa - p15)
@@ -783,25 +793,25 @@ def run_cce(input, input_piston, flags, meta_model):
     p_array = (
         np.array(
             [   
-                pa,
-                p0,
-                p2,
-                p13,
-                p14,
-                p15,
-                p21,
-                p25,
-                p26,
-                p3,
-                p31,
-                p31,
-                p34,
-                p35,
-                p4,  #secondary burner outlet
-                p4, # after ngv cooling
-                p5, # after rotor expansion
-                p5, # after rotor cooling
-                p8,
+                pa,  # 0
+                p0,  # 1 
+                p2,  # 2
+                p13,  # 3
+                p14,  # 4
+                p15,  # 5
+                p21,  # 6  inner fan outlet
+                p25,  # 7  LPC outlet
+                p26,  # 8  HPC inlet (After intercooler)
+                p3,  # 9   HPC outlet
+                p31, # 10
+                p31, # 11
+                p34, # 12
+                p35, # 13
+                p4, # secondary burner outlet 14
+                p4, # after ngv cooling 15
+                p5, # after rotor expansion 16
+                p5, # after rotor cooling 17
+                p8,  # 18
             ]
         )
         * 1e-3
@@ -877,12 +887,36 @@ def run_cce(input, input_piston, flags, meta_model):
 
     s_array = misc.entropy_array(p_array, T_array, far_array, fuel_type)
 
+    power_dict = {
+        "fan": P_inner_fan + P_outer_fan,      
+        "lpc": P_lpc,     
+        "hpc": P_hpc,    
+        "lpt": power_required_LPT,     
+    }
 
-    # IF WE WANT TO CALCULATE WEIGHT
-    # so far just place holder 
-    # using baseline weight for MR engine
-    #weight = misc.calculate_powerplant_weight(p_array, T_array, far_array, m_array, fuel_type)
-    weight = 3606
+    area_dict = {
+    "A8": A8,      
+    "A18": A18,     
+    "A17": A17,    
+    "A_IC": A_ic_nozzle,
+    "A_bypass_tot": A18 + A17 + A_ic_nozzle,     
+    }
+
+    mach_dict = {
+    "M8": M8,      
+    "M18": M18,
+    "M17": M17,
+    "M_IC": M_ic_nozzle,     
+    }
+
+    if input["calc_weight"]:
+        weight, A_dict = misc.calculate_powerplant_weight(p_array, T_array, far_array, m_array, power_dict, area_dict, mach_dict)
+    else:
+        A_dict = {}
+        weight = 3606
+
+    # temporarly
+    A_array = np.zeros(len(p_array))
 
 
 
@@ -948,7 +982,7 @@ def run_cce(input, input_piston, flags, meta_model):
 
         misc.plot_stations_cce(p_array, T_array)
 
-        misc.csv_output_cce(p_array, T_array, m_array, far_array, s_array)
+        misc.csv_output_cce(p_array, T_array, m_array, far_array, s_array, A_array)
         # power lost in the compressor gearbox
         # assuming offtake is taken before gearbox
 

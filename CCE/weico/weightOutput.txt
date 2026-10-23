@@ -1,0 +1,558 @@
+! Weico version: 9.6
+Configuration is:                         GTFSR 
+Entry into service is:                      2045
+Aero design point is:                        TOC
+Fan output (second column is british units)
+   tipRadius:                        1.03118364   40.59778127    
+   hub radius:                        0.31337671   12.33766573    
+   rotor tip exit radius:                 1.010559971282       39.785825641012
+   rotor hub exit radius:                 0.374004488304       14.724586153712
+   hub tip ratio:                         0.303900000000
+   fan rotor chord is:                    0.299086222793       11.775048141458
+   ogv blade height:                      0.554845507508       21.844311319197
+   splitter_radius:                       0.455714463774       17.941514321815
+   entrance Mach number:                  0.700000000000
+   aspect ratio (inlet blade heigth):         2.400000000000
+   average aspect ratio:                  2.264167177333
+   number of rotor blades:           20
+   number of ogv blades:             42
+   rotor solidity:                        1.416107522129
+   total ogv blade weights:                   119.309032445454      263.031391920138
+   total rotor blade weights:                 131.168473744843      289.176984491257
+   weight per blade:                      6.558423687242
+   disc weight:                          45.210592332778       99.672294604026
+   containment ring weight:             233.008783600986      513.696435416200
+   containment thickness:               0.013486929801        0.530981488217
+   case weight:                          82.727616032925      182.383173757805
+   weight of ogv flange supp.:           22.421596555696       49.431158984655
+   weight of spinner:                     9.076178897553       20.009549317493
+   weight of ess:                         7.746556472804       17.078233641373
+   total weight:                        659.327939190910     1453.569289957213
+   fan diffusion factor:                  0.395552025122
+   Utip:                                312.042705780665     1023.762158073048
+   D_facetoexit:                          1.048521074409
+   ogv blade material:            Ti64                            
+   rotor blade material:          Ti64                            
+   disc material:                 Ti17                            
+   bypass length:                         0.756699733445       29.791328088400
+   case material:                 Ti64                            
+   xnl (second data is rpm):             48.161294413254     2889.677664795242
+   fan length:                            0.756699733445       29.791328088400
+end Fan output
+Imc output (second column is british units)
+   main stream strut entry rt:            0.455714463774
+   main stream strut entry rh:            0.374004488304
+   main stream strut exit rt:             0.364571571019
+   main stream strut exit rh:             0.255178594663
+   bypass strut weight:                  39.715642593935
+   support part of strut:                 0.000000000000
+   main stream strut weight              25.886571337691
+   strut weight:                         65.602213931626      144.628124877025
+   number of struts:                12
+   bps casing weight:                    17.828049687644       39.304121644824
+   mss casing weight:                    20.059759529304       44.224199647150
+   fixa weight:                          11.094419471239       24.459008142572
+   total imc weight:                    114.584442619812      252.615454311571
+   exit Mach number is:                   0.478307448341
+end Imc output
+Ipc output (second column is british units)
+ Stage by stage output 
+ Stage    1
+   tip radius:                            0.364571571019       14.353211457452
+   hub radius:                            0.255178594663       10.046401364693
+   hub tip ratio:                         0.699941012816
+   utip:                                337.584303584329
+   number of rotor blades:           54
+   number of stator blades:          88
+   stator blade weights:                  5.227190017109       11.523981360422
+   rotor blade weights:                   3.687325699736        8.129161651762
+   weight per blade:                      0.068283809254        0.150540030588
+   disc weights:                         10.673063070094       23.530076288748
+   stator blade material:         Ti64                            
+   rotor blade material:          Ti64                            
+   disc material:                 Ti17                            
+   case material:                 Ti64                            
+   stage length:                          0.109392976356        4.306810092759
+   aspect ratio rotor:                    3.000000000000
+   aspect ratio stator:                   3.000000000000
+ Stage    2
+   tip radius:                            0.354489294367       13.956271431763
+   hub radius:                            0.265260871316       10.443341390383
+   hub tip ratio:                         0.748290217874
+   utip:                                328.248363503294
+   number of rotor blades:           60
+   number of stator blades:          93
+   stator blade weights:                  3.563426802076        7.856011339159
+   rotor blade weights:                   2.645985436558        5.833399350517
+   weight per blade:                      0.044099757276        0.097223322509
+   disc weights:                          9.575164206306       21.109623617140
+   stator blade material:         Ti64                            
+   rotor blade material:          Ti64                            
+   disc material:                 Ti17                            
+   case material:                 Ti64                            
+   stage length:                          0.097340097874        3.832287317869
+   aspect ratio rotor:                    2.750000000000
+   aspect ratio stator:                   2.750000000000
+ Stage    3
+   tip radius:                            0.346787483794       13.653050543077
+   hub radius:                            0.272962681888       10.746562279069
+   hub tip ratio:                         0.787118032352
+   utip:                                321.116676435021
+   number of rotor blades:           66
+   number of stator blades:          98
+   stator blade weights:                  2.570554553038        5.667102718323
+   rotor blade weights:                   1.994631727268        4.397410228193
+   weight per blade:                      0.030221692837        0.066627427700
+   disc weights:                          8.751393599567       19.293520302308
+   stator blade material:         Ti64                            
+   rotor blade material:          Ti64                            
+   disc material:                 Ti17                            
+   case material:                 Ti64                            
+   stage length:                          0.088589762287        3.487785916809
+   aspect ratio rotor:                    2.500000000000
+   aspect ratio stator:                   2.500000000000
+   M:                                     0.347491446136        0.348327630757        0.349163815379        0.350000000000 
+   tip radius:                            0.364571571019        0.354489294367        0.346787483794        0.340793482574 
+   hub radius:                            0.255178594663        0.265260871316        0.272962681888        0.278956683109 
+ lpc weight summary 
+   exit mean diameter:                    0.619750165682       24.399612822145
+   case thickness:                        0.005715000000        0.225000000000
+   weight of rotors:                      8.327942863561       18.359971230472
+   weight of stators:                    11.361171372223       25.047095417904
+   weight of blades:                     19.689114235785       43.407066648375
+   weight of discs:                      28.999620875967       63.933220208196
+   weight of lpc case:                   16.715669688114       36.851743533769
+   weight of connecting hardware:         5.537308998094       12.207676681364
+   weight of stator flange supp.:         3.714593264025        8.189276340838
+   weight of drum:                        1.139449828068        2.512056867420
+   weight of igv:                         5.570928136148       12.281794193647
+   total weight:                         81.366685026202      179.382834473608
+   xni (second data is rpm):            147.373560904557     8842.413654273440
+   length of compressor:                  0.368251487421       14.498090055943
+   average psi (at area mid):             0.537279542715
+   average pressure ratio:                1.251260822896
+   tip Mach number:                       1.073722599021
+Ipc output (second column is british units)
+imc2 output (second column is british units)
+   strut weight:                         14.660713750536       32.321341186880
+   bps casing weight:                     6.715969009125       14.806177205151
+   mss casing weight:                    10.707831693991       23.606727983521
+   fixa weight:                           3.549367646108        7.825016205868
+   total imc2 weight:                    35.633882099759       78.559262581420
+end imc2 output
+Hpc output (second column is british units)
+ Stage by stage output 
+ Stage    1
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.120885869307        4.759286193206
+   hub tip ratio:                         0.521645355052
+   utip:                                392.325815645130
+   number of rotor blades:            45
+   number of stator blades:           78
+   stator blade weights:                  5.333502728816       11.758360769639
+   stator blade material:          Ti64                            
+   stator blade length:                   0.055426849421        2.182159426041
+   rotor blade weights:                   8.144612062501       17.955795999172
+   rotor blade material:          Ti64                            
+   rotor blade lengths:                   0.055426849421        2.182159426041
+   disc material:                  Ti17                            
+   case material:                  Ti64                            
+   stage length:                          0.144109808496        5.673614507707
+ Stage    2
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.149589003224        5.889330835590
+   hub tip ratio:                         0.645504798417
+   utip:                                392.325815645130
+   number of rotor blades:            49
+   number of stator blades:           84
+   stator blade weights:                  3.254548465678        7.175051171337
+   stator blade material:          Ti64                            
+   stator blade length:                   0.042596589221        1.677031071695
+   rotor blade weights:                   3.938299355444        8.682463850623
+   rotor blade material:          Ti64                            
+   rotor blade lengths:                   0.042596589221        1.677031071695
+   disc material:                  Ti17                            
+   case material:                  Ti64                            
+   stage length:                          0.110751131975        4.360280786407
+ Stage    3
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.167051992131        6.576850083882
+   hub tip ratio:                         0.720860893390
+   utip:                                392.325815645130
+   number of rotor blades:            54
+   number of stator blades:           89
+   stator blade weights:                  2.235272779858        4.927932936478
+   stator blade material:          Ti64                            
+   stator blade length:                   0.034831771703        1.371329594603
+   rotor blade weights:                   2.270211180049        5.004958923910
+   rotor blade material:          Ti64                            
+   rotor blade lengths:                   0.034831771703        1.371329594603
+   disc material:                  Ti17                            
+   case material:                  Ti64                            
+   stage length:                          0.090562606428        3.565456945969
+ Stage    4
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.178758835971        7.037749447688
+   hub tip ratio:                         0.771378135370
+   utip:                                392.325815645130
+   number of rotor blades:            59
+   number of stator blades:           95
+   stator blade weights:                  1.656864390597        3.652760716845
+   stator blade material:          Ti64                            
+   stator blade length:                   0.029669210020        1.168079134656
+   rotor blade weights:                   1.465883772244        3.231720525291
+   rotor blade material:          Ti64                            
+   rotor blade lengths:                   0.029669210020        1.168079134656
+   disc material:                  Ti17                            
+   case material:                  Ti64                            
+   stage length:                          0.077139946053        3.037005750105
+ Stage    5
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.187039098753        7.363744045409
+   hub tip ratio:                         0.807109032982
+   utip:                                392.325815645130
+   number of rotor blades:            63
+   number of stator blades:          100
+   stator blade weights:                  1.116156515261        2.460703903068
+   stator blade material:          TiAl                            
+   stator blade length:                   0.026075273815        1.026585583263
+   rotor blade weights:                   1.919159294583        4.231021995770
+   rotor blade material:          Inco718                         
+   rotor blade lengths:                   0.026075273815        1.026585583263
+   disc material:                  Ti17                            
+   case material:                  Inco718                         
+   stage length:                          0.067795711919        2.669122516483
+ Stage    6
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.193096746721        7.602234122867
+   hub tip ratio:                         0.833248927933
+   utip:                                392.325815645130
+   number of rotor blades:            68
+   number of stator blades:          106
+   stator blade weights:                  0.918762136557        2.025523790352
+   stator blade material:          TiAl                            
+   stator blade length:                   0.023521717392        0.926051865821
+   rotor blade weights:                   1.462314074635        3.223850689188
+   rotor blade material:          Inco718                         
+   rotor blade lengths:                   0.023521717392        0.926051865821
+   disc material:                  Ti17                            
+   case material:                  Inco718                         
+   stage length:                          0.061156465219        2.407734851135
+ Stage    7
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.197621242590        7.780363881503
+   hub tip ratio:                         0.852772982049
+   utip:                                392.325815645130
+   number of rotor blades:            73
+   number of stator blades:          112
+   stator blade weights:                  0.788174537771        1.737627415934
+   stator blade material:          TiAl                            
+   stator blade length:                   0.021711661720        0.854789831499
+   rotor blade weights:                   1.183232793016        2.608581782397
+   rotor blade material:          Inco718                         
+   rotor blade lengths:                   0.021711661720        0.854789831499
+   disc material:                  Inco718                         
+   case material:                  Inco718                         
+   stage length:                          0.056450320472        2.222453561899
+ Stage    8
+   tip radius:                            0.231739568150        9.123605045288
+   hub radius:                            0.201033053440        7.914687143305
+   hub tip ratio:                         0.867495590177
+   utip:                                392.325815645130
+   number of rotor blades:            78
+   number of stator blades:          117
+   stator blade weights:                  0.702264506005        1.548228216461
+   stator blade material:          TiAl                            
+   stator blade length:                   0.020471009807        0.805945267988
+   rotor blade weights:                   1.012441956160        2.232052439860
+   rotor blade material:          Inco718                         
+   rotor blade lengths:                   0.020471009807        0.805945267988
+   disc material:                  Inco718                         
+   case material:                  Inco718                         
+   stage length:                          0.053224625498        2.095457696769
+   tip radius:    0.231740  0.231740  0.231740  0.231740  0.231740  0.231740  0.231740  0.231740  0.231740 
+   hub radius:    0.120886  0.149589  0.167052  0.178759  0.187039  0.193097  0.197621  0.201033  0.203597 
+   bore radius:    0.069661  0.078272  0.083511  0.087023  0.089507  0.091325  0.092682  0.093706 
+   clearance:                         0.300000000000
+   average psi (at area mid):         0.536609508934
+   average pressure ratio:            1.279167987305
+   MtipRel:                           1.181664118331
+   M:                                     0.345419294130        0.327241882364        0.309064470598        0.290887058831        0.272709647065        0.254532235299        0.236354823533        0.218177411766        0.200000000000 
+ HPC weight summary 
+   exit Reynolds number:             250161.800675867533
+   case thickness:                        0.005715000000        0.225000000000
+   weight of rotors:                     21.396154488633       47.170446206211
+   weight of stators:                    16.005546060543       35.286188920115
+   weight of blades:                     37.401700549176       82.456635126327
+   weight of discs:                      33.999993232360       74.957154222767
+   weight of hpc case:                   31.897526655581       70.322008845919
+   weight of connecting hardware:         7.764143856584       17.117007185513
+   weight of stator flange supp.:         5.927891419543       13.068763523387
+   weight of drum:                        0.863898735203        1.904570694616
+   weight of stub shaft:                  0.119933888910        0.264408964617
+   weight of rear drive shaft:            7.144444330105       15.750803590690
+   total weight:                        130.531174904546      287.771981051062
+   xnh (second data is rpm)             269.442949949674    16166.576996980424
+   length of compressor:                  0.749873575133       29.522581698139
+end Hpc output
+Comb output (second column is british units)
+   outer casing diameter:                0.521090455254       20.515372254083
+   outer liner diameter:                 0.486332888804       19.146964126123
+   inner liner diameter:                 0.382060189453       15.041739742242
+   inner casing diameter:                0.339682623003       13.373331614282
+   weight of liner:                     18.092586538086       39.887325569621
+   liner thickness:                      0.003810000000        0.150000000000
+   weight of inner case:                 8.628790981528       19.023227797082
+   weight of outer case:                13.043438002238       28.755858486416
+   case thickness:                       0.003810000000        0.150000000000
+   weight of combustor diffuser:        10.269332011623       22.640001664099
+   weight of combustor swirlers:         0.000000000000        0.000000000000
+   weight of fuel nozzles:              92.676419663741      204.316531302634
+   total weight:                       142.710567197216      314.622944819852
+   ucx:     2.057993    2.135179    2.348081    2.413418  
+   ucy:     0.231740    0.256735    0.296831    0.265016  
+   lcx:     2.057993    2.135179    2.425421  
+   lcy:     0.203597    0.169841    0.191401  
+   ulx:     2.177393    2.190057    2.348081    2.390753  
+   uly:     0.217668    0.239767    0.270923    0.265016  
+   llx:     2.177393    2.190690    2.348081    2.390753  
+   lly:     0.217668    0.195570    0.219204    0.231018  
+end Comb output (second column is british units)
+HPT output (second column is british units)
+ Stage by stage output 
+   sigma blade pull:                     56949719.817970789969
+ Stage    1
+   tip radius:                            0.265015585729       10.433684477514
+   hub radius:                            0.231018014286        9.095197412834
+   rotor chord length:                    0.022665047629        0.892324709787
+   rotor aspect ratio:                    1.500000000000
+   stator chord length:                   0.022665047629        0.892324709787
+   stator aspect ratio:                   1.500000000000
+   psi (at blade mid)                     3.474771126694
+   an2:                                3846.294310755935       21.462365178748
+   utip:                                448.660781840705
+   umid:                                419.882517833519
+   Number of blades:                            68
+   Number of vanes:                             52
+   Stator blade lengths:                  0.022665047629
+ Stage    2
+   tip radius:                            0.265015585729       10.433684477514
+   hub radius:                            0.231018014286        9.095197412834
+   rotor chord length:                    0.022665047629        0.892324709787
+   rotor aspect ratio:                    1.500000000000
+   stator chord length:                   0.022665047629        0.892324709787
+   stator aspect ratio:                   1.500000000000
+   psi (at blade mid)                     3.474771126694
+   an2:                                3846.294310755935       21.462365178748
+   utip:                                448.660781840705
+   umid:                                419.882517833519
+   Number of blades:                            75
+   Number of vanes:                             47
+   Stator blade lengths:                  0.022665047629
+ HPT weight summary 
+   entrance Mach number:                  0.100000000000
+   average psi (at area mid)              3.458524453301
+   weight of rotors:                      6.554527620532       14.450259867758
+   weight of stators:                     5.809982246597       12.808818293388
+   weight of blades:                     12.364509867130       27.259078161146
+   disc bore radius:                      0.056873508248        2.239114497944
+   weight of discs:                      44.605557725650       98.338421622150
+   weight of hpt case:                    9.220405766514       20.327515135482
+   weight of connecting hardware:         2.009391094143        4.429949062290
+   weight of drum:                        5.358376251049       11.813197499440
+   weight of stator flange:               4.728413213597       10.424366736145
+   total weight:                         78.286653918084      172.592528216654
+   length of hpt:                         0.117858247669        4.640088490892
+end hpt output
+Tcf output (second column is british units)
+   exit hub radius:                       0.362994859809       14.291136212966
+   exit tip radius:                       0.406808485355       16.016082100606
+end Tcf output
+LPT output (second column is british units)
+ Stage by stage output 
+ Stage    1
+   tip radius:                            0.406808485355       16.016082100606
+   hub radius:                            0.362994859809       14.291136212966
+   hub tip ratio:                         0.892299135531
+   rotor aspect ratio:                    1.607142857143
+   rotor chord:                           0.039047288579
+   stator chord:                          0.023579340366
+   stator aspect ratio:                   1.875000000000
+   umid m/s:                            362.321633798342
+   utip m/s:                            391.719673672654
+   an2:                                3390.492343289171       18.918985113524
+   M:                                     0.061348431730
+   Number of blades:                            60
+   Number of vanes:                             52
+   Disc material:                 Rene95                          
+   fi:                                    0.106200105121
+   psi (at blade mid)                     3.400000000000
+ Stage    2
+   tip radius:                            0.440838355635       17.355840773033
+   hub radius:                            0.354581115358       13.959886431433
+   hub tip ratio:                         0.804333631196
+   rotor aspect ratio:                    3.053571428571
+   rotor chord:                           0.033520201027
+   stator chord:                          0.027180120267
+   stator aspect ratio:                   3.187500000000
+   umid m/s:                            371.929735394243
+   utip m/s:                            419.455200291192
+   an2:                                5626.488069168559       31.395866217693
+   M:                                     0.065544053561
+   Number of blades:                            63
+   Number of vanes:                             55
+   Disc material:                 Rene95                          
+   fi:                                    0.100870147582
+   psi (at blade mid)                     3.400000000000
+ Stage    3
+   tip radius:                            0.458577335039       18.054225788955
+   hub radius:                            0.345545094662       13.604137585117
+   hub tip ratio:                         0.753515423156
+   rotor aspect ratio:                    4.500000000000
+   rotor chord:                           0.025800755356
+   stator chord:                          0.025133041126
+   stator aspect ratio:                   4.500000000000
+   umid m/s:                            370.123631955024
+   utip m/s:                            423.888584958700
+   an2:                                6334.264773274434       35.345268125408
+   M:                                     0.138710334419
+   Number of blades:                            65
+   Number of vanes:                             58
+   Disc material:                 Rene95                          
+   fi:                                    0.188816979394
+   psi (at blade mid)                     3.400000000000
+   average psi (at area mid)              3.350447151832
+        0.106200105121        3.400000000000       38.478595596859
+        0.100870147582        3.400000000000       37.516607299313
+        0.188816979394        3.400000000000       69.885626187922
+stage weights:        88.577744956975       93.335171429161       76.069194428393 
+rh:    0.3630   0.3546   0.3455   0.3377 
+rt:    0.4068   0.4408   0.4586   0.4549 
+A:     0.1060   0.2155   0.2855   0.2917 
+ Outlet conditions:
+   M:                                     0.732070700205
+   Tip radii:                             0.454871298719
+   Hub radii:                             0.337714612177
+   opening angle:                         27.894391572659
+ lpt weight summary 
+   weight of rotors:                     60.655881370842      133.723328218334
+   weight of stators:                    43.006559424841       94.813233795889
+   weight of blades:                    103.662440795683      228.536562014223
+   disc bore radius:                      0.171448682527        6.749948130970
+   weight of discs:                      75.732697624340      166.962018396252
+   case thickness:                        0.005715000000        0.225000000000
+   weight of lpt case:                   28.248320878729       62.276887238489
+   weight of connecting hardware:         6.007544530742       13.244368574237
+   weight of drum:                       16.020118748644       35.318316197965
+   weight of stator flange:              13.164448711523       29.022641433592
+   total weight:                        242.835571289661      535.360793854758
+   length of lpt:                         0.226538970735        8.918857115561
+end lpt output
+Tec output (second column is british units)
+   tec_material:                         Ti17                            
+   tip radius:                            0.454871298719       17.908318847189
+   support material thickness:            0.003911876982        0.154010904796
+   tec strut length:                      0.090120528109        3.548052287764
+   tec support weight:                   18.406084986608       40.578471341147
+   strut weight:                         15.365310887852       33.874711975097
+   case weight:                          35.140986650277       77.472614123287
+   support weight:                       18.406084986608       40.578471341147
+   total weight:                         68.912382524737      151.925797439531
+end Tec output
+hot nozzle output (second column is british units)
+   weight of nozzle plug:                 8.595043734196       18.948827852188
+   weight of nozzle outer case:          41.154157489268       90.729386583966
+   total hot nozzle weight:              49.749201223463      109.678214436154
+end hot nozzle output output
+Bypass duct output (second column is british units)
+   rt exit:                               1.091404768984       42.968691692293
+   outer case weight:                    39.076639533989       86.149243502461
+   inner case weight:                    20.080032529649       44.268893962323
+   total weight:                         59.156672063637      130.418137464785
+end bypass duct output (second column is british units)
+cold nozzle output (second column is british units)
+   weight of nozzle inner case:          13.726138531614       30.260955517426
+   weight of nozzle outer case:          23.149993638360       51.036999670784
+   total cold nozzle weight:             36.876132169974       81.297955188210
+end cold nozzle output output
+Low pressure shaft (second column is british units)
+   outer diameter                         0.095416015860        3.756536057479
+   torque density is                      9.696731948275
+   density is                          7833.413032987484        0.283000000000
+   weight per meter                      14.005541419600
+   total weight:                         39.410107065111       86.884413565225
+end Low pressure shaft
+High pressure shaft (second column is british units)
+   total weight:                          2.820215100841        6.217510009793
+end High pressure shaft
+Nacelle output (second column is british units)
+   NacelleDiameter:	           2.681077474829      105.554231292481
+   NacelleLength:		           4.214141284666      165.911074199437
+   Lnac:	           4.214141284666
+   Dnac:              2.681077474829
+   Di:	               2.146249662790
+   De:	               2.079385552302
+   Lf:		           1.259431728808
+   Lc:  	           1.158485290762
+   La:		           1.737727936142
+   D_hilite:          2.146249662790
+Bearings output (second column is british units)
+   total weight:                         58.302560126452      128.535142966473
+end Bearings output
+Engine summary output:
+Engine summary output
+   TotalEngineWeightIs      3136.895188623328     6915.670095207572
+   Dry weight is              1870.603048656537     4123.973797567487
+      Fan                                 659.327939190910     1453.569289957213
+      Imc                                 114.584442619812      252.615454311571
+      Ipc                                  81.366685026202      179.382834473608
+      IpcStageNo                                   3
+      Imc2                                 35.633882099759       78.559262581420
+      Hpc                                 130.531174904546      287.771981051062
+      HpcStageNo                                   8
+      LastStageBladeHeight                  0.028142374248        1.107967490088
+      Comb                                142.710567197216      314.622944819852
+      Hpt                                  78.286653918084      172.592528216654
+      HptStageNo                                   2
+      Tcf                                  17.758818370407       39.151492716702
+      Lpt                                 242.835571289661      535.360793854758
+      LptStageNo                                   3
+      Tec                                  68.912382524737      151.925797439531
+      Gbx                                 138.965377159162      306.366214138836
+      hot_nozzle                           49.749201223463      109.678214436154
+      bypass_duct                          59.156672063637      130.418137464785
+      cold_nozzle                          36.876132169974       81.297955188210
+      Lp_shaft                             39.410107065111       86.884413565225
+      Hp_shaft                              2.820215100841        6.217510009793
+      Accessories                         189.892582192352      418.641482422538
+      Nacelle                             989.774224381002     2182.078645593182
+      Bearings                             58.302560126452      128.535142966473
+   Total engine length is        3.331002982555
+   Modules contributing to total length
+      Fan                                   0.756699733445       29.791328088400        0.756699733445
+      Imc                                   0.291821340964       11.489029171799        1.048521074409
+      Ipc                                   0.368251487421       14.498090055943        1.416772561830
+      Imc2                                  0.206122664885        8.115065546649        1.622895226715
+      Hpc                                   0.749873575133       29.522581698139        2.372768801848
+      Comb                                  0.332760175785       13.100794322262        2.705528977633
+      Hpt                                   0.117858247669        4.640088490892        2.823387225302
+      Tcf                                   0.145895994354        5.743936785600        2.969283219656
+      Lpt                                   0.226538970735        8.918857115561        3.195822190391
+      Tec                                   0.135180792164        5.322078431646        3.331002982555
+   Length of other modules
+      Gbx                                   0.000000000000
+      hot_nozzle                            0.909742597437
+      bypass_duct                           0.998721913514
+      cold_nozzle                           0.982264292086
+      Lp_shaft                              2.604014748555
+      Hp_shaft                              0.255573561372
+      Accessories                           0.000000000000
+      Nacelle                               4.214141284666
+end engine summary output
+Estimated component efficiencies:
+  Component       EtaPol          Loading       EtaStar   DeltaEtaEIS           RNI    DeltaEtaRe         Mcorr     DeltaEtaM  DeltaEtaCool
+        Fan           NaN   1.00000  (PR)      0.945617      0.036694     -0.000505           NaN   4029.523629      0.000000      0.000000  
+        Ipc      0.918109   0.53728 (Psi)      0.911820      0.020366      0.485890     -0.008595     28.727858     -0.005483      0.000000  
+        Hpc      0.934999   0.53661 (Psi)      0.934087      0.012207      0.792892     -0.002230     16.475514     -0.009065      0.000000  
+        Hpt      0.903862   3.45852 (Psi)      0.955642      0.009873      2.117333      0.000000      2.131224     -0.024587     -0.037067  
+        Lpt      0.893300   3.35045 (Psi)      0.929611      0.027774      2.134047      0.000000      2.651651     -0.064085      0.000000  

@@ -1,0 +1,508 @@
+!
+! v6.0.0 2007.10.01 version control introduced
+!
+! v6.1.0 2007.10.15 titanium aluminides introduced
+!
+! TERA material database
+!
+!
+!
+!---------------------------------- 
+ Ti17               :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 4650.24            :Material density (kg/m^3)
+ 10                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00  1044.46  :
+   344.44   911.73  :
+   388.89   853.90  :
+   433.33   840.50  :
+   477.78   841.11  :
+   522.22   830.98  :
+   566.67   807.98  :
+   611.11   775.54  :
+   655.56   737.13  :
+   700.00   696.17  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.30               :Poisson's ratio
+!---------------------------------- 
+!
+! Increased strengths with 20% compared to Ti17
+!
+!---------------------------------- 
+ Ti17+              :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 4650.24            :Material density (kg/m^3)
+ 10                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00  1253.35  :
+   344.44  1094.07  :
+   388.89  1024.68  :
+   433.33  1008.60  :
+   477.78  1009.33  :
+   522.22   997.17  :
+   566.67   969.57  :
+   611.11   930.64  :  
+   655.56   884.55  :
+   700.00   835.40  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.30               :Poisson's ratio
+!---------------------------------- 
+! 
+! 
+!---------------------------------- 
+ 4130Steel          :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 7833.44            :Material density (kg/m^3)
+ 15                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00   480.58  :
+   344.29   464.23  :
+   388.57   447.16  :
+   432.86   430.12  :
+   477.14   413.82  :
+   521.43   398.91  :
+   565.71   385.53  :
+   610.00   373.63  :
+   654.29   361.43  :
+   698.57   345.27  :
+   742.86   322.28  :
+   787.14   293.24  :
+   831.43   259.95  :
+   875.71   224.21  :
+   920.00   187.81  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+! 
+! 
+!---------------------------------- 
+ Ti64               :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 4428.80            :Material density (kg/m^3)
+ 15                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00   811.53  :
+   336.43   756.77  :
+   372.86   705.60  :
+   409.29   658.77  :
+   445.71   617.06  :
+   482.14   581.21  :
+   518.57   551.77  :
+   555.00   528.72  :
+   591.43   511.90  :
+   627.86   500.08  :
+   664.29   488.52  :
+   700.71   471.75  :
+   737.14   444.32  :
+   773.57   400.78  :
+   810.00   335.68  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.335              :Poisson's ratio
+!---------------------------------- 
+! 
+! 
+!---------------------------------- 
+ Inco718            :Material specifier
+ 25.0		    :Larson Miller (LM) constant
+  6                 :Number of data in LM curve 
+    52.2     23.0   :LM curve (stress in (Ksi)). LM parameters in decreasing order.
+    50.0     44.0   :
+    47.0     80.0   :
+    45.6     89.0   :
+    45.0    100.0   :
+    39.6    150.0   :
+ 8220.96            :Material density (kg/m^3)
+ 20                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00  1122.64  :
+   355.79  1111.46  :
+   411.58  1100.28  :
+   467.37  1089.25  :
+   523.16  1078.41  :
+   578.95  1067.23  :
+   634.74  1055.24  :
+   690.53  1044.05  :
+   746.32  1035.11  :
+   802.11  1023.09  :
+   857.89  1001.11  :
+   913.68   970.32  :
+   969.47   927.68  :
+  1025.26   823.38  :
+  1081.05   610.08  :
+  1136.84   366.97  :
+  1192.63   203.49  :
+  1248.42   122.62  :
+  1304.21    87.84  :
+  1360.00    62.59  :
+  205000.0	    :Elastic modulus of the material in MPa
+  0.35		    :Fatigue ductility coefficient in mm
+  1736.0	    :Fatigue strength coefficient in MPa
+  -0.08		    :Fatigue strength exponent
+  -0.59		    :Fatigue ductility exponent
+  11.5E-6           :Linear coefficient of thermal expansion in mm/°C
+  0.29		    :Poisson's ratio
+!---------------------------------- 
+! 
+! 
+!---------------------------------- 
+ Rene95             :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8248.64            :Material density (kg/m^3)
+ 15                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00  1274.99  :
+   375.71  1237.62  :
+   451.43  1216.74  :
+   527.14  1198.43  :
+   602.86  1179.76  :
+   678.57  1164.42  :
+   754.29  1153.27  :
+   830.00  1134.86  :
+   905.71  1122.70  :
+   981.43  1105.43  :
+  1057.14   999.82  :
+  1132.86   604.57  :
+  1208.57   355.34  :
+  1284.29   229.69  :
+  1360.00    27.96  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+! 20% extra strength compared to Rene95
+!---------------------------------- 
+ Rene95++           :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8248.64            :Material density (kg/m^3)
+ 15                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   300.00  1529.98 :
+   375.71  1485.14 :
+   451.43  1460.08 :
+   527.14  1438.11 :
+   602.86  1415.71 :
+   678.57  1397.30 :
+   754.29  1383.92 :
+   830.00  1361.83 :
+   905.71  1347.24 :
+   981.43  1326.51 :
+  1057.14  1199.78 :
+  1132.86   725.48 :
+  1208.57   426.40 :
+  1284.29   275.62 :
+  1360.00    33.55 :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+! 
+! 
+!---------------------------------- 
+ Aluminium          :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 2768.00            :Material density (kg/m^3)
+ 0                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.0                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ Udimet720          :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8080.0             :Material density (kg/m^3)
+ 11                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+  100 1115.0 :
+  200 1130.0 :
+  300 1150.0 :
+  400 1170.0 :
+  500 1215.0 :
+  600 1265.0 :
+  650 1255.0 : 
+  700 1200.0 :
+  750 1050.0 :
+  800 900.0  :
+  900 600.0  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ Waspalloy          :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8190.0             :Material density (kg/m^3)
+ 15                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   294.26   792.86  :
+   370.85   782.63  :
+   447.44   772.67  :
+   524.02   762.55  :
+   600.61   751.84  :
+   677.20   741.48  :
+   753.78   734.17  :
+   830.37   717.88  :
+   906.96   692.32  :
+   983.55   686.49  :
+  1060.13   658.66  :
+  1136.72   536.73  :
+  1213.31   285.20  :
+  1289.90    41.45  :
+  1366.48     0.69  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ CMSX4              :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8700.0             :Material density (kg/m^3)
+ 8                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+  297.15   942.0    :
+  811.15   929.0    :
+  923.15   947.0    :
+ 1073.15  1093.0    :
+ 1144.15   899.0    :
+ 1255.15   704.0    :
+ 1367.15   420.0    :
+ 1477.15   146.0    :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ Unobtainium        :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8700.0             :Material density (kg/m^3)
+ 8                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+  297.15   942.0    :
+  811.15   929.0    :
+  923.15   947.0    :
+ 1073.15  1093.0    :
+ 1144.15   899.0    :
+ 1255.15   704.0    :
+ 1367.15   420.0    :
+ 1877.15   146.0    :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ ReneN5             :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8630.0             :Material density (kg/m^3)
+ 0                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ MarM002            :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8530.0             :Material density (kg/m^3)
+ 0                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ Rene80             :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8160.0             :Material density (kg/m^3)
+ 0                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ Rene77             :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 7910.0             :Material density (kg/m^3)
+ 0                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ TiAl               :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 3800.0             :Material density (kg/m^3)
+ 7                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+  273.2 615.0       :
+  473.1 600.0       :
+  673.2 580.0       :
+  873.1 535.0       :
+ 1073.2 455.0       :
+ 1173.2 400.0       :
+ 1273.2 370.0       :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ HastelloyX         :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 8220.9             :Material density (kg/m^3)
+ 15                 :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+   294.26   358.51  :
+   370.85   348.29  :
+   447.44   338.37  :
+   524.02   328.06  :
+   600.61   317.62  :
+   677.20   307.63  :
+   753.78   297.73  :
+   830.37   286.50  :
+   906.96   276.60  :
+   983.55   274.12  :
+  1060.13   246.72  :
+  1136.72   185.28  :
+  1213.31   132.93  :
+  1289.90    93.30  :
+  1366.48    55.16  :
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+!
+!
+!
+!---------------------------------- 
+ CMC                :Material specifier
+ 0.0                :Larson Miller (LM) constant
+ 0                  :Number of data in LM curve
+ 5754.6             :Material density (kg/m^3) - "effective density"
+ 0                  :No data in yield stress (ys) curve. Temp. in K. ys in MPa
+ 0.0                :Elastic modulus of the material in MPa
+ 0.0                :Fatigue ductility coefficient in mm
+ 0.0                :Fatigue strength coefficient in MPa
+ 0.0                :Fatigue strength exponent
+ 0.0                :Fatigue ductility exponent
+ 0.0                :Linear coefficient of thermal expansion in mm/°C
+ 0.3                :Poisson's ratio
+!---------------------------------- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

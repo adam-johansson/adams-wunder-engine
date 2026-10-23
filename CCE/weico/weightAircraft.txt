@@ -1,0 +1,32 @@
+! Weight Noise and emission output:
+GBX_ratio:    0.306000000000E+01
+FanR1BDiaOuter:    0.206236728833E+01
+! Annulus area: 
+FanA2:    0.303206022763E+01
+FanR1BNb:          20
+FanRss:    0.600000000000E+02
+MtipFan:    0.123528650740E+01
+xnl:    0.481612944133E+02
+FanVsOgvNb:          42
+D_facetoexit_fan:    0.733744914650E+00
+stages_LPC:           3
+r_compr:    0.364571571019E+00
+rh_compr:    0.255178594663E+00
+RSS_compr:    0.500000000000E+00
+MtipLpc:    0.107372259902E+01
+N_compr:          54
+S_compr:          88
+CombType:  SAC
+LptStgLastBNb:          65
+stages_LPT:           3
+LptStgLastDiaOuter:    0.909742597437E+00
+LptStgLastAExit:    0.291718049457E+00
+SRS:    0.300000000000E+00
+NozMainDiaB:    0.502759537970E+00
+LpNAbsTo:    0.884241365427E+04
+FanNAbsTo:    0.288967766480E+04
+A_core:    0.198522857749E+00
+A_bypass:    0.206861645635E+01
+Plug_radius:    0.000000000000E+00
+Core_nozzel_outer_radius:    0.251379768985E+00
+Bypass_nozzle_outer_radius:    0.103969277615E+01

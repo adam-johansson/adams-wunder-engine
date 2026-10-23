@@ -119,11 +119,11 @@ def print_output(
     return
 
 
-def csv_output_cce(p, t, m, far, s):
+def csv_output_cce(p, t, m, far, s, A):
     """
     saves pressures, temperatures and mass flows for all stations as csv file.
     """
-    headers = ("station", "m [kg/s]", "T [K]", "p [kPa]", "FAR []", "s [kJ /(kg * K) ]")
+    headers = ("station", "m [kg/s]", "T [K]", "p [kPa]", "FAR []", "s [kJ /(kg * K) ]", "A [m^2]")
     stations = (
         "a",
         "0",
@@ -148,7 +148,7 @@ def csv_output_cce(p, t, m, far, s):
 
     stations = np.atleast_2d(stations).T
     data = np.concatenate(
-        (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T, np.atleast_2d(far).T, np.atleast_2d(s).T), axis=1
+        (stations, np.atleast_2d(m).T, np.atleast_2d(t).T, np.atleast_2d(p).T, np.atleast_2d(far).T, np.atleast_2d(s).T, np.atleast_2d(A).T), axis=1
     )
     data = np.vstack([headers, data])
     np.savetxt("simulation_data/stations.csv", data, delimiter=",", fmt="%s")

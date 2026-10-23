@@ -3,7 +3,7 @@ import numpy as np
 from CCE.src import cce_propulsion_system, cce_propulsion_system_specific
 from timeit import default_timer as timer
 
-from CCE.src.misc import thrust_requirement_function
+from CCE.src.misc import thrust_requirement_function, get_block_energy
 
 #from mpmath.libmp import fzero
 from scipy.optimize import (
@@ -87,13 +87,14 @@ def run_cce_bpr(input, data_piston, meta_model):
             if input["trade_factors"] == True:
                 # calculate new thrust requirement based on sfc and engine weight
                 F_goal = thrust_requirement_function(sfc,weight,interpolator)
-     
+
 
             # denna var med även vid error förut så det kanske kan bli problem
             last_outputs.update({
                 'bore_match': bore,
             })
 
+            #print(f"Weight: {weight*1e-3}t, F: {F*1e-3} kN, F_goal: {F_goal*1e-3}kN, sfc:{sfc*1e6}mg/Ns")
             residual = np.array([F - F_goal])
             #print(f"Thrust residual {residual} bpr {x} bore: {bore}")
             return residual

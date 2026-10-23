@@ -1,0 +1,180 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\weico\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\engine_weight_procedures.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\no_quick_win\\graphics.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\acac_weight.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\no_quick_win\\interf.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\graphics.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\interf.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\duct_weight.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\nozzle_weight.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\weight.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{925FE7BB-696F-421F-8C69-43F2FB229D78}|weico.vfproj|c:\\users\\xisto\\documents\\github\\gestpan_src.git\\vital_source\\data_module.f90||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "engine_weight_procedures.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\engine_weight_procedures.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\engine_weight_procedures.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\engine_weight_procedures.f90",
+              "RelativeToolTip": "..\\vital_source\\engine_weight_procedures.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:54:36.984Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "graphics.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\no_quick_win\\graphics.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\no_quick_win\\graphics.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\no_quick_win\\graphics.f90",
+              "RelativeToolTip": "..\\vital_source\\no_quick_win\\graphics.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAApAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:52:48.09Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "acac_weight.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\acac_weight.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\acac_weight.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\acac_weight.f90",
+              "RelativeToolTip": "..\\vital_source\\acac_weight.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:52:42.681Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "interf.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\no_quick_win\\interf.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\no_quick_win\\interf.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\no_quick_win\\interf.f90",
+              "RelativeToolTip": "..\\vital_source\\no_quick_win\\interf.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:52:43.542Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "graphics.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\graphics.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\graphics.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\graphics.f90",
+              "RelativeToolTip": "..\\vital_source\\graphics.f90",
+              "ViewState": "AgIAAMoCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:49:29.395Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "interf.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\interf.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\interf.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\interf.f90",
+              "RelativeToolTip": "..\\vital_source\\interf.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:52:01.475Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "weight.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\weight.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\weight.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\weight.f90",
+              "RelativeToolTip": "..\\vital_source\\weight.f90",
+              "ViewState": "AgIAAKMAAAAAAAAAAAAcwLcAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:42:48.641Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "duct_weight.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\duct_weight.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\duct_weight.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\duct_weight.f90",
+              "RelativeToolTip": "..\\vital_source\\duct_weight.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAcAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:24:49.672Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "nozzle_weight.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\nozzle_weight.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\nozzle_weight.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\nozzle_weight.f90",
+              "RelativeToolTip": "..\\vital_source\\nozzle_weight.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:22:33.076Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "data_module.f90",
+              "DocumentMoniker": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\data_module.f90",
+              "RelativeDocumentMoniker": "..\\vital_source\\data_module.f90",
+              "ToolTip": "C:\\Users\\xisto\\Documents\\GitHub\\gestpan_src.git\\vital_source\\data_module.f90",
+              "RelativeToolTip": "..\\vital_source\\data_module.f90",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACMSURBVDhPxZJBDsQgCEU/sytHM57Cg/UUpEfDpbPSgjVtmc28lZKfJwSptYYOEY2zRVXPkIG3DWQFtdZlEAAO3ucSkparIOfsQgAgIjGBiLggTAdJi6t/3O0FB\u002B9DxswUFsyEBUmLGyMs6DAzISKYX\u002B68FnTmNYcFM/8XLH/iEyIytnAR2OAdS8EvfAEh4EkdDLYrMwAAAABJRU5ErkJgggAAAAAAAAAAAA==",
+              "WhenOpened": "2026-10-12T13:09:58.362Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

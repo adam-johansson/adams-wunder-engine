@@ -1,0 +1,85 @@
+cost_interface_type: file_based
+read_additional_data: ultimate_gor
+entry_into_service: 2050
+module Ipc
+ corrected_tip_speed: 450.0
+ deHaller: 0.7
+ hub_tip_ratio: 0.42
+ entrance_Mach_number: 0.54
+ design_type: constant_mean
+end module Ipc
+module Imc2
+ outer_radius_ratio_mss: 0.85
+ area_factor_mss: 1.0
+end module Imc2
+module Hpc
+ utip_corr: 450.0
+ deHaller: 0.7
+ disc_safety_factor: 1.2
+ design_type: constant_hub
+ structural_case: 1
+end module Hpc
+module Comb
+end module Comb
+module Hpt
+ disc_safety_factor: 1.1
+end module Hpt
+module Hpt_duct
+ area_factor: 1.5
+ outer_radius_ratio: 1.4
+ ratio_of_length_to_height: 0.6
+end module Hpt_duct
+module Ipt
+ number_of_stages: 2
+ aspect_ratio_stator_in: 4.0
+ aspect_ratio_stator_out: 4.0
+ disc_safety_factor: 1.5
+end module Ipt
+module Tec
+ leading_clearance_ratio: 0.3
+ trailing_clearance_ratio: 0.3
+ aspect_ratio: 2.0
+ outer_radius_ratio: 1.2
+ area_factor: 1.2
+end module Tec
+module Lpt
+ exit_Mach_number: 0.50
+ temperature_drop_coefficient: 4.0
+ disc_safety_factor: 1.2
+ disc_void_par: 0.4
+ xnl_unit: rps
+ design_type: conventional
+end module Lpt
+module Tec2
+ technology: ultimate
+ leading_clearance_ratio: 0.3
+ trailing_clearance_ratio: 0.3
+ aspect_ratio: 2.5
+ outer_radius_ratio: 1.0
+ hub_contr_fact: 1.08
+end module Tec2
+module Prop
+  par1: 15.1
+  par2: 2.61
+  additional_weight_factor: 2.2
+  rear_blade_height_factor: 0.90
+end module Prop
+module OR_duct
+ l2h_rat_1: 1.2
+end module OR_duct
+module Gbx
+ speed_ratio: 9.0
+! technology_factor: 1.5
+end module Gbx
+module Lp_shaft
+end module Lp_shaft
+module Hp_shaft
+end module Hp_shaft
+module Accessories
+end module Accessories
+module Nacelle
+ throat_radius_ratio: 0.922
+ max_radius_ratio: 1.8
+ len_fact: 0.85
+ use_thrust_reverser: false
+end module Nacelle

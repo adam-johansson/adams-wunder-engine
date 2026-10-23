@@ -1,0 +1,3 @@
+file performanceResults.txtdimensionsWeight.txt does not exist
+occurred in module read_and_write_files
+in routine open_file

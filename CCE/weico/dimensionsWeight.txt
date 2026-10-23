@@ -1,0 +1,123 @@
+print_level: dump_all
+read_additional_data: ultimate
+entry_into_service: 2045
+module Fan
+  hade_angle: 0.2
+  entrance_Mach_number: 0.7
+  rt_exit_fact: 1.04
+  blade_weight_factor: 1.0
+  hub_tip_ratio: 0.3039
+  aspect_ratio_ogv: 3.5
+  aspect_ratio_rotor: 2.4
+  n_rotor_blades: 20
+  rotor_spacing_to_rotor_chord_length_ratio: 0.3
+  bypass_duct_spacing_to_rotor_chord_length_ratio: 0.3
+  ogv_spacing_to_rotor_chord_length_ratio: 0.4
+  use_ess: true
+  aspect_ratio_ess: 2.0
+end module Fan
+!
+module Imc
+  aspect_ratio_bps: 4.0
+  aspect_ratio_mss: 0.28
+  outer_radius_ratio_mss: 0.8
+  imc_type: geared
+  outer_dydx2: -0.2
+  inner_dydx2: -0.2
+end module Imc
+!
+module Ipc
+  number_of_stages: 3
+  igv: true
+  exit_Mach_number: 0.35
+  is_a_three_shaft: false
+  clearance: 0.5
+end module Ipc
+!
+module Imc2
+  aspect_ratio_mss: 0.3
+  outer_radius_ratio_mss: 0.68
+  area_factor_mss: 1.02
+  outer_dydx2: -0.2
+end module Imc2
+!
+module Hpc
+  number_of_stages: 8
+  design_type: constant_tip
+  disc_type: conventional
+  exit_Mach_number: 0.2
+  disc_safety_factor: 2
+  igv: true
+  utip_corr: 380
+!  deHaller: 0.62 !low value used to match the stage loading of the reference_2020
+end module Hpc
+!
+module Comb
+  residence_time: 0.007
+  slope_fact: 0.1
+end module Comb
+!
+module Hpt
+  number_of_stages: 2
+  spacing: 0.3
+!  disc_type: conventional
+  disc_safety_factor: 1.4
+  rotor_blade_material: 'ReneN5'
+  stator_vane_material: 'MarM002'
+  disc_material: 'Rene95'
+end module Hpt
+!
+module Tcf
+  aspect_ratio: 0.6
+  area_factor: 2.0
+end module Tcf
+!
+module Lpt
+  max_aspect_ratio: 4.5
+  disc_safety_factor: 1.0
+  hub_angle: -7.0
+  spacing: 0.3
+  disc_void_par: 0.4
+  exit_Mach_number: 0.4
+  temperature_drop_coefficient: 3.4
+end module Lpt
+!
+module Tec
+ technology: ultimate
+end module Tec
+!
+module Gbx
+  speed_ratio: 3.06
+end module Gbx
+!
+module hot_nozzle
+end module hot_nozzle
+!
+module bypass_duct
+  ratio_of_length_to_height: 1.8
+  outer_radius_ratio: 1.08
+end module bypass_duct
+!
+module cold_nozzle
+  nozzle_exit_inner_radius: 0.65
+  length_to_diameter_ratio: 0.45
+end module cold_nozzle
+!
+module Lp_shaft
+end module Lp_shaft
+!
+module Hp_shaft
+end module Hp_shaft
+!
+module Accessories
+end module Accessories
+!
+module Nacelle
+  use_thrust_reverser: true
+  len_fact: 0.52
+  throat_radius_ratio: 0.95:
+end module Nacelle
+
+
+
+

@@ -1,0 +1,162 @@
+!
+print_level: dump_all
+cost_interface_type: integrated
+entry_into_service: 2050
+!
+module Fan
+ !
+ disc_type: conventional
+ fan_type: large
+ design_type: constant_tip
+ !
+ n_rotor_blades: 18
+ n_ogv_blades: 38
+ !
+ entrance_Mach_number: 0.58
+ hub_tip_ratio: 0.270
+ !
+ aspect_ratio_rotor: 2.3
+ rotor_spacing_to_rotor_chord_length_ratio: 0.50
+ bypass_duct_spacing_to_rotor_chord_length_ratio: 0.20
+ !
+! aspect_ratio_ogv: 4.20
+ aspect_ratio_ogv: 4.0
+ !
+ rt_exit_fact: 1.0
+ !
+ blade_type: solid
+ !
+end module Fan
+!
+!
+!
+module Imc
+ use_mid_fixa: false
+ outer_radius_ratio_mss: 0.75
+ aspect_ratio_mss: 0.3
+ technology: ultimate
+end module Imc
+!
+!
+!
+module Ipc
+ disc_type: conventional
+ ! selected hub_tip_ratio to determine "Booster exit mean diameter"
+ design_type: constant_hub
+ ! corrected speed is set through the gear box ratio
+ deHaller: 0.68
+end module Ipc
+!
+!
+!
+module Imc2
+end module Imc2
+!
+!
+!
+module Hpc
+ design_type: constant_hub
+ utip_corr: 400.0
+ disc_void_par: 0.35
+ disc_type: conventional
+ disc_safety_factor: 0.8
+ aspect_ratio_rotor_in: 2.0
+ aspect_ratio_rotor_out: 1.5
+ aspect_ratio_stator_in: 3.0
+ aspect_ratio_stator_out: 1.0
+ outlet_guide_vane: true
+ deHaller: 0.70
+ number_of_stages: 10
+end module Hpc
+!
+!
+!
+module Comb
+  slope_fact: 0.50
+  residence_time: 0.011
+end module Comb
+!
+! 
+!
+module Hpt
+ number_of_stages: 2
+ disc_type: conventional
+ disc_safety_factor: 0.7
+end module Hpt
+!
+!
+!
+module Tcf
+ aspect_ratio: 0.75
+end module Tcf
+!
+!
+!
+module Lpt
+ disc_void_par: 0.4
+ stator_solidity_in: 1.06
+ stator_solidity_out: 2.0
+ rotor_solidity_in:  0.6
+ rotor_solidity_out: 1.80
+ temperature_drop_coefficient: 3.2
+ number_of_stages: 4
+ disc_type: conventional
+ design_type: constant_hub
+end module Lpt
+!
+!
+!
+module Lp_shaft
+ diameter_ratio: 0.88
+ material: 'Aermet100'
+end module Lp_shaft
+!
+!
+!
+module Tec
+  technology: ultimate
+end module Tec
+!
+!
+!
+module hot_nozzle
+end module hot_nozzle
+!
+!
+!
+module bypass_duct
+end module bypass_duct
+!
+!
+!
+module cold_nozzle
+  length_to_diameter_ratio: 0.7
+end module cold_nozzle
+!
+!
+!
+module Gbx
+ speed_ratio: 3.0
+end module Gbx
+!
+!
+!
+module Nacelle
+ use_thrust_reverser: true
+ xfact: 1.0
+ yfact: 1.0
+ max_radius_ratio: 1.2
+ len_fact: 0.5
+ throat_radius_ratio: 0.922
+end module Nacelle
+!
+!
+!
+module Accessories
+ acc_w_fact: 0.08
+end module Accessories
+
+
+
+
+

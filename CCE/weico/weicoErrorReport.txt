@@ -1,0 +1,21 @@
+did not find variable W2:
+occurred in module data_module
+in routine getVal
+did not find variable P2:
+occurred in module data_module
+in routine getVal
+did not find variable T2:
+occurred in module data_module
+in routine getVal
+did not find variable FAR2:
+occurred in module data_module
+in routine getVal
+did not find variable P13:
+occurred in module data_module
+in routine getVal
+did not find variable P2:
+occurred in module data_module
+in routine getVal
+xnh varying during run
+occurred in module data_module
+in routine save_module_data

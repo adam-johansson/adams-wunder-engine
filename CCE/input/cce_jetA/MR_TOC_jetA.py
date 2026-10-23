@@ -64,6 +64,8 @@ intercooler = True
 specific = False
 life_hack = True
 piston_mode = "DI"
+trade_factors = False
+calc_weight = False
 
 bore = 0.18 # not used
 
